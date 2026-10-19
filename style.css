@@ -83,6 +83,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .hero-title .line:nth-child(2) > span { animation-delay: .12s; }
 /* kerning: Inter Tight leaves a wide gap between a and w at this size */
 .kern-aw { margin-right: -.03em; }
+/* tighter gaps after h, n, n so Johnny is as dense as Hawk */
+.kern-hnn { letter-spacing: -.085em; }
 @keyframes rise { to { transform: none; } }
 .dot {
   display: inline-block; width: .16em; height: .16em; margin-left: .03em;
