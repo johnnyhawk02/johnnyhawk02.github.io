@@ -5,7 +5,7 @@ export const work = [
     kind: "Plugin",
     title: "EpHeM",
     year: 2026,
-    blurb: "Ephemeral stereo FM synth: three operators with left/right spreads, slow wandering LFOs, and a cube you roll for new sounds.",
+    blurb: "Ephemeral stereo FM synth: three operators with left/right spreads, slow wandering LFOs, and a glowing blob you click for new sounds.",
     image: "img/ephem.jpg",
     link: "https://johnnyhawk02.github.io/ephem/",
     cta: "Play it in your browser",
