@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Johnny Hawk</title>
+  <meta name="description" content="Johnny Hawk makes audio plugins, websites and, as Global Goon, electronic music.">
+  <meta property="og:title" content="Johnny Hawk">
+  <meta property="og:description" content="Audio plugins, websites and Global Goon.">
+  <meta property="og:image" content="img/ephem.jpg">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23111'/><circle cx='16' cy='16' r='7' fill='%23ec8080'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="nav">
+    <a class="nav-name" href="#top">Johnny Hawk</a>
+    <nav>
+      <a href="#work">Work</a>
+      <a href="#music">Music</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <p class="eyebrow reveal">Plugins · Websites · Music</p>
+      <h1 class="hero-title">
+        <span class="line"><span>Johnny</span></span>
+        <span class="line"><span>Hawk<i class="dot"></i></span></span>
+      </h1>
+      <div class="hero-foot reveal">
+        <p class="hero-lede">I make audio plugins and websites, and I've made electronic music as <a href="#music">Global&nbsp;Goon</a> since 1989.</p>
+        <ul class="hero-meta">
+          <li><span>Based</span>Merseyside, UK</li>
+          <li><span>Releases</span><b data-count="releases"></b></li>
+          <li><span>Scroll</span>↓</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="marquee" aria-hidden="true"><div class="marquee-track" id="marquee"></div></div>
+
+    <section class="featured" id="featured"></section>
+
+    <section class="work" id="work">
+      <div class="section-head reveal">
+        <h2>Work</h2>
+        <div class="tabs" role="tablist" id="work-tabs">
+          <button class="on" data-filter="all">All</button>
+          <button data-filter="Plugin">Plugins</button>
+          <button data-filter="Website">Websites</button>
+        </div>
+      </div>
+      <div class="grid" id="work-grid"></div>
+    </section>
+
+    <section class="music" id="music">
+      <div class="music-inner">
+        <p class="eyebrow reveal">Music</p>
+        <h2 class="music-title reveal">Global Goon</h2>
+        <div class="music-intro reveal">
+          <div>
+            <p>Electronic music from Lydiate, Merseyside. The first three albums came out on Rephlex, the label run by Aphex Twin, before I started my own label, J-HOK. Since then: WéMè, Audio Dregs, 030303, and lately acid and braindance for EVEL, Acid Waxa, CPU and more.</p>
+            <div class="music-links">
+              <a class="button light" data-link="bandcamp" href="#">Listen on Bandcamp <span>→</span></a>
+              <a class="button ghost" data-link="discogs" href="#">Discogs <span>→</span></a>
+            </div>
+          </div>
+          <ul class="stats" id="stats"></ul>
+        </div>
+        <div class="section-head reveal">
+          <h3>Discography</h3>
+          <div class="tabs" id="music-tabs">
+            <button class="on" data-filter="all">All</button>
+            <button data-filter="Album">Albums</button>
+            <button data-filter="EP">EPs</button>
+          </div>
+        </div>
+        <ol class="timeline" id="timeline"></ol>
+      </div>
+    </section>
+  </main>
+
+  <footer class="contact" id="contact">
+    <p class="eyebrow">Contact</p>
+    <a class="big-link" href="https://github.com/johnnyhawk02">Say hello <span>→</span></a>
+    <div class="foot-row">
+      <span>© <span id="year"></span> Johnny Hawk</span>
+      <a href="https://github.com/johnnyhawk02">GitHub</a>
+      <a data-link="bandcamp" href="#">Bandcamp</a>
+      <a href="https://en.wikipedia.org/wiki/Global_Goon">Global Goon on Wikipedia</a>
+      <a href="#top">Back to top ↑</a>
+    </div>
+  </footer>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
