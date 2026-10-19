@@ -106,5 +106,14 @@ function count(el) {
   requestAnimationFrame(step);
 }
 
+// ---------- menu bar: solid once scrolled, dark over the music section ----------
+const nav = $(".nav"), music = $("#music");
+function navState() {
+  nav.classList.toggle("scrolled", scrollY > 10);
+  nav.classList.toggle("on-dark", music.getBoundingClientRect().top <= nav.offsetHeight);
+}
+addEventListener("scroll", navState, { passive: true });
+navState();
+
 document.querySelectorAll("[data-link]").forEach((a) => (a.href = links[a.dataset.link]));
 $("#year").textContent = new Date().getFullYear();

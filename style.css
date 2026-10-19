@@ -41,8 +41,17 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   padding: 18px var(--pad);
   font: 500 13px/1 var(--mono);
   letter-spacing: .06em; text-transform: uppercase;
-  mix-blend-mode: difference; color: #fff;
+  color: var(--ink);
+  transition: background .35s, color .35s, border-color .35s;
+  border-bottom: 1px solid transparent;
 }
+/* clear over the top of the page; frosted bar once you scroll, dark over the dark sections */
+.nav.scrolled {
+  background: rgba(243, 241, 236, .86);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+  border-bottom-color: var(--line);
+}
+.nav.scrolled.on-dark { background: rgba(18, 18, 20, .86); color: #eeeae4; border-bottom-color: var(--dark-line); }
 .nav nav { display: flex; gap: clamp(14px, 3vw, 36px); }
 .nav a { position: relative; }
 .nav nav a::after {
