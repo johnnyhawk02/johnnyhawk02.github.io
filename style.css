@@ -85,8 +85,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .kern-aw { margin-right: -.02em; }
 .kern-wk { margin-right: .01em; }
 /* tighter gaps in Johnny so it is as dense as Hawk: h-n and n-n a touch looser than n-y */
-.kern-hn { letter-spacing: -.075em; }
-.kern-ny { letter-spacing: -.085em; }
+.kern-hn { letter-spacing: -.07em; }
+.kern-ny { letter-spacing: -.08em; }
 @keyframes rise { to { transform: none; } }
 .dot {
   display: inline-block; width: .16em; height: .16em; margin-left: .03em;
