@@ -12,6 +12,15 @@ export const work = [
     featured: true,
   },
   {
+    kind: "Plugin",
+    title: "triBeep",
+    year: 2026,
+    blurb: "Three-voice groovebox: low, mid and high drum voices with eight patterns each, a mixer with delay and reverb, and Randomize for sounds and patterns.",
+    image: "img/tribeep.jpg",
+    link: "https://tribeep.netlify.app/",
+    cta: "Play it in your browser",
+  },
+  {
     kind: "Website",
     title: "Active Sefton",
     year: 2026,
