@@ -21,6 +21,15 @@ export const work = [
     cta: "Play it in your browser",
   },
   {
+    kind: "Plugin",
+    title: "beepBoop",
+    year: 2026,
+    blurb: "Four-voice techno groovebox: kick, noise, beep and hat on a Euclidean sequencer, with cross-talk between the voices. Also a VST3.",
+    image: "img/beepboop.jpg",
+    link: "https://beepboop-groovebox.netlify.app/",
+    cta: "Play it in your browser",
+  },
+  {
     kind: "Website",
     title: "Active Sefton",
     year: 2026,
