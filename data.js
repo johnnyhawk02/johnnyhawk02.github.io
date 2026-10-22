@@ -30,6 +30,15 @@ export const work = [
     cta: "Play it in your browser",
   },
   {
+    kind: "Plugin",
+    title: "Murmur",
+    year: 2026,
+    blurb: "Drone and texture box: four slowly drifting layers (drone, air, shimmer, pulse), tempo-locked motion and a sidechain from your kick.",
+    image: "img/murmur.jpg",
+    link: "https://johnnyhawk02.github.io/murmur/",
+    cta: "Play it in your browser",
+  },
+  {
     kind: "Website",
     title: "Active Sefton",
     year: 2026,
