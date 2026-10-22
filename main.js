@@ -31,7 +31,7 @@ $("#work-grid").innerHTML = work.map((w) => `
   </article>`).join("");
 
 // ---------- marquee ----------
-const words = ["EpHeM", "Active Sefton", "Global Goon", ...releases.filter((r) => r.type === "Album").map((r) => r.title)];
+const words = ["EpHeM", "Active Sefton", "TapTalk", "Global Goon", ...releases.filter((r) => r.type === "Album").map((r) => r.title)];
 const strip = words.map((w) => `<span>${esc(w)}</span>`).join("");
 $("#marquee").innerHTML = strip + strip;   // twice, so the loop is seamless
 

@@ -38,6 +38,15 @@ export const work = [
     link: "https://activeseftonfitness.netlify.app/",
     cta: "Visit the site",
   },
+  {
+    kind: "App",
+    title: "TapTalk",
+    year: 2026,
+    blurb: "A free picture talker (AAC) for iPad and Android tablets: children tap pictures to build a sentence and TapTalk says it out loud. No sign-up, no ads, works offline.",
+    image: "img/taptalk.jpg",
+    link: "https://johnnyhawk02.github.io/taptalk/parents/",
+    cta: "Find out more",
+  },
 ];
 
 export const links = {
