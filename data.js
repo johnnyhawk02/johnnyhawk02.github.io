@@ -53,8 +53,8 @@ export const work = [
     year: 2026,
     blurb: "Early words in small steps for tablets: look and listen, match pictures, then find a picture from its spoken word. Mistakes are never marked wrong, and it keeps track of every word. Free, works offline.",
     image: "img/wordsteps.jpg",
-    link: "https://johnnyhawk02.github.io/wordsteps/",
-    cta: "Open it in your browser",
+    link: "https://johnnyhawk02.github.io/wordsteps/parents/",
+    cta: "Find out more",
   },
 ];
 
