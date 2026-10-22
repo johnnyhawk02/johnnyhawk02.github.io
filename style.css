@@ -132,6 +132,10 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .frame img { width: 100%; transition: transform 1.2s var(--ease); }
 .frame:hover img { transform: scale(1.04); }
 
+/* ---------- reel ---------- */
+.reel { padding: 0 var(--pad) clamp(64px, 10vw, 140px); }
+.reel .frame { width: 100%; height: auto; }
+
 /* ---------- work ---------- */
 .work { padding: 0 var(--pad) clamp(80px, 12vw, 160px); }
 .section-head {
