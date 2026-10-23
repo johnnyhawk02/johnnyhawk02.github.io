@@ -25,6 +25,7 @@
   --bg: #11161d; --panel: #19212b; --fg: #e6ecf2; --muted: #9aa8b8; --line: #2b3642;
   --accent: #6aa3ff; --accent-fg: #0b1220; --bad: #ff8a7a; --good: #6fd08f; color-scheme: dark; }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { margin: 0; }
 body { background: var(--bg); color: var(--fg); font: 16px/1.5 var(--body); }
 .wrap { display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: 24px; max-width: 1400px; margin: 0 auto;
@@ -87,6 +88,16 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .sug { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px 4px 8px; font-size: .85rem; font-weight: 400; cursor: pointer; background: var(--bg); }
 .sug input { margin: 0; accent-color: var(--accent); }
 .sug i { width: 8px; height: 8px; border-radius: 2px; background: var(--cls); }
+.presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.preset { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); }
+.preset.on { border: 2px solid var(--accent); }
+.preset .thumb { aspect-ratio: 1; max-width: 100%; background: #ffffff; display: grid; place-items: center; border-bottom: 1px solid var(--line); }
+.preset .thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.preset .thumb span { color: #5d6b7c; font-size: .75rem; text-align: center; padding: 8px; }
+.preset .pm { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.preset .pn { font: 600 .95rem var(--display); overflow-wrap: anywhere; }
+.preset .pb { display: flex; flex-wrap: wrap; gap: 4px; }
+.preset .pb button { flex: 1 1 auto; padding: 5px 6px; font-size: .75rem; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; }
 </style>
 </head>
@@ -154,6 +165,21 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
       <div class="stats" id="stats"></div>
     </div>
     <section class="panel">
+      <div class="bar"><h2>Presets</h2>
+        <div class="row" style="flex:0 1 auto"><button type="button" id="pExport">Export presets</button><button type="button" id="pImportBtn">Import</button><input type="file" id="pImport" accept=".json,application/json" hidden></div></div>
+      <div class="row">
+        <div><label for="exampleWord">Example symbol</label><input type="text" id="exampleWord" placeholder="eat, verb"></div>
+        <p class="hint" style="flex:2 1 260px">Every preset's example uses this same word, so you can compare styles side by side.</p>
+      </div>
+      <div class="presets" id="presets"></div>
+      <div class="row">
+        <input type="text" id="pName" placeholder="Name for current settings, e.g. Bold classroom" aria-label="Preset name" style="flex:2 1 220px">
+        <label class="check" style="flex:0 1 auto"><input type="checkbox" id="pExample" checked> Make an example image</label>
+        <button type="button" class="primary" id="pSave" style="flex:0 0 auto">Save preset</button>
+      </div>
+      <p class="hint" id="pNote">A preset saves the style, prompt, border, model and quality.</p>
+    </section>
+    <section class="panel">
       <div class="bar"><h2>Style</h2><button type="button" id="resetStyle">Reset style</button></div>
       <p class="hint">These settings are added to the end of every prompt and take priority over it. Put <code>[STYLE]</code> in the prompt to place them somewhere else.</p>
       <div class="sliders" id="sliders"></div>
@@ -213,7 +239,7 @@ let running = false, stopFlag = false, spent = 0;
 // Approximate USD per 1024x1024 image (OpenAI list prices, Oct 2025). Check openai.com/api/pricing for current rates.
 const PRICE = { "gpt-image-1": { low: 0.011, medium: 0.042, high: 0.167 },
                 "gpt-image-1-mini": { low: 0.005, medium: 0.011, high: 0.036 } };
-const unitPrice = () => PRICE[$("model").value]?.[$("quality").value] ?? 0;
+const unitPrice = (c = cfg()) => PRICE[c.model]?.[c.quality] ?? 0;
 function updateCost() {
   const missing = [...items.values()].filter(v => !v.url).length, u = unitPrice();
   $("estimate").textContent = "$" + (missing * u).toFixed(2);
@@ -274,8 +300,11 @@ const STYLE = [
 ];
 let style = {};
 try { style = JSON.parse(store.get("aac.style") || "{}") || {}; } catch { style = {}; }
-const sv = c => style[c.id] ?? c.def;
-const styleText = () => "Style settings (these take priority over anything above):\n" + STYLE.map(c => "- " + c.text(sv(c))).join("\n");
+const sv = (c, st = style) => st[c.id] ?? c.def;
+const styleText = (st = style) => "Style settings (these take priority over anything above):\n" + STYLE.map(c => "- " + c.text(sv(c, st))).join("\n");
+// Everything that shapes a symbol, so presets can save it and examples can use it.
+const cfg = () => ({ style: { ...style }, template: $("template").value === TEMPLATE ? null : $("template").value,
+  border: $("border").checked, model: $("model").value, quality: $("quality").value });
 function drawStyle() {
   $("sliders").innerHTML = STYLE.map(c => {
     const id = "st_" + c.id;
@@ -293,13 +322,13 @@ function drawStyle() {
   }
 }
 
-function buildPrompt(it) {
+function buildPrompt(it, c = cfg()) {
   const name = COLOUR_NAMES[it.cls];
-  const border = $("border").checked && name
+  const border = c.border && name
     ? `Add a thin ${name} border around the square frame to mark the word class (${it.cls}).` : "";
-  let p = $("template").value;
+  let p = c.template ?? TEMPLATE;
   if (it.cls === "word") p = p.replace(/ ?\((\[WORD CLASS\]|\{word_class\})\)/g, "");
-  p = /\[STYLE\]/i.test(p) ? p.replace(/\[STYLE\]/gi, styleText()) : p.trimEnd() + "\n\n" + styleText();
+  p = /\[STYLE\]/i.test(p) ? p.replace(/\[STYLE\]/gi, styleText(c.style)) : p.trimEnd() + "\n\n" + styleText(c.style);
   p = p.replace(/\[WORD CLASS\]|\{word_class\}/gi, it.cls).replace(/\[WORD\]|\{word\}/gi, it.word).replace(/\[BORDER\]|\{border\}/gi, border);
   return p.replace(/\n{3,}/g, "\n\n");
 }
@@ -344,20 +373,20 @@ function render() {
   const vals = [...items.values()];
   const done = vals.filter(v => v.url).length, err = vals.filter(v => v.status === "error").length;
   $("stats").textContent = `${done} of ${vals.length} generated` + (err ? ` · ${err} failed` : "") + (spent ? ` · about $${spent.toFixed(2)} spent` : "");
-  updateCost();
+  updateCost(); drawPresets();
   $("zip").disabled = !done || running;
   $("go").disabled = running || ![...items.values()].some(v => !v.url); $("stop").disabled = !running;
 }
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
 
-async function generate(it) {
+async function generate(it, c = cfg()) {
   const key = $("key").value.trim();
   if (!key) throw new Error("Add your OpenAI key first.");
   const res = await fetch("https://api.openai.com/v1/images/generations", {
     method: "POST",
     headers: { "Authorization": "Bearer " + key, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: $("model").value, prompt: buildPrompt(it), size: "1024x1024",
-      quality: $("quality").value, n: 1, ...(sv(STYLE.find(c => c.id === "bg")) === "transparent" ? { background: "transparent" } : {}) })
+    body: JSON.stringify({ model: c.model, prompt: buildPrompt(it, c), size: "1024x1024",
+      quality: c.quality, n: 1, ...(sv(STYLE.find(x => x.id === "bg"), c.style) === "transparent" ? { background: "transparent" } : {}) })
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error((data.error && data.error.message) || `OpenAI returned ${res.status}`);
@@ -422,6 +451,101 @@ function makeZip(files) {
   return new Blob([...parts, ...central, e], { type: "application/zip" });
 }
 
+// Presets: named settings, each with an example of the same word.
+const STARTERS = [
+  { name: "Classic bold", cfg: { style: {}, template: null, border: true, model: "gpt-image-1", quality: "medium" } },
+  { name: "Clean and minimal", cfg: { style: { line: 2, detail: 1, colours: 3, sat: 3, round: 3 }, template: null, border: true, model: "gpt-image-1", quality: "medium" } },
+  { name: "Soft pastel", cfg: { style: { line: 3, sat: 2, round: 5, outline: "tone" }, template: null, border: true, model: "gpt-image-1", quality: "medium" } },
+  { name: "Detailed", cfg: { style: { line: 3, detail: 5, colours: 6 }, template: null, border: true, model: "gpt-image-1", quality: "medium" } },
+];
+let presets;
+try { presets = JSON.parse(store.get("aac.presets")); } catch { presets = null; }
+if (!Array.isArray(presets)) presets = STARTERS.map(p => ({ ...p, id: crypto.randomUUID?.() || String(Math.random()) }));
+const pendingDelete = new Set(), making = new Set();
+const sameCfg = (a, b) => { const n = c => JSON.stringify({ ...c, style: Object.fromEntries(STYLE.map(x => [x.id, sv(x, c.style || {})])) });
+  return n(a) === n(b); };
+function savePresets() {
+  try { localStorage.setItem("aac.presets", JSON.stringify(presets)); return true; }
+  catch { $("pNote").textContent = "Your browser's storage is full, so this change won't be remembered. Export your presets to keep them."; return false; }
+}
+const exampleItem = () => parse($("exampleWord").value || "eat, verb")[0] || { word: "eat", cls: "verb" };
+function drawPresets() {
+  const now = cfg();
+  $("presets").innerHTML = presets.map((p, i) => {
+    const busy = making.has(p.id);
+    const thumb = busy ? `<div class="spin" style="--cls:var(--accent)" aria-label="Making example"></div>`
+      : p.thumb ? `<img alt="Example in the ${esc(p.name)} style: ${esc(p.exampleWord || "")}" src="${p.thumb}">`
+      : `<span>No example yet</span>`;
+    const other = p.thumb && p.exampleWord && p.exampleWord !== exampleItem().word ? `<span class="hint">Example shows "${esc(p.exampleWord)}"</span>` : "";
+    return `<div class="preset ${sameCfg(p.cfg, now) ? "on" : ""}"><div class="thumb">${thumb}</div>
+      <div class="pm"><div class="pn">${esc(p.name)}</div>${other}
+        <div class="pb"><button type="button" data-i="${i}" data-a="use">Use</button>
+        <button type="button" data-i="${i}" data-a="ex" ${busy ? "disabled" : ""} title="About $${unitPrice(p.cfg).toFixed(3)}">${p.thumb ? "New example" : "Make example"}</button>
+        <button type="button" data-i="${i}" data-a="del">${pendingDelete.has(p.id) ? "Confirm delete" : "Delete"}</button></div></div></div>`;
+  }).join("") || `<p class="hint">No presets yet. Set up a style you like and save it below.</p>`;
+  $("presets").querySelectorAll("button").forEach(b => b.onclick = () => presetAction(b.dataset.a, presets[+b.dataset.i]));
+}
+function applyPreset(p) {
+  const c = p.cfg;
+  style = { ...(c.style || {}) }; store.set("aac.style", JSON.stringify(style));
+  $("template").value = c.template ?? TEMPLATE; store.set("aac.tpl", c.template ?? null); tplState();
+  $("border").checked = c.border !== false;
+  if (c.model) $("model").value = c.model;
+  if (c.quality) $("quality").value = c.quality;
+  drawStyle(); render();
+  $("pNote").textContent = `Using "${p.name}".`;
+}
+async function thumbnail(blob) {
+  const bmp = await createImageBitmap(blob), size = 320, cv = document.createElement("canvas");
+  cv.width = cv.height = size; cv.getContext("2d").drawImage(bmp, 0, 0, size, size);
+  return cv.toDataURL("image/png");
+}
+async function makeExample(p) {
+  if (!$("key").value.trim()) { $("pNote").textContent = "Add your OpenAI key to make example images."; return; }
+  const it = exampleItem();
+  making.add(p.id); drawPresets(); $("pNote").textContent = `Making an example of "${it.word}" in the "${p.name}" style…`;
+  try {
+    p.thumb = await thumbnail(await generate(it, p.cfg)); p.exampleWord = it.word; spent += unitPrice(p.cfg);
+    if (savePresets()) $("pNote").textContent = `Example saved for "${p.name}".`;
+  } catch (e) { $("pNote").textContent = e.message === "Failed to fetch" ? "Couldn't reach OpenAI. Check your internet connection and key." : e.message; }
+  making.delete(p.id); render();
+}
+function presetAction(a, p) {
+  if (a === "use") applyPreset(p);
+  if (a === "ex") makeExample(p);
+  if (a === "del") {
+    if (!pendingDelete.has(p.id)) { pendingDelete.add(p.id); drawPresets(); setTimeout(() => { pendingDelete.delete(p.id); drawPresets(); }, 4000); return; }
+    presets = presets.filter(x => x !== p); savePresets(); $("pNote").textContent = `Deleted "${p.name}".`; drawPresets();
+  }
+}
+$("pSave").onclick = () => {
+  const name = $("pName").value.trim();
+  if (!name) { $("pNote").textContent = "Give the preset a name first."; $("pName").focus(); return; }
+  let p = presets.find(x => x.name.toLowerCase() === name.toLowerCase());
+  if (p) { p.cfg = cfg(); p.thumb = null; p.exampleWord = null; }
+  else { p = { id: crypto.randomUUID?.() || String(Math.random()), name, cfg: cfg() }; presets.push(p); }
+  savePresets(); $("pName").value = ""; $("pNote").textContent = `Saved "${name}".`; drawPresets();
+  if ($("pExample").checked) makeExample(p);
+};
+$("pName").onkeydown = e => { if (e.key === "Enter") $("pSave").click(); };
+$("exampleWord").oninput = () => { store.set("aac.example", $("exampleWord").value); drawPresets(); };
+$("pExport").onclick = () => download(new Blob([JSON.stringify({ app: "aac-symbol-studio", presets }, null, 1)], { type: "application/json" }), "aac-presets.json");
+$("pImportBtn").onclick = () => $("pImport").click();
+$("pImport").onchange = async e => {
+  const f = e.target.files[0]; if (!f) return; e.target.value = "";
+  try {
+    const got = JSON.parse(await f.text()).presets;
+    if (!Array.isArray(got)) throw new Error();
+    let n = 0;
+    for (const g of got) if (g && g.name && g.cfg) {
+      const i = presets.findIndex(x => x.name.toLowerCase() === String(g.name).toLowerCase());
+      const p = { id: crypto.randomUUID?.() || String(Math.random()), name: String(g.name), cfg: g.cfg, thumb: g.thumb || null, exampleWord: g.exampleWord || null };
+      if (i >= 0) presets[i] = p; else presets.push(p); n++;
+    }
+    savePresets(); $("pNote").textContent = `Imported ${n} preset${n === 1 ? "" : "s"}.`; drawPresets();
+  } catch { $("pNote").textContent = "That file isn't a presets file exported from AAC Symbol Studio."; }
+};
+
 // AI word suggestions via the same key.
 const TEXT_MODEL = "gpt-4o-mini";
 let sugs = [];
@@ -482,7 +606,7 @@ $("template").oninput = () => { store.set("aac.tpl", $("template").value === TEM
 $("resetTpl").onclick = () => { $("template").value = TEMPLATE; store.set("aac.tpl", null); tplState(); render(); };
 $("border").onchange = render;
 $("resetStyle").onclick = () => { style = {}; store.set("aac.style", null); drawStyle(); render(); };
-$("model").onchange = updateCost; $("quality").onchange = updateCost;
+$("model").onchange = render; $("quality").onchange = render;
 $("key").oninput = () => { if ($("remember").checked) store.set("aac.key", $("key").value); };
 $("remember").onchange = () => store.set("aac.key", $("remember").checked ? $("key").value : null);
 
@@ -490,6 +614,7 @@ $("legend").innerHTML = CLASSES.filter(c => c !== "question").map(c =>
   `<span class="chip" style="--cls:var(--${c})"><i></i>${c}${c === "social" ? " / question" : ""}</span>`).join("");
 $("words").value = store.get("aac.words") ?? SAMPLE;
 $("template").value = store.get("aac.tpl") ?? TEMPLATE; tplState(); drawStyle();
+$("exampleWord").value = store.get("aac.example") ?? "eat, verb";
 const savedKey = store.get("aac.key"); if (savedKey) { $("key").value = savedKey; $("remember").checked = true; }
 sync();
 </script>
