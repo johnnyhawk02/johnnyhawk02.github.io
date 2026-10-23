@@ -41,7 +41,7 @@ input[type=password], input[type=text], select, textarea {
   width: 100%; font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
 textarea { font-family: var(--mono); font-size: .85rem; resize: vertical; }
 #words { min-height: 180px; }
-#template { min-height: 260px; font-size: .75rem; }
+#template { min-height: 220px; font-size: .8rem; line-height: 1.45; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .row > * { flex: 1 1 120px; min-width: 0; }
 .check { display: flex; gap: 8px; align-items: center; font-weight: 400; }
@@ -117,12 +117,6 @@ h2 label { font: inherit; }
           <select id="parallel"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></div>
         <div><label class="check" style="margin-top:22px"><input type="checkbox" id="border" checked> Word-class border</label></div>
       </div>
-      <details>
-        <summary>Prompt template</summary>
-        <p class="hint">Placeholders: {word}, {word_class}, {border}</p>
-        <textarea id="template" spellcheck="false"></textarea>
-        <button type="button" id="resetTpl">Restore the original prompt</button>
-      </details>
     </section>
   </aside>
 
@@ -135,6 +129,12 @@ h2 label { font: inherit; }
       </div>
       <div class="stats" id="stats"></div>
     </div>
+    <section class="panel">
+      <div class="bar"><h2><label for="template">Prompt</label></h2><span class="hint" id="tplState">Original prompt</span></div>
+      <p class="hint">This prompt is sent once per word. <code>[WORD]</code> is replaced by the word, <code>[WORD CLASS]</code> by its class, and <code>[BORDER]</code> by the border instruction. Your edits are saved in this browser.</p>
+      <textarea id="template" spellcheck="false"></textarea>
+      <div class="row" style="justify-content:flex-start"><button type="button" id="resetTpl" style="flex:0 0 auto">Reset to original prompt</button></div>
+    </section>
     <div class="status err" id="globalErr" hidden></div>
     <div class="board" id="board"></div>
   </main>
@@ -146,7 +146,7 @@ const COLOUR_NAMES = { noun:"orange", verb:"green", adjective:"blue", adverb:"li
   pronoun:"yellow", preposition:"pink", social:"purple", question:"purple" };
 const SAMPLE = "eat, verb\ndrink, verb\nplay, verb\napple, noun\nball, noun\nhappy, adjective\nbig, adjective\nmore\nhelp\nstop";
 const TEMPLATE = `Create a single AAC (augmentative and alternative communication) symbol
-representing the word "{word}" ({word_class}).
+representing the word "[WORD]" ([WORD CLASS]).
 
 Style: clean, flat vector-style pictogram in the tradition of widely used
 AAC symbol sets. Bold, consistent dark outline (uniform stroke weight),
@@ -162,7 +162,7 @@ with a clear expression. Figures are simple and neutral: rounded
 featureless or minimally featured heads, no realistic detail.
 
 Colour: limited, high-contrast palette of 3-5 colours, no more.
-{border}
+[BORDER]
 
 Constraints: no text, letters, or captions in the image. No background
 scenery. No photorealism. No brand logos or copyrighted characters.
@@ -211,8 +211,9 @@ function buildPrompt(it) {
   const name = COLOUR_NAMES[it.cls];
   const border = $("border").checked && name
     ? `Add a thin ${name} border around the square frame to mark the word class (${it.cls}).` : "";
-  let p = $("template").value.replaceAll("{word}", it.word).replaceAll("{word_class}", it.cls).replaceAll("{border}", border);
-  if (it.cls === "word") p = p.replace(` (word)`, "");
+  let p = $("template").value;
+  if (it.cls === "word") p = p.replace(/ ?\((\[WORD CLASS\]|\{word_class\})\)/g, "");
+  p = p.replace(/\[WORD CLASS\]|\{word_class\}/gi, it.cls).replace(/\[WORD\]|\{word\}/gi, it.word).replace(/\[BORDER\]|\{border\}/gi, border);
   return p.replace(/\n{3,}/g, "\n\n");
 }
 
@@ -343,8 +344,9 @@ $("zip").onclick = async () => {
 };
 $("file").onchange = async e => { const f = e.target.files[0]; if (!f) return; $("words").value = await f.text(); store.set("aac.words", $("words").value); sync(); };
 $("words").oninput = () => { store.set("aac.words", $("words").value); sync(); };
-$("template").oninput = () => { store.set("aac.tpl", $("template").value); render(); };
-$("resetTpl").onclick = () => { $("template").value = TEMPLATE; store.set("aac.tpl", null); render(); };
+const tplState = () => { $("tplState").textContent = $("template").value === TEMPLATE ? "Original prompt" : "Edited · saved in this browser"; };
+$("template").oninput = () => { store.set("aac.tpl", $("template").value === TEMPLATE ? null : $("template").value); tplState(); render(); };
+$("resetTpl").onclick = () => { $("template").value = TEMPLATE; store.set("aac.tpl", null); tplState(); render(); };
 $("border").onchange = render;
 $("model").onchange = updateCost; $("quality").onchange = updateCost;
 $("key").oninput = () => { if ($("remember").checked) store.set("aac.key", $("key").value); };
@@ -353,7 +355,7 @@ $("remember").onchange = () => store.set("aac.key", $("remember").checked ? $("k
 $("legend").innerHTML = CLASSES.filter(c => c !== "question").map(c =>
   `<span class="chip" style="--cls:var(--${c})"><i></i>${c}${c === "social" ? " / question" : ""}</span>`).join("");
 $("words").value = store.get("aac.words") ?? SAMPLE;
-$("template").value = store.get("aac.tpl") ?? TEMPLATE;
+$("template").value = store.get("aac.tpl") ?? TEMPLATE; tplState();
 const savedKey = store.get("aac.key"); if (savedKey) { $("key").value = savedKey; $("remember").checked = true; }
 sync();
 </script>
