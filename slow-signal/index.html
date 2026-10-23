@@ -1,0 +1,1485 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>body{margin:0}</style>
+</head>
+<body>
+<title>Slow Signal</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Michroma&family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.js"></script>
+<style>
+/* Layout: a modular synth panel. Video window in the middle, four LFO modules on each side,
+   and a pin-style patch matrix under the screen routing every source to every visual control. */
+:root {
+  color-scheme: dark;
+  --panel: #191c22;          /* anodised panel */
+  --rail: #111317;           /* rack rails, insets */
+  --module: #22262e;         /* module faceplate */
+  --line: #343a45;           /* panel seams */
+  --ink: #dfe2e8;            /* silkscreen */
+  --ink-dim: #8c93a1;
+  --rec: #ff4d3d;            /* render lamp */
+  --rec-ink: #1a0603;
+  --focus: #ffd36b;
+  --c0:#ff5a4e; --c1:#ff9f1c; --c2:#f5d547; --c3:#5fd068;
+  --c4:#3cc9d6; --c5:#5b8cff; --c6:#b07cff; --c7:#ff6fb5;
+  --c8:#ece6d6; --c9:#d39b66; --c10:#9fe0ff;
+  --f-display: "Michroma", "Eurostile", "Arial Black", sans-serif;
+  --f-body: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 6px;
+}
+html, body { height: 100%; }
+body {
+  background: var(--panel); color: var(--ink);
+  font: 14px/1.4 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 12px 24px;
+  box-sizing: border-box;
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.top {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--line); margin-bottom: 14px;
+}
+.brand { font-family: var(--f-display); font-size: 17px; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; }
+.brand small { display: block; font: 500 10px/1.2 var(--f-body); letter-spacing: .2em; color: var(--ink-dim); }
+.group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.grow { flex: 1 1 auto; }
+.btn {
+  background: var(--module); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 7px 12px; cursor: pointer; white-space: nowrap;
+  font-weight: 500; letter-spacing: .02em;
+}
+.btn:hover { border-color: var(--ink-dim); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.icon { width: 36px; padding: 7px 0; text-align: center; }
+.btn.rec {
+  background: var(--rec); color: var(--rec-ink); border-color: var(--rec);
+  font-weight: 600; text-transform: uppercase; letter-spacing: .1em; padding-inline: 16px;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.btn.rec::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--rec-ink); }
+.btn.rec:disabled { background: var(--module); color: var(--ink-dim); border-color: var(--line); }
+.btn.rec:disabled::before { background: var(--ink-dim); }
+.file-btn { position: relative; overflow: hidden; }
+.file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.track { font-size: 12px; color: var(--ink-dim); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.track b { color: var(--ink); font-weight: 500; }
+select.sel {
+  background: var(--rail); border: 1px solid var(--line); border-radius: 4px; padding: 5px 6px; font-size: 12px;
+}
+.lbl { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-dim); }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+
+.rack {
+  display: grid; gap: 12px;
+  grid-template-columns: minmax(230px, 270px) minmax(0, 1fr) minmax(230px, 270px);
+  grid-template-areas: "left center right";
+}
+.col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.col.left { grid-area: left; } .col.right { grid-area: right; } .center { grid-area: center; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+
+/* screen */
+.screen {
+  background: var(--rail); border: 1px solid var(--line); border-radius: 10px; padding: 10px;
+}
+.screen-frame { position: relative; margin: 0 auto; max-width: 100%; background: #000; border-radius: 4px; overflow: hidden; }
+.screen canvas { display: block; width: 100%; height: 100%; }
+.drop-hint {
+  position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
+  background: rgba(10, 12, 16, .72); font-size: 15px; letter-spacing: .04em; opacity: 0; transition: opacity .15s;
+}
+.screen-frame.dragging .drop-hint { opacity: 1; }
+.transport { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.transport input[type=range] { flex: 1; min-width: 60px; }
+.time { font-size: 12px; color: var(--ink-dim); white-space: nowrap; }
+
+input[type=range] {
+  -webkit-appearance: none; appearance: none; background: transparent; height: 18px; cursor: pointer;
+}
+input[type=range]::-webkit-slider-runnable-track { height: 4px; background: var(--line); border-radius: 2px; }
+input[type=range]::-moz-range-track { height: 4px; background: var(--line); border-radius: 2px; }
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 12px; height: 12px; margin-top: -4px; border-radius: 50%;
+  background: var(--thumb, var(--ink)); border: 2px solid var(--rail);
+}
+input[type=range]::-moz-range-thumb { width: 10px; height: 10px; border-radius: 50%; background: var(--thumb, var(--ink)); border: 2px solid var(--rail); }
+
+/* LFO module */
+.lfo {
+  background: var(--module); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 9px 10px 10px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px; position: relative; min-width: 0;
+  --thumb: var(--c);
+}
+.lfo::before { content: ""; position: absolute; left: -1px; top: 10px; bottom: 10px; width: 3px; border-radius: 0 2px 2px 0; background: var(--c); }
+.lfo-head { display: flex; align-items: center; gap: 8px; }
+.lfo-name { font-family: var(--f-display); font-size: 11px; letter-spacing: .12em; color: var(--c); }
+.lfo-head select { margin-left: auto; }
+.scope { width: 100%; min-width: 0; height: 44px; display: block; background: var(--rail); border-radius: 3px; }
+.row { display: flex; align-items: center; gap: 8px; }
+.row input[type=range] { flex: 1; min-width: 0; }
+.period {
+  width: 74px; background: var(--rail); border: 1px solid var(--line); border-radius: 4px;
+  padding: 3px 5px; font-size: 12px; text-align: right;
+}
+.hz { font-size: 10px; color: var(--ink-dim); width: 54px; text-align: right; }
+.row .lbl { width: 22px; flex: none; }
+.fm-row select { width: 76px; flex: none; }
+.fm-val { width: 34px; text-align: right; font-size: 11px; color: var(--ink-dim); }
+
+/* patch matrix */
+.matrix-wrap { background: var(--module); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 10px 6px; }
+.matrix-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+.matrix-head h2 { font-family: var(--f-display); font-size: 11px; letter-spacing: .14em; margin: 0; font-weight: 400; }
+.matrix-head p { margin: 0; font-size: 12px; color: var(--ink-dim); }
+.matrix-scroll { overflow-x: auto; }
+table.matrix { border-collapse: collapse; width: 100%; min-width: 660px; }
+.matrix th, .matrix td { padding: 0; }
+.matrix thead th { font: 600 10px/1 var(--f-mono); letter-spacing: .04em; padding: 4px 0 6px; text-align: center; }
+.matrix thead th.dest { text-align: left; }
+.matrix tr.grp td { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-dim); padding: 8px 0 3px; border-bottom: 1px solid var(--line); }
+.pname { white-space: nowrap; padding-right: 8px !important; font-size: 13px; width: 1%; }
+.pbase { width: 26%; min-width: 120px; padding-right: 10px !important; }
+.pbase-inner { position: relative; }
+.pbase input { width: 100%; display: block; }
+.meter { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--rail); border-radius: 1px; overflow: hidden; pointer-events: none; }
+.meter i { position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1px; background: var(--focus); left: 0; }
+.pval { width: 46px; font-size: 11px; color: var(--ink-dim); text-align: right; padding-right: 8px !important; }
+.cell {
+  display: grid; place-items: center; width: 100%; min-width: 26px; height: 24px;
+  background: none; border: 0; cursor: ns-resize; touch-action: none; padding: 0;
+}
+.cell span {
+  width: 9px; height: 9px; border-radius: 50%; background: var(--line); transition: transform .05s;
+}
+.cell.on span { background: var(--cc); }
+.cell.neg span { background: transparent; border: 2px solid var(--cc); }
+.cell:hover span { outline: 1px solid var(--ink-dim); outline-offset: 2px; }
+.matrix tbody tr:hover td { background: rgba(255,255,255,.025); }
+
+.speed { display: flex; align-items: center; gap: 8px; padding: 4px 10px; background: var(--rail); border: 1px solid var(--line); border-radius: var(--r); --thumb: var(--focus); }
+.speed input { width: 120px; }
+.speed-val { font-size: 12px; width: 46px; text-align: right; }
+.presets {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px;
+  background: var(--rail); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 8px 10px; margin-bottom: 12px;
+}
+.presets .sel { min-width: 0; max-width: 220px; }
+.presets .btn.icon { width: 30px; padding: 5px 0; }
+.glide { display: flex; align-items: center; gap: 6px; }
+.morphbar { flex-basis: 100%; height: 2px; background: var(--line); border-radius: 1px; overflow: hidden; }
+.morphbar i { display: block; height: 100%; width: 0; background: var(--focus); }
+.presets input[type=text] {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 5px 8px; font-size: 13px; width: 170px; min-width: 0;
+}
+.presets .btn { padding: 5px 10px; font-size: 13px; }
+.presets .sep { width: 1px; align-self: stretch; background: var(--line); }
+.presets .btn.armed { border-color: var(--rec); color: var(--rec); }
+.pmsg { font-size: 12px; color: var(--ink-dim); flex: 1 1 160px; min-width: 0; }
+.pmsg.err { color: var(--rec); }
+.where { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-dim); }
+.foot { margin-top: 14px; font-size: 12px; color: var(--ink-dim); display: flex; flex-wrap: wrap; gap: 6px 18px; }
+
+/* render overlay */
+.overlay { position: fixed; inset: 0; background: rgba(8, 9, 12, .82); display: grid; place-items: center; z-index: 20; padding: 16px; }
+.dialog {
+  width: min(520px, 100%); background: var(--module); border: 1px solid var(--line); border-radius: 10px; padding: 18px;
+  display: grid; gap: 12px;
+}
+.dialog h3 { margin: 0; font-family: var(--f-display); font-size: 13px; letter-spacing: .14em; font-weight: 400; }
+.dialog canvas { width: 100%; background: #000; border-radius: 4px; display: block; }
+.bar { height: 6px; background: var(--rail); border-radius: 3px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--rec); }
+.status { font-size: 12px; color: var(--ink-dim); min-height: 1.4em; }
+.status.err { color: var(--rec); }
+.dialog .group { justify-content: flex-end; }
+
+@media (max-width: 1100px) {
+  .rack { grid-template-columns: 1fr 1fr; grid-template-areas: "center center" "left right"; }
+}
+@media (max-width: 620px) {
+  .rack { grid-template-columns: minmax(0, 1fr); grid-template-areas: "center" "left" "right"; }
+  .track { max-width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .cell span { transition: none; } }
+</style>
+
+<header class="top">
+  <div class="brand">Slow Signal<small>LFO video synthesizer</small></div>
+  <div class="group">
+    <label class="btn file-btn" for="file">Load audio<input id="file" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg"></label>
+    <span class="track" id="track">No track loaded. The synth is free-running.</span>
+  </div>
+  <div class="grow"></div>
+  <div class="group">
+    <label class="speed" for="speed" title="Slows every LFO, the pattern flow and the feedback motion. Double-click for 1×.">
+      <span class="lbl">Speed</span>
+      <input type="range" id="speed" min="0" max="1000" step="1" value="1000" aria-label="Master speed">
+      <span class="mono speed-val" id="speedVal">1.00×</span>
+    </label>
+    <label class="speed" for="slew" title="Global slew: every visual control eases toward its new value over this time. Double-click for 0.">
+      <span class="lbl">Slew</span>
+      <input type="range" id="slew" min="0" max="1000" step="1" value="0" aria-label="Global slew time">
+      <span class="mono speed-val" id="slewVal">0.00 s</span>
+    </label>
+  </div>
+  <div class="group">
+    <select class="sel" id="res" aria-label="Output size">
+      <option value="1280x720">720p 16:9</option>
+      <option value="1920x1080" selected>1080p 16:9</option>
+      <option value="1080x1080">1080 square</option>
+      <option value="1080x1920">1080 vertical</option>
+      <option value="3840x2160">4K 16:9</option>
+    </select>
+    <select class="sel" id="fps" aria-label="Frame rate">
+      <option value="25">25 fps</option>
+      <option value="30" selected>30 fps</option>
+      <option value="60">60 fps</option>
+    </select>
+    <select class="sel" id="quality" aria-label="Quality">
+      <option value="0.6">Standard</option>
+      <option value="1" selected>High</option>
+      <option value="1.8">Very high</option>
+    </select>
+    <button class="btn rec" id="render" type="button" disabled>Render MP4</button>
+  </div>
+</header>
+
+<section class="presets" aria-label="Presets">
+  <span class="lbl">Preset</span>
+  <button class="btn icon" id="presetPrev" type="button" title="Previous preset" aria-label="Previous preset">◀</button>
+  <select class="sel" id="presetSel" aria-label="Saved presets"></select>
+  <button class="btn icon" id="presetNext" type="button" title="Next preset" aria-label="Next preset">▶</button>
+  <label class="glide" for="morphTime" title="How long the patch takes to move to the next preset"><span class="lbl">Glide</span>
+    <select class="sel" id="morphTime">
+      <option value="0">Instant</option><option value="2">2 s</option><option value="5" selected>5 s</option>
+      <option value="10">10 s</option><option value="30">30 s</option><option value="60">1 min</option>
+      <option value="120">2 min</option><option value="300">5 min</option><option value="600">10 min</option>
+    </select></label>
+  <span class="sep" aria-hidden="true"></span>
+  <input type="text" id="presetName" placeholder="Name this patch" aria-label="Preset name" maxlength="80" spellcheck="false">
+  <button class="btn icon" id="presetDice" type="button" title="Roll a new name" aria-label="Roll a new name">⚄</button>
+  <button class="btn" id="presetSave" type="button">Save</button>
+  <button class="btn" id="presetDelete" type="button" disabled>Delete</button>
+  <span class="sep" aria-hidden="true"></span>
+  <button class="btn" id="randomise" type="button" title="Random patch">Randomise</button>
+  <button class="btn" id="reset" type="button" title="Back to the starting patch">Init patch</button>
+  <span class="sep" aria-hidden="true"></span>
+  <label class="btn file-btn" for="presetImport">Import<input id="presetImport" type="file" accept=".json,application/json" multiple></label>
+  <button class="btn" id="presetExport" type="button" title="Export the current patch as a .json file">Export</button>
+  <button class="btn" id="presetExportAll" type="button" title="Export every saved preset in one .json file">Export all</button>
+  <span class="pmsg" id="presetMsg" role="status"></span>
+  <span class="where" id="presetWhere">Saved in this browser</span>
+  <div class="morphbar" id="morphBar" hidden><i></i></div>
+</section>
+
+<main class="rack">
+  <div class="col left" id="colLeft"></div>
+  <div class="center">
+    <div class="screen">
+      <div class="screen-frame" id="frame">
+        <canvas id="view"></canvas>
+        <div class="drop-hint">Drop the audio file to load it</div>
+      </div>
+      <div class="transport">
+        <button class="btn icon" id="play" type="button" aria-label="Play or pause">❚❚</button>
+        <button class="btn icon" id="restart" type="button" aria-label="Back to start">⏮</button>
+        <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Position">
+        <span class="time mono" id="time">0:00.0 / 6:00</span>
+      </div>
+    </div>
+    <section class="matrix-wrap">
+      <div class="matrix-head">
+        <h2>PATCH MATRIX</h2>
+        <p>Drag a pin up or down to set how much a source moves a control. Hollow pins are inverted. Double-click clears.</p>
+      </div>
+      <div class="matrix-scroll"><table class="matrix" id="matrix"></table></div>
+    </section>
+  </div>
+  <div class="col right" id="colRight"></div>
+</main>
+
+<div class="foot">
+  <span>Rates run from 10:00 per cycle down to 0.05 s. Type a period like <span class="mono">4m30</span>, <span class="mono">12s</span> or <span class="mono">3hz</span>.</span>
+  <span>FM is exponential: depth 1.00 swings the rate four octaves either way.</span>
+  <span>The render follows the same clock as the preview, so what you hear is what you get.</span>
+</div>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="rtitle">
+    <h3 id="rtitle">RENDERING</h3>
+    <canvas id="thumb" width="480" height="270"></canvas>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="status mono" id="rstatus">Preparing encoders…</div>
+    <div class="group">
+      <button class="btn" id="rcancel" type="button">Cancel</button>
+      <button class="btn rec" id="rsave" type="button" hidden>Save MP4</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+const SIM_HZ = 240;
+const MIN_P = 0.05, MAX_P = 600;
+const N_LFO = 8;
+const SHAPES = ["Sine", "Triangle", "Ramp up", "Ramp down", "Square", "Stepped random", "Smooth random"];
+const SRC = ["L1","L2","L3","L4","L5","L6","L7","L8","LVL","LOW","HI"];
+const SRC_LONG = ["LFO 1","LFO 2","LFO 3","LFO 4","LFO 5","LFO 6","LFO 7","LFO 8","Audio level","Audio lows","Audio highs"];
+const N_SRC = SRC.length;
+const COLORS = ["#ff5a4e","#ff9f1c","#f5d547","#5fd068","#3cc9d6","#5b8cff","#b07cff","#ff6fb5","#ece6d6","#d39b66","#9fe0ff"];
+
+// Visual destinations. fmt gives the readout.
+const PARAMS = [
+  { g: "Colour" },
+  { k: "hue", n: "Hue", min: 0, max: 1, d: 0.58, wrap: true },
+  { k: "spread", n: "Colour spread", min: 0, max: 1, d: 0.35 },
+  { k: "sat", n: "Saturation", min: 0, max: 1, d: 0.8 },
+  { k: "bright", n: "Brightness", min: 0, max: 2, d: 1 },
+  { g: "Geometry" },
+  { k: "zoom", n: "Zoom", min: 0.3, max: 4, d: 1 },
+  { k: "rot", n: "Rotate", min: -3.1416, max: 3.1416, d: 0 },
+  { k: "seg", n: "Mirror segments", min: 1, max: 12, d: 1 },
+  { g: "Pattern" },
+  { k: "shape", n: "Plasma › rings › grid", min: 0, max: 2, d: 0.3 },
+  { k: "scale", n: "Pattern scale", min: 0.5, max: 6, d: 2 },
+  { k: "warp", n: "Warp", min: 0, max: 2, d: 0.6 },
+  { k: "contour", n: "Contour bands", min: 0, max: 1, d: 0.4 },
+  { k: "flow", n: "Flow speed", min: -2, max: 2, d: 0.4 },
+  { g: "Feedback" },
+  { k: "fb", n: "Feedback", min: 0, max: 0.97, d: 0.6 },
+  { k: "fbZoom", n: "Feedback zoom", min: 0.94, max: 1.06, d: 1.01 },
+  { k: "fbRot", n: "Feedback twist", min: -0.08, max: 0.08, d: 0.006 },
+  { k: "fbHue", n: "Feedback hue drift", min: -0.15, max: 0.15, d: 0.02 },
+  { g: "Signal" },
+  { k: "chroma", n: "Chroma split", min: 0, max: 0.03, d: 0.004 },
+  { k: "scan", n: "Scanlines", min: 0, max: 1, d: 0.15 },
+];
+const PK = PARAMS.filter(p => p.k);
+const PIDX = Object.fromEntries(PK.map((p, i) => [p.k, i]));
+
+// ---------- patch state ----------
+function defaultPatch() {
+  const lfos = [
+    { period: 600, shape: 0, fmSrc: -1, fmAmt: 0 },
+    { period: 37, shape: 1, fmSrc: -1, fmAmt: 0 },
+    { period: 8, shape: 0, fmSrc: 0, fmAmt: 0.5 },
+    { period: 2.5, shape: 0, fmSrc: 1, fmAmt: 0.35 },
+    { period: 0.25, shape: 4, fmSrc: 7, fmAmt: 0.3 },
+    { period: 90, shape: 5, fmSrc: -1, fmAmt: 0 },
+    { period: 13, shape: 6, fmSrc: 8, fmAmt: 0.6 },
+    { period: 21, shape: 2, fmSrc: -1, fmAmt: 0 },
+  ];
+  const base = PK.map(p => p.d);
+  const mod = PK.map(() => new Array(N_SRC).fill(0));
+  const set = (k, s, a) => { mod[PIDX[k]][s] = a; };
+  set("hue", 0, 0.5); set("zoom", 1, 0.25); set("rot", 2, 0.3); set("warp", 3, 0.3);
+  set("chroma", 4, 0.15); set("seg", 5, 0.45); set("fbRot", 6, 0.4); set("shape", 7, 0.5);
+  set("bright", 8, 0.25); set("fbZoom", 9, 0.35); set("scan", 10, 0.3); set("spread", 1, -0.3); set("contour", 3, 0.25);
+  return { lfos, base, mod, speed: 1, slew: 0 };
+}
+let patch = loadPatch() || defaultPatch();
+function loadPatch() {
+  try {
+    const p = JSON.parse(localStorage.getItem("slowsignal.patch.v1"));
+    if (p && p.lfos && p.lfos.length === N_LFO && p.base.length === PK.length && p.mod.length === PK.length) return p;
+  } catch (e) {}
+  return null;
+}
+let saveTimer = 0;
+function savePatch() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { try { localStorage.setItem("slowsignal.patch.v1", JSON.stringify(patch)); } catch (e) {} refreshNameHint(); }, 300);
+}
+
+// ---------- modulation engine: a pure function of time, stepped at SIM_HZ ----------
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+class Engine {
+  constructor() { this.features = null; this.reset(); }
+  reset() {
+    this.n = 0;
+    this.phase = new Float64Array(N_LFO);
+    this.val = new Float32Array(N_LFO);
+    this.raw = new Float32Array(N_LFO);
+    this.freq = new Float32Array(N_LFO);
+    this.s1 = new Float32Array(N_LFO);
+    this.rng = Array.from({ length: N_LFO }, (_, i) => mulberry(1013 + i * 7919));
+    this.held = Array.from({ length: N_LFO }, (_, i) => [this.rng[i]() * 2 - 1, this.rng[i]() * 2 - 1]);
+    this.flow = 0;
+    this.computeVals();
+    this.s1.set(this.raw); this.val.set(this.raw);
+    this.sm = Float64Array.from(PK, (_, i) => this.param(i));
+  }
+  src(s) {
+    if (s < 0) return 0;
+    if (s < N_LFO) return this.val[s];
+    const f = this.features;
+    if (!f) return 0;
+    return f[s - N_LFO][Math.min(this.n, f.len - 1)];
+  }
+  computeVals() {
+    for (let i = 0; i < N_LFO; i++) {
+      const p = this.phase[i], h = this.held[i];
+      let v;
+      switch (patch.lfos[i].shape) {
+        case 0: v = Math.sin(p * 2 * Math.PI); break;
+        case 1: v = 1 - 4 * Math.abs(p - 0.5); break;
+        case 2: v = 2 * p - 1; break;
+        case 3: v = 1 - 2 * p; break;
+        case 4: v = p < 0.5 ? 1 : -1; break;
+        case 5: v = h[0]; break;
+        default: { const s = p * p * (3 - 2 * p); v = h[0] + (h[1] - h[0]) * s; }
+      }
+      this.raw[i] = v;
+    }
+  }
+  step() {
+    const dt = 1 / SIM_HZ;
+    for (let i = 0; i < N_LFO; i++) {
+      const L = patch.lfos[i];
+      const m = this.src(L.fmSrc);
+      const f = Math.min(80, (patch.speed ?? 1) / L.period * Math.pow(2, L.fmAmt * 4 * m));
+      let p = this.phase[i] + f * dt;
+      if (p >= 1) {
+        p -= Math.floor(p);
+        const h = this.held[i];
+        if (L.shape === 5) h[0] = this.rng[i]() * 2 - 1;
+        else { h[0] = h[1]; h[1] = this.rng[i]() * 2 - 1; }
+      }
+      this.phase[i] = p;
+      this.freq[i] = f;
+    }
+    this.n++;
+    this.computeVals();
+    // Hard-edged shapes (ramps, square, stepped) go through a two-pole smoother whose time constant
+    // is 7% of the LFO's current cycle, so edges round off at any rate. Sine, triangle and smooth
+    // random pass straight through, but the smoother keeps tracking so a shape change never snaps.
+    for (let i = 0; i < N_LFO; i++) {
+      const raw = this.raw[i];
+      const a = 1 - Math.exp(-dt * this.freq[i] / 0.07);
+      this.s1[i] += a * (raw - this.s1[i]);
+      const sh = patch.lfos[i].shape;
+      this.val[i] = sh >= 2 && sh <= 5 ? this.val[i] + a * (this.s1[i] - this.val[i]) : raw;
+      if (sh < 2 || sh > 5) this.s1[i] = raw;
+    }
+    this.slewTo(dt);
+    this.flow += this.sm[PIDX.flow] * dt * (patch.speed ?? 1);
+  }
+  // global slew: every control's final value eases toward its target with this time constant
+  slewTo(dt) {
+    const slew = patch.slew || 0;
+    const a = slew > 0 ? 1 - Math.exp(-dt / slew) : 1;
+    for (let i = 0; i < PK.length; i++) {
+      let d = this.param(i) - this.sm[i];
+      if (PK[i].wrap) d -= Math.round(d);   // hue takes the short way round
+      this.sm[i] += a * d;
+    }
+  }
+  advanceTo(t) {
+    const target = Math.max(0, Math.floor(t * SIM_HZ + 1e-6));
+    if (target < this.n) this.reset();
+    while (this.n < target) this.step();
+  }
+  param(i) {
+    const P = PK[i], row = patch.mod[i];
+    let v = patch.base[i];
+    const span = P.max - P.min;
+    for (let s = 0; s < N_SRC; s++) {
+      const a = row[s];
+      if (a) v += a * this.src(s) * (s < N_LFO ? span * 0.5 : span);
+    }
+    if (P.wrap) return v;
+    return v < P.min ? P.min : v > P.max ? P.max : v;
+  }
+  uniforms() {
+    const u = {};
+    for (let i = 0; i < PK.length; i++) u[PK[i].k] = this.sm[i];
+    u.flowT = this.flow;
+    u.speed = patch.speed ?? 1;
+    return u;
+  }
+}
+
+// ---------- audio analysis (level / lows / highs envelopes at SIM_HZ) ----------
+function analyse(buf) {
+  const sr = buf.sampleRate, len = buf.length, ch = buf.numberOfChannels;
+  const hop = sr / SIM_HZ;
+  const steps = Math.ceil(len / hop) + 1;
+  const lvl = new Float32Array(steps), low = new Float32Array(steps), hi = new Float32Array(steps);
+  const data = []; for (let c = 0; c < ch; c++) data.push(buf.getChannelData(c));
+  const aL = 1 - Math.exp(-2 * Math.PI * 180 / sr);
+  const aH = 1 - Math.exp(-2 * Math.PI * 2500 / sr);
+  let lp = 0, lp2 = 0, sA = 0, sL = 0, sH = 0, cnt = 0, k = 0, next = hop;
+  for (let i = 0; i < len; i++) {
+    let x = 0; for (let c = 0; c < ch; c++) x += data[c][i]; x /= ch;
+    lp += aL * (x - lp); lp2 += aH * (x - lp2);
+    const h = x - lp2;
+    sA += x * x; sL += lp * lp; sH += h * h; cnt++;
+    if (i + 1 >= next || i === len - 1) {
+      lvl[k] = Math.sqrt(sA / cnt); low[k] = Math.sqrt(sL / cnt); hi[k] = Math.sqrt(sH / cnt);
+      sA = sL = sH = 0; cnt = 0; k++; next += hop;
+    }
+  }
+  const out = [lvl, low, hi].map(a => {
+    // normalise to the 97th percentile, then envelope-follow (fast attack, slower release)
+    const sorted = Array.from(a.subarray(0, k)).sort((x, y) => x - y);
+    const ref = sorted[Math.floor(sorted.length * 0.97)] || 1e-6;
+    const att = 1 - Math.exp(-1 / (SIM_HZ * 0.012)), rel = 1 - Math.exp(-1 / (SIM_HZ * 0.18));
+    let e = 0;
+    for (let i = 0; i < steps; i++) {
+      const v = Math.min(1, (i < k ? a[i] : 0) / ref);
+      e += (v > e ? att : rel) * (v - e);
+      a[i] = e;
+    }
+    return a;
+  });
+  out.len = steps;
+  return out;
+}
+
+// ---------- WebGL renderer: scene pass with feedback into ping-pong buffers, then a signal pass ----------
+const VS = `#version 300 es
+in vec2 a; out vec2 vUv; void main(){ vUv = a*.5+.5; gl_Position = vec4(a,0.,1.); }`;
+const FS_SCENE = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uPrev; uniform vec2 uRes; uniform float uDt;
+uniform float hue, spread, sat, bright, zoom, rot, seg, shape, scale, warp, contour, flowT, fb, fbZoom, fbRot, fbHue, speed;
+mat2 R(float a){ float c=cos(a), s=sin(a); return mat2(c,-s,s,c); }
+float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453); }
+float noise(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
+  return mix(mix(hash(i),hash(i+vec2(1,0)),f.x), mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x), f.y)*2.-1.; }
+float fbm(vec2 p){ float v=0., a=.5; for(int i=0;i<4;i++){ v+=a*noise(p); p=p*2.03+17.1; a*=.5; } return v; }
+vec3 hsv(vec3 c){ vec3 p=abs(fract(c.xxx+vec3(1.,2./3.,1./3.))*6.-3.); return c.z*mix(vec3(1.), clamp(p-1.,0.,1.), c.y); }
+vec3 hueShift(vec3 c, float a){
+  const mat3 toY = mat3(.299,.596,.211, .587,-.274,-.523, .114,-.322,.312);
+  const mat3 toR = mat3(1.,1.,1., .956,-.272,-1.106, .621,-.647,1.703);
+  vec3 y = toY*c; float h = a*6.2832; float cs=cos(h), sn=sin(h);
+  y.yz = vec2(y.y*cs - y.z*sn, y.y*sn + y.z*cs); return toR*y; }
+vec3 field(vec2 p, float n){
+  if(n>1.5){ float a=atan(p.y,p.x), r=length(p), s=6.28318/n; a=mod(a,s); a=abs(a-s*.5); p=vec2(cos(a),sin(a))*r; }
+  vec2 q = p*scale;
+  q += warp*vec2(fbm(q*.8+flowT*.31), fbm(q*.8+vec2(5.2,1.3)-flowT*.27));
+  float pl = (sin(q.x*3.+flowT)+sin(q.y*2.7-flowT*1.3)+sin((q.x+q.y)*2.1+flowT*.7)+sin(length(q)*4.-flowT*2.))*.25;
+  float rg = sin(length(q)*7.-flowT*3.);
+  float gd = sin(q.x*5.+flowT)*sin(q.y*5.-flowT*.8);
+  float v = shape<1. ? mix(pl, rg, shape) : mix(rg, gd, shape-1.);
+  v = mix(v, sin(v*(2.+contour*22.)), smoothstep(0.,.6,contour));
+  return hsv(vec3(fract(hue + v*spread), sat, (.5+.5*v)*(.35+.65*smoothstep(-.9,.9,v)))) * bright;
+}
+void main(){
+  float asp = uRes.x/uRes.y;
+  vec2 p = (vUv-.5)*vec2(asp,1.);
+  p = R(rot)*p/zoom;
+  // mirror count is continuous: between whole counts the two neighbouring kaleidoscopes dissolve into each other
+  float n0 = floor(max(seg, 1.)), x = max(seg, 1.)-n0;   // linear, so the dissolve is spread evenly across the whole step
+  vec3 col = field(p, n0);
+  if(x > .001) col = mix(col, field(p, n0+1.), x);
+  float k = uDt*60.;
+  vec2 fp = (vUv-.5)*vec2(asp,1.);
+  float km = k*speed;   // feedback motion follows master speed; decay stays tied to real time
+  fp = R(fbRot*km)*fp / pow(fbZoom, km);
+  fp = fp/vec2(asp,1.)+.5;
+  float edge = step(0.,fp.x)*step(fp.x,1.)*step(0.,fp.y)*step(fp.y,1.);
+  vec3 prev = hueShift(texture(uPrev, fp).rgb, fbHue*km) * edge;
+  float f = pow(clamp(fb,0.,.97), k);
+  o = vec4(clamp(col*(1.-f*.55) + prev*f, 0., 1.), 1.);
+}`;
+const FS_POST = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uSrc; uniform vec2 uRes; uniform float chroma, scan;
+void main(){
+  vec2 d = (vUv-.5)*chroma*4.;
+  vec3 c = vec3(texture(uSrc, vUv+d).r, texture(uSrc, vUv).g, texture(uSrc, vUv-d).b);
+  float l = .5+.5*sin(vUv.y*3.14159*540.);
+  c *= 1. - scan*.55*l;
+  vec2 w = vUv-.5; c *= 1. - dot(w,w)*.55;
+  o = vec4(c, 1.);
+}`;
+
+class Renderer {
+  constructor(canvas) {
+    this.c = canvas;
+    const gl = this.gl = canvas.getContext("webgl2", { preserveDrawingBuffer: true, antialias: false, alpha: false });
+    if (!gl) throw new Error("WebGL2 is not available in this browser.");
+    this.half = !!gl.getExtension("EXT_color_buffer_float");
+    this.scene = this.prog(FS_SCENE); this.post = this.prog(FS_POST);
+    const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+    this.vao = gl.createVertexArray(); gl.bindVertexArray(this.vao);
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    this.w = this.h = 0; this.cur = 0; this.tex = []; this.fbo = [];
+  }
+  prog(fs) {
+    const gl = this.gl;
+    const sh = (t, s) => { const x = gl.createShader(t); gl.shaderSource(x, s); gl.compileShader(x);
+      if (!gl.getShaderParameter(x, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(x)); return x; };
+    const p = gl.createProgram();
+    gl.attachShader(p, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs));
+    gl.bindAttribLocation(p, 0, "a"); gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS), loc = {};
+    for (let i = 0; i < n; i++) { const u = gl.getActiveUniform(p, i); loc[u.name] = gl.getUniformLocation(p, u.name); }
+    return { p, loc };
+  }
+  resize(w, h) {
+    if (w === this.w && h === this.h) return;
+    const gl = this.gl;
+    this.c.width = w; this.c.height = h; this.w = w; this.h = h;
+    this.tex.forEach(t => gl.deleteTexture(t)); this.fbo.forEach(f => gl.deleteFramebuffer(f));
+    this.tex = []; this.fbo = [];
+    for (let i = 0; i < 2; i++) {
+      const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+      if (this.half) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, w, h, 0, gl.RGBA, gl.HALF_FLOAT, null);
+      else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      const f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+      gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT);
+      this.tex.push(t); this.fbo.push(f);
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+  draw(u, dt) {
+    const gl = this.gl, nx = 1 - this.cur;
+    gl.bindVertexArray(this.vao);
+    gl.viewport(0, 0, this.w, this.h);
+    let P = this.scene;
+    gl.useProgram(P.p);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo[nx]);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.tex[this.cur]);
+    gl.uniform1i(P.loc.uPrev, 0); gl.uniform2f(P.loc.uRes, this.w, this.h); gl.uniform1f(P.loc.uDt, Math.min(dt, 0.1));
+    for (const k in P.loc) if (k in u) gl.uniform1f(P.loc[k], u[k]);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    P = this.post;
+    gl.useProgram(P.p);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindTexture(gl.TEXTURE_2D, this.tex[nx]);
+    gl.uniform1i(P.loc.uSrc, 0); gl.uniform2f(P.loc.uRes, this.w, this.h);
+    gl.uniform1f(P.loc.chroma, u.chroma); gl.uniform1f(P.loc.scan, u.scan);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    this.cur = nx;
+  }
+}
+
+// ---------- helpers ----------
+const $ = id => document.getElementById(id);
+const el = (tag, attrs = {}, ...kids) => {
+  const e = document.createElement(tag);
+  for (const k in attrs) { if (k === "class") e.className = attrs[k]; else if (k === "style") e.style.cssText = attrs[k]; else e.setAttribute(k, attrs[k]); }
+  kids.forEach(k => e.append(k)); return e;
+};
+const periodToPos = p => Math.log(MAX_P / p) / Math.log(MAX_P / MIN_P) * 1000;
+const posToPeriod = x => MAX_P * Math.pow(MIN_P / MAX_P, x / 1000);
+function fmtPeriod(p) {
+  if (p >= 60) { const m = Math.floor(p / 60), s = Math.round(p - m * 60); return s === 60 ? `${m + 1}:00` : `${m}:${String(s).padStart(2, "0")}`; }
+  if (p >= 10) return p.toFixed(1) + " s";
+  if (p >= 1) return p.toFixed(2) + " s";
+  return p.toFixed(3) + " s";
+}
+function fmtHz(p) { const f = 1 / p; return f >= 1 ? f.toFixed(2) + " Hz" : f >= 0.01 ? (f * 1000).toFixed(1) + " mHz" : (f * 1000).toFixed(2) + " mHz"; }
+function parsePeriod(str) {
+  const s = str.trim().toLowerCase().replace(/\s+/g, "");
+  let m;
+  if ((m = s.match(/^([\d.]+)hz$/))) return 1 / parseFloat(m[1]);
+  if ((m = s.match(/^([\d.]+)mhz$/))) return 1000 / parseFloat(m[1]);
+  if ((m = s.match(/^(\d+):(\d{1,2}(?:\.\d+)?)$/))) return +m[1] * 60 + parseFloat(m[2]);
+  if ((m = s.match(/^([\d.]+)m(?:in)?([\d.]+)?s?$/))) return parseFloat(m[1]) * 60 + (m[2] ? parseFloat(m[2]) : 0);
+  if ((m = s.match(/^([\d.]+)ms$/))) return parseFloat(m[1]) / 1000;
+  if ((m = s.match(/^([\d.]+)s?$/))) return parseFloat(m[1]);
+  return NaN;
+}
+const clampP = p => Math.min(MAX_P, Math.max(MIN_P, p));
+function fmtTime(t) { const m = Math.floor(t / 60), s = t - m * 60; return `${m}:${s.toFixed(1).padStart(4, "0")}`; }
+function fmtVal(P, v) {
+  if (P.int) return String(Math.floor(v + 0.5));
+  if (P.wrap) v = ((v % 1) + 1) % 1;
+  const span = P.max - P.min;
+  return span < 0.5 ? v.toFixed(3) : v.toFixed(2);
+}
+
+// ---------- build LFO modules ----------
+const lfoUI = [];
+function srcOptions(sel) {
+  sel.append(el("option", { value: "-1" }, "No FM"));
+  SRC_LONG.forEach((n, i) => sel.append(el("option", { value: String(i) }, n)));
+}
+for (let i = 0; i < N_LFO; i++) {
+  const shape = el("select", { class: "sel", "aria-label": `LFO ${i + 1} shape`, id: `shape${i}` });
+  SHAPES.forEach((s, j) => shape.append(el("option", { value: String(j) }, s)));
+  const scope = el("canvas", { class: "scope", width: "500", height: "88" });
+  const rate = el("input", { type: "range", min: "0", max: "1000", step: "1", "aria-label": `LFO ${i + 1} rate`, id: `rate${i}` });
+  const per = el("input", { class: "period mono", type: "text", "aria-label": `LFO ${i + 1} period`, id: `per${i}`, spellcheck: "false" });
+  const hz = el("span", { class: "hz mono" });
+  const fmSrc = el("select", { class: "sel", "aria-label": `LFO ${i + 1} FM source`, id: `fms${i}` }); srcOptions(fmSrc);
+  const fmAmt = el("input", { type: "range", min: "-100", max: "100", step: "1", "aria-label": `LFO ${i + 1} FM depth`, id: `fma${i}` });
+  const fmVal = el("span", { class: "fm-val mono" });
+  const mod = el("section", { class: "lfo", style: `--c:${COLORS[i]}` },
+    el("div", { class: "lfo-head" }, el("span", { class: "lfo-name" }, `LFO ${i + 1}`), shape),
+    scope,
+    el("div", { class: "row" }, el("span", { class: "lbl" }, "Rate"), rate, per),
+    el("div", { class: "row fm-row" }, el("span", { class: "lbl" }, "FM"), fmSrc, fmAmt, fmVal),
+    el("div", { class: "row" }, el("span", { class: "lbl" }, ""), hz, el("span", { class: "lbl", style: "width:auto;margin-left:auto" }, ""))
+  );
+  // the third row's right label shows the live rate under FM
+  const live = mod.lastChild.lastChild; live.classList.add("mono"); live.style.letterSpacing = "0"; live.style.textTransform = "none";
+  (i < 4 ? $("colLeft") : $("colRight")).append(mod);
+  const ui = { shape, scope, ctx: scope.getContext("2d"), rate, per, hz, fmSrc, fmAmt, fmVal, live, hist: new Float32Array(240), hp: 0 };
+  lfoUI.push(ui);
+  shape.addEventListener("change", () => { patch.lfos[i].shape = +shape.value; savePatch(); });
+  rate.addEventListener("input", () => { patch.lfos[i].period = posToPeriod(+rate.value); syncLfo(i, true); savePatch(); });
+  per.addEventListener("change", () => {
+    const p = parsePeriod(per.value);
+    if (isFinite(p) && p > 0) patch.lfos[i].period = clampP(p);
+    syncLfo(i); savePatch();
+  });
+  per.addEventListener("keydown", e => { if (e.key === "Enter") per.blur(); });
+  fmSrc.addEventListener("change", () => { patch.lfos[i].fmSrc = +fmSrc.value; savePatch(); });
+  fmAmt.addEventListener("input", () => { patch.lfos[i].fmAmt = +fmAmt.value / 100; syncLfo(i); savePatch(); });
+  fmAmt.addEventListener("dblclick", () => { patch.lfos[i].fmAmt = 0; syncLfo(i); savePatch(); });
+}
+function syncLfo(i, fromSlider) {
+  const L = patch.lfos[i], u = lfoUI[i];
+  u.shape.value = String(L.shape);
+  if (!fromSlider) u.rate.value = String(Math.round(periodToPos(L.period)));
+  if (document.activeElement !== u.per) u.per.value = fmtPeriod(L.period);
+  u.hz.textContent = fmtHz(L.period);
+  u.fmSrc.value = String(L.fmSrc);
+  u.fmAmt.value = String(Math.round(L.fmAmt * 100));
+  u.fmVal.textContent = (L.fmAmt >= 0 ? "+" : "") + L.fmAmt.toFixed(2);
+}
+
+// ---------- build patch matrix ----------
+const rowUI = [];
+(function buildMatrix() {
+  const t = $("matrix");
+  const head = el("tr", {}, el("th", { class: "dest", colspan: "3" }, ""));
+  SRC.forEach((s, i) => head.append(el("th", { style: `color:${COLORS[i]}`, title: SRC_LONG[i] }, s)));
+  t.append(el("thead", {}, head));
+  const body = el("tbody");
+  let pi = 0;
+  for (const P of PARAMS) {
+    if (P.g) { body.append(el("tr", { class: "grp" }, el("td", { colspan: String(3 + N_SRC) }, P.g))); continue; }
+    const idx = pi++;
+    const base = el("input", { type: "range", min: "0", max: "1000", step: "1", id: `base_${P.k}`, "aria-label": `${P.n} base value` });
+    const meterDot = el("i");
+    const val = el("td", { class: "pval mono" });
+    const tr = el("tr", {},
+      el("td", { class: "pname" }, P.n),
+      el("td", { class: "pbase" }, el("div", { class: "pbase-inner" }, base, el("div", { class: "meter" }, meterDot))),
+      val);
+    const cells = [];
+    for (let s = 0; s < N_SRC; s++) {
+      const b = el("button", { class: "cell", type: "button", style: `--cc:${COLORS[s]}`, id: `cell_${P.k}_${s}` }, el("span"));
+      bindCell(b, idx, s);
+      cells.push(b);
+      tr.append(el("td", {}, b));
+    }
+    base.addEventListener("input", () => { patch.base[idx] = P.min + (P.max - P.min) * (+base.value / 1000); savePatch(); });
+    base.addEventListener("dblclick", () => { patch.base[idx] = P.d; syncRow(idx); savePatch(); });
+    rowUI.push({ base, meterDot, val, cells });
+    body.append(tr);
+  }
+  t.append(body);
+})();
+function syncCell(idx, s) {
+  const a = patch.mod[idx][s], b = rowUI[idx].cells[s];
+  b.classList.toggle("on", a > 0); b.classList.toggle("neg", a < 0);
+  const sc = a === 0 ? 1 : 0.9 + Math.abs(a) * 1.3;
+  b.firstChild.style.transform = `scale(${sc})`;
+  b.title = `${SRC_LONG[s]} → ${PK[idx].n}: ${a === 0 ? "off" : (a > 0 ? "+" : "") + a.toFixed(2)}`;
+  b.setAttribute("aria-label", b.title);
+}
+function syncRow(idx) {
+  const P = PK[idx];
+  rowUI[idx].base.value = String(Math.round((patch.base[idx] - P.min) / (P.max - P.min) * 1000));
+  for (let s = 0; s < N_SRC; s++) syncCell(idx, s);
+}
+function bindCell(b, idx, s) {
+  let y0 = 0, a0 = 0, moved = false, id = null;
+  const setA = a => { a = Math.round(Math.max(-1, Math.min(1, a)) * 100) / 100; patch.mod[idx][s] = a; syncCell(idx, s); savePatch(); };
+  b.addEventListener("pointerdown", e => { id = e.pointerId; b.setPointerCapture(id); y0 = e.clientY; a0 = patch.mod[idx][s]; moved = false; e.preventDefault(); b.focus(); });
+  b.addEventListener("pointermove", e => {
+    if (id !== e.pointerId) return;
+    const dy = y0 - e.clientY;
+    if (Math.abs(dy) > 3) moved = true;
+    if (moved) setA(a0 + dy / 90);
+  });
+  const up = e => { if (id !== e.pointerId) return; id = null; if (!moved) setA(a0 === 0 ? 0.5 : 0); };
+  b.addEventListener("pointerup", up); b.addEventListener("pointercancel", () => { id = null; });
+  b.addEventListener("dblclick", () => setA(0));
+  b.addEventListener("wheel", e => { e.preventDefault(); setA(patch.mod[idx][s] - Math.sign(e.deltaY) * 0.05); }, { passive: false });
+  b.addEventListener("keydown", e => {
+    const a = patch.mod[idx][s];
+    if (e.key === "ArrowUp" || e.key === "ArrowRight") { setA(a + 0.05); e.preventDefault(); }
+    else if (e.key === "ArrowDown" || e.key === "ArrowLeft") { setA(a - 0.05); e.preventDefault(); }
+    else if (e.key === "Delete" || e.key === "Backspace" || e.key === "0") { setA(0); e.preventDefault(); }
+    else if (e.key === "Enter" || e.key === " ") { setA(a === 0 ? 0.5 : 0); e.preventDefault(); }
+  });
+}
+const speedFromPos = x => 0.01 * Math.pow(100, x / 1000);
+const posFromSpeed = v => Math.round(Math.log(v / 0.01) / Math.log(100) * 1000);
+function syncSpeed() {
+  const v = patch.speed ?? 1;
+  $("speed").value = String(posFromSpeed(v));
+  $("speedVal").textContent = (v < 0.1 ? v.toFixed(3) : v.toFixed(2)) + "×";
+}
+$("speed").addEventListener("input", e => {
+  let v = speedFromPos(+e.target.value);
+  if (v > 0.985) v = 1;
+  patch.speed = +v.toPrecision(3); syncSpeed(); savePatch();
+});
+$("speed").addEventListener("dblclick", () => { patch.speed = 1; syncSpeed(); savePatch(); });
+function syncSlew() {
+  const v = patch.slew || 0;
+  $("slew").value = String(Math.round(v * 1000));
+  $("slewVal").textContent = v.toFixed(2) + " s";
+}
+$("slew").addEventListener("input", e => { patch.slew = +e.target.value / 1000; syncSlew(); savePatch(); });
+$("slew").addEventListener("dblclick", () => { patch.slew = 0; syncSlew(); savePatch(); });
+function syncAll() { syncSpeed(); syncSlew(); for (let i = 0; i < N_LFO; i++) syncLfo(i); for (let i = 0; i < PK.length; i++) syncRow(i); }
+syncAll();
+
+// ---------- randomise / init ----------
+$("randomise").addEventListener("click", () => {
+  const r = Math.random;
+  const p = defaultPatch();
+  p.lfos = p.lfos.map((_, i) => ({
+    period: clampP(posToPeriod(i < 3 ? r() * 450 : 200 + r() * 800)),
+    shape: Math.floor(r() * SHAPES.length),
+    fmSrc: r() < 0.55 ? Math.floor(r() * N_SRC) : -1,
+    fmAmt: Math.round((r() * 1.2 - 0.6) * 100) / 100,
+  }));
+  p.lfos.forEach(L => { if (L.fmSrc < 0) L.fmAmt = 0; });
+  p.base = PK.map(P => {
+    const span = P.max - P.min;
+    if (P.k === "fb") return 0.3 + r() * 0.55;
+    if (P.k === "bright") return 0.8 + r() * 0.5;
+    if (P.k === "chroma") return r() * 0.008;
+    return P.d + (r() - 0.5) * span * 0.5;
+  }).map((v, i) => Math.max(PK[i].min, Math.min(PK[i].max, v)));
+  p.mod = PK.map(() => new Array(N_SRC).fill(0));
+  const pins = 9 + Math.floor(r() * 8);
+  for (let n = 0; n < pins; n++) {
+    const d = Math.floor(r() * PK.length), s = Math.floor(r() * N_SRC);
+    p.mod[d][s] = Math.round((r() < 0.75 ? 1 : -1) * (0.15 + r() * 0.5) * 100) / 100;
+  }
+  p.speed = patch.speed ?? 1;
+  p.slew = patch.slew || 0;
+  patch = p; syncAll(); savePatch();
+});
+$("reset").addEventListener("click", () => { patch = defaultPatch(); syncAll(); savePatch(); });
+
+// ---------- audio loading & transport ----------
+let audioEl = null, audioBuf = null, features = null, trackName = "";
+let freeT = 0, playing = true, lastNow = performance.now();
+const engine = new Engine();
+const DEFAULT_DUR = 360;
+const duration = () => audioEl && isFinite(audioEl.duration) ? audioEl.duration : (audioBuf ? audioBuf.duration : DEFAULT_DUR);
+
+async function loadFile(file) {
+  if (!file) return;
+  $("track").textContent = `Reading ${file.name}…`;
+  try {
+    const bytes = await file.arrayBuffer();
+    const ctx = new OfflineAudioContext(2, 1, 48000);
+    const buf = await ctx.decodeAudioData(bytes);
+    audioBuf = buf; features = analyse(buf); engine.features = features;
+    if (audioEl) { audioEl.pause(); URL.revokeObjectURL(audioEl.src); }
+    audioEl = new Audio(URL.createObjectURL(file));
+    audioEl.preload = "auto";
+    audioEl.addEventListener("ended", () => setPlaying(false));
+    trackName = file.name.replace(/\.[^.]+$/, "");
+    const tr = $("track"); tr.textContent = "";
+    tr.append(el("b", {}, file.name), ` · ${fmtTime(buf.duration).replace(/\.\d$/, "")} · ${buf.numberOfChannels === 1 ? "mono" : "stereo"}`);
+    tr.title = file.name;
+    $("render").disabled = false;
+    setPlaying(false);
+    audioEl.currentTime = 0;
+  } catch (err) {
+    $("track").textContent = `Couldn't read that file as audio. Try an MP3, WAV, M4A or FLAC.`;
+  }
+}
+$("file").addEventListener("change", e => loadFile(e.target.files[0]));
+const frameEl = $("frame");
+["dragenter", "dragover"].forEach(ev => document.addEventListener(ev, e => { e.preventDefault(); frameEl.classList.add("dragging"); }));
+["dragleave", "drop"].forEach(ev => document.addEventListener(ev, e => { e.preventDefault(); if (ev === "drop" || !e.relatedTarget) frameEl.classList.remove("dragging"); }));
+document.addEventListener("drop", e => { const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) loadFile(f); });
+
+function setPlaying(on) {
+  playing = on;
+  $("play").textContent = on ? "❚❚" : "▶";
+  if (audioEl) { if (on) audioEl.play().catch(() => { playing = false; $("play").textContent = "▶"; }); else audioEl.pause(); }
+}
+$("play").addEventListener("click", () => setPlaying(!playing));
+$("restart").addEventListener("click", () => { if (audioEl) audioEl.currentTime = 0; freeT = 0; engine.reset(); });
+$("scrub").addEventListener("input", e => {
+  const t = (+e.target.value / 1000) * duration();
+  if (audioEl) audioEl.currentTime = t; else freeT = t;
+});
+document.addEventListener("keydown", e => {
+  if (e.code === "Space" && !/INPUT|SELECT|BUTTON|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); setPlaying(!playing); }
+});
+
+// ---------- preview loop ----------
+const view = $("view");
+let renderer;
+try { renderer = new Renderer(view); } catch (err) {
+  $("track").textContent = err.message;
+}
+function aspect() { const [w, h] = $("res").value.split("x").map(Number); return w / h; }
+function layoutView() {
+  const box = frameEl.parentElement.clientWidth - 20;
+  const a = aspect();
+  const maxH = Math.max(220, Math.min(window.innerHeight * 0.58, 720));
+  let w = box, h = w / a;
+  if (h > maxH) { h = maxH; w = h * a; }
+  frameEl.style.width = w + "px"; frameEl.style.height = h + "px";
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const px = Math.min(1600, Math.round(w * dpr));
+  if (renderer) renderer.resize(px & ~1, Math.round(px / a) & ~1);
+}
+window.addEventListener("resize", layoutView);
+$("res").addEventListener("change", layoutView);
+layoutView();
+
+let rendering = false;
+function drawScope(i, now) {
+  const u = lfoUI[i], c = u.ctx, W = u.scope.width, H = u.scope.height;
+  u.hist[u.hp] = engine.val[i]; u.hp = (u.hp + 1) % u.hist.length;
+  c.clearRect(0, 0, W, H);
+  c.strokeStyle = "rgba(140,147,161,.18)"; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(0, H / 2); c.lineTo(W - H - 8, H / 2); c.stroke();
+  const tw = W - H - 12;
+  c.strokeStyle = COLORS[i]; c.lineWidth = 2.5; c.beginPath();
+  const n = u.hist.length;
+  for (let k = 0; k < n; k++) {
+    const v = u.hist[(u.hp + k) % n], x = k / (n - 1) * tw, y = H / 2 - v * (H / 2 - 6);
+    k ? c.lineTo(x, y) : c.moveTo(x, y);
+  }
+  c.stroke();
+  // phase ring: progress through the current cycle
+  const cx = W - H / 2 - 2, cy = H / 2, r = H / 2 - 8;
+  c.strokeStyle = "rgba(140,147,161,.25)"; c.lineWidth = 5;
+  c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); c.stroke();
+  c.strokeStyle = COLORS[i];
+  c.beginPath(); c.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + engine.phase[i] * Math.PI * 2); c.stroke();
+}
+function liveRate(i) {
+  const L = patch.lfos[i];
+  const f = Math.min(80, (patch.speed ?? 1) / L.period * Math.pow(2, L.fmAmt * 4 * engine.src(L.fmSrc)));
+  return 1 / f;
+}
+let uiTick = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.1, (now - lastNow) / 1000); lastNow = now;
+  if (rendering || !renderer) return;
+  stepMorph(now);
+  let t;
+  if (audioEl) t = audioEl.currentTime;
+  else { if (playing) freeT += dt; if (freeT > DEFAULT_DUR) freeT = 0; t = freeT; }
+  const n0 = engine.n;
+  engine.advanceTo(t);
+  if (engine.n === n0) engine.slewTo(dt);   // paused: controls still answer, on the wall clock
+  const u = engine.uniforms();
+  renderer.draw(u, dt);
+  for (let i = 0; i < N_LFO; i++) drawScope(i, now);
+  if ((uiTick++ & 3) === 0) {
+    for (let i = 0; i < PK.length; i++) {
+      const P = PK[i], v = u[P.k];
+      let x = (v - P.min) / (P.max - P.min); if (P.wrap) x = ((x % 1) + 1) % 1;
+      rowUI[i].meterDot.style.left = (x * 100).toFixed(2) + "%";
+      rowUI[i].val.textContent = fmtVal(P, v);
+    }
+    for (let i = 0; i < N_LFO; i++) {
+      const L = patch.lfos[i];
+      lfoUI[i].live.textContent = (L.fmSrc >= 0 && L.fmAmt) || (patch.speed ?? 1) !== 1 ? "now " + fmtPeriod(liveRate(i)) : "";
+    }
+    const d = duration();
+    $("time").textContent = `${fmtTime(t)} / ${fmtTime(d).replace(/\.\d$/, "")}`;
+    if (document.activeElement !== $("scrub")) $("scrub").value = String(Math.round(t / d * 1000));
+  }
+}
+requestAnimationFrame(frame);
+
+// ---------- MP4 render (WebCodecs + mp4-muxer) ----------
+const yieldNow = () => new Promise(r => { const ch = new MessageChannel(); ch.port1.onmessage = () => r(); ch.port2.postMessage(0); });
+let cancelRender = false, lastFile = null;
+
+async function pickVideoConfig(w, h, fps, bitrate) {
+  const cands = [
+    ["avc", "avc1.640034"], ["avc", "avc1.640033"], ["avc", "avc1.64002A"], ["avc", "avc1.640028"], ["avc", "avc1.4D4028"],
+    ["vp9", "vp09.00.40.08"], ["vp9", "vp09.00.10.08"], ["av1", "av01.0.08M.08"],
+  ];
+  for (const [mux, codec] of cands) {
+    const cfg = { codec, width: w, height: h, bitrate, framerate: fps, latencyMode: "quality" };
+    if (mux === "avc") cfg.avc = { format: "avc" };
+    try { const s = await VideoEncoder.isConfigSupported(cfg); if (s.supported) return { mux, cfg }; } catch (e) {}
+  }
+  return null;
+}
+async function pickAudioConfig(sr, ch) {
+  const cands = [["aac", { codec: "mp4a.40.2", sampleRate: sr, numberOfChannels: ch, bitrate: 256000 }],
+                 ["opus", { codec: "opus", sampleRate: 48000, numberOfChannels: ch, bitrate: 192000 }]];
+  for (const [mux, cfg] of cands) {
+    if (mux === "opus" && sr !== 48000) continue;
+    try { const s = await AudioEncoder.isConfigSupported(cfg); if (s.supported) return { mux, cfg }; } catch (e) {}
+  }
+  return null;
+}
+
+$("render").addEventListener("click", startRender);
+$("rcancel").addEventListener("click", () => { if (rendering) cancelRender = true; else closeOverlay(); });
+$("rsave").addEventListener("click", saveFile);
+function closeOverlay() { $("overlay").hidden = true; }
+function status(msg, err) { const s = $("rstatus"); s.textContent = msg; s.classList.toggle("err", !!err); }
+
+async function startRender() {
+  if (!audioBuf || rendering) return;
+  const ov = $("overlay"); ov.hidden = false;
+  $("rsave").hidden = true; $("rcancel").textContent = "Cancel"; $("bar").style.width = "0";
+  if (typeof VideoEncoder === "undefined" || typeof AudioEncoder === "undefined" || typeof Mp4Muxer === "undefined") {
+    status(typeof Mp4Muxer === "undefined" ? "The MP4 muxer didn't load. Check your connection and reload." :
+      "This browser can't encode video. Use a current Chrome or Edge on desktop.", true);
+    $("rcancel").textContent = "Close"; return;
+  }
+  const [W, H] = $("res").value.split("x").map(Number);
+  const fps = +$("fps").value;
+  const q = +$("quality").value;
+  const bitrate = Math.round(W * H * fps * 0.14 * q);   // ~8.7 Mbps for 1080p30 at High
+  const sr = audioBuf.sampleRate, ch = Math.min(2, audioBuf.numberOfChannels);
+  const vsel = await pickVideoConfig(W, H, fps, bitrate);
+  const asel = await pickAudioConfig(sr, ch);
+  if (!vsel || !asel) { status(`This browser can't encode ${!vsel ? W + "×" + H + " video" : "audio"} for MP4. Try a smaller size, or Chrome/Edge on desktop.`, true); $("rcancel").textContent = "Close"; return; }
+
+  rendering = true; cancelRender = false; setPlaying(false);
+  let wake = null; try { wake = await navigator.wakeLock.request("screen"); } catch (e) {}
+  const thumb = $("thumb"); thumb.height = Math.round(thumb.width * H / W);
+  const tctx = thumb.getContext("2d");
+  let failure = null;
+  const muxer = new Mp4Muxer.Muxer({
+    target: new Mp4Muxer.ArrayBufferTarget(),
+    video: { codec: vsel.mux, width: W, height: H, frameRate: fps },
+    audio: { codec: asel.mux, numberOfChannels: ch, sampleRate: asel.cfg.sampleRate },
+    fastStart: "in-memory",
+    firstTimestampBehavior: "offset",
+  });
+  const venc = new VideoEncoder({ output: (c, m) => muxer.addVideoChunk(c, m), error: e => { failure = e; } });
+  const aenc = new AudioEncoder({ output: (c, m) => muxer.addAudioChunk(c, m), error: e => { failure = e; } });
+  venc.configure(vsel.cfg); aenc.configure(asel.cfg);
+
+  const rc = document.createElement("canvas");
+  let r;
+  try { r = new Renderer(rc); r.resize(W, H); } catch (e) { failure = e; }
+  const eng = new Engine(); eng.features = features;
+  const dur = audioBuf.duration, total = Math.ceil(dur * fps);
+  const chans = []; for (let c = 0; c < ch; c++) chans.push(audioBuf.getChannelData(c));
+  let aPos = 0;
+  const t0 = performance.now();
+  const keyEvery = fps * 2;
+  status(`Encoding ${W}×${H} at ${fps} fps · ${vsel.mux === "avc" ? "H.264" : vsel.mux.toUpperCase()} + ${asel.mux === "aac" ? "AAC" : "Opus"} audio`);
+
+  for (let i = 0; i < total && !failure && !cancelRender; i++) {
+    const t = i / fps;
+    eng.advanceTo(t);
+    r.draw(eng.uniforms(), 1 / fps);
+    const vf = new VideoFrame(rc, { timestamp: Math.round(i * 1e6 / fps), duration: Math.round(1e6 / fps) });
+    venc.encode(vf, { keyFrame: i % keyEvery === 0 });
+    vf.close();
+    // feed audio up to the end of this frame so the two tracks stay interleaved
+    const aEnd = Math.min(audioBuf.length, Math.round((i + 1) / fps * sr));
+    if (aEnd > aPos) {
+      const n = aEnd - aPos, data = new Float32Array(n * ch);
+      for (let c = 0; c < ch; c++) data.set(chans[c].subarray(aPos, aEnd), c * n);
+      const ad = new AudioData({ format: "f32-planar", sampleRate: sr, numberOfFrames: n, numberOfChannels: ch, timestamp: Math.round(aPos / sr * 1e6), data });
+      aenc.encode(ad); ad.close(); aPos = aEnd;
+    }
+    while (venc.encodeQueueSize > 6 && !failure) await new Promise(res => venc.addEventListener("dequeue", res, { once: true }));
+    if (i % 8 === 0) {
+      const done = (i + 1) / total, el2 = (performance.now() - t0) / 1000;
+      const eta = el2 / done - el2;
+      $("bar").style.width = (done * 100).toFixed(2) + "%";
+      $("rstatus").textContent = `Frame ${i + 1} of ${total} · ${fmtTime(t).replace(/\.\d$/, "")} of ${fmtTime(dur).replace(/\.\d$/, "")} · ${(i / el2 || 0).toFixed(0)} fps · about ${Math.ceil(eta / 60)} min left`;
+      if (i % 24 === 0) tctx.drawImage(rc, 0, 0, thumb.width, thumb.height);
+      await yieldNow();
+    }
+  }
+  try {
+    if (!failure && !cancelRender) {
+      status("Finishing the file…");
+      await venc.flush(); await aenc.flush();
+      muxer.finalize();
+    }
+  } catch (e) { failure = failure || e; }
+  try { venc.close(); } catch (e) {} try { aenc.close(); } catch (e) {}
+  try { r && r.gl.getExtension("WEBGL_lose_context")?.loseContext(); } catch (e) {}
+  if (wake) wake.release().catch(() => {});
+  rendering = false;
+  lastNow = performance.now();
+  $("rcancel").textContent = "Close";
+  if (cancelRender) { status("Render cancelled."); return; }
+  if (failure) { status(`Encoding stopped: ${failure.message || failure}. Try a smaller size or lower quality.`, true); return; }
+  const blob = new Blob([muxer.target.buffer], { type: "video/mp4" });
+  const secs = ((performance.now() - t0) / 1000).toFixed(0);
+  const name = `${(trackName || "slow-signal").replace(/[^\w\- ]+/g, "").trim() || "slow-signal"} - ${W}x${H}.mp4`;
+  lastFile = { blob, name };
+  $("bar").style.width = "100%";
+  status(`Done in ${secs} s · ${(blob.size / 1048576).toFixed(0)} MB${asel.mux === "opus" ? " · audio is Opus (this browser has no AAC encoder), plays in Chrome and VLC" : ""}`);
+  $("rsave").hidden = false;
+}
+
+async function offerDownload(filename, data) {
+  const api = window.claude && typeof window.claude.use === "function" ? await window.claude.use("downloads").catch(() => null) : null;
+  if (api) {
+    try { await api.save({ filename, data }); return { ok: true, msg: `Saved ${filename}.` }; }
+    catch (e) {
+      if (e && e.code === "declined") return { ok: false, msg: "Save cancelled." };
+      if (e && e.code === "rate_limited") return { ok: false, msg: "A save prompt is already open." };
+      return { ok: false, err: true, msg: `Couldn't save the file (${e && e.code || "unavailable"}).` };
+    }
+  }
+  const blob = data instanceof Blob ? data : new Blob([data], { type: "application/octet-stream" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  return { ok: true, msg: `Saved ${filename} to your downloads.` };
+}
+async function saveFile() {
+  if (!lastFile) return;
+  const r = await offerDownload(lastFile.name, lastFile.blob);
+  status(r.msg, r.err);
+}
+
+// ---------- presets ----------
+// Portable format: everything keyed by name, so files stay readable and survive new controls being added.
+function patchToJSON(p) {
+  return {
+    speed: p.speed ?? 1,
+    slew: p.slew || 0,
+    lfos: p.lfos.map(L => ({ period: +L.period.toPrecision(6), shape: SHAPES[L.shape], fm: L.fmSrc < 0 ? null : SRC[L.fmSrc], fmDepth: L.fmAmt })),
+    controls: Object.fromEntries(PK.map((P, i) => {
+      const mod = {};
+      SRC.forEach((s, j) => { if (p.mod[i][j]) mod[s] = p.mod[i][j]; });
+      return [P.k, { base: +p.base[i].toPrecision(6), mod }];
+    })),
+  };
+}
+function patchFromJSON(j) {
+  if (!j || !Array.isArray(j.lfos) || typeof j.controls !== "object") throw new Error("not a Slow Signal patch");
+  const p = defaultPatch();
+  p.mod = PK.map(() => new Array(N_SRC).fill(0));
+  const num = (v, d) => (typeof v === "number" && isFinite(v) ? v : d);
+  p.speed = Math.max(0.01, Math.min(1, num(j.speed, 1)));
+  p.slew = Math.max(0, Math.min(1, num(j.slew, 0)));
+  p.lfos = p.lfos.map((d, i) => {
+    const L = j.lfos[i] || {};
+    const sh = SHAPES.indexOf(L.shape);
+    const fs = L.fm == null ? -1 : SRC.indexOf(L.fm);
+    return { period: clampP(num(L.period, d.period)), shape: sh < 0 ? d.shape : sh, fmSrc: fs, fmAmt: fs < 0 ? 0 : Math.max(-1, Math.min(1, num(L.fmDepth, 0))) };
+  });
+  PK.forEach((P, i) => {
+    const c = j.controls[P.k];
+    if (!c) return;
+    p.base[i] = Math.max(P.min, Math.min(P.max, num(c.base, P.d)));
+    if (c.mod) for (const s in c.mod) { const k = SRC.indexOf(s); if (k >= 0) p.mod[i][k] = Math.max(-1, Math.min(1, num(c.mod[s], 0))); }
+  });
+  return p;
+}
+const FACTORY = [{ id: "factory:start", name: "Starting patch", factory: true, get patch() { return patchToJSON(defaultPatch()); } }];
+const presets = {
+  list: [], coll: null, cloud: false,
+  loadLocal() {
+    try { const a = JSON.parse(localStorage.getItem("slowsignal.presets.v1")); if (Array.isArray(a)) this.list = a; } catch (e) {}
+  },
+  saveLocal() { try { localStorage.setItem("slowsignal.presets.v1", JSON.stringify(this.list)); } catch (e) {} },
+  async init() {
+    this.loadLocal(); renderPresetList();
+    if (!window.claude || typeof window.claude.use !== "function") return;
+    try {
+      const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+      const uid = user ? await user.id() : null;
+      if (!db || !uid) return;
+      this.coll = db.collection("data/users/" + uid);
+      this.coll.onSnapshot(snap => {
+        const local = this.list;
+        this.list = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(x => x.patch && x.name);
+        if (!this.cloud) {
+          this.cloud = true;
+          $("presetWhere").textContent = "Saved to your account";
+          // carry over anything saved in this browser before the account store answered
+          for (const x of local) if (!this.list.some(y => y.name === x.name)) this.put(x);
+        }
+        renderPresetList();
+      }, () => {});
+    } catch (e) {}
+  },
+  async put(x) {
+    const i = this.list.findIndex(y => y.id === x.id);
+    if (i >= 0) this.list[i] = x; else this.list.push(x);
+    renderPresetList();
+    if (this.cloud) await this.coll.doc(x.id).set({ name: x.name, savedAt: x.savedAt, patch: x.patch });
+    else this.saveLocal();
+  },
+  async remove(id) {
+    this.list = this.list.filter(y => y.id !== id);
+    renderPresetList();
+    if (this.cloud) await this.coll.doc(id).delete();
+    else this.saveLocal();
+  },
+  byId(id) { return FACTORY.find(f => f.id === id) || this.list.find(y => y.id === id); },
+};
+// ---------- alien names: fragments of signal and sky words, glued to sounds no mouth was built for ----------
+const NAME_ROOTS = ["vor", "neb", "quas", "phos", "chrom", "noct", "zeph", "umbr", "lum", "morph", "syl", "tess", "crys", "xen",
+  "puls", "drom", "eth", "kal", "oss", "vel", "grav", "ion", "myr", "oz", "thal", "pris", "orb", "sol", "cael", "osc",
+  "hel", "spec", "tid", "aur", "vort", "flux", "phas", "mon", "stra", "cor", "lun", "ast", "nym", "obl", "sib"];
+const NAME_TAILS = ["ax", "oth", "yx", "ul", "ae", "ix", "esh", "qor", "uun", "eth", "ra", "ith", "ok", "ys", "yrr", "oa",
+  "iel", "umn", "aq", "ozz", "ek", "ara", "ui", "orn", "ith", "esk", "aal", "yth", "ex", "iqa"];
+const cap = w => w.charAt(0).toUpperCase() + w.slice(1);
+function glue(a, b) {
+  // drop a doubled letter where pieces meet, and soften three consonants in a row
+  if (a.slice(-1) === b.charAt(0)) b = b.slice(1);
+  const v = /[aeiouy]/;
+  if (!v.test(a.slice(-1)) && !v.test(b.charAt(0)) && !v.test(a.slice(-2, -1))) a += "a";
+  return a + b;
+}
+function alienName(rng) {
+  const pick = arr => arr[Math.floor(rng() * arr.length)];
+  const word = () => {
+    const r = rng();
+    if (r < 0.4) return cap(glue(pick(NAME_ROOTS), pick(NAME_TAILS)));
+    if (r < 0.65) return cap(glue(glue(pick(NAME_ROOTS), pick(NAME_TAILS)), pick(NAME_ROOTS)));
+    if (r < 0.85) return cap(pick(NAME_ROOTS)) + "'" + glue(pick(NAME_TAILS), pick(NAME_ROOTS));
+    return cap(glue(pick(NAME_TAILS), pick(NAME_ROOTS))) + "-" + cap(pick(NAME_TAILS));
+  };
+  const r = rng();
+  if (r < 0.55) return word();
+  if (r < 0.85) return word() + " " + word();
+  return word() + " " + ["Prime", "Drift", "Minor", "Deep", "IV", "IX", "Null", "Low"][Math.floor(rng() * 8)];
+}
+let nameRoll = 0;
+function patchSeed() {
+  const str = JSON.stringify(patchToJSON(patch));
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+// the same patch always suggests the same name; the dice steps to the next one
+function suggestName() {
+  const rng = mulberry(patchSeed() + nameRoll * 7919);
+  let n = alienName(rng), tries = 0;
+  while (presets.list.some(y => y.name.toLowerCase() === n.toLowerCase()) && tries++ < 20) n = alienName(rng);
+  return n;
+}
+function refreshNameHint() { $("presetName").placeholder = suggestName(); }
+$("presetDice").addEventListener("click", () => { nameRoll++; const n = suggestName(); $("presetName").value = n; $("presetName").placeholder = n; });
+
+const newId = () => "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+let currentPreset = "";
+function pmsg(msg, err) { const m = $("presetMsg"); m.textContent = msg; m.classList.toggle("err", !!err); }
+function renderPresetList() {
+  const sel = $("presetSel");
+  sel.textContent = "";
+  sel.append(el("option", { value: "" }, presets.list.length ? "Choose a preset…" : "No saved presets yet"));
+  const fac = el("optgroup", { label: "Factory" });
+  FACTORY.forEach(f => fac.append(el("option", { value: f.id }, f.name)));
+  sel.append(fac);
+  if (presets.list.length) {
+    const mine = el("optgroup", { label: "Yours" });
+    [...presets.list].sort((a, b) => a.name.localeCompare(b.name)).forEach(x => mine.append(el("option", { value: x.id }, x.name)));
+    sel.append(mine);
+  }
+  sel.value = presets.byId(currentPreset) ? currentPreset : "";
+  $("presetDelete").disabled = !presets.list.some(y => y.id === sel.value);
+  $("presetExportAll").disabled = !presets.list.length;
+}
+function applyPatch(p) { if (morph) { morph = null; $("morphBar").hidden = true; } patch = p; syncAll(); savePatch(); }
+$("presetSel").addEventListener("change", e => {
+  const x = presets.byId(e.target.value);
+  disarmDelete();
+  if (!x) { currentPreset = ""; renderPresetList(); return; }
+  try {
+    startMorph(patchFromJSON(x.patch), x.name);
+    currentPreset = x.id;
+    $("presetName").value = x.factory ? "" : x.name;
+  } catch (err) { pmsg(`“${x.name}” couldn't be loaded: ${err.message}.`, true); }
+  renderPresetList();
+});
+// ---------- glide between presets ----------
+let morph = null;   // { from, to, t0, dur, name }
+const clonePatch = p => JSON.parse(JSON.stringify(p));
+function lerpPatch(a, b, x) {
+  const s = x * x * (3 - 2 * x);
+  const L = (u, v) => u + (v - u) * s;
+  const G = (u, v) => u * Math.pow(v / u, s);   // rates and periods glide on a log scale
+  return {
+    speed: G(a.speed ?? 1, b.speed ?? 1),
+    slew: L(a.slew || 0, b.slew || 0),
+    lfos: a.lfos.map((A, i) => {
+      const B = b.lfos[i];
+      let fmSrc, fmAmt;
+      if (A.fmSrc === B.fmSrc) { fmSrc = A.fmSrc; fmAmt = L(A.fmAmt, B.fmAmt); }
+      // a different FM source: fade the old one out, then the new one in
+      else if (s < 0.5) { fmSrc = A.fmSrc; fmAmt = A.fmAmt * (1 - 2 * s); }
+      else { fmSrc = B.fmSrc; fmAmt = B.fmAmt * (2 * s - 1); }
+      return { period: G(A.period, B.period), shape: s < 0.5 ? A.shape : B.shape, fmSrc, fmAmt };
+    }),
+    base: a.base.map((v, i) => {
+      if (PK[i].wrap) { let d = b.base[i] - v; d -= Math.round(d); return v + d * s; }
+      return L(v, b.base[i]);
+    }),
+    mod: a.mod.map((r, i) => r.map((v, j) => L(v, b.mod[i][j]))),
+  };
+}
+function startMorph(target, name) {
+  const dur = +$("morphTime").value;
+  if (!dur) { morph = null; $("morphBar").hidden = true; applyPatch(target); pmsg(`Loaded “${name}”.`); return; }
+  morph = { from: clonePatch(patch), to: target, t0: performance.now(), dur: dur * 1000, name };
+  $("morphBar").hidden = false;
+}
+let morphTick = 0;
+function stepMorph(now) {
+  if (!morph) return;
+  const x = Math.min(1, (now - morph.t0) / morph.dur);
+  if (x >= 1) {
+    const name = morph.name;
+    patch = morph.to; morph = null;
+    syncAll(); savePatch();
+    $("morphBar").hidden = true;
+    pmsg(`Arrived at “${name}”.`);
+    return;
+  }
+  patch = lerpPatch(morph.from, morph.to, x);
+  if ((morphTick++ & 3) === 0) {
+    syncAll();
+    $("morphBar").firstChild.style.width = (x * 100).toFixed(1) + "%";
+    const left = (morph.dur - (now - morph.t0)) / 1000;
+    pmsg(`Gliding to “${morph.name}” · ${left >= 60 ? fmtPeriod(left) : Math.ceil(left) + " s"} left`);
+  }
+}
+function stopMorph(why) {
+  if (!morph) return;
+  morph = null; $("morphBar").hidden = true; savePatch();
+  pmsg(why);
+}
+// touching any control mid-glide stops it where it is, so the hand always wins
+["input", "change", "pointerdown"].forEach(ev => document.addEventListener(ev, e => {
+  if (morph && e.isTrusted && e.target.closest && e.target.closest(".rack, .speed")) stopMorph("Glide stopped. Your change took over.");
+}, true));
+function stepPreset(dir) {
+  const ids = [...FACTORY.map(f => f.id), ...[...presets.list].sort((a, b) => a.name.localeCompare(b.name)).map(x => x.id)];
+  let i = ids.indexOf(currentPreset);
+  i = i < 0 ? (dir > 0 ? 0 : ids.length - 1) : (i + dir + ids.length) % ids.length;
+  const sel = $("presetSel");
+  sel.value = ids[i];
+  sel.dispatchEvent(new Event("change"));
+}
+$("presetPrev").addEventListener("click", () => stepPreset(-1));
+$("presetNext").addEventListener("click", () => stepPreset(1));
+try { const m = localStorage.getItem("slowsignal.glide"); if (m && [...$("morphTime").options].some(o => o.value === m)) $("morphTime").value = m; } catch (e) {}
+$("morphTime").addEventListener("change", e => { try { localStorage.setItem("slowsignal.glide", e.target.value); } catch (err) {} });
+
+$("presetSave").addEventListener("click", async () => {
+  const name = $("presetName").value.trim() || suggestName();
+  const existing = presets.list.find(y => y.name.toLowerCase() === name.toLowerCase());
+  const x = { id: existing ? existing.id : newId(), name, savedAt: new Date().toISOString(), patch: patchToJSON(patch) };
+  currentPreset = x.id; $("presetName").value = name;
+  try {
+    await presets.put(x);
+    // line up a fresh name so the next save makes a new preset
+    nameRoll++;
+    const next = suggestName();
+    $("presetName").value = next; $("presetName").placeholder = next;
+    pmsg(`${existing ? "Updated" : "Saved"} “${name}”. Next save will be “${next}”.`);
+  }
+  catch (e) { pmsg(`Couldn't save “${name}”: ${e.message || e.code}.`, true); }
+});
+$("presetName").addEventListener("keydown", e => { if (e.key === "Enter") $("presetSave").click(); });
+let armTimer = 0;
+function disarmDelete() { clearTimeout(armTimer); const b = $("presetDelete"); b.classList.remove("armed"); b.textContent = "Delete"; }
+$("presetDelete").addEventListener("click", async () => {
+  const b = $("presetDelete"), x = presets.list.find(y => y.id === $("presetSel").value);
+  if (!x) return;
+  if (!b.classList.contains("armed")) {
+    b.classList.add("armed"); b.textContent = "Delete for good?";
+    armTimer = setTimeout(disarmDelete, 4000); return;
+  }
+  disarmDelete();
+  currentPreset = "";
+  try { await presets.remove(x.id); pmsg(`Deleted “${x.name}”.`); } catch (e) { pmsg(`Couldn't delete: ${e.message || e.code}.`, true); }
+});
+const fileSafe = n => n.replace(/[^\w\- ]+/g, "").trim() || "patch";
+$("presetExport").addEventListener("click", async () => {
+  const name = $("presetName").value.trim() || suggestName();
+  const doc = { format: "slow-signal-preset", version: 1, name, savedAt: new Date().toISOString(), patch: patchToJSON(patch) };
+  const r = await offerDownload(`${fileSafe(name)}.json`, JSON.stringify(doc, null, 2));
+  pmsg(r.msg, r.err);
+});
+$("presetExportAll").addEventListener("click", async () => {
+  const doc = { format: "slow-signal-bank", version: 1, savedAt: new Date().toISOString(),
+    presets: presets.list.map(x => ({ name: x.name, savedAt: x.savedAt, patch: x.patch })) };
+  const r = await offerDownload(`Slow Signal presets.json`, JSON.stringify(doc, null, 2));
+  pmsg(r.msg, r.err);
+});
+$("presetImport").addEventListener("change", async e => {
+  const files = [...e.target.files]; e.target.value = "";
+  const found = [];
+  let bad = 0;
+  for (const f of files) {
+    try {
+      const j = JSON.parse(await f.text());
+      const items = j.format === "slow-signal-bank" && Array.isArray(j.presets) ? j.presets
+        : j.patch ? [j] : j.lfos ? [{ name: f.name.replace(/\.json$/i, ""), patch: j }] : [];
+      if (!items.length) bad++;
+      for (const it of items) {
+        try { patchFromJSON(it.patch); found.push({ name: String(it.name || f.name.replace(/\.json$/i, "")).slice(0, 80), patch: it.patch }); }
+        catch (err) { bad++; }
+      }
+    } catch (err) { bad++; }
+  }
+  let last = null;
+  for (const it of found) {
+    let name = it.name, n = 2;
+    while (presets.list.some(y => y.name.toLowerCase() === name.toLowerCase())) name = `${it.name} (${n++})`;
+    last = { id: newId(), name, savedAt: new Date().toISOString(), patch: patchToJSON(patchFromJSON(it.patch)) };
+    try { await presets.put(last); } catch (err) { bad++; }
+  }
+  if (found.length === 1 && last) { applyPatch(patchFromJSON(last.patch)); currentPreset = last.id; $("presetName").value = last.name; renderPresetList(); }
+  const skipped = bad ? ` ${bad} item${bad > 1 ? "s" : ""} skipped: not a Slow Signal preset file.` : "";
+  pmsg(found.length === 1 ? `Imported and loaded “${last.name}”.${skipped}` : found.length ? `Imported ${found.length} presets.${skipped}` : `Nothing imported.${skipped}`, !found.length);
+});
+presets.init();
+refreshNameHint();
+$("randomise").addEventListener("click", () => { $("presetName").value = ""; currentPreset = ""; renderPresetList(); }, true);
+// Randomise and Init cancel a glide before they set the patch (capture phase runs first)
+["randomise", "reset"].forEach(id => $(id).addEventListener("click", () => {
+  if (morph) { morph = null; $("morphBar").hidden = true; }
+  if (id === "reset") { currentPreset = ""; $("presetName").value = ""; renderPresetList(); }
+}, true));
+
+// test hook
+window.__slowSignal = { Engine, Renderer, setPatch: p => { patch = p; }, alienName, suggestName, loadFile, startRender, get lastFile() { return lastFile; }, patch: () => patch, presets, patchToJSON, patchFromJSON };
+})();
+</script>
+
+</body>
+</html>
