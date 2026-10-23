@@ -77,6 +77,11 @@ main { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
 .cost strong { font: 600 1.4rem var(--display); display: block; }
 .bar .row > * { flex: 0 0 auto; }
 h2 label { font: inherit; }
+.sliders { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px 20px; }
+.ctl { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ctl .top { display: flex; justify-content: space-between; gap: 8px; }
+.ctl output { color: var(--accent); font-weight: 700; font-size: .8rem; text-align: right; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; }
 </style>
 </head>
@@ -129,6 +134,11 @@ h2 label { font: inherit; }
       </div>
       <div class="stats" id="stats"></div>
     </div>
+    <section class="panel">
+      <div class="bar"><h2>Style</h2><button type="button" id="resetStyle">Reset style</button></div>
+      <p class="hint">These settings are added to the end of every prompt and take priority over it. Put <code>[STYLE]</code> in the prompt to place them somewhere else.</p>
+      <div class="sliders" id="sliders"></div>
+    </section>
     <section class="panel">
       <div class="bar"><h2><label for="template">Prompt</label></h2><span class="hint" id="tplState">Original prompt</span></div>
       <p class="hint">This prompt is sent once per word. <code>[WORD]</code> is replaced by the word, <code>[WORD CLASS]</code> by its class, and <code>[BORDER]</code> by the border instruction. Your edits are saved in this browser.</p>
@@ -207,12 +217,70 @@ const keyOf = it => it.word.toLowerCase() + "|" + it.cls;
 const fileName = it => it.word.trim().replace(/[^\p{L}\p{N}]+/gu, "_").replace(/^_|_$/g, "") + "_" + it.cls + ".png";
 const clsVar = c => CLASSES.includes(c) ? `var(--${c})` : "var(--word)";
 
+const STYLE = [
+  { id: "line", label: "Line thickness", min: 1, max: 5, def: 4,
+    names: ["Hairline", "Thin", "Medium", "Bold", "Extra bold"],
+    text: v => `Outline: ${["very thin hairline", "thin", "medium-weight", "bold, thick", "extra bold, chunky"][v-1]} outline with one uniform stroke weight on every shape.` },
+  { id: "detail", label: "Detail level", min: 1, max: 5, def: 3,
+    names: ["Bare minimum", "Very simple", "Simple", "Some detail", "Detailed"],
+    text: v => ["Detail: the absolute minimum. Reduce the concept to a few basic geometric shapes, like a road sign.",
+      "Detail: very simple. Only the essential shapes.",
+      "Detail: simple. Just enough detail to recognise the concept instantly.",
+      "Detail: moderate. Include a few small identifying features.",
+      "Detail: fuller illustration with more identifying features, still flat and clean."][v-1] },
+  { id: "colours", label: "Number of colours", min: 2, max: 6, def: 4,
+    names: ["2", "3", "4", "5", "6"],
+    text: v => `Colours: use at most ${v} fill colours, not counting the outline and the background.` },
+  { id: "sat", label: "Colour strength", min: 1, max: 5, def: 4,
+    names: ["Muted", "Soft", "Balanced", "Bright", "Vivid"],
+    text: v => `Colour strength: ${["muted, low-saturation", "soft, pastel", "balanced, natural", "bright, high-contrast", "very vivid, saturated primary"][v-1]} colours.` },
+  { id: "fill", label: "Size in frame", min: 60, max: 95, step: 5, def: 80,
+    names: v => v + "%",
+    text: v => `Size: the subject fills about ${v}% of the square frame, centred.` },
+  { id: "round", label: "Shape roundness", min: 1, max: 5, def: 4,
+    names: ["Angular", "Slightly rounded", "Rounded", "Very rounded", "Soft and bubbly"],
+    text: v => `Shapes: ${["angular with crisp corners", "slightly rounded corners", "rounded", "very rounded, friendly", "soft, bubbly, extra-rounded"][v-1]}.` },
+  { id: "figure", label: "People", type: "select", def: "rounded",
+    options: { rounded: "Simple rounded figure", stick: "Stick figure", bust: "Head and shoulders", hands: "Hands only where possible" },
+    text: v => ({ rounded: "People: when a person is needed, draw a simple figure with a round head and rounded body.",
+      stick: "People: when a person is needed, draw a stick figure with a round head and thick limbs.",
+      bust: "People: when a person is needed, show only head and shoulders unless the action needs the full body.",
+      hands: "People: when the concept is an action, show only the hands or body part doing it where that stays clear." })[v] },
+  { id: "outline", label: "Outline colour", type: "select", def: "black",
+    options: { black: "Black", grey: "Dark grey", navy: "Dark navy", tone: "Darker shade of each fill" },
+    text: v => `Outline colour: ${({ black: "black", grey: "dark charcoal grey", navy: "dark navy blue", tone: "a darker shade of each shape's fill colour" })[v]}.` },
+  { id: "bg", label: "Background", type: "select", def: "white",
+    options: { white: "White", transparent: "Transparent" },
+    text: v => v === "transparent" ? "Background: fully transparent, with no white fill behind the subject." : "Background: plain white." },
+];
+let style = {};
+try { style = JSON.parse(store.get("aac.style") || "{}") || {}; } catch { style = {}; }
+const sv = c => style[c.id] ?? c.def;
+const styleText = () => "Style settings (these take priority over anything above):\n" + STYLE.map(c => "- " + c.text(sv(c))).join("\n");
+function drawStyle() {
+  $("sliders").innerHTML = STYLE.map(c => {
+    const id = "st_" + c.id;
+    const field = c.type === "select"
+      ? `<select id="${id}">${Object.entries(c.options).map(([k, l]) => `<option value="${k}" ${k === sv(c) ? "selected" : ""}>${l}</option>`).join("")}</select>`
+      : `<input type="range" id="${id}" min="${c.min}" max="${c.max}" step="${c.step || 1}" value="${sv(c)}">`;
+    return `<div class="ctl"><div class="top"><label for="${id}">${c.label}</label><output id="${id}_o"></output></div>${field}</div>`;
+  }).join("");
+  for (const c of STYLE) {
+    const el = $("st_" + c.id), out = $("st_" + c.id + "_o");
+    const show = () => { const v = c.type === "select" ? el.value : +el.value;
+      out.textContent = c.type === "select" ? "" : (typeof c.names === "function" ? c.names(v) : c.names[v - c.min]); };
+    show();
+    el.oninput = () => { style[c.id] = c.type === "select" ? el.value : +el.value; store.set("aac.style", JSON.stringify(style)); show(); render(); };
+  }
+}
+
 function buildPrompt(it) {
   const name = COLOUR_NAMES[it.cls];
   const border = $("border").checked && name
     ? `Add a thin ${name} border around the square frame to mark the word class (${it.cls}).` : "";
   let p = $("template").value;
   if (it.cls === "word") p = p.replace(/ ?\((\[WORD CLASS\]|\{word_class\})\)/g, "");
+  p = /\[STYLE\]/i.test(p) ? p.replace(/\[STYLE\]/gi, styleText()) : p.trimEnd() + "\n\n" + styleText();
   p = p.replace(/\[WORD CLASS\]|\{word_class\}/gi, it.cls).replace(/\[WORD\]|\{word\}/gi, it.word).replace(/\[BORDER\]|\{border\}/gi, border);
   return p.replace(/\n{3,}/g, "\n\n");
 }
@@ -270,7 +338,7 @@ async function generate(it) {
     method: "POST",
     headers: { "Authorization": "Bearer " + key, "Content-Type": "application/json" },
     body: JSON.stringify({ model: $("model").value, prompt: buildPrompt(it), size: "1024x1024",
-      quality: $("quality").value, n: 1 })
+      quality: $("quality").value, n: 1, ...(sv(STYLE.find(c => c.id === "bg")) === "transparent" ? { background: "transparent" } : {}) })
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error((data.error && data.error.message) || `OpenAI returned ${res.status}`);
@@ -348,6 +416,7 @@ const tplState = () => { $("tplState").textContent = $("template").value === TEM
 $("template").oninput = () => { store.set("aac.tpl", $("template").value === TEMPLATE ? null : $("template").value); tplState(); render(); };
 $("resetTpl").onclick = () => { $("template").value = TEMPLATE; store.set("aac.tpl", null); tplState(); render(); };
 $("border").onchange = render;
+$("resetStyle").onclick = () => { style = {}; store.set("aac.style", null); drawStyle(); render(); };
 $("model").onchange = updateCost; $("quality").onchange = updateCost;
 $("key").oninput = () => { if ($("remember").checked) store.set("aac.key", $("key").value); };
 $("remember").onchange = () => store.set("aac.key", $("remember").checked ? $("key").value : null);
@@ -355,7 +424,7 @@ $("remember").onchange = () => store.set("aac.key", $("remember").checked ? $("k
 $("legend").innerHTML = CLASSES.filter(c => c !== "question").map(c =>
   `<span class="chip" style="--cls:var(--${c})"><i></i>${c}${c === "social" ? " / question" : ""}</span>`).join("");
 $("words").value = store.get("aac.words") ?? SAMPLE;
-$("template").value = store.get("aac.tpl") ?? TEMPLATE; tplState();
+$("template").value = store.get("aac.tpl") ?? TEMPLATE; tplState(); drawStyle();
 const savedKey = store.get("aac.key"); if (savedKey) { $("key").value = savedKey; $("remember").checked = true; }
 sync();
 </script>
