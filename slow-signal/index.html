@@ -586,7 +586,7 @@ void main(){
   vec2 p = (vUv-.5)*vec2(asp,1.);
   p = R(rot)*p/zoom;
   // mirror count is continuous: between whole counts the two neighbouring kaleidoscopes dissolve into each other
-  float n0 = floor(seg), x = smoothstep(.15, .85, seg-n0);
+  float n0 = floor(max(seg, 1.)), x = max(seg, 1.)-n0;   // linear, so the dissolve is spread evenly across the whole step
   vec3 col = field(p, n0);
   if(x > .001) col = mix(col, field(p, n0+1.), x);
   float k = uDt*60.;
@@ -1477,7 +1477,7 @@ $("randomise").addEventListener("click", () => { $("presetName").value = ""; cur
 }, true));
 
 // test hook
-window.__slowSignal = { alienName, suggestName, loadFile, startRender, get lastFile() { return lastFile; }, patch: () => patch, presets, patchToJSON, patchFromJSON };
+window.__slowSignal = { Engine, Renderer, setPatch: p => { patch = p; }, alienName, suggestName, loadFile, startRender, get lastFile() { return lastFile; }, patch: () => patch, presets, patchToJSON, patchFromJSON };
 })();
 </script>
 
