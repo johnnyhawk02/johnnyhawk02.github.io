@@ -133,14 +133,13 @@ input[type=range]::-moz-range-thumb { width: 10px; height: 10px; border-radius: 
   width: 74px; background: var(--rail); border: 1px solid var(--line); border-radius: 4px;
   padding: 3px 5px; font-size: 12px; text-align: right;
 }
-.hz { font-size: 10px; color: var(--ink-dim); width: 54px; text-align: right; }
 .row .lbl { width: 22px; flex: none; }
 .fm-row select { width: 76px; flex: none; }
 .fm-val { width: 34px; text-align: right; font-size: 11px; color: var(--ink-dim); }
 
 /* patch matrix */
 .matrix-wrap { background: var(--module); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 10px 6px; }
-.matrix-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+.matrix-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
 .matrix-head h2 { font-family: var(--f-display); font-size: 11px; letter-spacing: .14em; margin: 0; font-weight: 400; }
 .matrix-head p { margin: 0; font-size: 12px; color: var(--ink-dim); }
 .matrix-scroll { overflow-x: auto; }
@@ -190,6 +189,57 @@ table.matrix { border-collapse: collapse; width: 100%; min-width: 660px; }
 .pmsg { font-size: 12px; color: var(--ink-dim); flex: 1 1 160px; min-width: 0; }
 .pmsg.err { color: var(--rec); }
 .where { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-dim); }
+/* fitted layout: on a laptop-sized window everything sits on one screen */
+.frame-box { display: flex; justify-content: center; }
+.tabs { display: flex; gap: 2px; background: var(--rail); border: 1px solid var(--line); border-radius: 5px; padding: 2px; }
+.tab { background: none; border: 0; border-radius: 3px; padding: 3px 10px; font-size: 12px; color: var(--ink-dim); cursor: pointer; }
+.tab[aria-selected="true"] { background: var(--module); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+.matrix tbody tr[data-g] { display: none; }
+.matrix tbody tr[data-g].shown { display: table-row; }
+.matrix tr.grp { display: none; }
+.lfo-info { font-size: 10px; color: var(--ink-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.lfo-info .live:not(:empty) + .hz { display: none; }
+.lfo-info .live { color: var(--ink); }
+.rsetup { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.rsetup label { display: grid; gap: 4px; }
+.rnote { grid-column: 1 / -1; margin: 0; font-size: 12px; color: var(--ink-dim); }
+@media (min-width: 1180px) and (min-height: 600px) {
+  html, body { height: 100%; }
+  body { display: flex; flex-direction: column; overflow: hidden; padding-block: 8px; }
+  .top { flex-wrap: nowrap; padding-bottom: 8px; margin-bottom: 8px; gap: 12px; }
+  .brand { font-size: 14px; }
+  .group { flex-wrap: nowrap; }
+  .track { max-width: 170px; }
+  .speed { padding: 3px 8px; gap: 6px; }
+  .speed input { width: 84px; }
+  .presets { flex-wrap: nowrap; padding: 5px 8px; margin-bottom: 8px; gap: 6px; }
+  .presets .btn { padding: 4px 8px; font-size: 12px; }
+  .presets input[type=text] { width: 150px; }
+  .presets .sel { max-width: 170px; }
+  .pmsg { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1 1 0; }
+  .morphbar { position: absolute; left: 0; right: 0; bottom: 0; flex-basis: auto; }
+  .presets { position: relative; }
+  .rack { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); gap: 10px; }
+  .col { min-height: 0; overflow-y: auto; gap: 8px; scrollbar-width: thin; }
+  .lfo { padding: 5px 9px 6px; gap: 4px; }
+  .scope { height: 26px; }
+  .center { min-height: 0; gap: 8px; }
+  .screen { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 8px; }
+  .frame-box { flex: 1; min-height: 0; align-items: center; }
+  .transport { margin-top: 8px; }
+  .matrix-wrap { flex: none; padding: 7px 10px 4px; }
+  .matrix-head { margin-bottom: 2px; flex-wrap: nowrap; }
+  .matrix-head p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; margin-left: auto; font-size: 11px; }
+  .cell { height: 22px; }
+  #foot { display: none; }
+  .matrix-scroll { min-height: 134px; }   /* tallest group, so switching tabs never resizes the screen */
+  .matrix-head h2 { white-space: nowrap; flex: none; }
+}
+@media (min-width: 1180px) and (max-width: 1320px) and (min-height: 600px) {
+  .brand small { display: none; }
+  .track { max-width: 110px; }
+  .presets input[type=text] { width: 120px; }
+}
 .foot { margin-top: 14px; font-size: 12px; color: var(--ink-dim); display: flex; flex-wrap: wrap; gap: 6px 18px; }
 
 /* render overlay */
@@ -235,7 +285,7 @@ body.perform.idle .perf-ui { opacity: 0; }
 .status.err { color: var(--rec); }
 .dialog .group { justify-content: flex-end; }
 
-@media (max-width: 1100px) {
+@media (max-width: 1179px) {
   .rack { grid-template-columns: 1fr 1fr; grid-template-areas: "center center" "left right"; }
 }
 @media (max-width: 620px) {
@@ -247,9 +297,9 @@ body.perform.idle .perf-ui { opacity: 0; }
 
 <header class="top">
   <div class="brand">Slow Signal<small>LFO video synthesizer</small></div>
-  <div class="group">
-    <label class="btn file-btn" for="file">Load audio<input id="file" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg"></label>
-    <span class="track" id="track">No track loaded. The synth is free-running.</span>
+  <div class="group trackgrp">
+    <label class="btn file-btn" for="file" title="Load a 3–6 minute audio track (or drop it on the screen)">Load audio<input id="file" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg"></label>
+    <span class="track" id="track">No track yet, free-running</span>
   </div>
   <div class="grow"></div>
   <div class="group">
@@ -272,23 +322,12 @@ body.perform.idle .perf-ui { opacity: 0; }
       <option value="1080x1920">1080 vertical</option>
       <option value="3840x2160">4K 16:9</option>
     </select>
-    <select class="sel" id="fps" aria-label="Frame rate">
-      <option value="25">25 fps</option>
-      <option value="30" selected>30 fps</option>
-      <option value="60">60 fps</option>
-    </select>
-    <select class="sel" id="quality" aria-label="Quality">
-      <option value="0.6">Standard</option>
-      <option value="1" selected>High</option>
-      <option value="1.8">Very high</option>
-    </select>
     <button class="btn" id="perform" type="button" title="Full-screen video with preset buttons">Perform</button>
     <button class="btn rec" id="render" type="button" disabled>Render MP4</button>
   </div>
 </header>
 
-<section class="presets" aria-label="Presets">
-  <span class="lbl">Preset</span>
+<section class="presets" aria-label="Presets" id="presetStrip">
   <button class="btn icon" id="presetPrev" type="button" title="Previous preset" aria-label="Previous preset">◀</button>
   <select class="sel" id="presetSel" aria-label="Saved presets"></select>
   <button class="btn icon" id="presetNext" type="button" title="Next preset" aria-label="Next preset">▶</button>
@@ -301,17 +340,17 @@ body.perform.idle .perf-ui { opacity: 0; }
   <span class="sep" aria-hidden="true"></span>
   <input type="text" id="presetName" placeholder="Name this patch" aria-label="Preset name" maxlength="80" spellcheck="false">
   <button class="btn icon" id="presetDice" type="button" title="Roll a new name" aria-label="Roll a new name">⚄</button>
-  <button class="btn" id="presetSave" type="button">Save</button>
+  <button class="btn" id="presetSave" type="button" title="Saves this patch in this browser">Save</button>
   <button class="btn" id="presetDelete" type="button" disabled>Delete</button>
   <span class="sep" aria-hidden="true"></span>
   <button class="btn" id="randomise" type="button" title="Random patch">Randomise</button>
   <button class="btn" id="reset" type="button" title="Back to the starting patch">Init patch</button>
   <span class="sep" aria-hidden="true"></span>
-  <label class="btn file-btn" for="presetImport">Import<input id="presetImport" type="file" accept=".json,application/json" multiple></label>
+  <label class="btn file-btn" for="presetImport" title="Import preset .json files">Import<input id="presetImport" type="file" accept=".json,application/json" multiple></label>
   <button class="btn" id="presetExport" type="button" title="Export the current patch as a .json file">Export</button>
   <button class="btn" id="presetExportAll" type="button" title="Export every saved preset in one .json file">Export all</button>
   <span class="pmsg" id="presetMsg" role="status"></span>
-  <span class="where" id="presetWhere">Saved in this browser</span>
+  <span class="where" id="presetWhere" hidden>Saved in this browser</span>
   <div class="morphbar" id="morphBar" hidden><i></i></div>
 </section>
 
@@ -319,6 +358,7 @@ body.perform.idle .perf-ui { opacity: 0; }
   <div class="col left" id="colLeft"></div>
   <div class="center">
     <div class="screen">
+      <div class="frame-box" id="frameBox">
       <div class="screen-frame" id="frame">
         <canvas id="view"></canvas>
         <div class="drop-hint">Drop the audio file to load it</div>
@@ -328,6 +368,7 @@ body.perform.idle .perf-ui { opacity: 0; }
           <div class="perf-name" id="perfName" aria-live="polite"></div>
           <button class="perf-exit" id="perfExit" type="button">Exit</button>
         </div>
+      </div>
       </div>
       <div class="transport">
         <button class="btn icon" id="play" type="button" aria-label="Play or pause">❚❚</button>
@@ -339,7 +380,8 @@ body.perform.idle .perf-ui { opacity: 0; }
     <section class="matrix-wrap">
       <div class="matrix-head">
         <h2>PATCH MATRIX</h2>
-        <p>Drag a pin up or down to set how much a source moves a control. Hollow pins are inverted. Double-click clears.</p>
+        <div class="tabs" role="tablist" id="mtabs" aria-label="Control groups"></div>
+        <p title="Drag a pin up or down to set how much a source moves a control. Hollow pins are inverted. Double-click clears.">Drag pins up/down · hollow = inverted · double-click clears</p>
       </div>
       <div class="matrix-scroll"><table class="matrix" id="matrix"></table></div>
     </section>
@@ -347,7 +389,7 @@ body.perform.idle .perf-ui { opacity: 0; }
   <div class="col right" id="colRight"></div>
 </main>
 
-<div class="foot">
+<div class="foot" id="foot">
   <span>Rates run from 10:00 per cycle down to 0.05 s. Type a period like <span class="mono">4m30</span>, <span class="mono">12s</span> or <span class="mono">3hz</span>.</span>
   <span>FM is exponential: depth 1.00 swings the rate four octaves either way.</span>
   <span>The render follows the same clock as the preview, so what you hear is what you get.</span>
@@ -355,12 +397,28 @@ body.perform.idle .perf-ui { opacity: 0; }
 
 <div class="overlay" id="overlay" hidden>
   <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="rtitle">
-    <h3 id="rtitle">RENDERING</h3>
-    <canvas id="thumb" width="480" height="270"></canvas>
-    <div class="bar"><i id="bar"></i></div>
-    <div class="status mono" id="rstatus">Preparing encoders…</div>
+    <h3 id="rtitle">RENDER MP4</h3>
+    <div class="rsetup" id="rsetup">
+      <label for="fps"><span class="lbl">Frame rate</span>
+        <select class="sel" id="fps">
+          <option value="25">25 fps</option>
+          <option value="30" selected>30 fps</option>
+          <option value="60">60 fps</option>
+        </select></label>
+      <label for="quality"><span class="lbl">Quality</span>
+        <select class="sel" id="quality">
+          <option value="0.6">Standard</option>
+          <option value="1" selected>High</option>
+          <option value="1.8">Very high</option>
+        </select></label>
+      <p class="rnote" id="rnote"></p>
+    </div>
+    <canvas id="thumb" width="480" height="270" hidden></canvas>
+    <div class="bar" id="rbar" hidden><i id="bar"></i></div>
+    <div class="status mono" id="rstatus" hidden>Preparing encoders…</div>
     <div class="group">
       <button class="btn" id="rcancel" type="button">Cancel</button>
+      <button class="btn rec" id="rstart" type="button">Start render</button>
       <button class="btn rec" id="rsave" type="button" hidden>Save MP4</button>
     </div>
   </div>
@@ -764,19 +822,17 @@ for (let i = 0; i < N_LFO; i++) {
   const scope = el("canvas", { class: "scope", width: "500", height: "88" });
   const rate = el("input", { type: "range", min: "0", max: "1000", step: "1", "aria-label": `LFO ${i + 1} rate`, id: `rate${i}` });
   const per = el("input", { class: "period mono", type: "text", "aria-label": `LFO ${i + 1} period`, id: `per${i}`, spellcheck: "false" });
-  const hz = el("span", { class: "hz mono" });
+  const hz = el("span", { class: "hz" });
+  const live = el("span", { class: "live" });   // the rate right now, when FM or master speed changes it
   const fmSrc = el("select", { class: "sel", "aria-label": `LFO ${i + 1} FM source`, id: `fms${i}` }); srcOptions(fmSrc);
   const fmAmt = el("input", { type: "range", min: "-100", max: "100", step: "1", "aria-label": `LFO ${i + 1} FM depth`, id: `fma${i}` });
   const fmVal = el("span", { class: "fm-val mono" });
   const mod = el("section", { class: "lfo", style: `--c:${COLORS[i]}` },
-    el("div", { class: "lfo-head" }, el("span", { class: "lfo-name" }, `LFO ${i + 1}`), shape),
+    el("div", { class: "lfo-head" }, el("span", { class: "lfo-name" }, `LFO ${i + 1}`), el("span", { class: "lfo-info mono" }, live, hz), shape),
     scope,
     el("div", { class: "row" }, el("span", { class: "lbl" }, "Rate"), rate, per),
-    el("div", { class: "row fm-row" }, el("span", { class: "lbl" }, "FM"), fmSrc, fmAmt, fmVal),
-    el("div", { class: "row" }, el("span", { class: "lbl" }, ""), hz, el("span", { class: "lbl", style: "width:auto;margin-left:auto" }, ""))
+    el("div", { class: "row fm-row" }, el("span", { class: "lbl" }, "FM"), fmSrc, fmAmt, fmVal)
   );
-  // the third row's right label shows the live rate under FM
-  const live = mod.lastChild.lastChild; live.classList.add("mono"); live.style.letterSpacing = "0"; live.style.textTransform = "none";
   (i < 4 ? $("colLeft") : $("colRight")).append(mod);
   const ui = { shape, scope, ctx: scope.getContext("2d"), rate, per, hz, fmSrc, fmAmt, fmVal, live, hist: new Float32Array(240), hp: 0 };
   lfoUI.push(ui);
@@ -811,14 +867,21 @@ const rowUI = [];
   SRC.forEach((s, i) => head.append(el("th", { style: `color:${COLORS[i]}`, title: SRC_LONG[i] }, s)));
   t.append(el("thead", {}, head));
   const body = el("tbody");
-  let pi = 0;
+  let pi = 0, group = "";
   for (const P of PARAMS) {
-    if (P.g) { body.append(el("tr", { class: "grp" }, el("td", { colspan: String(3 + N_SRC) }, P.g))); continue; }
+    if (P.g) {
+      group = P.g;
+      body.append(el("tr", { class: "grp" }, el("td", { colspan: String(3 + N_SRC) }, P.g)));
+      const tab = el("button", { class: "tab", type: "button", role: "tab", id: `tab_${P.g}`, "aria-selected": "false" }, P.g);
+      tab.addEventListener("click", () => showGroup(tab.textContent));
+      $("mtabs").append(tab);
+      continue;
+    }
     const idx = pi++;
     const base = el("input", { type: "range", min: "0", max: "1000", step: "1", id: `base_${P.k}`, "aria-label": `${P.n} base value` });
     const meterDot = el("i");
     const val = el("td", { class: "pval mono" });
-    const tr = el("tr", {},
+    const tr = el("tr", { "data-g": group },
       el("td", { class: "pname" }, P.n),
       el("td", { class: "pbase" }, el("div", { class: "pbase-inner" }, base, el("div", { class: "meter" }, meterDot))),
       val);
@@ -836,6 +899,19 @@ const rowUI = [];
   }
   t.append(body);
 })();
+var layoutReady = false;   // var: read before the layout code below has run
+// the matrix shows one group of controls at a time, so it fits under the screen
+function showGroup(g) {
+  document.querySelectorAll("#matrix tr[data-g]").forEach(r => r.classList.toggle("shown", r.dataset.g === g));
+  document.querySelectorAll("#mtabs .tab").forEach(t => t.setAttribute("aria-selected", String(t.textContent === g)));
+  try { localStorage.setItem("slowsignal.tab", g); } catch (e) {}
+  if (layoutReady) layoutView();
+}
+{
+  let g = "Colour";
+  try { const v = localStorage.getItem("slowsignal.tab"); if (v && PARAMS.some(P => P.g === v)) g = v; } catch (e) {}
+  showGroup(g);
+}
 function syncCell(idx, s) {
   const a = patch.mod[idx][s], b = rowUI[idx].cells[s];
   b.classList.toggle("on", a > 0); b.classList.toggle("neg", a < 0);
@@ -945,7 +1021,7 @@ async function loadFile(file) {
     audioEl.addEventListener("ended", () => setPlaying(false));
     trackName = file.name.replace(/\.[^.]+$/, "");
     const tr = $("track"); tr.textContent = "";
-    tr.append(el("b", {}, file.name), ` · ${fmtTime(buf.duration).replace(/\.\d$/, "")} · ${buf.numberOfChannels === 1 ? "mono" : "stereo"}`);
+    tr.append(el("b", {}, trackName), ` · ${fmtTime(buf.duration).replace(/\.\d$/, "")}`);
     tr.title = file.name;
     $("render").disabled = false;
     setPlaying(false);
@@ -995,6 +1071,19 @@ function layoutView() {
     if (renderer) renderer.resize(px & ~1, Math.round(px / a) & ~1);
     return;
   }
+  if (matchMedia("(min-width: 1180px) and (min-height: 600px)").matches) {
+    // fitted layout: the screen takes whatever room the frame box has
+    const fb = $("frameBox");
+    frameEl.style.width = "1px"; frameEl.style.height = "1px";   // let the box size itself first
+    const bw = fb.clientWidth, bh = fb.clientHeight;
+    let w = bw, h = w / a;
+    if (h > bh) { h = bh; w = h * a; }
+    w = Math.max(160, Math.floor(w)); h = Math.max(90, Math.floor(h));
+    frameEl.style.width = w + "px"; frameEl.style.height = h + "px";
+    const px = Math.min(1600, Math.round(w * dpr));
+    if (renderer) renderer.resize(px & ~1, Math.round(px / a) & ~1);
+    return;
+  }
   const box = frameEl.parentElement.clientWidth - 20;
   const maxH = Math.max(220, Math.min(window.innerHeight * 0.58, 720));
   let w = box, h = w / a;
@@ -1005,11 +1094,16 @@ function layoutView() {
 }
 window.addEventListener("resize", layoutView);
 $("res").addEventListener("change", layoutView);
-layoutView();
+layoutView(); layoutReady = true;
+if (document.fonts) document.fonts.ready.then(layoutView);
 
 let rendering = false;
 function drawScope(i, now) {
-  const u = lfoUI[i], c = u.ctx, W = u.scope.width, H = u.scope.height;
+  const u = lfoUI[i], c = u.ctx;
+  // keep the canvas at twice its on-screen size so the phase ring stays round at any layout
+  const cw = u.scope.clientWidth * 2, ch = u.scope.clientHeight * 2;
+  if (cw && (u.scope.width !== cw || u.scope.height !== ch)) { u.scope.width = cw; u.scope.height = ch; }
+  const W = u.scope.width, H = u.scope.height;
   u.hist[u.hp] = engine.val[i]; u.hp = (u.hp + 1) % u.hist.length;
   c.clearRect(0, 0, W, H);
   c.strokeStyle = "rgba(140,147,161,.18)"; c.lineWidth = 1;
@@ -1093,7 +1187,18 @@ async function pickAudioConfig(sr, ch) {
   return null;
 }
 
-$("render").addEventListener("click", startRender);
+$("render").addEventListener("click", openRenderSetup);
+$("rstart").addEventListener("click", startRender);
+function openRenderSetup() {
+  if (!audioBuf || rendering) return;
+  const [W, H] = $("res").value.split("x").map(Number);
+  $("rtitle").textContent = "RENDER MP4";
+  $("rnote").textContent = `Renders the whole track (${fmtTime(audioBuf.duration).replace(/\.\d$/, "")}) at ${W}×${H} with the current patch. Change the size in the top bar.`;
+  $("rsetup").hidden = false; $("rstart").hidden = false;
+  $("thumb").hidden = true; $("rbar").hidden = true; $("rstatus").hidden = true; $("rsave").hidden = true;
+  $("rcancel").textContent = "Cancel";
+  $("overlay").hidden = false;
+}
 $("rcancel").addEventListener("click", () => { if (rendering) cancelRender = true; else closeOverlay(); });
 $("rsave").addEventListener("click", saveFile);
 function closeOverlay() { $("overlay").hidden = true; }
@@ -1102,6 +1207,9 @@ function status(msg, err) { const s = $("rstatus"); s.textContent = msg; s.class
 async function startRender() {
   if (!audioBuf || rendering) return;
   const ov = $("overlay"); ov.hidden = false;
+  $("rtitle").textContent = "RENDERING";
+  $("rsetup").hidden = true; $("rstart").hidden = true;
+  $("thumb").hidden = false; $("rbar").hidden = false; $("rstatus").hidden = false;
   $("rsave").hidden = true; $("rcancel").textContent = "Cancel"; $("bar").style.width = "0";
   if (typeof VideoEncoder === "undefined" || typeof AudioEncoder === "undefined" || typeof Mp4Muxer === "undefined") {
     status(typeof Mp4Muxer === "undefined" ? "The MP4 muxer didn't load. Check your connection and reload." :
@@ -1272,6 +1380,7 @@ const presets = {
         if (!this.cloud) {
           this.cloud = true;
           $("presetWhere").textContent = "Saved to your account";
+          $("presetSave").title = "Saves this patch to your account";
           // carry over anything saved in this browser before the account store answered
           for (const x of local) if (!this.list.some(y => y.name === x.name)) this.put(x);
         }
