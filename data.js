@@ -75,6 +75,15 @@ export const work = [
     link: "https://johnnyhawk02.github.io/calm-space/",
     cta: "Try it on your iPad",
   },
+  {
+    kind: "App",
+    title: "Field Pokédex",
+    year: 2026,
+    blurb: "A kid-friendly Pokédex of all 1,025 Pokémon: search and rank by any stat, keep your own notes, and play three games. Guess my Pokémon, Who's That Pokémon?, and a type battle where you catch Pokémon and level up.",
+    image: "img/pokedex.jpg",
+    link: "https://johnnyhawk02.github.io/pokedex/",
+    cta: "Play it in your browser",
+  },
 ];
 
 export const links = {
