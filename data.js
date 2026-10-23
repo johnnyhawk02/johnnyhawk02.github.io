@@ -84,6 +84,15 @@ export const work = [
     link: "https://johnnyhawk02.github.io/pokedex/",
     cta: "Play it in your browser",
   },
+  {
+    kind: "App",
+    title: "Slow Signal",
+    year: 2026,
+    blurb: "Video synthesizer for your tracks: eight LFOs from ten-minute sweeps to fast flicker, modulating each other and a feedback kaleidoscope. Load a song, patch it, and render an MP4 with your audio.",
+    image: "img/slow-signal.jpg",
+    link: "https://johnnyhawk02.github.io/slow-signal/",
+    cta: "Play it in your browser",
+  },
 ];
 
 export const links = {
