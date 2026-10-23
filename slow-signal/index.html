@@ -211,7 +211,8 @@ table.matrix { border-collapse: collapse; width: 100%; min-width: 660px; }
   .group { flex-wrap: nowrap; }
   .track { max-width: 170px; }
   .speed { padding: 3px 8px; gap: 6px; }
-  .speed input { width: 84px; }
+  .speed input { width: 64px; }
+  .speed .lbl { letter-spacing: .08em; }
   .presets { flex-wrap: nowrap; padding: 5px 8px; margin-bottom: 8px; gap: 6px; }
   .presets .btn { padding: 4px 8px; font-size: 12px; }
   .presets input[type=text] { width: 150px; }
@@ -235,8 +236,15 @@ table.matrix { border-collapse: collapse; width: 100%; min-width: 660px; }
   .matrix-scroll { min-height: 134px; }   /* tallest group, so switching tabs never resizes the screen */
   .matrix-head h2 { white-space: nowrap; flex: none; }
 }
-@media (min-width: 1180px) and (max-width: 1320px) and (min-height: 600px) {
+#loadLbl { display: inline-block; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+@media (min-width: 1180px) and (max-width: 1460px) and (min-height: 600px) {
   .brand small { display: none; }
+  .brand { font-size: 12px; letter-spacing: .1em; }
+  .track { display: none; }
+  #loadLbl { max-width: 110px; }
+  .speed input { width: 54px; }
+  .top { gap: 8px; }
+  .top .group { gap: 6px; }
   .track { max-width: 110px; }
   .presets input[type=text] { width: 120px; }
 }
@@ -298,7 +306,7 @@ body.perform.idle .perf-ui { opacity: 0; }
 <header class="top">
   <div class="brand">Slow Signal<small>LFO video synthesizer</small></div>
   <div class="group trackgrp">
-    <label class="btn file-btn" for="file" title="Load a 3–6 minute audio track (or drop it on the screen)">Load audio<input id="file" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg"></label>
+    <label class="btn file-btn" for="file" id="loadBtn" title="Load a 3–6 minute audio track (or drop it on the screen)"><span id="loadLbl">Load audio</span><input id="file" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg"></label>
     <span class="track" id="track">No track yet, free-running</span>
   </div>
   <div class="grow"></div>
@@ -307,6 +315,11 @@ body.perform.idle .perf-ui { opacity: 0; }
       <span class="lbl">Speed</span>
       <input type="range" id="speed" min="0" max="1000" step="1" value="1000" aria-label="Master speed">
       <span class="mono speed-val" id="speedVal">1.00×</span>
+    </label>
+    <label class="speed" for="audioDepth" title="How strongly the audio (level, lows, highs) moves everything it is patched to. Double-click for 100%.">
+      <span class="lbl">Audio</span>
+      <input type="range" id="audioDepth" min="0" max="100" step="1" value="100" aria-label="Audio effect depth">
+      <span class="mono speed-val" id="audioVal">100%</span>
     </label>
     <label class="speed" for="slew" title="Global slew: every visual control eases toward its new value over this time. Double-click for 0.">
       <span class="lbl">Slew</span>
@@ -321,6 +334,11 @@ body.perform.idle .perf-ui { opacity: 0; }
       <option value="1080x1080">1080 square</option>
       <option value="1080x1920">1080 vertical</option>
       <option value="3840x2160">4K 16:9</option>
+    </select>
+    <select class="sel" id="blur" aria-label="Motion blur" title="Motion blur: each frame is the average of this many sub-frames. Costs that many times the GPU work, in the preview and the render.">
+      <option value="0">No blur</option>
+      <option value="2">Blur ×2</option><option value="3">Blur ×3</option><option value="4">Blur ×4</option>
+      <option value="5">Blur ×5</option><option value="6">Blur ×6</option><option value="7">Blur ×7</option><option value="8">Blur ×8</option>
     </select>
     <button class="btn" id="perform" type="button" title="Full-screen video with preset buttons">Perform</button>
     <button class="btn rec" id="render" type="button" disabled>Render MP4</button>
@@ -483,7 +501,7 @@ function defaultPatch() {
   set("hue", 0, 0.5); set("zoom", 1, 0.25); set("rot", 2, 0.3); set("warp", 3, 0.3);
   set("chroma", 4, 0.15); set("seg", 5, 0.45); set("fbRot", 6, 0.4); set("shape", 7, 0.5);
   set("bright", 8, 0.25); set("fbZoom", 9, 0.35); set("scan", 10, 0.3); set("spread", 1, -0.3); set("contour", 3, 0.25);
-  return { lfos, base, mod, speed: 1, slew: 0 };
+  return { lfos, base, mod, speed: 1, slew: 0, audioDepth: 1 };
 }
 let patch = loadPatch() || defaultPatch();
 function loadPatch() {
@@ -523,7 +541,7 @@ class Engine {
     if (s < N_LFO) return this.val[s];
     const f = this.features;
     if (!f) return 0;
-    return f[s - N_LFO][Math.min(this.n, f.len - 1)];
+    return f[s - N_LFO][Math.min(this.n, f.len - 1)] * (patch.audioDepth ?? 1);
   }
   computeVals() {
     for (let i = 0; i < N_LFO; i++) {
@@ -696,15 +714,19 @@ void main(){
 const FS_POST = `#version 300 es
 precision highp float;
 in vec2 vUv; out vec4 o;
-uniform sampler2D uSrc; uniform vec2 uRes; uniform float chroma, scan;
+uniform sampler2D uSrc; uniform vec2 uRes; uniform float chroma, scan, gain;
 void main(){
   vec2 d = (vUv-.5)*chroma*4.;
   vec3 c = vec3(texture(uSrc, vUv+d).r, texture(uSrc, vUv).g, texture(uSrc, vUv-d).b);
   float l = .5+.5*sin(vUv.y*3.14159*540.);
   c *= 1. - scan*.55*l;
   vec2 w = vUv-.5; c *= 1. - dot(w,w)*.55;
-  o = vec4(c, 1.);
+  o = vec4(c*gain, 1.);
 }`;
+const FS_COPY = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o; uniform sampler2D uSrc;
+void main(){ o = vec4(texture(uSrc, vUv).rgb, 1.); }`;
 
 class Renderer {
   constructor(canvas) {
@@ -712,7 +734,7 @@ class Renderer {
     const gl = this.gl = canvas.getContext("webgl2", { preserveDrawingBuffer: true, antialias: false, alpha: false });
     if (!gl) throw new Error("WebGL2 is not available in this browser.");
     this.half = !!gl.getExtension("EXT_color_buffer_float");
-    this.scene = this.prog(FS_SCENE); this.post = this.prog(FS_POST);
+    this.scene = this.prog(FS_SCENE); this.post = this.prog(FS_POST); this.copy = this.prog(FS_COPY);
     const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
     this.vao = gl.createVertexArray(); gl.bindVertexArray(this.vao);
@@ -737,7 +759,7 @@ class Renderer {
     this.c.width = w; this.c.height = h; this.w = w; this.h = h;
     this.tex.forEach(t => gl.deleteTexture(t)); this.fbo.forEach(f => gl.deleteFramebuffer(f));
     this.tex = []; this.fbo = [];
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 3; i++) {   // two feedback buffers + one for motion-blur accumulation
       const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
       if (this.half) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, w, h, 0, gl.RGBA, gl.HALF_FLOAT, null);
       else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
@@ -752,25 +774,41 @@ class Renderer {
     }
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
-  draw(u, dt) {
-    const gl = this.gl, nx = 1 - this.cur;
+  // one frame from a single state
+  draw(u, dt) { this.drawFrames([u], dt); }
+  // one frame from several sub-frame states averaged together (motion blur); feedback runs per sub-frame
+  drawFrames(us, dt) {
+    const gl = this.gl, n = us.length;
     gl.bindVertexArray(this.vao);
     gl.viewport(0, 0, this.w, this.h);
-    let P = this.scene;
-    gl.useProgram(P.p);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo[nx]);
-    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.tex[this.cur]);
-    gl.uniform1i(P.loc.uPrev, 0); gl.uniform2f(P.loc.uRes, this.w, this.h); gl.uniform1f(P.loc.uDt, Math.min(dt, 0.1));
-    for (const k in P.loc) if (k in u) gl.uniform1f(P.loc[k], u[k]);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    P = this.post;
-    gl.useProgram(P.p);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.bindTexture(gl.TEXTURE_2D, this.tex[nx]);
-    gl.uniform1i(P.loc.uSrc, 0); gl.uniform2f(P.loc.uRes, this.w, this.h);
-    gl.uniform1f(P.loc.chroma, u.chroma); gl.uniform1f(P.loc.scan, u.scan);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    this.cur = nx;
+    if (n > 1) { gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo[2]); gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT); }
+    for (const u of us) {
+      const nx = 1 - this.cur;
+      let P = this.scene;
+      gl.useProgram(P.p);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo[nx]);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.tex[this.cur]);
+      gl.uniform1i(P.loc.uPrev, 0); gl.uniform2f(P.loc.uRes, this.w, this.h); gl.uniform1f(P.loc.uDt, Math.min(dt / n, 0.1));
+      for (const k in P.loc) if (k in u) gl.uniform1f(P.loc[k], u[k]);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      P = this.post;
+      gl.useProgram(P.p);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, n > 1 ? this.fbo[2] : null);
+      gl.bindTexture(gl.TEXTURE_2D, this.tex[nx]);
+      gl.uniform1i(P.loc.uSrc, 0); gl.uniform2f(P.loc.uRes, this.w, this.h);
+      gl.uniform1f(P.loc.chroma, u.chroma); gl.uniform1f(P.loc.scan, u.scan); gl.uniform1f(P.loc.gain, 1 / n);
+      if (n > 1) { gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE); }
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      gl.disable(gl.BLEND);
+      this.cur = nx;
+    }
+    if (n > 1) {
+      gl.useProgram(this.copy.p);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.bindTexture(gl.TEXTURE_2D, this.tex[2]);
+      gl.uniform1i(this.copy.loc.uSrc, 0);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
   }
 }
 
@@ -967,7 +1005,16 @@ function syncSlew() {
 }
 $("slew").addEventListener("input", e => { patch.slew = +e.target.value / 1000; syncSlew(); savePatch(); });
 $("slew").addEventListener("dblclick", () => { patch.slew = 0; syncSlew(); savePatch(); });
-function syncAll() { syncSpeed(); syncSlew(); for (let i = 0; i < N_LFO; i++) syncLfo(i); for (let i = 0; i < PK.length; i++) syncRow(i); }
+function syncAudioDepth() {
+  const v = patch.audioDepth ?? 1;
+  $("audioDepth").value = String(Math.round(v * 100));
+  $("audioVal").textContent = Math.round(v * 100) + "%";
+}
+$("audioDepth").addEventListener("input", e => { patch.audioDepth = +e.target.value / 100; syncAudioDepth(); savePatch(); });
+$("audioDepth").addEventListener("dblclick", () => { patch.audioDepth = 1; syncAudioDepth(); savePatch(); });
+try { const b = localStorage.getItem("slowsignal.blur"); if (b && [...$("blur").options].some(o => o.value === b)) $("blur").value = b; } catch (e) {}
+$("blur").addEventListener("change", e => { try { localStorage.setItem("slowsignal.blur", e.target.value); } catch (err) {} });
+function syncAll() { syncSpeed(); syncSlew(); syncAudioDepth(); for (let i = 0; i < N_LFO; i++) syncLfo(i); for (let i = 0; i < PK.length; i++) syncRow(i); }
 syncAll();
 
 // ---------- randomise / init ----------
@@ -996,6 +1043,7 @@ $("randomise").addEventListener("click", () => {
   }
   p.speed = patch.speed ?? 1;
   p.slew = patch.slew || 0;
+  p.audioDepth = patch.audioDepth ?? 1;
   patch = p; syncAll(); savePatch();
 });
 $("reset").addEventListener("click", () => { patch = defaultPatch(); syncAll(); savePatch(); });
@@ -1020,6 +1068,7 @@ async function loadFile(file) {
     audioEl.preload = "auto";
     audioEl.addEventListener("ended", () => setPlaying(false));
     trackName = file.name.replace(/\.[^.]+$/, "");
+    $("loadLbl").textContent = "♪ " + trackName; $("loadBtn").title = `${file.name}: click to load a different track`;
     const tr = $("track"); tr.textContent = "";
     tr.append(el("b", {}, trackName), ` · ${fmtTime(buf.duration).replace(/\.\d$/, "")}`);
     tr.title = file.name;
@@ -1128,7 +1177,8 @@ function liveRate(i) {
   const f = Math.min(80, (patch.speed ?? 1) / L.period * Math.pow(2, L.fmAmt * 4 * engine.src(L.fmSrc)));
   return 1 / f;
 }
-let uiTick = 0;
+let uiTick = 0, lastT = 0;
+const blurFrames = () => Math.max(1, +$("blur").value || 1);
 function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(0.1, (now - lastNow) / 1000); lastNow = now;
@@ -1137,11 +1187,17 @@ function frame(now) {
   let t;
   if (audioEl) t = audioEl.currentTime;
   else { if (playing) freeT += dt; if (freeT > DEFAULT_DUR) freeT = 0; t = freeT; }
-  const n0 = engine.n;
-  engine.advanceTo(t);
+  const n0 = engine.n, nb = blurFrames();
+  const us = [];
+  if (nb > 1 && t > lastT && t - lastT < 0.25) {
+    for (let k = 1; k <= nb; k++) { engine.advanceTo(lastT + (t - lastT) * k / nb); us.push(engine.uniforms()); }
+  } else engine.advanceTo(t);
   if (engine.n === n0) engine.slewTo(dt);   // paused: controls still answer, on the wall clock
   const u = engine.uniforms();
-  renderer.draw(u, dt);
+  while (us.length < nb) us.push(u);
+  us[us.length - 1] = u;
+  lastT = t;
+  renderer.drawFrames(us, dt);
   for (let i = 0; i < N_LFO; i++) drawScope(i, now);
   if ((uiTick++ & 3) === 0) {
     for (let i = 0; i < PK.length; i++) {
@@ -1193,7 +1249,7 @@ function openRenderSetup() {
   if (!audioBuf || rendering) return;
   const [W, H] = $("res").value.split("x").map(Number);
   $("rtitle").textContent = "RENDER MP4";
-  $("rnote").textContent = `Renders the whole track (${fmtTime(audioBuf.duration).replace(/\.\d$/, "")}) at ${W}×${H} with the current patch. Change the size in the top bar.`;
+  $("rnote").textContent = `Renders the whole track (${fmtTime(audioBuf.duration).replace(/\.\d$/, "")}) at ${W}×${H} with the current patch${blurFrames() > 1 ? `, with ×${blurFrames()} motion blur (about ${blurFrames()}× slower to render)` : ""}. Change the size in the top bar.`;
   $("rsetup").hidden = false; $("rstart").hidden = false;
   $("thumb").hidden = true; $("rbar").hidden = true; $("rstatus").hidden = true; $("rsave").hidden = true;
   $("rcancel").textContent = "Cancel";
@@ -1250,12 +1306,14 @@ async function startRender() {
   let aPos = 0;
   const t0 = performance.now();
   const keyEvery = fps * 2;
+  const nb = blurFrames();
   status(`Encoding ${W}×${H} at ${fps} fps · ${vsel.mux === "avc" ? "H.264" : vsel.mux.toUpperCase()} + ${asel.mux === "aac" ? "AAC" : "Opus"} audio`);
 
   for (let i = 0; i < total && !failure && !cancelRender; i++) {
     const t = i / fps;
-    eng.advanceTo(t);
-    r.draw(eng.uniforms(), 1 / fps);
+    const us = [];
+    for (let k = 0; k < nb; k++) { eng.advanceTo((i + k / nb) / fps); us.push(eng.uniforms()); }
+    r.drawFrames(us, 1 / fps);
     const vf = new VideoFrame(rc, { timestamp: Math.round(i * 1e6 / fps), duration: Math.round(1e6 / fps) });
     venc.encode(vf, { keyFrame: i % keyEvery === 0 });
     vf.close();
@@ -1330,6 +1388,7 @@ function patchToJSON(p) {
   return {
     speed: p.speed ?? 1,
     slew: p.slew || 0,
+    audioDepth: p.audioDepth ?? 1,
     lfos: p.lfos.map(L => ({ period: +L.period.toPrecision(6), shape: SHAPES[L.shape], fm: L.fmSrc < 0 ? null : SRC[L.fmSrc], fmDepth: L.fmAmt })),
     controls: Object.fromEntries(PK.map((P, i) => {
       const mod = {};
@@ -1345,6 +1404,7 @@ function patchFromJSON(j) {
   const num = (v, d) => (typeof v === "number" && isFinite(v) ? v : d);
   p.speed = Math.max(0.01, Math.min(1, num(j.speed, 1)));
   p.slew = Math.max(0, Math.min(1, num(j.slew, 0)));
+  p.audioDepth = Math.max(0, Math.min(1, num(j.audioDepth, 1)));
   p.lfos = p.lfos.map((d, i) => {
     const L = j.lfos[i] || {};
     const sh = SHAPES.indexOf(L.shape);
@@ -1539,6 +1599,7 @@ function lerpPatch(a, b, x) {
   return {
     speed: G(a.speed ?? 1, b.speed ?? 1),
     slew: L(a.slew || 0, b.slew || 0),
+    audioDepth: L(a.audioDepth ?? 1, b.audioDepth ?? 1),
     lfos: a.lfos.map((A, i) => {
       const B = b.lfos[i];
       let fmSrc, fmAmt;
