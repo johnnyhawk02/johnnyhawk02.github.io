@@ -82,6 +82,11 @@ h2 label { font: inherit; }
 .ctl .top { display: flex; justify-content: space-between; gap: 8px; }
 .ctl output { color: var(--accent); font-weight: 700; font-size: .8rem; text-align: right; }
 input[type=range] { width: 100%; accent-color: var(--accent); }
+.ai { border-top: 1px solid var(--line); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.sugs { display: flex; flex-wrap: wrap; gap: 6px; }
+.sug { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px 4px 8px; font-size: .85rem; font-weight: 400; cursor: pointer; background: var(--bg); }
+.sug input { margin: 0; accent-color: var(--accent); }
+.sug i { width: 8px; height: 8px; border-radius: 2px; background: var(--cls); }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; }
 </style>
 </head>
@@ -106,6 +111,20 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
       <p class="hint">One per line: <code>word, class</code>. The class is optional. Load a .csv or .txt file:</p>
       <input type="file" id="file" accept=".csv,.txt,text/plain,text/csv">
       <div class="legend" id="legend"></div>
+      <div class="ai">
+        <label for="aiTopic">Suggest words with AI</label>
+        <input type="text" id="aiTopic" placeholder="e.g. snack time, zoo animals, feelings, core words">
+        <div class="row">
+          <select id="aiCount" aria-label="How many words"><option value="10">10 words</option><option value="20" selected>20 words</option><option value="40">40 words</option></select>
+          <button type="button" id="aiGo">Suggest</button>
+        </div>
+        <p class="hint" id="aiNote">Uses your OpenAI key and a small text model. Each suggestion costs well under 1 cent.</p>
+        <div class="sugs" id="sugs"></div>
+        <div class="row" id="sugActions" hidden>
+          <button type="button" class="primary" id="sugAdd">Add ticked words</button>
+          <button type="button" id="sugAll">Tick all / none</button>
+        </div>
+      </div>
     </section>
 
     <section class="panel">
@@ -402,6 +421,52 @@ function makeZip(files) {
   e.setUint32(12, size, true); e.setUint32(16, off, true);
   return new Blob([...parts, ...central, e], { type: "application/zip" });
 }
+
+// AI word suggestions via the same key.
+const TEXT_MODEL = "gpt-4o-mini";
+let sugs = [];
+async function suggest() {
+  const key = $("key").value.trim(), topic = $("aiTopic").value.trim(), n = +$("aiCount").value;
+  if (!key) { $("aiNote").textContent = "Add your OpenAI key first."; return; }
+  if (!topic) { $("aiNote").textContent = "Type a topic or situation first."; $("aiTopic").focus(); return; }
+  const have = [...items.values()].map(v => v.word.toLowerCase());
+  $("aiGo").disabled = true; $("aiGo").textContent = "Thinking…"; $("aiNote").textContent = "Asking OpenAI for words…";
+  try {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST", headers: { "Authorization": "Bearer " + key, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: TEXT_MODEL, temperature: 0.4, response_format: { type: "json_object" }, messages: [
+        { role: "system", content: "You are a speech and language therapist building vocabulary for AAC (augmentative and alternative communication) boards. " +
+          "Return JSON {\"words\":[{\"word\":string,\"class\":string}]}. class must be one of: noun, verb, adjective, adverb, pronoun, preposition, social, question. " +
+          "Prefer high-frequency, concrete, easily pictured single words (short phrases only for social words like 'thank you'). Lowercase except proper nouns. No duplicates." },
+        { role: "user", content: `Topic or situation: ${topic}\nGive ${n} words, most useful first.` + (have.length ? `\nAlready on the list (do not repeat): ${have.join(", ")}` : "") }
+      ] })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error((data.error && data.error.message) || `OpenAI returned ${res.status}`);
+    const list = JSON.parse(data.choices[0].message.content).words || [];
+    sugs = list.filter(w => w && w.word && !have.includes(String(w.word).toLowerCase()))
+      .map(w => ({ word: String(w.word).trim(), cls: CLASSES.includes(String(w.class).toLowerCase()) ? String(w.class).toLowerCase() : "word", on: true }));
+    $("aiNote").textContent = sugs.length ? `${sugs.length} suggestions. Untick any you don't want.` : "No new words came back. Try a different topic.";
+  } catch (e) {
+    $("aiNote").textContent = e.message === "Failed to fetch" ? "Couldn't reach OpenAI. Check your internet connection and key." : e.message;
+  }
+  $("aiGo").disabled = false; $("aiGo").textContent = "Suggest"; drawSugs();
+}
+function drawSugs() {
+  $("sugs").innerHTML = sugs.map((w, i) => `<label class="sug" style="--cls:${clsVar(w.cls)}"><input type="checkbox" data-i="${i}" ${w.on ? "checked" : ""}><i></i>${esc(w.word)}</label>`).join("");
+  $("sugs").querySelectorAll("input").forEach(el => el.onchange = () => { sugs[+el.dataset.i].on = el.checked; });
+  $("sugActions").hidden = !sugs.length;
+}
+$("aiGo").onclick = suggest;
+$("aiTopic").onkeydown = e => { if (e.key === "Enter") suggest(); };
+$("sugAll").onclick = () => { const on = !sugs.every(w => w.on); sugs.forEach(w => w.on = on); drawSugs(); };
+$("sugAdd").onclick = () => {
+  const add = sugs.filter(w => w.on).map(w => w.cls === "word" ? w.word : `${w.word}, ${w.cls}`);
+  if (!add.length) return;
+  $("words").value = ($("words").value.trimEnd() + "\n" + add.join("\n")).trimStart();
+  store.set("aac.words", $("words").value); sugs = []; drawSugs();
+  $("aiNote").textContent = `Added ${add.length} word${add.length === 1 ? "" : "s"} to the list.`; sync();
+};
 
 $("go").onclick = () => runQueue([...items].filter(([, v]) => !v.url).map(([k]) => k));
 $("stop").onclick = () => { stopFlag = true; $("stop").disabled = true; };
