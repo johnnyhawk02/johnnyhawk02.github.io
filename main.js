@@ -24,14 +24,16 @@ if (f) {
 // ---------- work grid ----------
 $("#work-grid").innerHTML = work.map((w) => `
   <article class="card reveal" data-kind="${w.kind}">
-    <a class="frame" href="${w.link}"><img src="${w.image}" alt="${esc(w.title)}" loading="lazy"></a>
+    <a class="frame" href="${w.link}">${w.video
+      ? `<video src="${w.video}" poster="${w.image}" aria-label="${esc(w.title)} demo" autoplay muted loop playsinline preload="metadata"></video>`
+      : `<img src="${w.image}" alt="${esc(w.title)}" loading="lazy">`}</a>
     <div class="card-meta"><h3>${esc(w.title)}</h3><span class="eyebrow">${w.kind} · ${w.year}</span></div>
     <p>${esc(w.blurb)}</p>
     <a class="go" href="${w.link}">${esc(w.cta)} →</a>
   </article>`).join("");
 
 // ---------- marquee ----------
-const words = ["EpHeM", "Active Sefton", "TapTalk", "WordSteps", "Global Goon", ...releases.filter((r) => r.type === "Album").map((r) => r.title)];
+const words = ["EpHeM", "Active Sefton", "TapTalk", "WordSteps", "Calm Space", "Global Goon", ...releases.filter((r) => r.type === "Album").map((r) => r.title)];
 const strip = words.map((w) => `<span>${esc(w)}</span>`).join("");
 $("#marquee").innerHTML = strip + strip;   // twice, so the loop is seamless
 

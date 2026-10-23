@@ -65,6 +65,16 @@ export const work = [
     link: "https://johnnyhawk02.github.io/wordsteps/parents/",
     cta: "Find out more",
   },
+  {
+    kind: "App",
+    title: "Calm Space",
+    year: 2026,
+    blurb: "A calm sensory app for iPad, made for autistic and neurodivergent children: eight 3D scenes to touch, from springy discs and a jelly blob to star swarms and a kaleidoscope, each with soft sounds. No goals, scores or timers, and it works offline.",
+    image: "img/calm-space.jpg",
+    video: "videos/calm-space.mp4",
+    link: "https://johnnyhawk02.github.io/calm-space/",
+    cta: "Try it on your iPad",
+  },
 ];
 
 export const links = {
