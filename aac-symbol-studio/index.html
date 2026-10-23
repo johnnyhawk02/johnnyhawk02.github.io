@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600&display=swap">
 <style>
-/* Layout: control rail on the left, symbol board on the right; stacks on phones. */
+/* Layout: header with the key; tabbed controls on the left, symbol board on the right; stacks on phones. */
 :root {
   --bg: #f6f8fb; --panel: #ffffff; --fg: #1d2733; --muted: #5d6b7c; --line: #dbe2ea;
   --accent: #1f5fbf; --accent-fg: #ffffff; --bad: #b42318; --good: #157f3d;
@@ -28,13 +28,30 @@
 [hidden] { display: none !important; }
 html, body { margin: 0; }
 body { background: var(--bg); color: var(--fg); font: 16px/1.5 var(--body); }
-.wrap { display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: 24px; max-width: 1400px; margin: 0 auto;
-  padding-block: 24px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.masthead { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: flex-end; justify-content: space-between; max-width: 1400px; margin: 0 auto;
+  padding-block: 20px 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.keybox { display: flex; flex-direction: column; gap: 4px; flex: 0 1 420px; min-width: 0; }
+.keyrow { display: flex; gap: 10px; align-items: center; }
+.keyrow input { flex: 1; min-width: 0; border: 2px solid var(--accent); }
+.wrap { display: grid; grid-template-columns: minmax(300px, 420px) 1fr; gap: 24px; max-width: 1400px; margin: 0 auto; align-items: start;
+  padding-block: 0 32px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 @media (max-width: 820px) { .wrap { grid-template-columns: 1fr; } }
 h1 { font: 600 1.75rem/1.1 var(--display); margin: 0 0 4px; text-wrap: balance; }
 h2 { font: 600 1.05rem/1.2 var(--display); margin: 0; }
 .sub { color: var(--muted); margin: 0; font-size: .9rem; }
-aside { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.side { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; min-width: 0; position: sticky; top: 12px; max-height: calc(100vh - 24px); display: flex; flex-direction: column; }
+@media (max-width: 820px) { .side { position: static; max-height: none; } }
+.tabs { display: flex; gap: 2px; padding: 6px 6px 0; border-bottom: 1px solid var(--line); overflow-x: auto; flex: 0 0 auto; }
+.tabs button { border: 0; background: none; border-radius: 8px 8px 0 0; padding: 10px 12px; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -1px; }
+.tabs button[aria-selected=true] { color: var(--fg); border-bottom-color: var(--accent); }
+.tabs button:hover { color: var(--fg); }
+.count { display: inline-block; min-width: 1.6em; padding: 0 5px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); font-size: .72rem; font-variant-numeric: tabular-nums; }
+.pane { padding: 16px; display: flex; flex-direction: column; gap: 18px; overflow-y: auto; min-height: 0; }
+.group { display: flex; flex-direction: column; gap: 8px; }
+.group + .group { border-top: 1px solid var(--line); padding-top: 16px; }
+.filebtn { display: inline-flex; align-items: center; font-size: .85rem; flex: 0 1 auto !important; border: 1px solid var(--line); border-radius: 8px; padding: 7px 12px; cursor: pointer; background: var(--panel); }
+.filebtn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.actionbar { position: sticky; top: 0; z-index: 2; background: var(--bg); padding-block: 12px; margin-top: -12px; }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
 label { font-weight: 700; font-size: .85rem; }
 .hint { color: var(--muted); font-size: .8rem; margin: 0; }
@@ -73,12 +90,11 @@ main { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
 .actions { display: flex; gap: 6px; }
 .actions button { flex: 1; padding: 6px 8px; font-size: .8rem; }
 .empty { color: var(--muted); padding: 32px; text-align: center; border: 2px dashed var(--line); border-radius: 12px; }
-.panel.key { border: 2px solid var(--accent); }
 .cost { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-variant-numeric: tabular-nums; }
 .cost strong { font: 600 1.4rem var(--display); display: block; }
 .bar .row > * { flex: 0 0 auto; }
 h2 label { font: inherit; }
-.sliders { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px 20px; }
+.sliders { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px 20px; }
 .ctl { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .ctl .top { display: flex; justify-content: space-between; gap: 8px; }
 .ctl output { color: var(--accent); font-weight: 700; font-size: .8rem; text-align: right; }
@@ -88,7 +104,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .sug { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px 4px 8px; font-size: .85rem; font-weight: 400; cursor: pointer; background: var(--bg); }
 .sug input { margin: 0; accent-color: var(--accent); }
 .sug i { width: 8px; height: 8px; border-radius: 2px; background: var(--cls); }
-.presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
 .preset { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); }
 .preset.on { border: 2px solid var(--accent); }
 .preset .thumb { aspect-ratio: 1; max-width: 100%; background: #ffffff; display: grid; place-items: center; border-bottom: 1px solid var(--line); }
@@ -102,34 +118,47 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 </style>
 </head>
 <body>
+<header class="masthead">
+  <div class="brand">
+    <h1>AAC Symbol Studio</h1>
+    <p class="sub">Turn a word list into flat AAC pictograms with your OpenAI key.</p>
+  </div>
+  <div class="keybox">
+    <label for="key">OpenAI API key</label>
+    <div class="keyrow">
+      <input type="password" id="key" placeholder="sk-..." autocomplete="off" spellcheck="false">
+      <label class="check"><input type="checkbox" id="remember"> Remember</label>
+    </div>
+    <p class="hint">Sent only to api.openai.com. Remember saves it in this browser.</p>
+  </div>
+</header>
+
 <div class="wrap">
-  <aside>
-    <div>
-      <h1>AAC Symbol Studio</h1>
-      <p class="sub">Turn a word list into flat AAC pictograms with your OpenAI key.</p>
+  <aside class="side">
+    <div class="tabs" role="tablist" aria-label="Sections">
+      <button type="button" role="tab" id="tab-words" aria-controls="pane-words">Words <span class="count" id="wordCount"></span></button>
+      <button type="button" role="tab" id="tab-style" aria-controls="pane-style">Style</button>
+      <button type="button" role="tab" id="tab-presets" aria-controls="pane-presets">Presets</button>
+      <button type="button" role="tab" id="tab-prompt" aria-controls="pane-prompt">Prompt</button>
+      <button type="button" role="tab" id="tab-settings" aria-controls="pane-settings">Settings</button>
     </div>
 
-    <section class="panel key">
-      <h2><label for="key">OpenAI API key</label></h2>
-      <input type="password" id="key" placeholder="sk-..." autocomplete="off" spellcheck="false">
-      <label class="check"><input type="checkbox" id="remember"> Remember on this computer</label>
-      <p class="hint">The key goes only from this page to api.openai.com. If you tick Remember, it's saved in this browser.</p>
-    </section>
-
-    <section class="panel">
-      <h2>Words</h2>
-      <textarea id="words" spellcheck="false"></textarea>
-      <p class="hint">One per line: <code>word, class</code>. The class is optional. Load a .csv or .txt file:</p>
-      <input type="file" id="file" accept=".csv,.txt,text/plain,text/csv">
-      <div class="legend" id="legend"></div>
-      <div class="ai">
+    <section class="pane" role="tabpanel" id="pane-words" aria-labelledby="tab-words">
+      <div class="group">
+        <label for="words">Word list</label>
+        <textarea id="words" spellcheck="false"></textarea>
+        <p class="hint">One per line: <code>word, class</code>. The class is optional.</p>
+        <div class="row"><label class="filebtn" tabindex="0"><input type="file" id="file" accept=".csv,.txt,text/plain,text/csv" hidden>Load a .csv or .txt file</label></div>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="group">
         <label for="aiTopic">Suggest words with AI</label>
-        <input type="text" id="aiTopic" placeholder="e.g. snack time, zoo animals, feelings, core words">
         <div class="row">
-          <select id="aiCount" aria-label="How many words"><option value="10">10 words</option><option value="20" selected>20 words</option><option value="40">40 words</option></select>
-          <button type="button" id="aiGo">Suggest</button>
+          <input type="text" id="aiTopic" placeholder="e.g. snack time, zoo animals, feelings" style="flex:3 1 200px">
+          <select id="aiCount" aria-label="How many words" style="flex:1 1 90px"><option value="10">10</option><option value="20" selected>20</option><option value="40">40</option></select>
+          <button type="button" id="aiGo" style="flex:0 0 auto">Suggest</button>
         </div>
-        <p class="hint" id="aiNote">Uses your OpenAI key and a small text model. Each suggestion costs well under 1 cent.</p>
+        <p class="hint" id="aiNote">Uses your key and a small text model. Each suggestion costs well under 1 cent.</p>
         <div class="sugs" id="sugs"></div>
         <div class="row" id="sugActions" hidden>
           <button type="button" class="primary" id="sugAdd">Add ticked words</button>
@@ -138,25 +167,63 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
       </div>
     </section>
 
-    <section class="panel">
-      <h2>Settings</h2>
-      <div class="row">
-        <div><label for="model">Model</label>
-          <select id="model"><option>gpt-image-1</option><option>gpt-image-1-mini</option></select></div>
+    <section class="pane" role="tabpanel" id="pane-style" aria-labelledby="tab-style" hidden>
+      <div class="group">
+        <div class="bar"><span class="hint">Added to every prompt, and takes priority over it.</span><button type="button" id="resetStyle">Reset style</button></div>
+        <div class="sliders" id="sliders"></div>
+        <label class="check"><input type="checkbox" id="border" checked> Coloured border for the word class</label>
       </div>
-      <label for="quality">Quality</label>
-      <select id="quality"><option value="low">Low: fastest, cheapest</option><option value="medium" selected>Medium: good for most symbols</option><option value="high">High: crispest, for printing</option></select>
-      <div class="cost" aria-live="polite"><span class="hint">Approximate cost to generate the missing symbols</span><strong id="estimate">$0.00</strong><span class="hint" id="estDetail"></span></div>
-      <div class="row">
-        <div><label for="parallel">At once</label>
-          <select id="parallel"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></div>
-        <div><label class="check" style="margin-top:22px"><input type="checkbox" id="border" checked> Word-class border</label></div>
+    </section>
+
+    <section class="pane" role="tabpanel" id="pane-presets" aria-labelledby="tab-presets" hidden>
+      <div class="group">
+        <label for="pName">Save the current style</label>
+        <div class="row">
+          <input type="text" id="pName" placeholder="Name, e.g. Bold classroom" style="flex:3 1 180px">
+          <button type="button" class="primary" id="pSave" style="flex:0 0 auto">Save preset</button>
+        </div>
+        <label class="check"><input type="checkbox" id="pExample" checked> Make an example image when saving</label>
+        <p class="hint" id="pNote">A preset saves the style, prompt, border, model and quality.</p>
       </div>
+      <div class="group">
+        <div class="row">
+          <label for="exampleWord" style="flex:0 0 auto">Example symbol</label>
+          <input type="text" id="exampleWord" placeholder="eat, verb">
+        </div>
+        <p class="hint">Every example uses this same word, so you can compare styles.</p>
+        <div class="presets" id="presets"></div>
+        <div class="row">
+          <button type="button" id="pExport">Export presets</button>
+          <button type="button" id="pImportBtn">Import presets</button>
+          <input type="file" id="pImport" accept=".json,application/json" hidden>
+        </div>
+      </div>
+    </section>
+
+    <section class="pane" role="tabpanel" id="pane-prompt" aria-labelledby="tab-prompt" hidden>
+      <div class="group">
+        <div class="bar"><label for="template">Prompt</label><span class="hint" id="tplState">Original prompt</span></div>
+        <p class="hint">Sent once per word. <code>[WORD]</code>, <code>[WORD CLASS]</code>, <code>[BORDER]</code> and <code>[STYLE]</code> are filled in for you. Style is added at the end if <code>[STYLE]</code> is missing.</p>
+        <textarea id="template" spellcheck="false"></textarea>
+        <div class="row"><button type="button" id="resetTpl" style="flex:0 0 auto">Reset to original prompt</button></div>
+      </div>
+    </section>
+
+    <section class="pane" role="tabpanel" id="pane-settings" aria-labelledby="tab-settings" hidden>
+      <div class="group">
+        <label for="model">Model</label>
+        <select id="model"><option>gpt-image-1</option><option>gpt-image-1-mini</option></select>
+        <label for="quality">Quality</label>
+        <select id="quality"><option value="low">Low: fastest, cheapest</option><option value="medium" selected>Medium: good for most symbols</option><option value="high">High: crispest, for printing</option></select>
+        <label for="parallel">Symbols generated at once</label>
+        <select id="parallel"><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
+      </div>
+      <div class="cost" aria-live="polite"><span class="hint">Approximate cost of the missing symbols</span><strong id="estimate">$0.00</strong><span class="hint" id="estDetail"></span></div>
     </section>
   </aside>
 
   <main>
-    <div class="bar">
+    <div class="bar actionbar">
       <div class="row" style="flex:0 1 auto">
         <button class="primary" id="go">Generate missing</button>
         <button id="stop" disabled>Stop</button>
@@ -164,32 +231,6 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
       </div>
       <div class="stats" id="stats"></div>
     </div>
-    <section class="panel">
-      <div class="bar"><h2>Presets</h2>
-        <div class="row" style="flex:0 1 auto"><button type="button" id="pExport">Export presets</button><button type="button" id="pImportBtn">Import</button><input type="file" id="pImport" accept=".json,application/json" hidden></div></div>
-      <div class="row">
-        <div><label for="exampleWord">Example symbol</label><input type="text" id="exampleWord" placeholder="eat, verb"></div>
-        <p class="hint" style="flex:2 1 260px">Every preset's example uses this same word, so you can compare styles side by side.</p>
-      </div>
-      <div class="presets" id="presets"></div>
-      <div class="row">
-        <input type="text" id="pName" placeholder="Name for current settings, e.g. Bold classroom" aria-label="Preset name" style="flex:2 1 220px">
-        <label class="check" style="flex:0 1 auto"><input type="checkbox" id="pExample" checked> Make an example image</label>
-        <button type="button" class="primary" id="pSave" style="flex:0 0 auto">Save preset</button>
-      </div>
-      <p class="hint" id="pNote">A preset saves the style, prompt, border, model and quality.</p>
-    </section>
-    <section class="panel">
-      <div class="bar"><h2>Style</h2><button type="button" id="resetStyle">Reset style</button></div>
-      <p class="hint">These settings are added to the end of every prompt and take priority over it. Put <code>[STYLE]</code> in the prompt to place them somewhere else.</p>
-      <div class="sliders" id="sliders"></div>
-    </section>
-    <section class="panel">
-      <div class="bar"><h2><label for="template">Prompt</label></h2><span class="hint" id="tplState">Original prompt</span></div>
-      <p class="hint">This prompt is sent once per word. <code>[WORD]</code> is replaced by the word, <code>[WORD CLASS]</code> by its class, and <code>[BORDER]</code> by the border instruction. Your edits are saved in this browser.</p>
-      <textarea id="template" spellcheck="false"></textarea>
-      <div class="row" style="justify-content:flex-start"><button type="button" id="resetTpl" style="flex:0 0 auto">Reset to original prompt</button></div>
-    </section>
     <div class="status err" id="globalErr" hidden></div>
     <div class="board" id="board"></div>
   </main>
@@ -347,7 +388,7 @@ function sync() {
 
 function render() {
   const board = $("board"); board.innerHTML = "";
-  if (!items.size) { board.innerHTML = '<div class="empty">Add some words on the left to see them here.</div>'; }
+  if (!items.size) { board.innerHTML = '<div class="empty">Add words in the Words tab to see them here.</div>'; }
   for (const [k, it] of items) {
     const card = document.createElement("article");
     card.className = "card"; card.style.setProperty("--cls", clsVar(it.cls));
@@ -373,7 +414,7 @@ function render() {
   const vals = [...items.values()];
   const done = vals.filter(v => v.url).length, err = vals.filter(v => v.status === "error").length;
   $("stats").textContent = `${done} of ${vals.length} generated` + (err ? ` · ${err} failed` : "") + (spent ? ` · about $${spent.toFixed(2)} spent` : "");
-  updateCost(); drawPresets();
+  updateCost(); drawPresets(); $("wordCount").textContent = items.size;
   $("zip").disabled = !done || running;
   $("go").disabled = running || ![...items.values()].some(v => !v.url); $("stop").disabled = !running;
 }
@@ -592,6 +633,17 @@ $("sugAdd").onclick = () => {
   $("aiNote").textContent = `Added ${add.length} word${add.length === 1 ? "" : "s"} to the list.`; sync();
 };
 
+// Tabs
+const TABS = ["words", "style", "presets", "prompt", "settings"];
+function showTab(t, focus) {
+  for (const x of TABS) { const on = x === t; $("tab-" + x).setAttribute("aria-selected", on); $("tab-" + x).tabIndex = on ? 0 : -1; $("pane-" + x).hidden = !on; }
+  if (focus) $("tab-" + t).focus();
+  store.set("aac.tab", t);
+}
+TABS.forEach((t, i) => { const b = $("tab-" + t); b.onclick = () => showTab(t);
+  b.onkeydown = e => { const d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0; if (d) showTab(TABS[(i + d + TABS.length) % TABS.length], true); }; });
+showTab(TABS.includes(store.get("aac.tab")) ? store.get("aac.tab") : "words");
+
 $("go").onclick = () => runQueue([...items].filter(([, v]) => !v.url).map(([k]) => k));
 $("stop").onclick = () => { stopFlag = true; $("stop").disabled = true; };
 $("zip").onclick = async () => {
@@ -599,6 +651,7 @@ $("zip").onclick = async () => {
   for (const it of items.values()) if (it.blob) files.push({ name: fileName(it), data: new Uint8Array(await it.blob.arrayBuffer()) });
   download(makeZip(files), "aac-symbols.zip");
 };
+document.querySelector(".filebtn").onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("file").click(); } };
 $("file").onchange = async e => { const f = e.target.files[0]; if (!f) return; $("words").value = await f.text(); store.set("aac.words", $("words").value); sync(); };
 $("words").oninput = () => { store.set("aac.words", $("words").value); sync(); };
 const tplState = () => { $("tplState").textContent = $("template").value === TEMPLATE ? "Original prompt" : "Edited · saved in this browser"; };
