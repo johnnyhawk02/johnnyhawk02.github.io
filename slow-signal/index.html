@@ -708,8 +708,13 @@ void main(){
   fp = fp/vec2(asp,1.)+.5;
   float edge = step(0.,fp.x)*step(fp.x,1.)*step(0.,fp.y)*step(fp.y,1.);
   vec3 prev = hueShift(texture(uPrev, fp).rgb, fbHue*km) * edge;
-  float f = pow(clamp(fb,0.,.97), k);
-  o = vec4(clamp(col*(1.-f*.55) + prev*f, 0., 1.), 1.);
+  // feedback as a time-step-independent leaky mix: per 1/60 s the old image keeps fb of itself and the new one
+  // adds (1-.55fb). For any step the new image's weight is scaled so the steady brightness is the same,
+  // whatever the frame rate or number of motion-blur sub-frames.
+  float fb0 = clamp(fb,0.,.97);
+  float f = pow(fb0, k);
+  float w = (1.-f)*(1.-.55*fb0)/(1.-fb0);
+  o = vec4(clamp(col*w + prev*f, 0., 1.), 1.);
 }`;
 const FS_POST = `#version 300 es
 precision highp float;
