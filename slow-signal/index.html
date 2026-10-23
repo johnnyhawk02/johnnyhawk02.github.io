@@ -193,6 +193,35 @@ table.matrix { border-collapse: collapse; width: 100%; min-width: 660px; }
 .foot { margin-top: 14px; font-size: 12px; color: var(--ink-dim); display: flex; flex-wrap: wrap; gap: 6px 18px; }
 
 /* render overlay */
+/* perform mode: the screen takes the whole window */
+body.perform { overflow: hidden; }
+body.perform .screen-frame {
+  position: fixed; inset: 0; z-index: 30; width: auto !important; height: auto !important;
+  max-width: none; border-radius: 0; background: #000; display: grid; place-items: center;
+}
+body.perform .screen-frame canvas { width: var(--pw); height: var(--ph); }
+body.perform.idle, body.perform.idle * { cursor: none; }
+.perf-ui { position: absolute; inset: 0; transition: opacity .4s; }
+body.perform.idle .perf-ui { opacity: 0; }
+.perf-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 72px; height: 120px; border: 0; border-radius: 10px; cursor: pointer;
+  background: rgba(10, 12, 16, .45); color: #f2f2f2; font: 300 64px/1 var(--f-body);
+}
+.perf-arrow:hover { background: rgba(10, 12, 16, .7); }
+.perf-arrow.left { left: max(16px, env(safe-area-inset-left, 0px)); }
+.perf-arrow.right { right: max(16px, env(safe-area-inset-right, 0px)); }
+.perf-name {
+  position: absolute; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  font-family: var(--f-display); font-size: clamp(14px, 2.2vw, 26px); letter-spacing: .14em; color: #f2f2f2;
+  text-shadow: 0 1px 12px rgba(0,0,0,.8); white-space: nowrap; transition: opacity .6s;
+}
+.perf-name small { display: block; text-align: center; font: 500 11px/1.6 var(--f-mono); letter-spacing: .1em; opacity: .7; }
+.perf-name.fade { opacity: 0; }
+.perf-exit {
+  position: absolute; top: calc(16px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+  background: rgba(10, 12, 16, .55); color: #f2f2f2; border: 1px solid rgba(255,255,255,.25); border-radius: 6px; padding: 6px 12px; cursor: pointer;
+}
 .overlay { position: fixed; inset: 0; background: rgba(8, 9, 12, .82); display: grid; place-items: center; z-index: 20; padding: 16px; }
 .dialog {
   width: min(520px, 100%); background: var(--module); border: 1px solid var(--line); border-radius: 10px; padding: 18px;
@@ -253,6 +282,7 @@ table.matrix { border-collapse: collapse; width: 100%; min-width: 660px; }
       <option value="1" selected>High</option>
       <option value="1.8">Very high</option>
     </select>
+    <button class="btn" id="perform" type="button" title="Full-screen video with preset buttons">Perform</button>
     <button class="btn rec" id="render" type="button" disabled>Render MP4</button>
   </div>
 </header>
@@ -292,6 +322,12 @@ table.matrix { border-collapse: collapse; width: 100%; min-width: 660px; }
       <div class="screen-frame" id="frame">
         <canvas id="view"></canvas>
         <div class="drop-hint">Drop the audio file to load it</div>
+        <div class="perf-ui" id="perfUi" hidden>
+          <button class="perf-arrow left" id="perfPrev" type="button" aria-label="Previous preset">‹</button>
+          <button class="perf-arrow right" id="perfNext" type="button" aria-label="Next preset">›</button>
+          <div class="perf-name" id="perfName" aria-live="polite"></div>
+          <button class="perf-exit" id="perfExit" type="button">Exit</button>
+        </div>
       </div>
       <div class="transport">
         <button class="btn icon" id="play" type="button" aria-label="Play or pause">❚❚</button>
@@ -947,13 +983,23 @@ try { renderer = new Renderer(view); } catch (err) {
 }
 function aspect() { const [w, h] = $("res").value.split("x").map(Number); return w / h; }
 function layoutView() {
-  const box = frameEl.parentElement.clientWidth - 20;
   const a = aspect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  if (document.body.classList.contains("perform")) {
+    // letterbox the chosen output shape inside the whole window
+    const W = window.innerWidth, H = window.innerHeight;
+    let w = W, h = W / a;
+    if (h > H) { h = H; w = H * a; }
+    frameEl.style.setProperty("--pw", w + "px"); frameEl.style.setProperty("--ph", h + "px");
+    const px = Math.min(2560, Math.round(w * dpr));
+    if (renderer) renderer.resize(px & ~1, Math.round(px / a) & ~1);
+    return;
+  }
+  const box = frameEl.parentElement.clientWidth - 20;
   const maxH = Math.max(220, Math.min(window.innerHeight * 0.58, 720));
   let w = box, h = w / a;
   if (h > maxH) { h = maxH; w = h * a; }
   frameEl.style.width = w + "px"; frameEl.style.height = h + "px";
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const px = Math.min(1600, Math.round(w * dpr));
   if (renderer) renderer.resize(px & ~1, Math.round(px / a) & ~1);
 }
@@ -1319,11 +1365,61 @@ $("presetSel").addEventListener("change", e => {
   if (!x) { currentPreset = ""; renderPresetList(); return; }
   try {
     startMorph(patchFromJSON(x.patch), x.name);
+    flashPerfName(x.name);
     currentPreset = x.id;
     $("presetName").value = x.factory ? "" : x.name;
   } catch (err) { pmsg(`“${x.name}” couldn't be loaded: ${err.message}.`, true); }
   renderPresetList();
 });
+// ---------- perform mode ----------
+let perfFull = false, idleTimer = 0, nameTimer = 0;
+function flashPerfName(name) {
+  const el2 = $("perfName"), g = +$("morphTime").value;
+  el2.textContent = "";
+  el2.append(name, el("small", {}, g ? `gliding · ${$("morphTime").selectedOptions[0].textContent}` : ""));
+  el2.classList.remove("fade");
+  clearTimeout(nameTimer);
+  nameTimer = setTimeout(() => el2.classList.add("fade"), 3500);
+}
+function wake() {
+  document.body.classList.remove("idle");
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => document.body.classList.add("idle"), 2500);
+}
+async function enterPerform() {
+  document.body.classList.add("perform");
+  $("perfUi").hidden = false;
+  layoutView(); wake();
+  const cur = presets.byId(currentPreset);
+  flashPerfName(cur ? cur.name : "Current patch");
+  try { await document.documentElement.requestFullscreen(); perfFull = true; } catch (e) { perfFull = false; }
+  layoutView();
+}
+function exitPerform() {
+  if (!document.body.classList.contains("perform")) return;
+  document.body.classList.remove("perform", "idle");
+  $("perfUi").hidden = true;
+  clearTimeout(idleTimer);
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  perfFull = false;
+  layoutView();
+}
+$("perform").addEventListener("click", enterPerform);
+$("perfExit").addEventListener("click", exitPerform);
+$("perfPrev").addEventListener("click", () => { stepPreset(-1); wake(); });
+$("perfNext").addEventListener("click", () => { stepPreset(1); wake(); });
+document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && perfFull) exitPerform(); else layoutView(); });
+["pointermove", "pointerdown"].forEach(ev => document.addEventListener(ev, () => { if (document.body.classList.contains("perform")) wake(); }));
+document.addEventListener("keydown", e => {
+  if (!document.body.classList.contains("perform")) return;
+  if (e.key === "ArrowRight") { stepPreset(1); e.preventDefault(); }
+  else if (e.key === "ArrowLeft") { stepPreset(-1); e.preventDefault(); }
+  else if (e.key === "Escape") exitPerform();
+  wake();
+});
+// a tap on the picture itself brings the buttons back without changing anything
+frameEl.addEventListener("click", e => { if (e.target === view) wake(); });
+
 // ---------- glide between presets ----------
 let morph = null;   // { from, to, t0, dur, name }
 const clonePatch = p => JSON.parse(JSON.stringify(p));
