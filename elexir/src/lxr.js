@@ -1112,7 +1112,7 @@ export class FxBus {
     const fx = this.input, dw = this.forceWet ? 1 : this.dryWet;
     switch (this.fxType) {
       case FX_DISTORTION: distortionProcess(this.distortion, fx, out, size, dw); break;
-      case FX_RING: ringmodProcess(this.ringmod, fx, out, size, this.dryWet, rng); break;
+      case FX_RING: ringmodProcess(this.ringmod, fx, out, size, dw, rng); break;
       case FX_COMPRESSOR: compressorProcess(this.compressor, fx, out, size, dw); break;
       case FX_DELAY:
         if (this.delay.type === DELAY_NORMAL) delayProcess(this.delay, this.buffer, fx, out, size, dw);

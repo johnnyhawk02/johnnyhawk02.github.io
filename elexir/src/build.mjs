@@ -15,7 +15,7 @@ const strip = (src) => src
 const engine = [read('lxr-tables.js'), read('lxr-ui-data.js'), read('lxr.js')].map(strip).join('\n');
 const names = ['LxrEngine', 'PAR', 'CC', 'CC2', 'BLOCK', 'REAL_FS', 'PARAM_DTYPES', 'MOD_TARGETS',
   'MOD_TARGET_VOICE_RANGES', 'VOICE_PAGES', 'INIT_KIT', 'OSC_WAVE_NAMES', 'FILTER_TYPE_NAMES',
-  'LFO_WAVE_NAMES', 'LFO_SYNC_NAMES', 'MIXER_ROUTING_FX_BUS', 'FX_NAMES', 'FX_DELAY', 'DIST_NAMES', 'RATIO_NAMES', 'DELAY_NAMES'];
+  'LFO_WAVE_NAMES', 'LFO_SYNC_NAMES', 'MIXER_ROUTING_FX_BUS', 'FX_NAMES', 'FX_DELAY', 'FX_DISTORTION', 'FX_RING', 'FxBus', 'Rng', 'DIST_NAMES', 'RATIO_NAMES', 'DELAY_NAMES'];
 const bundle = `const LXR = (() => {\n${engine}\nreturn { ${names.join(', ')} };\n})();\n`;
 
 // kit files (.SND) in kits/ are bundled into the page's kit menu

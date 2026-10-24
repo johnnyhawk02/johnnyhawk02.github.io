@@ -20,7 +20,7 @@ Erica Synths.
 - **Save** a sound under a random alien name (kept in the browser), or export it as an LXR `.SND`.
 - **FX bus** from the firmware: distortion (tube, fold, rat), ring mod, compressor and delay
   (normal or ping-pong). Each voice can be routed through it, and kits load their own settings.
-- **Mixer** with level, pan, reverb send, mute and solo, and a reverb with a gated mode.
+- **Mixer** with level, pan, mute and solo, and three FX sends per voice (echo, distortion, ring mod) using the firmware's FX code; a master compressor with a drum 1 sidechain duck.
 - **Crossfeed**: a 6 × 6 patchbay that feeds any voice into the FM, filter or ring modulation of
   any other, with a depth control and a randomiser.
 
@@ -31,7 +31,7 @@ integer behaviour. `src/verify.mjs` runs the same parameter edits and triggers t
 port and through the firmware's own engine code (cross-compiled for the Cortex-M7 FPU and run
 under qemu) and compares every sample of all six voices and of the FX bus output. Over 700 random
 scenarios (176 million samples) they are identical. The compressor calls the C library's `logf`
-and `expf`, so those are ported too (glibc's and newlib's share the same algorithm). The mixer, reverb, crossfeed and pattern generator are new and
+and `expf`, so those are ported too (glibc's and newlib's share the same algorithm). The mixer, FX sends, crossfeed and pattern generator are new and
 sit outside that comparison; with crossfeed at zero the engine runs exactly as verified.
 
 The shipped firmware is built with `-O3 -ffast-math`, which rounds slightly differently: with

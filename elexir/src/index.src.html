@@ -162,7 +162,7 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 /* perform: pattern and randomise cards on the left, the mixer card on the right */
 .card { background: var(--tint); border-radius: 10px; padding: 14px 16px 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
 .card > h2 { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
-.tab-perform { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); grid-template-rows: 1fr auto; gap: 14px; align-items: stretch; }
+.tab-perform { grid-template-columns: minmax(260px, 1fr) minmax(0, 2.8fr); grid-template-rows: 1fr auto; gap: 14px; align-items: stretch; }
 .pattern-card { grid-column: 1; grid-row: 1; grid-template-rows: auto 1fr; align-content: stretch; }
 .rand-card { grid-column: 1; grid-row: 2; }
 .right-col { grid-column: 2; grid-row: 1 / span 2; display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 14px; min-height: 0; min-width: 0; }
@@ -198,16 +198,38 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .tab-perform .strip:first-child { border-left: 0; }
 .tab-perform .strip .name { font-size: .84rem; }
 .tab-perform .sends { gap: 10px; }
-.tab-perform .sdial .dial { width: 38px; height: 38px; }
+.tab-perform .sdial .dial { width: 32px; height: 32px; }
 .tab-perform .sdial span { font-size: .7rem; margin-top: 2px; }
 .tab-perform .ms { gap: 6px; }
 .tab-perform .sm { font-size: .68rem; }
 .tab-perform .strip .fader { height: 230px; }
 .tab-perform .ms button { width: 28px; height: 24px; font-size: .74rem; }
 .fx-card { padding: 10px 16px; gap: 4px; }
-.fx-row { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 16px; align-items: center; }
-.fx-sels { display: grid; gap: 6px; }
-.fx-sels select { width: 100%; padding: 4px 8px; font-size: .84rem; }
+.fx-groups { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 3.2fr) minmax(0, 3.8fr); gap: 12px; }
+.fxg { display: grid; gap: 4px; align-content: start; min-width: 0; }
+.fxg + .fxg { border-left: 1px solid var(--line); padding-left: 12px; }
+.fxh { font-size: .74rem; color: var(--muted); text-transform: lowercase; }
+.fxh b { color: var(--ink); font-weight: 600; margin-right: 2px; }
+.radios { display: flex; flex-wrap: wrap; gap: 2px; }
+.radios label { position: relative; cursor: pointer; }
+.radios input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.radios span { display: block; font-size: .68rem; line-height: 1; padding: 4px 6px; border-radius: 4px; background: var(--tint-2); color: var(--ink); text-transform: lowercase; }
+.radios input:checked + span { background: var(--ink); color: var(--panel); }
+.radios input:focus-visible + span { outline: 2px solid var(--ink); outline-offset: 1px; }
+.fxg .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; }
+.chan { display: flex; gap: 6px; justify-content: center; align-items: stretch; }
+.chan .sends { flex-direction: column; justify-content: center; gap: 8px; }
+.tab-perform .chan .sdial .dial { width: 26px; height: 26px; }
+.chan .sdial span { font-size: .6rem; }
+.shead { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.shead .sdial span { display: none; } /* the dial's own tooltip names it pan */
+.sfoot { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.sfoot output { min-width: 2.2em; text-align: right; }
+.tab-perform .shead .sdial .dial { width: 30px; height: 30px; }
+/* each send's label sits to the left of its dial so three stack beside a short fader */
+.chan .sends .sdial { display: flex; align-items: center; gap: 3px; }
+.chan .sends .sdial span { order: -1; margin: 0; }
+.tab-perform .chan .sends .sdial .dial { width: 24px; height: 24px; }
 .fx-knobs { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
 .sends { display: flex; gap: 4px; justify-content: center; }
 .sdial { display: grid; justify-items: center; gap: 0; user-select: none; touch-action: none; }
@@ -320,7 +342,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-perform .strips { min-height: 0; }
   .tab-perform .strip { display: flex; flex-direction: column; align-items: center; min-height: 0; }
   .tab-perform .strip .sm { align-self: stretch; }
-  .tab-perform .strip .fader { flex: 1 1 0; height: auto; min-height: 50px; }
+  .tab-perform .chan { flex: 1 1 0; min-height: 80px; }
+  .tab-perform .strip .fader { height: auto; }
   .pattern-card { grid-template-rows: auto minmax(0, 1fr); }
   .tab-perform .perform { align-content: space-evenly; align-self: stretch; padding-block: 0; }
 }
@@ -332,6 +355,9 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .mix-card > h2 { display: none; }
   .tab-perform .sdial .dial { width: 30px; height: 30px; }
   .tab-perform .strip .sm { font-size: 0; } /* the pan label; the slider stays */
+  .radios span { padding: 4px 5px; }
+  .fx-card .knob .dial { width: 30px; height: 30px; }
+  .fx-groups { gap: 10px; } .fxg + .fxg { padding-left: 10px; }
 }
 @media (max-width: 1300px) { h1 small { display: none; } .field input[type=range] { width: 70px; } .topbar { gap: 8px 14px; } }
 @media (max-width: 760px) {
@@ -342,6 +368,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .master-card, .fx-card { grid-template-columns: minmax(0, 1fr); }
   .fx-row { grid-template-columns: minmax(0, 1fr); }
   .mgroup + .mgroup { border-left: 0; padding-left: 0; }
+  .fx-groups { grid-template-columns: minmax(0, 1fr); }
+  .fxg + .fxg { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 8px; }
   .tab-perform .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 16px; }
   .tab-perform .strip:nth-child(4) { border-left: 0; }
   .tab-perform .strip .fader { height: 140px; }
@@ -435,13 +463,12 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
         <div class="mgroup"><span class="mlab">drum 1 sidechain<output id="duck-out"></output></span><div class="knobs" id="duck-knobs"></div></div>
       </div>
     </div>
-    <div class="card fx-card" role="group" aria-label="Delay">
-      <h2>delay</h2>
-      <div class="fx-row">
-        <div class="fx-sels">
-          <span id="fx-mode-wrap"><select id="fx-mode" aria-label="FX mode"></select></span>
-        </div>
-        <div class="knobs fx-knobs" id="fx-params"></div>
+    <div class="card fx-card" role="group" aria-label="Effects">
+      <h2>fx</h2>
+      <div class="fx-groups">
+        <div class="fxg" role="group" aria-label="FX 1, echo"><span class="fxh"><b>1</b> echo</span><div class="radios" id="r-echo"></div><div class="knobs" id="k-echo"></div></div>
+        <div class="fxg" role="group" aria-label="FX 2, distortion"><span class="fxh"><b>2</b> distortion</span><div class="radios" id="r-dist"></div><div class="knobs" id="k-dist"></div></div>
+        <div class="fxg" role="group" aria-label="FX 3, ring mod"><span class="fxh"><b>3</b> ring mod</span><div class="radios" id="r-ring"></div><div class="knobs" id="k-ring"></div></div>
       </div>
     </div>
     <div class="card mix-card">
@@ -505,8 +532,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   <details open>
     <summary>HOW TO PLAY IT</summary>
     <div class="body">
-      <p class="src">Elexir by Johnny Hawk is an unofficial browser drum machine, not made or endorsed by Erica Synths. Its sound engine is a JavaScript port of the six drum voices and the FX bus of the Erica Synths LXR-02 firmware (<a href="https://github.com/erica-synths/lxr-desktop-app" target="_blank" rel="noopener">erica-synths/lxr-desktop-app</a>, GPL-3.0, commit a43cd4f), ported line by line; its output matches the original C code compiled for the Cortex-M7 sample for sample. The FX bus (distortion, ring mod, compressor, delay) is the firmware's too; the mixer, reverb, crossfeed and pattern generator are new. The 16 kits after the init kit are Hrtl's free LXR-02 DLC kits, used with credit, and any LXR kit file (.SND) can be opened. Source and licence (GPL-3.0): <a href="https://github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir" target="_blank" rel="noopener">github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir</a>.</p>
-      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit; mute and solo sit after the engine. Save keeps the current sound (kit and crossfeed) in this browser under a made-up name, listed under saved in the kit menu; export downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). The one effect is the LXR-02's delay, from its FX slot, run as a send: each mixer strip's delay dial sets how much of that voice goes into it, every voice keeps its dry sound and the delay output is fully wet. Kits that used another effect get a plain delay instead. Its time is synced to the tempo: from 1/128 of a bar fully left to one bar fully right, gliding through the musical lengths (the readout names the nearest, with ≈ when it is between); randomise puts it near a musical length but not exactly on it. The sync, the send and the larger delay buffer are additions to the firmware. The FX section above the mixer picks the effect and sets it. The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits, and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the red figures show how far each is pulling down. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. Press R for the same; Randomise all (Shift-R) does every voice at once. New kit builds a fresh kit from voices of the built-in kits, varies each by 10% and names it something ending in kit; it isn't kept until you press its save button. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
+      <p class="src">Elexir by Johnny Hawk is an unofficial browser drum machine, not made or endorsed by Erica Synths. Its sound engine is a JavaScript port of the six drum voices and the FX bus of the Erica Synths LXR-02 firmware (<a href="https://github.com/erica-synths/lxr-desktop-app" target="_blank" rel="noopener">erica-synths/lxr-desktop-app</a>, GPL-3.0, commit a43cd4f), ported line by line; its output matches the original C code compiled for the Cortex-M7 sample for sample. The FX bus (distortion, ring mod, compressor, delay) is the firmware's too; the mixer, the three FX sends, crossfeed and the pattern generator are new. The 16 kits after the init kit are Hrtl's free LXR-02 DLC kits, used with credit, and any LXR kit file (.SND) can be opened. Source and licence (GPL-3.0): <a href="https://github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir" target="_blank" rel="noopener">github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir</a>.</p>
+      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit; mute and solo sit after the engine. Save keeps the current sound (kit and crossfeed) in this browser under a made-up name, listed under saved in the kit menu; export downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). There are three effects, all the LXR-02's own FX-slot code run as sends: each mixer strip has three dials left of its fader, fx1 for echo, fx2 for distortion and fx3 for ring mod. Every voice keeps its dry sound and each effect's output is fully wet. The echo's time is synced to the tempo: from 1/128 of a bar fully left to one bar fully right, gliding through the musical lengths (the readout names the nearest, with ≈ when it is between); randomise puts it near a musical length but not exactly on it. The FX section above the mixer sets all three: echo mode (normal or ping-pong), time, tone and feedback; distortion type (tube, fold or rat), drive, color, tone and volume; ring mod carrier wave and frequency. A kit that used distortion or ring mod in its FX slot loads those settings into that effect with a little of each routed voice sent to it. The sync, the sends, the extra buses and the larger delay buffer are additions to the firmware. The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits, and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the red figures show how far each is pulling down. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. Press R for the same; Randomise all (Shift-R) does every voice at once. New kit builds a fresh kit from voices of the built-in kits, varies each by 10% and names it something ending in kit; it isn't kept until you press its save button. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
     </div>
   </details>
 
@@ -558,6 +585,7 @@ function barOk(b, bar) {
 }
 // the tempo-synced delay: 1/128 of a bar at 0, a whole bar at 1, evenly in octaves between
 const delaySamples = (pos, bpm) => 240 / bpm * Math.pow(2, -7 * (1 - pos)) * LXR.REAL_FS;
+const RING_MAKEUP = 3;
 class Player {
   constructor(outRate) {
     this.e = new LXR.LxrEngine();
@@ -580,6 +608,13 @@ class Player {
     // delay: tempo-synced time, 0 = 1/128 .. 1 = one bar, and run as a send effect (all wet,
     // the voices keep their dry path); not in the firmware
     this.delayPos = 1 + Math.log2(3 / 16) / 7;
+    // two more of the firmware's FX, each as its own send bus: distortion and ring mod (the
+    // engine's own FX bus is the echo); all three are wet only, the voices keep their dry path
+    this.dist = new LXR.FxBus(); this.dist.fxType = LXR.FX_DISTORTION; this.dist.forceWet = true;
+    this.ring = new LXR.FxBus(); this.ring.fxType = LXR.FX_RING; this.ring.forceWet = true;
+    this.fxRng = new LXR.Rng(0x2545f491);
+    this.sendD = new Float32Array(6); this.sendR = new Float32Array(6);
+    this.busIn = new Float32Array(128); this.busOut = new Int16Array(128);
     this.duckEnv = 0; this.duckAt = 1; this.compEnv = 0; this.gr = 0; this.duckMin = 1;
     this.events = [];
     this._render(this.A); this._render(this.B);
@@ -590,7 +625,15 @@ class Player {
     else if (m.type === 'trig') { this.e.trigger(m.voice, m.vel, 60); this.gainTo[Math.min(m.voice, 5)] = 1; }
     else if (m.type === 'xmod') this.e.setCrossMod(m.amt, m.target);
     else if (m.type === 'delay') this.delayPos = m.pos;
-    else if (m.type === 'mix') { if (m.master) Object.assign(this.master, m.master); this.fxAmt.set(m.fx); this.chan.set(m.chan); }
+    else if (m.type === 'mix') {
+      if (m.master) Object.assign(this.master, m.master);
+      if (m.dist) {
+        this.dist.distortion.type = m.dist.type;
+        m.dist.p.forEach((v, i) => this.dist.setParameter(i, v / 127));
+        this.ring.ringmod.osc.waveform = m.ring.wave;
+        this.ring.setParameter(0, m.ring.freq / 127);
+        this.sendD.set(m.sendD); this.sendR.set(m.sendR);
+      } this.fxAmt.set(m.fx); this.chan.set(m.chan); }
     else if (m.type === 'seq') {
       this.pattern = m.pattern; this.bpm = m.bpm; this.vel = m.vel; this.e.bpm = m.bpm;
       this.accGain = Math.pow(10, -m.accentDb / 20);
@@ -636,10 +679,9 @@ class Player {
       // accent gain and mute/solo, both ramped over the block, and the duck on every voice but drum 1
       const d0 = n ? duck0 : 1, d1 = n ? duck1 : 1;
       const g0 = this.gain[n] * this.chanAt[n] * d0, g1 = this.gainTo[n] * this.chan[n] * d1, dg = (g1 - g0) / 64;
-      // a voice routed to the FX bus splits between the bus (fx send) and the outputs;
-      // at a full send it only reaches the outputs through the bus, as in the firmware
-      const fa = e.audioRouting[n] === LXR.MIXER_ROUTING_FX_BUS ? this.fxAmt[n] : 0, direct = isDelay ? 1 : 1 - fa;
-      const pl = direct * pans[n].triggeredPanL / 32768, pr = direct * pans[n].triggeredPanR / 32768;
+      // every voice reaches the outputs; one routed to the echo bus also feeds it at its send
+      const fa = e.audioRouting[n] === LXR.MIXER_ROUTING_FX_BUS ? this.fxAmt[n] : 0;
+      const pl = pans[n].triggeredPanL / 32768, pr = pans[n].triggeredPanR / 32768;
       const o = out[n];
       for (let i = 0; i < 64; i++) { const v = o[i] * (g0 + dg * i); L[i] += v * pl; R[i] += v * pr; }
       this.fxGain[n] = g1 * fa;
@@ -647,6 +689,23 @@ class Player {
     }
     // the firmware's FX bus (distortion, ring mod, compressor or delay), sample-exact
     const fx = e.renderFx(this.fxGain);
+    // distortion and ring mod buses: each voice panned in at its send, saturated to int16.
+    // The firmware's ring mod carrier is quiet (about a third of a plain multiply), so its bus gets makeup gain.
+    for (const [bus, sends, mk] of [[this.dist, this.sendD, 1], [this.ring, this.sendR, RING_MAKEUP]]) {
+      const bi = this.busIn; bi.fill(0);
+      let any = false;
+      for (let n = 0; n < 6; n++) {
+        const g = sends[n] * this.gainTo[n] * this.chan[n] * (n ? duck1 : 1);
+        if (!g) continue;
+        any = true;
+        const o = out[n], pl = pans[n].triggeredPanL * g, pr = pans[n].triggeredPanR * g;
+        for (let i = 0; i < 64; i++) { bi[2 * i] += o[i] * pl; bi[2 * i + 1] += o[i] * pr; }
+      }
+      for (let i = 0; i < 128; i++) bus.input[i] = Math.max(-32768, Math.min(32767, Math.round(bi[i])));
+      const bo = this.busOut; bo.fill(0);
+      bus.process(bo, 64, this.fxRng);
+      if (any || bo.some((v) => v)) for (let i = 0; i < 64; i++) { L[i] += bo[2 * i] * mk / 32768; R[i] += bo[2 * i + 1] * mk / 32768; }
+    }
     for (let i = 0; i < 64; i++) { L[i] += fx[2 * i] / 32768; R[i] += fx[2 * i + 1] / 32768; }
     if (M.comp) {
       // peak detector in dB, attack/release smoothing, gain = over * (1/ratio - 1) + makeup
@@ -1168,10 +1227,10 @@ const kitSel = $('kit');
 const SAVE_KEY = 'elexir-presets';
 function storedPresets() { try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || []; } catch (e) { return []; } }
 function storePresets() {
-  const list = kitList.filter((k) => k.saved).map((k) => ({ name: k.name, kit: Array.from(k.kit), xm: k.xm, fx: k.fx, dpos: k.dpos }));
+  const list = kitList.filter((k) => k.saved).map((k) => ({ name: k.name, kit: Array.from(k.kit), xm: k.xm, fx: k.fx, fx3: k.fx3, dpos: k.dpos }));
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(list)); } catch (e) {}
 }
-for (const p of storedPresets()) kitList.push({ name: p.name, kit: Uint8Array.from(p.kit), xm: p.xm, fx: p.fx, dpos: p.dpos, saved: true, userSamples: 0 });
+for (const p of storedPresets()) kitList.push({ name: p.name, kit: Uint8Array.from(p.kit), xm: p.xm, fx: p.fx, fx3: p.fx3, dpos: p.dpos, saved: true, userSamples: 0 });
 function fillKits() {
   kitSel.innerHTML = '';
   const groups = [['kits', (k) => !k.saved], ['saved', (k) => k.saved]];
@@ -1199,11 +1258,19 @@ function alienName() {
   return 'Xo' + Math.floor(Math.random() * 1e6);
 }
 function useKit(k) {
-  const hadDelay = k.kit[PAR.FX_TYPE] === LXR.FX_DELAY;
+  const kitFx = k.kit[PAR.FX_TYPE], hadDelay = kitFx === LXR.FX_DELAY;
+  // the kit's own effect seeds that bus, and the voices it routed there get a 25% send on it
+  Object.assign(fx3, structuredClone(k.fx3 ? k.fx3.params : FX3_0));
+  if (!k.fx3 && kitFx === LXR.FX_DISTORTION) fx3.dist = { type: k.kit[PAR.FX_DIST_TYPE], p: [0, 1, 2, 3].map((i) => k.kit[PAR.FX_P1 + i]) };
+  if (!k.fx3 && kitFx === LXR.FX_RING) fx3.ring = { wave: k.kit[PAR.FX_WAVE], freq: k.kit[PAR.FX_P1] };
+  const routed = [0, 1, 2, 3, 4, 5].map((n) => k.kit[PAR.AUDIO_OUT1 + n] === LXR.MIXER_ROUTING_FX_BUS);
+  const deflt = (t) => routed.map((r) => (r && (kitFx === t || (t === LXR.FX_DELAY && kitFx !== LXR.FX_DISTORTION && kitFx !== LXR.FX_RING)) ? 25 : 0));
   initValues.set(k.kit); asDelay(initValues); values.set(initValues);
   if (k.xm) { xm.amt.splice(0, 36, ...k.xm.amt); xm.target.splice(0, 6, ...k.xm.target); xm.target.forEach((t, d) => { xSelects[d].value = t; }); xcells.forEach((d) => d()); sendX(); }
   $('kit-del').hidden = !k.saved;
-  mix.fx.splice(0, 6, ...(k.fx || new Array(6).fill(0)));
+  mix.fx.splice(0, 6, ...(k.fx || deflt(LXR.FX_DELAY)));
+  mix.dist.splice(0, 6, ...(k.fx3 ? k.fx3.dist : deflt(LXR.FX_DISTORTION)));
+  mix.ring.splice(0, 6, ...(k.fx3 ? k.fx3.ring : deflt(LXR.FX_RING)));
   // a kit's own delay time, unless it has none worth keeping (another effect, or a time
   // under 1/32 of a bar, a comb more than an echo): then a dotted eighth
   const own = hadDelay ? kitDelayPos() : 0;
@@ -1219,7 +1286,7 @@ function useKit(k) {
 kitSel.addEventListener('change', () => { if (Number(kitSel.value) < 0) return; dropPending(); useKit(kitList[Number(kitSel.value)]); });
 $('kit-save').addEventListener('click', () => {
   if (pendingKit) { $('keep-kit').click(); return; } // a generated kit keeps its name
-  const k = { name: alienName(), kit: Uint8Array.from(values), xm: { amt: xm.amt.slice(), target: xm.target.slice() }, fx: mix.fx.slice(), dpos: delayPos, saved: true, userSamples: 0 };
+  const k = { name: alienName(), kit: Uint8Array.from(values), xm: { amt: xm.amt.slice(), target: xm.target.slice() }, fx: mix.fx.slice(), fx3: fx3Snapshot(), dpos: delayPos, saved: true, userSamples: 0 };
   kitList.push(k); storePresets(); fillKits();
   kitSel.value = kitList.length - 1;
   initValues.set(values); buildKnobs(); // the saved sound is now the reference for changed knobs
@@ -1268,7 +1335,7 @@ $('keep-kit').addEventListener('click', () => {
   if (!k) return;
   dropPending();
   // keeps the sound as it is now, edits since generating it included
-  Object.assign(k, { kit: Uint8Array.from(values), xm: { amt: xm.amt.slice(), target: xm.target.slice() }, fx: mix.fx.slice(), dpos: delayPos, saved: true });
+  Object.assign(k, { kit: Uint8Array.from(values), xm: { amt: xm.amt.slice(), target: xm.target.slice() }, fx: mix.fx.slice(), fx3: fx3Snapshot(), dpos: delayPos, saved: true });
   kitList.push(k); storePresets(); fillKits();
   kitSel.value = kitList.length - 1;
   initValues.set(values); buildKnobs();
@@ -1387,7 +1454,12 @@ function drawMini() {
 const MASTER0 = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150 };
 const master = { ...MASTER0 };
 const CH = ['DRUM 1', 'DRUM 2', 'DRUM 3', 'SNARE', 'CYMBAL', 'HIHAT'];
-const mix = { fx: new Array(6).fill(0), mute: new Array(6).fill(false), solo: new Array(6).fill(false) };
+// sends per voice: fx = echo (the engine's FX bus), dist = distortion, ring = ring mod, 0..100
+const mix = { fx: new Array(6).fill(0), dist: new Array(6).fill(0), ring: new Array(6).fill(0),
+  mute: new Array(6).fill(false), solo: new Array(6).fill(false) };
+const FX3_0 = { dist: { type: 0, p: [70, 64, 80, 90] }, ring: { wave: 0, freq: 40 } };
+const fx3 = structuredClone(FX3_0);
+const fx3Snapshot = () => ({ params: structuredClone(fx3), dist: mix.dist.slice(), ring: mix.ring.slice() });
 const stripsEl = $('strips');
 const fxButtons = [];
 // small dial for the mixer's sends, 0..100
@@ -1420,11 +1492,9 @@ function miniDial(label, aria, get, set, dflt, max = 100, show = (v) => v + '%',
 CH.forEach((name, n) => {
   const vol = PAR.VOL1 + n, pan = PAR.PAN1 + n;
   const el = document.createElement('div'); el.className = 'strip'; el.setAttribute('role', 'group'); el.setAttribute('aria-label', name);
-  el.innerHTML = `<span class="name">${name}</span>
-    <span class="sends"></span>
-    <input class="fader" type="range" min="0" max="127" value="${values[vol]}" aria-label="${name} level">
-    <output>${values[vol]}</output>
-    <span class="ms"><button class="m" type="button" aria-pressed="false" aria-label="Mute ${name}">M</button><button class="s" type="button" aria-pressed="false" aria-label="Solo ${name}">S</button></span>`;
+  el.innerHTML = `<div class="shead"><span class="name">${name}</span><span class="pan-wrap"></span></div>
+    <div class="chan"><span class="sends"></span><input class="fader" type="range" min="0" max="127" value="${values[vol]}" aria-label="${name} level"></div>
+    <div class="sfoot"><output>${values[vol]}</output><span class="ms"><button class="m" type="button" aria-pressed="false" aria-label="Mute ${name}">M</button><button class="s" type="button" aria-pressed="false" aria-label="Solo ${name}">S</button></span></div>`;
   const fader = el.querySelector('.fader'), out = el.querySelector('output');
   // pan is a small dial; mixInputs gets an input-like stand-in so kit loads and knob edits redraw it
   const panD = miniDial('pan', `${name} pan`, () => values[pan], (v) => setValue(pan, v, true), 63, 127,
@@ -1436,22 +1506,26 @@ CH.forEach((name, n) => {
   fader.addEventListener('change', buildKnobs);
   fader.addEventListener('dblclick', () => { setValue(vol, initValues[vol], true); buildKnobs(); });
   const sends = el.querySelector('.sends'), out6 = PAR.AUDIO_OUT1 + n;
-  // fx send: above 0 the voice's AUDIO_OUT is the FX bus (6), at 0 the main stereo out (0)
-  const fxd = miniDial('delay', `${name} delay send`, () => mix.fx[n], (v) => {
+  // echo send: above 0 the voice's AUDIO_OUT is the FX bus (6), at 0 the main stereo out (0)
+  const fxd = miniDial('fx1', `${name} echo send`, () => mix.fx[n], (v) => {
     mix.fx[n] = v;
     const out = v > 0 ? LXR.MIXER_ROUTING_FX_BUS : 0;
     if (values[out6] !== out) setValue(out6, out, true);
     sendMix();
-  }, 100);
-  sends.append(fxd.el, panD.el);
-  const redraw = fxd.draw;
+  }, 0);
+  const dd = miniDial('fx2', `${name} distortion send`, () => mix.dist[n], (v) => { mix.dist[n] = v; sendMix(); }, 0);
+  const rd = miniDial('fx3', `${name} ring mod send`, () => mix.ring[n], (v) => { mix.ring[n] = v; sendMix(); }, 0);
+  sends.append(fxd.el, dd.el, rd.el);
+  el.querySelector('.pan-wrap').append(panD.el);
+  const redraw = () => { fxd.draw(); dd.draw(); rd.draw(); };
   for (const [cls, key] of [['m', 'mute'], ['s', 'solo']]) {
     const b = el.querySelector('.' + cls);
     b.addEventListener('click', () => { mix[key][n] = !mix[key][n]; b.setAttribute('aria-pressed', mix[key][n]); sendMix(); });
   }
-  // after a kit load: a routed voice keeps its send (full if it had none), an unrouted one is 0
+  // after a kit load (useKit sets the sends): redraw, and route the echo bus to match
   fxButtons[n] = () => {
-    if (values[out6] !== LXR.MIXER_ROUTING_FX_BUS) mix.fx[n] = 0; else if (!mix.fx[n]) mix.fx[n] = 25;
+    const out = mix.fx[n] > 0 ? LXR.MIXER_ROUTING_FX_BUS : 0;
+    if (values[out6] !== out) setValue(out6, out, true);
     redraw();
   };
   fxButtons[n]();
@@ -1459,7 +1533,6 @@ CH.forEach((name, n) => {
 });
 
 // ---- FX bus: the firmware's FX page. P1..P4 mean different things per effect ----
-const fxMode = $('fx-mode');
 // musical lengths as fractions of a bar: straight, dotted and triplet, 1/128 .. 1/1
 const NOTES = [];
 for (let k = 0; k <= 7; k++) {
@@ -1489,20 +1562,38 @@ function randomDelayPos() {
   const [fr] = pool[Math.floor(rnd() * pool.length)];
   return Math.max(0, Math.min(1, posOf(fr) + (rnd() < 0.5 ? -1 : 1) * (0.002 + rnd() * 0.004)));
 }
-function syncFx() {
-  // the FX slot is always the delay: mode, tempo-synced time, tone and feedback; the amount is
-  // always full (a send effect) and TIME/RANGE give way to the synced time
-  const box = $('fx-params'); box.innerHTML = '';
-  fxButtons.forEach((b) => b());
-  fxMode.innerHTML = '';
-  LXR.DELAY_NAMES.forEach((n, i) => fxMode.appendChild(new Option(n.toLowerCase(), i)));
-  fxMode.value = values[PAR.FX_DELAY_TYPE];
-  box.appendChild(dialKnob('time', { max: 1000, show: showDelay, get: () => Math.round(delayPos * 1000),
-    set: (v) => { delayPos = v / 1000; send({ type: 'delay', pos: delayPos }); }, dflt: () => Math.round(posOf(3 / 16) * 1000) }));
-  box.appendChild(knob('tone', PAR.FX_P3, true));
-  box.appendChild(knob('feedback', PAR.FX_P4, true));
+// a row of radio buttons drawn as a segmented control
+function radios(box, name, labels, get, set) {
+  box.innerHTML = '';
+  labels.forEach((l, i) => {
+    const lab = document.createElement('label');
+    lab.innerHTML = `<input type="radio" name="${name}" value="${i}"><span>${l}</span>`;
+    const r = lab.querySelector('input');
+    r.checked = get() === i;
+    r.addEventListener('change', () => { if (r.checked) set(i); });
+    box.appendChild(lab);
+  });
 }
-fxMode.addEventListener('change', () => setValue(PAR.FX_DELAY_TYPE, Number(fxMode.value), true));
+// a 0..127 knob over one of the page's own FX settings
+const fx3Knob = (label, obj, key, dflt) => dialKnob(label, { max: 127, show: (v) => String(v), get: () => obj()[key],
+  set: (v) => { obj()[key] = v; sendMix(); }, dflt: () => dflt });
+function syncFx() {
+  // 1: the firmware's delay on the engine's FX bus, always the delay here: tempo-synced time,
+  // tone, feedback. 2 and 3: distortion and ring mod on their own buses (page settings)
+  fxButtons.forEach((b) => b());
+  radios($('r-echo'), 'echo-mode', LXR.DELAY_NAMES.map((n) => n.toLowerCase()), () => values[PAR.FX_DELAY_TYPE],
+    (i) => setValue(PAR.FX_DELAY_TYPE, i, true));
+  const ke = $('k-echo'); ke.innerHTML = '';
+  ke.append(dialKnob('time', { max: 1000, show: showDelay, get: () => Math.round(delayPos * 1000),
+    set: (v) => { delayPos = v / 1000; send({ type: 'delay', pos: delayPos }); }, dflt: () => Math.round(posOf(3 / 16) * 1000) }),
+    knob('tone', PAR.FX_P3, true), knob('feedback', PAR.FX_P4, true));
+  radios($('r-dist'), 'dist-type', LXR.DIST_NAMES.map((n) => n.toLowerCase()), () => fx3.dist.type, (i) => { fx3.dist.type = i; sendMix(); });
+  const kd = $('k-dist'); kd.innerHTML = '';
+  ['drive', 'color', 'tone', 'volume'].forEach((l, i) => kd.append(fx3Knob(l, () => fx3.dist.p, i, FX3_0.dist.p[i])));
+  radios($('r-ring'), 'ring-wave', LXR.OSC_WAVE_NAMES.map((n) => n.toLowerCase()), () => fx3.ring.wave, (i) => { fx3.ring.wave = i; sendMix(); });
+  const kr = $('k-ring'); kr.innerHTML = '';
+  kr.append(fx3Knob('freq', () => fx3.ring, 'freq', FX3_0.ring.freq));
+}
 syncFx();
 function syncMixer() {
   if (typeof syncFx === 'function') syncFx();
@@ -1510,7 +1601,8 @@ function syncMixer() {
 }
 function sendMix() {
   const anySolo = mix.solo.some(Boolean);
-  send({ type: 'mix', master: { ...master }, fx: mix.fx.map((v) => v / 100),
+  send({ type: 'mix', master: { ...master }, fx: mix.fx.map((v) => v / 100), dist: fx3.dist, ring: fx3.ring,
+    sendD: mix.dist.map((v) => v / 100), sendR: mix.ring.map((v) => v / 100),
     chan: mix.mute.map((m, n) => (m || (anySolo && !mix.solo[n]) ? 0 : 1)) });
 }
 
