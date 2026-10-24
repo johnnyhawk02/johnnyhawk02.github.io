@@ -39,6 +39,15 @@ export const work = [
     cta: "Play it in your browser",
   },
   {
+    kind: "Plugin",
+    title: "Elexir",
+    year: 2026,
+    blurb: "Six-voice electro drum machine running a sample-exact port of the LXR-02 drum engine: energy, beat and fills dials build the groove, with a 6 × 6 crossfeed patchbay, gated reverb and kit randomiser.",
+    image: "img/elexir.jpg",
+    link: "https://johnnyhawk02.github.io/elexir/",
+    cta: "Play it in your browser",
+  },
+  {
     kind: "Website",
     title: "Active Sefton",
     year: 2026,
