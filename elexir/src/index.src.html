@@ -257,17 +257,14 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .master-card .knob .dial, .fx-card .knob .dial { width: 36px; height: 36px; }
 .master-card .knob label, .fx-card .knob label { font-size: .7rem; line-height: 1.3; }
 .master-card .knob output, .fx-card .knob output { font-size: .66rem; line-height: 1.3; }
-.tab-perform .perform { grid-template-columns: minmax(0, 1fr); gap: 4px; padding-block: 4px; align-self: center; }
-.bslider { display: grid; grid-template-columns: 4.2em minmax(0, 1fr) 8.6em; align-items: center; gap: 14px; padding-block: 10px; }
-.bslider label { font-family: var(--display); font-weight: 600; font-size: 1rem; }
-.bslider output { font-size: .88rem; color: var(--muted); white-space: nowrap; }
-.bslider output b { color: var(--ink); font-weight: 500; }
-.bs-track { position: relative; height: 12px; border-radius: 6px; background: var(--line); cursor: pointer; touch-action: none; }
-.bs-track::before { content: ''; position: absolute; inset: -12px 0; } /* a taller hit area */
-.bs-fill { position: absolute; inset: 0 auto 0 0; border-radius: 6px; background: var(--ink); }
-.bs-thumb { position: absolute; top: 50%; width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 50%;
-  background: var(--panel); border: 3px solid var(--ink); box-sizing: border-box; }
-.bs-track:focus-visible { outline-offset: 6px; }
+.tab-perform .perform { grid-template-columns: minmax(0, 1fr); gap: 6px; padding-block: 4px; align-self: center; }
+.pknobs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; justify-items: center; }
+.pknobs .knob { gap: 1px; min-width: 0; width: 100%; }
+.pknobs .knob .dial { width: 46px; height: 46px; }
+.pknobs .knob label { font-family: var(--display); font-weight: 600; font-size: .86rem; }
+.pknobs .knob output { font-size: .7rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.pgh { margin: 4px 0 0; font-family: var(--display); font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+  border-top: 1px solid var(--line); padding-top: 8px; }
 .perform-rand { gap: 8px 6px; }
 .perform-rand .btn { padding: 6px 9px; }
 .rand-opts { display: flex; align-items: center; gap: 14px; white-space: nowrap; }
@@ -394,12 +391,13 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .midi-map dd { margin: 0; }
 .midi-map dd.hit { color: var(--led); }
 /* pattern off: the generator's sliders give way to the MIDI note map; tempo stays (the echo syncs to it) */
-.pattern-card.midi .bslider:not([data-k="tempo"]) { display: none; }
+.pattern-card.midi #pk-pattern .knob:not([data-k="tempo"]), .pattern-card.midi #pk-feel { display: none; }
 .pattern-card.midi { grid-template-rows: auto auto minmax(0, 1fr) !important; }
 .pattern-card.midi .gtable { display: none; }
 /* groove per track, under the pattern sliders */
 .gtable { display: grid; grid-template-columns: 4.2em repeat(7, minmax(0, 1fr)); gap: 2px 4px; align-items: center; justify-items: center;
   border-top: 1px solid var(--line); padding-top: 8px; }
+.gtable .ghead { border: 0; padding: 0; margin: 0; justify-self: start; }
 .gtable .glab { justify-self: start; font-family: var(--display); font-weight: 600; font-size: .9rem; }
 .gtable .gname { font-size: .68rem; color: var(--muted); }
 .gtable .sdial span { display: none; }
@@ -502,10 +500,13 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-perform .strip .sm { font-size: 0; } /* the pan label; the slider stays */
   .radios span { padding: 4px 4px; font-size: .64rem; }
   /* six pattern sliders in a short window */
-  .bslider { padding-block: 0; }
   .tab-perform .perform { gap: 0; }
-  .bslider label { font-size: .9rem; }
-  .bs-thumb { width: 20px; height: 20px; margin: -10px 0 0 -10px; }
+  .pknobs .knob .dial { width: 34px; height: 34px; }
+  .pknobs .knob label { font-size: .78rem; line-height: 1.2; }
+  .pknobs .knob output { font-size: .66rem; line-height: 1.2; }
+  .pgh { margin-top: 2px; padding-top: 4px; }
+  .tab-perform .pattern-card { gap: 4px; }
+  .gtable { padding-top: 4px; }
   .pattern-card > h2 { margin-bottom: 0; }
   .fx-card .knob .dial { width: 30px; height: 30px; }
   .master-card, .fx-card { --kw: 52px; }
@@ -534,8 +535,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .pad kbd { display: none; }
   .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .perform { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-block: 8px; gap: 18px 8px; }
-  .bslider { grid-template-columns: 4em minmax(0, 1fr); gap: 4px 12px; }
-  .bslider output { grid-column: 2; }
   .grid { grid-template-columns: 4em repeat(16, minmax(0, 1fr)); gap: 2px; }
   .cell { aspect-ratio: .8; border-radius: 2px; }
   .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -587,8 +586,9 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
       </dl>
     </div>
     <div class="perform" id="perform">
-      <div class="dials" id="dials-l"></div>
-      <div class="dials" id="dials-r"></div>
+      <div class="pknobs" id="pk-pattern"></div>
+      <div class="pknobs" id="pk-feel"></div>
+      <h3 class="pgh">sound</h3><div class="pknobs macro" id="pk-macro" role="group" aria-label="Sound macros"></div>
       <div hidden>
         <input id="energy" type="range" min="0" max="100" value="60" aria-hidden="true" tabindex="-1"><output id="energy-out"></output>
         <input id="beat" type="range" min="0" max="15" step="1" value="0" aria-hidden="true" tabindex="-1"><output id="beat-out"></output>
@@ -693,7 +693,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <summary>HOW TO PLAY IT</summary>
     <div class="body">
       <p class="src">Elexir by Johnny Hawk is an unofficial browser drum machine, not made or endorsed by Erica Synths. Its sound engine is a JavaScript port of the six drum voices and the FX bus of the Erica Synths LXR-02 firmware (<a href="https://github.com/erica-synths/lxr-desktop-app" target="_blank" rel="noopener">erica-synths/lxr-desktop-app</a>, GPL-3.0, commit a43cd4f), ported line by line; its output matches the original C code compiled for the Cortex-M7 sample for sample. The FX bus (distortion, ring mod, compressor, delay) is the firmware's too; the mixer, the three FX sends, crossfeed and the pattern generator are new. The generator's source kits include Hrtl's free LXR-02 DLC kits, used with credit, and any LXR kit file (.SND) can be opened. Source and licence (GPL-3.0): <a href="https://github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir" target="_blank" rel="noopener">github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir</a>.</p>
-      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit. Drag a fader for fine control (it moves less than the mouse; hold Shift for finer still) or scroll on it; the strip's name shows the level while it moves. Save keeps everything as a preset in this browser under a two-word alien name: the sound (kit, crossfeed, FX and sends) and the song (pattern, perform dials, tempo, velocity, accent, master), and loading it brings all of that back. A red star by save means a randomise has changed things since the last save or load. ‹ and › step through the presets; while playing, a new preset comes in at the start of the next bar. Presets opens the preset manager: load, delete, and star favourites; export favourites downloads them as a file, and favourites sent in that way are built into the next release. Open .snd there loads an LXR kit file as the current sound, and export .snd downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). There are three effects, all the LXR-02's own FX-slot code run as sends: each mixer strip has three send dials left of its fader: echo, dist and ring. Every voice keeps its dry sound and each effect's output is fully wet. The echo's time is synced to the tempo: from 1/128 of a bar fully left to one bar fully right, gliding through the musical lengths (the readout names the nearest, with ≈ when it is between); randomise puts it near a musical length but not exactly on it. Ticks round the time dial mark the musical lengths (long for straight notes, short for dotted and triplet); a drag catches on them, and the scroll wheel and arrow keys step from one to the next (Shift + arrow for fine steps). The FX section above the mixer sets all three: echo mode (normal or ping-pong), time, tone, feedback and width (100% is the firmware's own; 0% is mono; the firmware's ping-pong only bounces sound that reaches it off-centre, and most drums sit in the middle, so above 100% width pushes the echo's input to one side, and at 200% a centred drum bounces fully; on a normal echo, above 100% widens the echoes' stereo); distortion type (tube, fold or rat), drive, color, tone and volume; ring mod carrier wave and frequency. A kit that used distortion or ring mod in its FX slot loads those settings into that effect with a little of each routed voice sent to it. The sync, the sends, the extra buses and the larger delay buffer are additions to the firmware. The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits, and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the red figures show how far each is pulling down. The red circle by play opens the recorder: pick free (records until you press stop, up to ten minutes) or a loop of 1 to 16 bars, which starts on the next bar (starting playback from bar 1 if it is stopped) and is cut to exactly that many bars at the tempo, with the echo carried in from before so it loops cleanly. Choose 44.1 or 48 kHz, 16-bit (dithered) or 24-bit, and normalise (peak at −0.3 dB). Each take is listed with a player and a save .wav button; takes are kept until you reload the page. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The switch on the pattern card turns the pattern off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge). The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise (sound tab) varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. In the mixer, r by each name gives that voice a random sound from the bundled kits, varied by 10%, and a varies the voice's current sound by 10%; undo takes either back. The randomise card on the perform tab (beside the master section): kit does the same for all six drum sounds and leaves the mixer, FX, crossfeed and pattern alone. Press R for the same; Randomise all (Shift-R) does every voice at once. Everything builds a fresh sound from voices of the bundled kits (Hrtl's LXR-02 kits and twelve generated ones, which aren't listed as presets), varies each by 10%, and rolls new crossfeed, delay time, echo feedback (usually low, now and then high), beat, energy and fills, keeping the mixer levels; save keeps it. Swing (on the pattern card, and on the steps tab) delays every second 16th: 50% is straight, 66% a triplet feel, 75% the most. Each track has two dials (under the pattern sliders, and at the end of its row on the steps tab): swing sets how much of the swing that track takes (so the hats can swing while the kick stays straight), and push moves the whole track early (left) or late (right) by up to a quarter of a 16th, centre being on the grid. The groove applies to the perform patterns too and is saved with presets. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
+      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit. Drag a fader for fine control (it moves less than the mouse; hold Shift for finer still) or scroll on it; the strip's name shows the level while it moves. Save keeps everything as a preset in this browser under a two-word alien name: the sound (kit, crossfeed, FX and sends) and the song (pattern, perform dials, tempo, velocity, accent, master), and loading it brings all of that back. A red star by save means a randomise has changed things since the last save or load. ‹ and › step through the presets; while playing, a new preset comes in at the start of the next bar. Presets opens the preset manager: load, delete, and star favourites; export favourites downloads them as a file, and favourites sent in that way are built into the next release. Open .snd there loads an LXR kit file as the current sound, and export .snd downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). There are three effects, all the LXR-02's own FX-slot code run as sends: each mixer strip has three send dials left of its fader: echo, dist and ring. Every voice keeps its dry sound and each effect's output is fully wet. The echo's time is synced to the tempo: from 1/128 of a bar fully left to one bar fully right, gliding through the musical lengths (the readout names the nearest, with ≈ when it is between); randomise puts it near a musical length but not exactly on it. Ticks round the time dial mark the musical lengths (long for straight notes, short for dotted and triplet); a drag catches on them, and the scroll wheel and arrow keys step from one to the next (Shift + arrow for fine steps). The FX section above the mixer sets all three: echo mode (normal or ping-pong), time, tone, feedback and width (100% is the firmware's own; 0% is mono; the firmware's ping-pong only bounces sound that reaches it off-centre, and most drums sit in the middle, so above 100% width pushes the echo's input to one side, and at 200% a centred drum bounces fully; on a normal echo, above 100% widens the echoes' stereo); distortion type (tube, fold or rat), drive, color, tone and volume; ring mod carrier wave and frequency. A kit that used distortion or ring mod in its FX slot loads those settings into that effect with a little of each routed voice sent to it. The sync, the sends, the extra buses and the larger delay buffer are additions to the firmware. The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits, and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the red figures show how far each is pulling down. The red circle by play opens the recorder: pick free (records until you press stop, up to ten minutes) or a loop of 1 to 16 bars, which starts on the next bar (starting playback from bar 1 if it is stopped) and is cut to exactly that many bars at the tempo, with the echo carried in from before so it loops cleanly. Choose 44.1 or 48 kHz, 16-bit (dithered) or 24-bit, and normalise (peak at −0.3 dB). Each take is listed with a player and a save .wav button; takes are kept until you reload the page. The sound knobs on the pattern card are performance macros over all six voices at once: fm depth (the drums' FM amount and the cymbal and hat FM), decay (every amp decay), pitch (every voice's coarse tune, up to two octaves either way) and filter (every filter's cutoff). Each sits in the middle as the kit is; turning it pushes every voice's own value towards the top or the bottom, so the kit's differences stay. They change what the engine plays, not the kit: the sound tab still shows the kit's own values, and double-click sets a macro back to the middle. They are saved with presets. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The switch on the pattern card turns the pattern off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge). The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise (sound tab) varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. In the mixer, r by each name gives that voice a random sound from the bundled kits, varied by 10%, and a varies the voice's current sound by 10%; undo takes either back. The randomise card on the perform tab (beside the master section): kit does the same for all six drum sounds and leaves the mixer, FX, crossfeed and pattern alone. Press R for the same; Randomise all (Shift-R) does every voice at once. Everything builds a fresh sound from voices of the bundled kits (Hrtl's LXR-02 kits and twelve generated ones, which aren't listed as presets), varies each by 10%, and rolls new crossfeed, delay time, echo feedback (usually low, now and then high), beat, energy and fills, keeping the mixer levels; save keeps it. Swing (on the pattern card, and on the steps tab) delays every second 16th: 50% is straight, 66% a triplet feel, 75% the most. Each track has two dials (under the pattern sliders, and at the end of its row on the steps tab): swing sets how much of the swing that track takes (so the hats can swing while the kick stays straight), and push moves the whole track early (left) or late (right) by up to a quarter of a 16th, centre being on the grid. The groove applies to the perform patterns too and is saved with presets. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
     </div>
   </details>
 
@@ -1050,7 +1050,7 @@ function send(m) { if (barSync) m = { type: 'atBar', m }; if (node) node.port.po
 async function startAudio() {
   if (ctx) { if (ctx.state === 'suspended') await ctx.resume(); return; }
   ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const kitMsg = { type: 'kit', values: Array.from(values) };
+  const kitMsg = { type: 'kit', values: effValues() };
   try {
     const src = document.getElementById('engine').textContent + document.getElementById('player').textContent + `
       registerProcessor('lxr', class extends AudioWorkletProcessor {
@@ -1123,11 +1123,34 @@ function buildPages() {
 
 function detail(text) { $('lcd-detail').innerHTML = text; }
 
+// ---- performance macros: global offsets on top of the kit, sent to the engine only (the kit keeps its own values) ----
+// fm, decay and filter go from -100% (every voice's value down to 0) through 0 (as the kit) to +100% (all the way up);
+// pitch moves every voice's coarse tune by up to two octaves either way
+const MACROS = {
+  fm: ['FMAMNT1', 'FMAMNT2', 'FMAMNT3', 'MOD_OSC_GAIN1_CYM', 'MOD_OSC_GAIN2_CYM', 'MOD_OSC_GAIN1', 'MOD_OSC_GAIN2'],
+  decay: ['VELOD1', 'VELOD2', 'VELOD3', 'VELOD4', 'VELOD5', 'VELOD6_CLOSED', 'VELOD6_OPEN'],
+  pitch: ['COARSE1', 'COARSE2', 'COARSE3', 'COARSE4', 'COARSE5', 'COARSE6'],
+  filter: ['FILTER_FREQ_1', 'FILTER_FREQ_2', 'FILTER_FREQ_3', 'FILTER_FREQ_4', 'FILTER_FREQ_5', 'FILTER_FREQ_6'],
+};
+const MACRO0 = { fm: 100, decay: 100, pitch: 24, filter: 100 }; // knob positions: 100 (24 for pitch) is the middle
+const macro = { ...MACRO0 };
+const macroOf = {};
+for (const m in MACROS) for (const n of MACROS[m]) if (PAR[n] !== undefined) macroOf[PAR[n]] = m;
+function eff(par, v) {
+  const m = macroOf[par];
+  if (!m || macro[m] === MACRO0[m]) return v;
+  const max = spec(par).max;
+  if (m === 'pitch') return Math.max(0, Math.min(max, v + macro.pitch - 24));
+  const k = (macro[m] - 100) / 100;
+  return Math.round(k > 0 ? v + (max - v) * k : v * (1 + k));
+}
+const effValues = () => Array.from(values, (v, par) => eff(par, v));
+function sendMacros() { for (const par in macroOf) send({ type: 'param', par: Number(par), value: eff(Number(par), values[par]) }); }
 function setValue(par, v, quiet) {
   values[par] = v;
   if (mixInputs[par] && Number(mixInputs[par].value) !== v) { mixInputs[par].value = v; mixInputs[par].dispatchEvent(new Event('sync')); }
   if (!quiet) for (const k in homes) delete homes[k]; // a knob edit makes the current sound the new home
-  send({ type: 'param', par, value: v });
+  send({ type: 'param', par, value: eff(par, v) });
   if (!quiet) scheduleScope();
 }
 
@@ -1219,7 +1242,8 @@ function dialKnob(label, o) {
   };
   const draw = () => {
     const v = Math.min(o.get(), o.max), a = A0 + (A1 - A0) * (o.max ? v / o.max : 0);
-    val.setAttribute('d', v > 0 ? arc(27, A0, a) : '');
+    const c = o.center !== undefined ? A0 + (A1 - A0) * o.center / o.max : A0; // a bipolar knob draws out from its middle
+    val.setAttribute('d', v === (o.center ?? 0) ? '' : arc(27, Math.min(c, a), Math.max(c, a)));
     ptr.setAttribute('x2', (32 + 15 * Math.cos(a)).toFixed(2)); ptr.setAttribute('y2', (32 + 15 * Math.sin(a)).toFixed(2));
     out.textContent = o.show(v);
     dial.setAttribute('aria-valuenow', v); dial.setAttribute('aria-valuetext', o.show(v));
@@ -1480,7 +1504,7 @@ const showSwingP = () => { $('swing-p-out').innerHTML = groove.swing === 50 ? '<
 $('swing-p').addEventListener('input', () => { groove.swing = Number($('swing-p').value); drawGroove(); sendSeq(); });
 {
   const gt = $('gtable');
-  gt.appendChild(document.createElement('span'));
+  { const h = document.createElement('span'); h.className = 'pgh ghead'; h.textContent = 'groove'; gt.appendChild(h); }
   ['d1', 'd2', 'd3', 'sn', 'cy', 'ch', 'oh'].forEach((n, r) => { const h = document.createElement('span'); h.className = 'gname'; h.textContent = n; h.title = TRACKS[r].name.toLowerCase(); gt.appendChild(h); });
   for (const [label, key, dflt, show, center, tip] of [
     ['swing', 'share', 100, (v) => v + '% of the swing', false, 'How much of the swing each track takes'],
@@ -1617,7 +1641,7 @@ function useKit(k) {
   syncMixer(); sendMix();
   for (const h in homes) delete homes[h];
   undoValues = null; $('undo').disabled = true;
-  send({ type: 'kit', values: Array.from(values) });
+  send({ type: 'kit', values: effValues() });
   buildKnobs(); drawScope();
   kitNote(k.userSamples
     ? `${k.userSamples} transient${k.userSamples > 1 ? 's use' : ' uses'} a user sample from the SD card, which plays silent here.` : '');
@@ -1649,7 +1673,7 @@ function setDirty(d) {
 function songSnapshot() {
   const copy = (a) => a.map((r) => r.slice());
   return { energy: Number($('energy').value), beat: Number($('beat').value), fills: Number($('fills').value),
-    tempo: Number($('tempo').value), vel: Number($('level').value), accent: Number($('accent').value), view, patternOn, groove: structuredClone(groove),
+    tempo: Number($('tempo').value), vel: Number($('level').value), accent: Number($('accent').value), view, patternOn, groove: structuredClone(groove), macro: { ...macro },
     pattern: { on: copy(pattern.on), acc: copy(pattern.acc), bar: copy(pattern.bar) },
     master: { ...master }, mute: mix.mute.slice(), solo: mix.solo.slice() };
 }
@@ -1669,6 +1693,7 @@ function useSong(g) {
   if (g.view === 'steps') setTab('steps');
   if ((g.patternOn !== false) !== patternOn) setPatternOn(g.patternOn !== false);
   Object.assign(groove, structuredClone(g.groove || GROOVE0)); drawGroove(); sendSeq();
+  Object.assign(macro, MACRO0, g.macro || {}); drawMacros(); sendMacros();
 }
 $('kit-save').addEventListener('click', () => {
   const k = { name: presetName(), kit: Uint8Array.from(values), xm: { amt: xm.amt.slice(), target: xm.target.slice() }, fx: mix.fx.slice(),
@@ -1702,7 +1727,7 @@ $('new-kit').addEventListener('click', async () => {
   delayPos = randomDelayPos(); send({ type: 'delay', pos: delayPos }); syncFx();
   initValues.set(values);
   for (const h in homes) delete homes[h];
-  send({ type: 'kit', values: Array.from(values) });
+  send({ type: 'kit', values: effValues() });
   buildKnobs(); drawScope();
   randomiseX();
   $('beat').value = Math.floor(rnd() * GROOVES.length); $('energy').value = 45 + Math.floor(rnd() * 46); $('fills').value = Math.floor(rnd() * 101);
@@ -2237,47 +2262,35 @@ $('comp-on').addEventListener('click', () => { master.comp = !master.comp; $('co
 sendMix();
 
 // ---- big sliders for the perform controls, over the hidden inputs that hold the values ----
-function bigSlider(input, label, out, opts = {}) {
-  const min = opts.min ?? Number(input.min), max = opts.max ?? Number(input.max), step = opts.step ?? (Number(input.step) || 1);
-  const el = document.createElement('div'); el.className = 'bslider'; el.dataset.k = input.id;
-  const id = 'bs-' + input.id;
-  el.innerHTML = `<label for="${id}">${label}</label>
-    <div class="bs-track" id="${id}" tabindex="0" role="slider" aria-label="${label}" aria-valuemin="${min}" aria-valuemax="${max}">
-      <div class="bs-fill"></div><div class="bs-thumb"></div></div>`;
-  el.appendChild(out);
-  const track = el.querySelector('.bs-track'), fill = el.querySelector('.bs-fill'), thumb = el.querySelector('.bs-thumb');
-  const draw = () => {
-    const fr = Math.max(0, Math.min(1, (Number(input.value) - min) / (max - min)));
-    fill.style.width = fr * 100 + '%'; thumb.style.left = fr * 100 + '%';
-    track.setAttribute('aria-valuenow', input.value); track.setAttribute('aria-valuetext', out.textContent);
-  };
-  const set = (val) => {
-    val = Math.max(min, Math.min(max, Math.round(val / step) * step));
-    if (val === Number(input.value)) return;
-    input.value = val; input.dispatchEvent(new Event(opts.event || 'input')); draw();
-  };
-  input.addEventListener('sync', draw); // set from outside, e.g. loading a preset
-  const fromX = (x) => { const r = track.getBoundingClientRect(); set(min + (x - r.left) / r.width * (max - min)); };
-  let drag = false;
-  track.addEventListener('pointerdown', (e) => { track.setPointerCapture(e.pointerId); drag = true; track.focus(); fromX(e.clientX); });
-  track.addEventListener('pointermove', (e) => { if (drag) fromX(e.clientX); });
-  track.addEventListener('pointerup', () => { drag = false; }); track.addEventListener('pointercancel', () => { drag = false; });
-  track.addEventListener('keydown', (e) => {
-    const d = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 10, PageDown: -10 }[e.key];
-    if (d) { e.preventDefault(); set(Number(input.value) + d * step * (Math.abs(d) > 1 && max - min <= 20 ? 0.1 : 1)); }
-  });
-  input.addEventListener('input', draw); input.addEventListener('change', draw);
-  new MutationObserver(draw).observe(out, { childList: true, characterData: true, subtree: true });
-  draw();
-  return el;
-}
 const tempoOut = document.createElement('output');
 const showTempo = () => { tempoOut.innerHTML = `<b>${$('tempo').value}</b> bpm`; };
 $('tempo').addEventListener('change', showTempo); $('tempo').addEventListener('input', showTempo); showTempo();
-$('dials-l').append(bigSlider($('energy'), 'energy', $('energy-out')), bigSlider($('beat'), 'beat', $('beat-out')));
-$('dials-r').append(bigSlider($('fills'), 'fills', $('fills-out')), bigSlider($('tempo'), 'tempo', tempoOut, { min: 70, max: 170, event: 'change' }),
-  bigSlider($('level'), 'velocity', $('level-out'), { event: 'change' }), bigSlider($('accent'), 'accent', $('accent-out'), { event: 'change' }),
-  bigSlider($('swing-p'), 'swing', $('swing-p-out')));
+// the pattern card's knobs drive the hidden inputs, which the rest of the page listens to
+function inputKnob(input, label, out, opts = {}) {
+  const min = opts.min ?? Number(input.min), max = (opts.max ?? Number(input.max)) - min;
+  // the readout keeps the word (driving, planet, every 4); the LCD-style detail line shows it all
+  const k = dialKnob(label, { max, show: () => (opts.short ? out.textContent.split('·')[0] : out.textContent).trim(), get: () => Number(input.value) - min,
+    set: (v) => { input.value = v + min; input.dispatchEvent(new Event('input')); if (opts.event) input.dispatchEvent(new Event(opts.event)); },
+    dflt: () => opts.dflt - min, detents: opts.detents });
+  k.dataset.k = input.id;
+  for (const ev of ['sync', 'input', 'change']) input.addEventListener(ev, () => k.draw());
+  new MutationObserver(() => k.draw()).observe(out, { childList: true, characterData: true, subtree: true });
+  return k;
+}
+$('pk-pattern').append(inputKnob($('energy'), 'energy', $('energy-out'), { short: true, dflt: 60 }), inputKnob($('beat'), 'beat', $('beat-out'), { short: true, dflt: 0 }),
+  inputKnob($('fills'), 'fills', $('fills-out'), { short: true, dflt: 40 }), inputKnob($('tempo'), 'tempo', tempoOut, { min: 70, max: 170, event: 'change', dflt: 118 }));
+$('pk-feel').append(inputKnob($('level'), 'velocity', $('level-out'), { event: 'change', dflt: 100 }),
+  inputKnob($('accent'), 'accent', $('accent-out'), { event: 'change', dflt: 6 }),
+  inputKnob($('swing-p'), 'swing', $('swing-p-out'), { short: true, dflt: 50, detents: [[16, true]] }));
+const macroKnobs = [['fm', 'fm depth'], ['decay', 'decay'], ['pitch', 'pitch'], ['filter', 'filter']].map(([m, label]) => {
+  const pitch = m === 'pitch', max = pitch ? 48 : 200, mid = MACRO0[m];
+  return dialKnob(label, { max, center: mid, detents: pitch ? [[0, false], [12, false], [24, true], [36, false], [48, false]] : [[mid, true]], jump: false,
+    show: (v) => (pitch ? (v === 24 ? '0 st' : (v > 24 ? '+' : '−') + Math.abs(v - 24) + ' st') : (v === 100 ? '0%' : (v > 100 ? '+' : '−') + Math.abs(v - 100) + '%')),
+    get: () => macro[m], set: (v) => { macro[m] = v; for (const n of MACROS[m]) if (PAR[n] !== undefined) send({ type: 'param', par: PAR[n], value: eff(PAR[n], values[PAR[n]]) }); },
+    dflt: () => mid, changed: () => macro[m] !== mid });
+});
+$('pk-macro').append(...macroKnobs);
+function drawMacros() { macroKnobs.forEach((k) => k.draw()); }
 drawGroove();
 
 // ---- crossfeed matrix ----
