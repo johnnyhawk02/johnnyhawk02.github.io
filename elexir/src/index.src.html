@@ -691,6 +691,8 @@ class Player {
         this.sendD.set(m.sendD); this.sendR.set(m.sendR);
       } this.fxAmt.set(m.fx); this.chan.set(m.chan); }
     else if (m.type === 'seq') {
+      // a live pattern change (the perform sliders, the grid) wins over one still waiting for the bar
+      this.atBar = this.atBar.filter((q) => q.type !== 'seq');
       this.pattern = m.pattern; this.bpm = m.bpm; this.vel = m.vel; this.e.bpm = m.bpm;
       this.accGain = Math.pow(10, -m.accentDb / 20);
       if (m.playing && !this.playing) { this.step = 0; this.bar = 0; this.toNext = 0; }
