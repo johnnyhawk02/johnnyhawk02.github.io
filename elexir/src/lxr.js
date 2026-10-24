@@ -1525,17 +1525,19 @@ export class LxrEngine {
         inp[2 * i + 1] = qadd16(toI16(f(s * v.triggeredPanR)), inp[2 * i + 1]);
       }
     }
-    // Not in the firmware (width 0..1, null = as the firmware): the delay's stereo width. Ping-pong
-    // only bounces what reaches it off-centre, so its input becomes the mid signal pushed to the left
-    // by the width; a normal delay keeps its input and has the side of its output scaled by the width.
-    const delay = width !== null && fx.fxType === FX_DELAY, pp = delay && fx.delay.type !== DELAY_NORMAL;
+    // Not in the firmware (width 0..2, 1 or null = as the firmware): the delay's stereo width.
+    // Ping-pong: below 1 the side of its input is narrowed (0 = mono, no bounce); above 1 the mid is
+    // pushed left, since the firmware's ping-pong only bounces what reaches it off-centre (2 = a centred
+    // sound goes in on one side only and bounces fully). Normal delay: the side of its output is scaled.
+    const delay = width !== null && width !== 1 && fx.fxType === FX_DELAY, pp = delay && fx.delay.type !== DELAY_NORMAL;
     if (pp) for (let i = 0; i < BLOCK; i++) {
-      const mid = (inp[2 * i] + inp[2 * i + 1]) / 2;
-      inp[2 * i] = ssat16(Math.round(mid * (1 + width))); inp[2 * i + 1] = ssat16(Math.round(mid * (1 - width)));
+      const l = inp[2 * i], r = inp[2 * i + 1], mid = (l + r) / 2, side = (l - r) / 2;
+      const nl = width <= 1 ? mid + side * width : l + mid * (width - 1), nr = width <= 1 ? mid - side * width : r - mid * (width - 1);
+      inp[2 * i] = ssat16(Math.round(nl)); inp[2 * i + 1] = ssat16(Math.round(nr));
     }
     // FxBus_process runs every block, routed voices or not (delay tails, compressor envelope)
     fx.process(out, BLOCK, this.rng);
-    if (delay && !pp && width !== 1) for (let i = 0; i < BLOCK; i++) {
+    if (delay && !pp) for (let i = 0; i < BLOCK; i++) {
       const mid = (out[2 * i] + out[2 * i + 1]) / 2, side = (out[2 * i] - out[2 * i + 1]) / 2 * width;
       out[2 * i] = ssat16(Math.round(mid + side)); out[2 * i + 1] = ssat16(Math.round(mid - side));
     }
