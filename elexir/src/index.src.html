@@ -362,7 +362,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
       <div class="rand perform-rand">
         <button class="btn" id="rand-all" type="button">kit</button>
         <button class="btn" id="xrand2" type="button">crossfeed</button>
-        <button class="btn" id="new-kit" type="button" title="Build a new kit from voices of the built-in kits, vary each by 10% and save it">new kit</button>
+        <button class="btn" id="new-kit" type="button" title="Build a new kit from voices of the built-in kits and vary each by 10%">new kit</button>
+        <button class="btn play" id="keep-kit" type="button" hidden>save</button>
         <button class="btn" id="undo" type="button" disabled>undo</button>
         <span class="spacer"></span>
         <label class="field" for="depth">depth <input id="depth" type="range" min="1" max="100" value="30"><output id="depth-out">30%</output></label>
@@ -455,7 +456,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <summary>HOW TO PLAY IT</summary>
     <div class="body">
       <p class="src">Elexir by Johnny Hawk is an unofficial browser drum machine, not made or endorsed by Erica Synths. Its sound engine is a JavaScript port of the six drum voices and the FX bus of the Erica Synths LXR-02 firmware (<a href="https://github.com/erica-synths/lxr-desktop-app" target="_blank" rel="noopener">erica-synths/lxr-desktop-app</a>, GPL-3.0, commit a43cd4f), ported line by line; its output matches the original C code compiled for the Cortex-M7 sample for sample. The FX bus (distortion, ring mod, compressor, delay) is the firmware's too; the mixer, reverb, crossfeed and pattern generator are new. The 16 kits after the init kit are Hrtl's free LXR-02 DLC kits, used with credit, and any LXR kit file (.SND) can be opened. Source and licence (GPL-3.0): <a href="https://github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir" target="_blank" rel="noopener">github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir</a>.</p>
-      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit; reverb send, mute and solo sit after the engine. Save keeps the current sound (kit and crossfeed) in this browser under a made-up name, listed under saved in the kit menu; export downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). The FX bus is the LXR-02's effect slot: each mixer strip's fx dial sends that voice into it (all the way up, the voice only reaches the output through the bus, as on the hardware; in between, the rest goes straight out). Kits bring their own FX settings. The rev dial is the strip's reverb send. Gated reverb opens on every hit sent to it, holds for the gate time and then cuts off. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of five electro grooves, and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. Press R for the same; Randomise all (Shift-R) does every voice at once. New kit builds a fresh kit from voices of the built-in kits, varies each by 10% and saves it under a made-up name ending in kit. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
+      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit; reverb send, mute and solo sit after the engine. Save keeps the current sound (kit and crossfeed) in this browser under a made-up name, listed under saved in the kit menu; export downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). The FX bus is the LXR-02's effect slot: each mixer strip's fx dial sends that voice into it (all the way up, the voice only reaches the output through the bus, as on the hardware; in between, the rest goes straight out). Kits bring their own FX settings. The rev dial is the strip's reverb send. Gated reverb opens on every hit sent to it, holds for the gate time and then cuts off. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of five electro grooves, and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. Press R for the same; Randomise all (Shift-R) does every voice at once. New kit builds a fresh kit from voices of the built-in kits, varies each by 10% and names it something ending in kit; it isn't kept until you press its save button. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
     </div>
   </details>
 
@@ -1173,8 +1174,9 @@ function useKit(k) {
   $('kit-msg').textContent = k.userSamples
     ? `${k.userSamples} transient${k.userSamples > 1 ? 's use' : ' uses'} a user sample from the SD card, which plays silent here.` : '';
 }
-kitSel.addEventListener('change', () => useKit(kitList[Number(kitSel.value)]));
+kitSel.addEventListener('change', () => { if (Number(kitSel.value) < 0) return; dropPending(); useKit(kitList[Number(kitSel.value)]); });
 $('kit-save').addEventListener('click', () => {
+  if (pendingKit) { $('keep-kit').click(); return; } // a generated kit keeps its name
   const k = { name: alienName(), kit: Uint8Array.from(values), xm: { amt: xm.amt.slice(), target: xm.target.slice() }, fx: mix.fx.slice(), saved: true, userSamples: 0 };
   kitList.push(k); storePresets(); fillKits();
   kitSel.value = kitList.length - 1;
@@ -1198,16 +1200,37 @@ $('new-kit').addEventListener('click', async () => {
   if (src.length) for (let v = 0; v < 6; v++) { const k = pick(src); for (const par of voiceOwned(v)) kit[par] = k.kit[par]; }
   let name;
   do { name = alienName().replace(/'/g, ''); } while (name.length > 5 || kitList.some((k) => k.name === name + 'kit'));
-  const k = { name: name + 'kit', kit, xm: { amt: new Array(36).fill(0), target: xm.target.slice() }, saved: true, userSamples: 0 };
+  const k = { name: name + 'kit', kit, xm: { amt: new Array(36).fill(0), target: xm.target.slice() }, saved: false, userSamples: 0 };
   useKit(k);
   for (let v = 0; v < 6; v++) randomiseVoice(v, 0.1);
   k.kit.set(values); initValues.set(values);
   for (const h in homes) delete homes[h];
-  kitList.push(k); storePresets(); fillKits();
-  kitSel.value = kitList.length - 1;
   send({ type: 'kit', values: Array.from(values) });
   buildKnobs(); drawScope();
-  $('kit-msg').textContent = `made ${k.name}`;
+  // a preview until saved: the kit menu shows it as unsaved
+  pendingKit = k;
+  kitSel.querySelector('option[data-pending]')?.remove();
+  const o = new Option(`${k.name} (unsaved)`, -1); o.dataset.pending = '1';
+  kitSel.prepend(o); kitSel.value = -1;
+  $('keep-kit').hidden = false; $('keep-kit').textContent = `save ${k.name}`;
+  $('kit-msg').textContent = '';
+});
+let pendingKit = null;
+function dropPending() {
+  pendingKit = null; $('keep-kit').hidden = true;
+  kitSel.querySelector('option[data-pending]')?.remove();
+}
+$('keep-kit').addEventListener('click', () => {
+  const k = pendingKit;
+  if (!k) return;
+  dropPending();
+  // keeps the sound as it is now, edits since generating it included
+  Object.assign(k, { kit: Uint8Array.from(values), xm: { amt: xm.amt.slice(), target: xm.target.slice() }, fx: mix.fx.slice(), saved: true });
+  kitList.push(k); storePresets(); fillKits();
+  kitSel.value = kitList.length - 1;
+  initValues.set(values); buildKnobs();
+  $('kit-del').hidden = false;
+  $('kit-msg').textContent = `saved ${k.name}`;
 });
 $('kit-del').addEventListener('click', () => {
   const i = Number(kitSel.value), k = kitList[i];
@@ -1218,7 +1241,7 @@ $('kit-del').addEventListener('click', () => {
 });
 // .SND: 8-character name, then one byte per sound parameter (crossfeed isn't part of the format)
 $('kit-export').addEventListener('click', () => {
-  const k = kitList[Number(kitSel.value)];
+  const k = pendingKit || kitList[Number(kitSel.value)];
   const name = (k ? k.name : 'Elexir').replace(/[^\x20-\x7e]/g, '').slice(0, 8).padEnd(8, ' ');
   const bytes = new Uint8Array(8 + PAR.END_OF_SOUND_PARAMETERS);
   for (let i = 0; i < 8; i++) bytes[i] = name.charCodeAt(i);
