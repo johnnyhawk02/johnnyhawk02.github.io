@@ -24,7 +24,6 @@ static uint32_t rngState = 0x12345678u;
 uint32_t HAL_RNG_GetRandomNumber(RNG_HandleTypeDef *h) { (void)h; uint32_t x = rngState; x ^= x << 13; x ^= x >> 17; x ^= x << 5; rngState = x; return x; }
 float adc_getFaderVolume(uint8_t idx) { (void)idx; return 1.f; }
 uint8_t activeParameters[NUM_PARAMS];
-FxBus fxBus;
 PatternSet seq_patternSet;
 uint8_t frontParser_activeTrack;
 volatile uint32_t systick_ticks;
@@ -56,8 +55,20 @@ static void setParam(uint16_t idx, uint8_t val)
 	midiParser_ccHandler(msg, 1, 0, 0.f);
 }
 
-// copy of mixer_calcNextSampleBlock without the GPIO reads, panning and FX bus
-static void renderBlock(int16_t out[6][OUTPUT_DMA_SIZE])
+// copy of mixer_calcNextSampleBlock without the GPIO reads: each voice's mono output, and the
+// FX bus (voices routed to it, panned with their triggered pan) after FxBus_process
+static void addToFxBus(int n, int16_t* data, float panL, float panR, int16_t* fxBuffer)
+{
+	if(mixer_audioRouting[n] != MIXER_ROUTING_FX_BUS) return;
+	for(int i=0;i<OUTPUT_DMA_SIZE;i++)
+	{
+		int32_t y = *((int32_t*)fxBuffer);
+		int32_t x = __PKHBT( (int16_t)(data[i] * panL), (int16_t)(data[i] * panR), 16);
+		*((int32_t*)fxBuffer) = __QADD16(x, y);
+		fxBuffer += 2;
+	}
+}
+static void renderBlock(int16_t out[6][OUTPUT_DMA_SIZE], int16_t fxOut[OUTPUT_DMA_SIZE*2])
 {
 	modNode_resetTargets();
 	modNode_reassignVeloMod();
@@ -85,6 +96,18 @@ static void renderBlock(int16_t out[6][OUTPUT_DMA_SIZE])
 	Snare_calcSyncBlock(out[3], OUTPUT_DMA_SIZE); mixer_decimateBlock(3, out[3]);
 	Cymbal_calcSyncBlock(out[4], OUTPUT_DMA_SIZE); mixer_decimateBlock(4, out[4]);
 	HiHat_calcSyncBlock(out[5], OUTPUT_DMA_SIZE); mixer_decimateBlock(5, out[5]);
+	int16_t fxBusData[OUTPUT_DMA_SIZE*2];
+	memset(fxBusData, 0, sizeof(fxBusData));
+	memset(fxOut, 0, OUTPUT_DMA_SIZE*2*sizeof(int16_t));
+	addToFxBus(0, out[0], voiceArray[0].triggeredPanL, voiceArray[0].triggeredPanR, fxBusData);
+	addToFxBus(1, out[1], voiceArray[1].triggeredPanL, voiceArray[1].triggeredPanR, fxBusData);
+	addToFxBus(2, out[2], voiceArray[2].triggeredPanL, voiceArray[2].triggeredPanR, fxBusData);
+	addToFxBus(3, out[3], snareVoice.triggeredPanL, snareVoice.triggeredPanR, fxBusData);
+	addToFxBus(4, out[4], cymbalVoice.triggeredPanL, cymbalVoice.triggeredPanR, fxBusData);
+	addToFxBus(5, out[5], hatVoice.triggeredPanL, hatVoice.triggeredPanR, fxBusData);
+	// FX output routed to a stereo pair (audioRouting 0 or 1): fxOut is that pair
+	fxBus.audioRouting = MIXER_ROUTING_DAC2_STEREO;
+	FxBus_process(fxBusData, &fxOut[0], &fxOut[1], &fxOut[0], &fxOut[1], OUTPUT_DMA_SIZE);
 }
 
 int main(int argc, char** argv)
@@ -95,6 +118,7 @@ int main(int argc, char** argv)
 	FILE* out = fopen(argv[1], "wb");
 	// soundengine_init() order
 	mixer_init();
+	FxBus_init();
 	parameterArray_init();
 	for(int i=0;i<6;i++) modNode_init(&velocityModulators[i]);
 	initDrumVoice();
@@ -117,7 +141,7 @@ int main(int argc, char** argv)
 		else if(!strcmp(cmd, "t")) { scanf("%d %d %d", &a, &b, &c); voiceControl_noteOn(a, c, b); }
 		else if(!strcmp(cmd, "seed")) { scanf("%u", &rngState); }
 		else if(!strcmp(cmd, "r")) { scanf("%d", &a);
-			for(int k=0;k<a;k++) { int16_t buf[6][OUTPUT_DMA_SIZE]; renderBlock(buf); fwrite(buf, sizeof(buf), 1, out); } }
+			for(int k=0;k<a;k++) { int16_t buf[6][OUTPUT_DMA_SIZE], fx[OUTPUT_DMA_SIZE*2]; renderBlock(buf, fx); fwrite(buf, sizeof(buf), 1, out); fwrite(fx, sizeof(fx), 1, out); } }
 	}
 	fclose(out);
 	return 0;

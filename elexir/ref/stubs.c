@@ -1,11 +1,4 @@
 // no-op stand-ins for firmware modules outside the sound engine
-void Compressor_setRatio(void* c, unsigned char r) {}
-void FxBus_init() {}
-void FxBus_prepareFxChange() {}
-void FxBus_process() {}
-void FxBus_setParameter(unsigned char a, float b) {}
-void FxBus_updateParameter() {}
-void Ringmod_setWave(void* r, unsigned char w) {}
 unsigned char menu_getActiveVoice() { return 0; }
 unsigned char menu_getSubPage() { return 0; }
 unsigned char menu_getViewedPattern() { return 0; }

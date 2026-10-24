@@ -5,397 +5,244 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: one six-voice front panel. Voice strip, LCD + pad, page tabs, knob row, 7-track step grid; source folds below. */
-/* Flat mustard panel on green, ink outlines, blue/red blocks: the pattern drawn as an isometric
-   city of hits in the middle, round dials either side, triangle voice keys. */
+/* Elexir: one flat mustard panel per tab on a green bench. Ink type and outlines, red for hits
+   and accents, blue for the groove. Plain shapes only: pills, rounded rects, thin rings. */
 :root {
-  --bg: #62bd8c;          /* green bench */
-  --panel: #ead85a;       /* mustard face */
-  --edge: #cdbb45;
+  --bg: #62bd8c;
+  --panel: #ead85a;
   --ink: #2a2a28;
   --muted: #6c6326;
-  --led: #d9574f;         /* red: accents, fills, hits */
-  --blue: #5b8dc4;        /* blue: the groove */
-  --led-soft: #f3e9a8;
+  --tint: color-mix(in srgb, var(--ink) 8%, transparent);
+  --tint-2: color-mix(in srgb, var(--ink) 14%, transparent);
+  --line: color-mix(in srgb, var(--ink) 16%, transparent);
+  --led: #d9574f;
+  --blue: #4f82bb;
   --lcd: #dfcc4f;
   --lcd-ink: #2a2a28;
   --lcd-dim: #8f8331;
-  --knob: #2a2a28;
-  --knob-face: #ead85a;
   --cell: #dbc84c;
-  --tri: #fbfaf5; --tri-shade: #dedbd0;
-  --code-bg: #f4eaa6;
+  --code-bg: #f1e6a0;
   --display: "Outfit", system-ui, sans-serif;
   --body: "Outfit", system-ui, -apple-system, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #0f2419; --panel: #302c16; --edge: #4b4524; --ink: #f1e7b0; --muted: #b2a766; --led: #e5675f; --blue: #6f9fd6; --led-soft: #4a4422;
-  --lcd: #27240f; --lcd-ink: #f1e7b0; --lcd-dim: #7d7440; --knob: #f1e7b0; --knob-face: #302c16; --cell: #3b3719; --tri: #e9e4cf; --tri-shade: #bdb79f;
-  --code-bg: #24210e; color-scheme: dark } }
+  --bg: #0f2419; --panel: #302c16; --ink: #f1e7b0; --muted: #b2a766; --led: #e5675f; --blue: #6f9fd6;
+  --lcd: #27240f; --lcd-ink: #f1e7b0; --lcd-dim: #7d7440; --cell: #3b3719; --code-bg: #24210e; color-scheme: dark } }
 :root[data-theme="dark"] {
-  --bg: #0f2419; --panel: #302c16; --edge: #4b4524; --ink: #f1e7b0; --muted: #b2a766; --led: #e5675f; --blue: #6f9fd6; --led-soft: #4a4422;
-  --lcd: #27240f; --lcd-ink: #f1e7b0; --lcd-dim: #7d7440; --knob: #f1e7b0; --knob-face: #302c16; --cell: #3b3719; --tri: #e9e4cf; --tri-shade: #bdb79f;
-  --code-bg: #24210e; color-scheme: dark }
+  --bg: #0f2419; --panel: #302c16; --ink: #f1e7b0; --muted: #b2a766; --led: #e5675f; --blue: #6f9fd6;
+  --lcd: #27240f; --lcd-ink: #f1e7b0; --lcd-dim: #7d7440; --cell: #3b3719; --code-bg: #24210e; color-scheme: dark }
 
+/* ---- base ---- */
 * { box-sizing: border-box; }
-body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5;
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 48px; }
-.wrap { max-width: 1000px; margin: 0 auto; display: grid; gap: 20px; }
-header { display: grid; gap: 6px; }
-h1 { font-family: var(--display); font-weight: 700; font-size: 2rem; letter-spacing: .06em; margin: 0; text-wrap: balance; }
-h1 small { font-size: .85rem; font-weight: 500; color: var(--muted); letter-spacing: .14em; margin-left: .6em; }
-.src { color: var(--muted); font-size: .9rem; max-width: 72ch; margin: 0; }
-.src a { color: inherit; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5;
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) 32px max(16px, env(safe-area-inset-left, 0px)); }
+.wrap { max-width: 1480px; margin: 0 auto; display: grid; gap: 14px; }
+[hidden] { display: none !important; }
+h1 { font-family: var(--display); font-weight: 600; font-size: 1.6rem; margin: 0; white-space: nowrap; }
+h1 small { font-size: .85rem; font-weight: 400; color: var(--muted); margin-left: .5em; }
+h2 { font-family: var(--display); font-weight: 600; font-size: .95rem; margin: 0; }
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
-.panel { background: var(--panel); border: 1px solid var(--edge); border-radius: 6px; padding: 20px; display: grid; gap: 20px;
-  box-shadow: 0 8px 24px -18px rgba(0,0,0,.4); }
+/* ---- controls ---- */
+.btn, .sm, .bus h2, .bus .gate, .vbtn, .pbtn { text-transform: lowercase; }
+.field select, .field input { color: var(--ink); }
+.btn { font-family: var(--display); font-weight: 500; font-size: .88rem; border: 0; border-radius: 6px; padding: 6px 14px;
+  background: var(--tint); color: var(--ink); cursor: pointer; white-space: nowrap; }
+.btn:hover { background: var(--tint-2); }
+.btn[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
+.btn:disabled { opacity: .45; cursor: default; }
+.seg { display: inline-flex; gap: 2px; }
+.field { display: flex; align-items: center; gap: 8px; font-size: .88rem; color: var(--muted); white-space: nowrap; }
+.field output { font-family: var(--mono); font-size: .8rem; color: var(--ink); min-width: 3.2em; font-variant-numeric: tabular-nums; }
+select, .field input[type=number] { border: 0; border-radius: 6px; background: var(--tint); padding: 5px 8px; font-size: .88rem; max-width: 100%; }
+.field input[type=number] { width: 4.5em; font-family: var(--mono); }
+input[type=range] { accent-color: var(--ink); margin: 0; }
+.field input[type=range] { width: 90px; }
+input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; margin: 0; }
 
-.voices { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
-.vbtn { font-family: var(--display); font-weight: 600; letter-spacing: .08em; font-size: .78rem; padding: 8px 6px 7px; border-radius: 3px;
-  border: 1px solid var(--edge); background: var(--panel); color: var(--muted); cursor: pointer; display: grid; justify-items: center; gap: 5px; }
-.vbtn:hover { color: var(--ink); border-color: var(--muted); }
-.vbtn[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
-.vbtn i { width: 8px; height: 8px; border-radius: 50%; background: var(--led-soft); transition: background .3s, box-shadow .3s; }
-.vbtn.hit i { background: var(--led); box-shadow: 0 0 8px var(--led); transition: none; }
-.vbtn kbd { font-family: var(--mono); font-size: .66rem; opacity: .7; }
-
-.top { display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 20px; }
-.lcd { background: var(--lcd); color: var(--lcd-ink); border-radius: 4px; padding: 12px 14px; font-family: var(--mono); min-width: 0;
-  display: grid; grid-template-rows: auto 1fr; gap: 8px; box-shadow: inset 0 2px 8px rgba(0,0,0,.45); }
-.lcd-line { display: flex; justify-content: space-between; gap: 12px; font-size: .88rem; white-space: nowrap; overflow: hidden; }
-.lcd-line b { font-weight: 500; letter-spacing: .1em; }
-.lcd-line span { color: var(--lcd-dim); overflow: hidden; text-overflow: ellipsis; }
-.lcd-line span em { color: var(--lcd-ink); font-style: normal; }
-.lcd canvas { width: 100%; height: 130px; display: block; }
-
-.pad { border: 0; border-radius: 6px; background: var(--knob); cursor: pointer; font-family: var(--display); font-weight: 600;
-  letter-spacing: .14em; font-size: .85rem; display: grid; place-items: center; align-content: center; gap: 8px;
-  box-shadow: 0 3px 0 rgba(0,0,0,.4); transition: transform .05s; }
-.pad span { color: #d4d6d9; }
-.pad .led { width: 14px; height: 14px; border-radius: 50%; background: var(--led-soft); transition: background .3s, box-shadow .3s; }
-.pad.hit .led { background: var(--led); box-shadow: 0 0 14px var(--led); transition: none; }
-.pad:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.4); }
-.pad kbd { font-family: var(--mono); font-size: .7rem; color: #8f9399; letter-spacing: 0; }
-
-.pages { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--edge); }
-.pbtn { font-family: var(--display); font-weight: 600; letter-spacing: .12em; font-size: .76rem; padding: 7px 12px; border: 0;
-  border-bottom: 2px solid transparent; background: none; color: var(--muted); cursor: pointer; margin-bottom: -1px; }
-.pbtn:hover { color: var(--ink); }
-.pbtn[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--led); }
-
-.knobs { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 14px 8px; min-height: 112px; align-items: start; }
-.knob { display: grid; justify-items: center; gap: 3px; user-select: none; touch-action: none; min-width: 0; }
-.knob .dial { width: 62px; height: 62px; cursor: ns-resize; border-radius: 50%; outline-offset: 3px; }
-.knob .dial:focus-visible { outline: 2px solid var(--led); }
-.knob label { font-family: var(--display); font-weight: 600; letter-spacing: .1em; font-size: .74rem; white-space: nowrap; }
-.knob output { font-family: var(--mono); font-size: .76rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.knob.changed output { color: var(--led); }
-.dial .track { fill: none; stroke: var(--cell); stroke-width: 4; stroke-linecap: round; }
-.dial .val { fill: none; stroke: var(--led); stroke-width: 4; stroke-linecap: round; }
-.dial .cap { fill: var(--knob-face); stroke: var(--knob); stroke-width: 2; }
-.dial .ptr { stroke: #eceae6; stroke-width: 2.5; stroke-linecap: round; }
-.sel { grid-column: span 2; display: grid; gap: 4px; align-content: start; min-width: 0; }
-.sel label { font-family: var(--display); font-weight: 600; letter-spacing: .1em; font-size: .74rem; }
-select { font-family: var(--body); font-size: .85rem; padding: 5px 8px; border: 1px solid var(--edge); border-radius: 4px; background: var(--code-bg); color: var(--ink); max-width: 100%; }
-
-.seq { display: grid; gap: 12px; }
-.seq-ctrl { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
-.btn { font-family: var(--display); font-weight: 600; letter-spacing: .12em; font-size: .78rem; border: 1px solid var(--edge);
-  background: var(--panel); color: var(--ink); border-radius: 4px; padding: 7px 14px; cursor: pointer; }
-.btn:hover { border-color: var(--muted); }
-.btn[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
-.btn:focus-visible, .vbtn:focus-visible, .pbtn:focus-visible, .cell:focus-visible, select:focus-visible, input:focus-visible, .pad:focus-visible { outline: 2px solid var(--led); outline-offset: 2px; }
-.field { display: flex; align-items: center; gap: 8px; font-size: .88rem; color: var(--muted); }
-.field input[type=number] { width: 4.5em; font-family: var(--mono); font-size: .88rem; padding: 4px 6px; border: 1px solid var(--edge);
-  border-radius: 4px; background: var(--code-bg); color: var(--ink); }
-.field input[type=range] { width: 110px; accent-color: var(--led); }
-.field input[type=checkbox] { accent-color: var(--led); width: 16px; height: 16px; margin: 0; }
-.grid { display: grid; grid-template-columns: 5.2em repeat(16, minmax(0, 1fr)); gap: 4px; align-items: center; }
-.grid .row-name { font-family: var(--display); font-weight: 600; font-size: .7rem; letter-spacing: .08em; color: var(--muted);
-  background: none; border: 0; text-align: left; padding: 0; cursor: pointer; white-space: nowrap; overflow: hidden; }
-.grid .row-name.active { color: var(--ink); }
-.cell { aspect-ratio: 1.25; min-width: 0; border: 0; border-radius: 2px; background: var(--cell); cursor: pointer; padding: 0; }
-.cell.q { box-shadow: inset 0 -2px 0 var(--edge); }
-.cell { position: relative; font-family: var(--mono); font-size: .7rem; font-weight: 500; color: #fff; line-height: 1; }
-.cell.on { background: color-mix(in srgb, var(--led) 55%, var(--cell)); }
-.cell.on.acc { background: var(--led); }
-.cell.on.acc::after { content: ""; position: absolute; left: 3px; right: 3px; top: 3px; height: 2px; border-radius: 1px; background: rgba(255,255,255,.85); }
-.cell.now { outline: 2px solid var(--ink); outline-offset: 1px; }
-.seg { display: inline-flex; border: 1px solid var(--edge); border-radius: 4px; overflow: hidden; }
-.seg .btn { border: 0; border-radius: 0; }
-.seg .btn + .btn { border-left: 1px solid var(--edge); }
-.bars { display: inline-flex; gap: 5px; align-items: center; font-family: var(--display); font-weight: 600; font-size: .72rem; letter-spacing: .1em; color: var(--muted); }
-.bars i { width: 9px; height: 9px; border-radius: 50%; background: var(--cell); }
-.bars i.lit { background: var(--led); box-shadow: 0 0 6px var(--led); }
-.kitbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
-.kitbar select { font-family: var(--display); font-weight: 600; letter-spacing: .06em; font-size: .85rem; min-width: 12em; }
+/* ---- header ---- */
+.topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 26px; }
+.kitbar, .transport, .seq-ctrl, .rand, .xfeed-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.kitbar { flex: 1 1 auto; }
+.kitbar select { min-width: 11em; font-weight: 500; }
 .kitbar .file { position: relative; overflow: hidden; }
 .kitbar .file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-.kitbar .file:focus-within { outline: 2px solid var(--led); outline-offset: 2px; }
+.kitbar .file:focus-within { outline: 2px solid var(--ink); outline-offset: 2px; }
 .kitbar .msg { font-size: .82rem; color: var(--muted); }
-[hidden] { display: none !important; }
-.mixer { display: grid; gap: 12px; border-top: 1px solid var(--edge); padding-top: 18px; }
-.mixer h2, .fx h2 { font-family: var(--display); font-weight: 700; letter-spacing: .14em; font-size: .85rem; margin: 0; }
-.strips { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)) minmax(0, 1.6fr); gap: 8px; }
-.strip { border: 1px solid var(--edge); border-radius: 4px; padding: 10px 8px; display: grid; gap: 8px; justify-items: center; min-width: 0; }
-.strip .name { font-family: var(--display); font-weight: 600; letter-spacing: .08em; font-size: .74rem; white-space: nowrap; }
-.strip .sm { display: grid; gap: 2px; width: 100%; font-size: .7rem; color: var(--muted); font-family: var(--display); letter-spacing: .08em; }
-.strip input[type=range] { width: 100%; margin: 0; accent-color: var(--led); }
-.strip .fader { writing-mode: vertical-lr; direction: rtl; width: 28px !important; height: 120px; }
-.strip output { font-family: var(--mono); font-size: .72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-.ms { display: flex; gap: 4px; }
-.ms button { font-family: var(--display); font-weight: 700; font-size: .72rem; width: 26px; height: 24px; border-radius: 3px; border: 1px solid var(--edge); background: var(--panel); color: var(--muted); cursor: pointer; padding: 0; }
-.ms button[aria-pressed="true"].m { background: var(--ink); color: var(--panel); border-color: var(--ink); }
-.ms button[aria-pressed="true"].s { background: var(--led); color: #fff; border-color: var(--led); }
-.ms button:focus-visible, .strip input:focus-visible { outline: 2px solid var(--led); outline-offset: 2px; }
-.fx { grid-template-columns: 1fr 1fr; align-items: start; justify-items: stretch; background: color-mix(in srgb, var(--cell) 35%, transparent); }
-.fx h2 { grid-column: 1 / -1; }
-.fx .gate { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; font-size: .8rem; color: var(--ink); font-family: var(--display); letter-spacing: .08em; }
-.fx .gate input { accent-color: var(--led); width: 16px; height: 16px; margin: 0; }
-@media (max-width: 760px) { .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); } .fx { grid-column: 1 / -1; } .strip .fader { height: 96px; } }
-.perform { display: grid; gap: 14px; }
-.slider-row { display: grid; grid-template-columns: 6.5em minmax(0, 1fr) 13em; align-items: center; gap: 6px 14px; }
-.slider-row label { font-family: var(--display); font-weight: 600; letter-spacing: .12em; font-size: .85rem; }
-.slider-row input[type=range] { width: 100%; height: 28px; margin: 0; accent-color: var(--led); }
-.slider-row output { font-family: var(--mono); font-size: .82rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.slider-row output b { color: var(--ink); font-weight: 500; }
-.mini { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 3px; padding-top: 4px; }
-.mini i { height: 6px; border-radius: 1px; background: var(--cell); }
-.mini i.on { background: color-mix(in srgb, var(--led) 55%, var(--cell)); }
-.mini i.on.acc { background: var(--led); }
-.mini i.fill { background: color-mix(in srgb, var(--ink) 55%, var(--cell)); }
-.mini i.now { outline: 1px solid var(--ink); outline-offset: 1px; }
-@media (max-width: 760px) { .slider-row { grid-template-columns: minmax(0, 1fr) auto; } .slider-row input[type=range] { grid-column: 1 / -1; grid-row: 2; } }
-.rand { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
-.rand output { font-family: var(--mono); font-size: .8rem; min-width: 3.2em; font-variant-numeric: tabular-nums; }
-.btn:disabled { opacity: .45; cursor: default; }
-.note { font-size: .82rem; color: var(--muted); margin: 0; max-width: 80ch; }
-
-details { background: var(--panel); border: 1px solid var(--edge); border-radius: 6px; }
-summary { cursor: pointer; padding: 12px 16px; font-family: var(--display); font-weight: 600; letter-spacing: .1em; font-size: .85rem; }
-.body { padding: 0 16px 16px; display: grid; gap: 10px; max-width: 80ch; }
-.body p { margin: 0; }
-.body code { font-family: var(--mono); font-size: .82em; }
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; padding: 0 16px 16px; }
-.stat { border: 1px solid var(--edge); border-radius: 4px; padding: 10px 12px; display: grid; gap: 2px; }
-.stat b { font-family: var(--display); font-size: 1.3rem; font-variant-numeric: tabular-nums; }
-.stat span { font-size: .8rem; color: var(--muted); }
-.code-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 16px 10px; flex-wrap: wrap; }
-pre { margin: 0; padding: 14px 16px; overflow-x: auto; background: var(--code-bg); border-top: 1px solid var(--edge);
-  font-family: var(--mono); font-size: .76rem; line-height: 1.55; border-radius: 0 0 6px 6px; max-height: 560px; }
-
-@media (max-width: 760px) {
-  .voices { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .top { grid-template-columns: 1fr; }
-  .pad { height: 80px; grid-auto-flow: column; }
-  .grid { grid-template-columns: 4.2em repeat(16, minmax(0, 1fr)); gap: 2px; }
-  .cell { aspect-ratio: .8; }
-}
-@media (prefers-reduced-motion: reduce) { .pad, .pad .led, .vbtn i { transition: none; } }
-
-/* ---- flat restyle ---- */
-h1 { font-weight: 600; letter-spacing: 0; text-transform: lowercase; }
-h1 b { font-weight: 700; } h1 span { font-weight: 300; }
-h1 small { text-transform: lowercase; letter-spacing: .02em; font-weight: 400; }
-.src { color: color-mix(in srgb, var(--ink) 80%, transparent); }
-.panel { border: 0; border-radius: 10px; box-shadow: 0 40px 70px -40px rgba(0,0,0,.45); padding: 24px; }
-.btn, .vbtn, .pbtn, .knob label, .sel label, .strip .name, .strip .sm, .mixer h2, .fx h2, summary, .grid .row-name, .bars,
-.fx .gate, .slider-row label, .pad span, .lcd-line b, .bigdial label { text-transform: lowercase; letter-spacing: .02em; }
-.btn { border: 0; background: color-mix(in srgb, var(--ink) 8%, transparent); font-weight: 500; font-size: .88rem; padding: 7px 14px; }
-.btn:hover { background: color-mix(in srgb, var(--ink) 14%, transparent); }
-.btn[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
-.seg { border: 0; gap: 2px; } .seg .btn + .btn { border-left: 0; }
-select, .field input[type=number] { border: 0; background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); }
-input[type=range], .field input[type=range], .strip input[type=range], .slider-row input[type=range], input[type=checkbox] { accent-color: var(--ink); }
-.field { color: var(--muted); }
-/* triangle keys */
-.voices { gap: 4px; }
-.vbtn { border: 0; background: none; color: var(--muted); font-weight: 500; font-size: .85rem; padding: 4px 2px; gap: 6px; }
-.vbtn:hover { color: var(--ink); }
-.vbtn i { width: 48px; height: 42px; border-radius: 0; clip-path: polygon(50% 0, 100% 100%, 0 100%);
-  background: linear-gradient(90deg, var(--tri-shade) 50%, var(--tri) 50%); box-shadow: none; transition: background .25s; }
-.vbtn[aria-pressed="true"] { background: none; color: var(--ink); font-weight: 600; }
-.vbtn[aria-pressed="true"] i { background: linear-gradient(90deg, color-mix(in srgb, var(--blue) 70%, #000) 50%, var(--blue) 50%); }
-.vbtn.hit i { background: linear-gradient(90deg, color-mix(in srgb, var(--led) 72%, #000) 50%, var(--led) 50%); box-shadow: none; }
-.vbtn kbd { opacity: .55; }
-/* display and pad */
-.lcd { box-shadow: none; border-radius: 6px; }
-.pad { background: none; box-shadow: none; gap: 10px; }
-.pad:active { transform: none; box-shadow: none; }
-.pad .led { width: 112px; height: 98px; border-radius: 0; clip-path: polygon(50% 0, 100% 100%, 0 100%);
-  background: linear-gradient(90deg, var(--tri-shade) 50%, var(--tri) 50%); box-shadow: none; }
-.pad.hit .led { background: linear-gradient(90deg, color-mix(in srgb, var(--led) 72%, #000) 50%, var(--led) 50%); box-shadow: none; }
-.pad span { color: var(--ink); } .pad kbd { color: var(--muted); }
-/* knobs: thin ring, ink arc */
-.dial .track { stroke: color-mix(in srgb, var(--ink) 22%, transparent); stroke-width: 1.5; }
-.dial .val { stroke: var(--ink); stroke-width: 3; }
-.dial .cap { fill: none; stroke: none; }
-.dial .ptr { stroke: var(--ink); stroke-width: 3; }
-.knob label { font-weight: 500; font-size: .8rem; }
-.pbtn { font-weight: 500; font-size: .88rem; letter-spacing: .02em; }
-.pbtn[aria-selected="true"] { border-bottom-color: var(--ink); }
-.pages { border-bottom-color: color-mix(in srgb, var(--ink) 15%, transparent); }
-/* steps */
-.cell { background: var(--cell); border-radius: 3px; }
-.cell.q { box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--ink) 18%, transparent); }
-.cell.on { background: var(--blue); }
-.cell.on.acc { background: var(--led); }
-.bars i { background: color-mix(in srgb, var(--ink) 15%, transparent); }
-.bars i.lit { background: var(--ink); box-shadow: none; }
-/* perform: dials either side of the block view */
-.perform { grid-template-columns: 150px minmax(0, 1fr) 150px; align-items: center; gap: 8px; }
-.dials { display: grid; gap: 26px; justify-items: center; }
-.bigdial { display: grid; justify-items: center; gap: 2px; user-select: none; touch-action: none; }
-.bigdial svg { width: 96px; height: 96px; cursor: ns-resize; border-radius: 50%; }
-.bigdial svg:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-.bigdial label { font-weight: 600; font-size: .95rem; }
-.bigdial output { font-size: .8rem; color: var(--muted); text-align: center; white-space: nowrap; }
-.bigdial output b { color: var(--ink); font-weight: 500; }
-.bigdial .ring { fill: none; stroke: color-mix(in srgb, var(--ink) 25%, transparent); stroke-width: 1.5; }
-.bigdial .arc { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
-.bigdial .top { fill: var(--panel); } .bigdial .l { fill: color-mix(in srgb, var(--blue) 70%, #000); } .bigdial .r { fill: var(--blue); }
-.bigdial .cube polygon { stroke: var(--ink); stroke-width: 1.2; stroke-linejoin: round; }
-@media (max-width: 760px) {
-  .perform { grid-template-columns: 1fr 1fr; }
-  .vbtn i { width: 40px; height: 35px; }
-}
-/* crossfeed matrix */
-.xfeed { display: grid; gap: 12px; border-top: 1px solid color-mix(in srgb, var(--ink) 15%, transparent); padding-top: 18px; }
-.xfeed-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
-.xfeed h2 { font-family: var(--display); font-weight: 700; font-size: .85rem; letter-spacing: .02em; margin: 0; text-transform: lowercase; }
-.xgrid { display: grid; grid-template-columns: 4.6em repeat(6, minmax(0, 1fr)); gap: 4px; align-items: center; max-width: 640px; }
-.xgrid .lab { font-size: .78rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.xgrid .col { display: grid; gap: 3px; justify-items: center; font-size: .78rem; font-weight: 600; min-width: 0; }
-.xgrid .col select { font-size: .74rem; padding: 3px 2px; width: 100%; appearance: none; -webkit-appearance: none; text-align: center; text-align-last: center; border-radius: 4px; cursor: pointer; }
-.xgrid .short { display: none; }
-@media (max-width: 520px) { .xgrid .full { display: none; } .xgrid .short { display: inline; } .xgrid { grid-template-columns: 3.6em repeat(6, minmax(0, 1fr)); } .xcell { aspect-ratio: 1; } }
-.xcell { aspect-ratio: 1.4; min-width: 0; border: 0; border-radius: 4px; cursor: ns-resize; touch-action: none; user-select: none;
-  background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--ink); font-family: var(--mono); font-size: .72rem; padding: 0; }
-.xcell:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
-.xcell.diag { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 18%, transparent); }
-/* mixer */
-.mixer { border-top-color: color-mix(in srgb, var(--ink) 15%, transparent); }
-.strip { border: 0; background: color-mix(in srgb, var(--ink) 6%, transparent); border-radius: 8px; }
-.fx { background: color-mix(in srgb, var(--ink) 11%, transparent); }
-.ms button { border: 0; background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); }
-.ms button[aria-pressed="true"].s { background: var(--led); }
-details { border: 0; border-radius: 10px; }
-pre { border-top: 0; border-radius: 0 0 10px 10px; }
-.stat { border: 0; background: color-mix(in srgb, var(--ink) 7%, transparent); }
-
-/* ---- one-screen layout: header bar, then voice | pattern + crossfeed | mixer ---- */
-body { padding-block: 14px 32px; }
-.wrap { max-width: 1480px; gap: 14px; }
-.topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 26px; }
-.topbar h1 { font-size: 1.6rem; white-space: nowrap; }
-.topbar .kitbar { flex: 1 1 auto; }
-.transport { gap: 8px 14px; }
-.transport .field input[type=range] { width: 90px; }
-.rack { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr) minmax(0, .95fr); gap: 26px; align-items: start; padding: 20px; }
-.rack > .col { display: grid; gap: 12px; align-content: start; min-width: 0; }
-.rack h2 { font-family: var(--display); font-weight: 700; font-size: .95rem; letter-spacing: .02em; margin: 0; text-transform: lowercase; }
-.vbtn { font-size: .78rem; gap: 4px; }
-.vbtn i { width: 34px; height: 30px; }
-.vbtn kbd { display: none; }
-.top { grid-template-columns: minmax(0, 1fr) 96px; gap: 12px; }
-.lcd { padding: 8px 12px; gap: 4px; }
-.lcd canvas { height: 92px; }
-.pad .led { width: 66px; height: 58px; }
-.pad { gap: 4px; }
-.pad kbd { font-size: .62rem; }
-.rand { gap: 6px 10px; }
-.rand .field input[type=range] { width: 80px; }
-.pages { gap: 0; }
-.pbtn { padding: 5px 8px; font-size: .82rem; }
-.knobs { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 6px; min-height: 0; }
-.knob .dial { width: 54px; height: 54px; }
-.sel { grid-column: span 2; }
-.seq > .seq-ctrl { gap: 10px 14px; }
-.perform { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
-.dials { display: contents; }
-.bigdial svg { width: 76px; height: 76px; }
-.bigdial label { font-size: .88rem; }
-.bigdial output { font-size: .74rem; }
-.grid { grid-template-columns: 4.4em repeat(16, minmax(0, 1fr)); gap: 3px; }
-.cell { aspect-ratio: 1; }
-.xfeed { border-top: 1px solid color-mix(in srgb, var(--ink) 15%, transparent); padding-top: 12px; gap: 8px; }
-.xfeed-head { gap: 6px 12px; }
-.xfeed-head .field input[type=range] { width: 80px; }
-.xgrid { max-width: none; grid-template-columns: 4.2em repeat(6, minmax(0, 1fr)); gap: 3px; }
-.xcell { aspect-ratio: 2.1; }
-.mixer { border-top: 0; padding-top: 0; gap: 10px; }
-.strips { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; }
-.strip { padding: 8px 4px; gap: 6px; }
-.strip .name { font-size: .72rem; }
-.strip .fader { height: 150px; }
-.fx { grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 14px; padding: 12px; }
-.fx .gate { grid-column: auto; }
-.fx #rv-gatetime-wrap { grid-column: span 2; }
 #kit-msg:empty { display: none; }
-.rand .btn, .xfeed-head .btn { padding: 6px 10px; }
-.rand .field input[type=range], .xfeed-head .field input[type=range] { width: 64px; }
-.rand, .xfeed-head { flex-wrap: wrap; }
-/* ---- tabs: one section on screen at a time ---- */
-.tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: -14px; padding-left: 14px; }
-.tab { font-family: var(--display); font-weight: 700; font-size: .95rem; letter-spacing: .02em; text-transform: lowercase;
-  border: 0; border-radius: 10px 10px 0 0; padding: 9px 20px 10px; cursor: pointer; color: var(--ink);
-  background: color-mix(in srgb, var(--panel) 45%, transparent); }
+.bars { display: inline-flex; gap: 5px; }
+.bars i { width: 8px; height: 8px; border-radius: 50%; background: var(--tint-2); }
+.bars i.lit { background: var(--ink); }
+
+/* ---- tabs and panels ---- */
+.tabs { display: flex; gap: 4px; padding-left: 12px; margin-bottom: -14px; }
+.tab { font-family: var(--display); font-weight: 600; font-size: .95rem; border: 0; border-radius: 10px 10px 0 0; padding: 8px 20px 9px;
+  cursor: pointer; color: var(--ink); background: color-mix(in srgb, var(--panel) 45%, transparent); }
 .tab:hover { background: color-mix(in srgb, var(--panel) 70%, transparent); }
 .tab[aria-selected="true"] { background: var(--panel); }
-.tab:focus-visible { outline: 2px solid var(--led); outline-offset: -3px; }
-.rack { border-top-left-radius: 0; }
+.tab:focus-visible { outline-offset: -3px; }
+.panel { background: var(--panel); border-radius: 10px; padding: 22px; }
+.rack { display: grid; gap: 28px; align-items: start; border-top-left-radius: 0; }
+.rack > .col { display: grid; gap: 14px; align-content: start; min-width: 0; }
+
+/* ---- sound tab ---- */
 .tab-sound { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); }
-.tab-sound .knobs { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-.tab-sound .lcd canvas { height: 150px; }
-.tab-sound .pad .led { width: 96px; height: 96px; }
-.tab-sound .top { grid-template-columns: minmax(0, 1fr) 120px; }
-.tab-sound .vbtn i { width: 44px; height: 38px; }
+.voices { display: flex; flex-wrap: wrap; gap: 4px; }
+.vbtn { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 999px; padding: 5px 11px;
+  background: var(--tint); color: var(--ink); cursor: pointer; font-family: var(--display); font-weight: 500; font-size: .86rem; }
+.vbtn:hover { background: var(--tint-2); }
+.vbtn i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); transition: background .25s; }
+.vbtn[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
+.vbtn[aria-pressed="true"] i { background: color-mix(in srgb, var(--panel) 45%, transparent); }
+.vbtn.hit i { background: var(--led); transition: none; }
+.vbtn kbd { display: none; }
+.top { display: grid; grid-template-columns: minmax(0, 1fr) 110px; gap: 12px; }
+.lcd { background: var(--lcd); color: var(--lcd-ink); border-radius: 8px; padding: 10px 14px; font-family: var(--mono);
+  display: grid; grid-template-rows: auto 1fr; gap: 6px; min-width: 0; }
+.lcd-line { display: flex; justify-content: space-between; gap: 12px; font-size: .85rem; white-space: nowrap; overflow: hidden; }
+.lcd-line b { font-weight: 500; text-transform: lowercase; }
+.lcd-line span { color: var(--lcd-dim); overflow: hidden; text-overflow: ellipsis; }
+.lcd-line span em { color: var(--lcd-ink); font-style: normal; }
+.lcd canvas { width: 100%; height: 140px; display: block; }
+.pad { border: 2px solid var(--ink); border-radius: 10px; background: none; cursor: pointer; display: grid; place-items: center;
+  align-content: center; gap: 4px; font-family: var(--display); font-weight: 600; font-size: 1rem; color: var(--ink); transition: background .2s; }
+.pad:hover { background: var(--tint); }
+.pad .led { display: none; }
+.pad.hit { background: var(--led); border-color: var(--led); color: #fff; transition: none; }
+.pad span { text-transform: lowercase; }
+.pad kbd { font-family: var(--mono); font-size: .66rem; color: var(--muted); }
+.pad.hit kbd { color: inherit; }
+.rand .btn { padding: 6px 12px; }
+.rand .field input[type=range] { width: 70px; }
+.pages { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--line); }
+.pbtn { font-family: var(--display); font-weight: 500; font-size: .88rem; padding: 6px 10px; border: 0; border-bottom: 2px solid transparent;
+  margin-bottom: -1px; background: none; color: var(--muted); cursor: pointer; }
+.pbtn:hover { color: var(--ink); }
+.pbtn[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+.knobs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px 6px; align-items: start; }
+.knob { display: grid; justify-items: center; gap: 2px; user-select: none; touch-action: none; min-width: 0; }
+.knob .dial { width: 54px; height: 54px; cursor: ns-resize; border-radius: 50%; }
+.knob label { font-family: var(--display); font-weight: 500; font-size: .8rem; white-space: nowrap; text-transform: lowercase; }
+.knob output { font-family: var(--mono); font-size: .74rem; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.knob.changed output { color: var(--led); }
+.dial .track { fill: none; stroke: var(--line); stroke-width: 2; stroke-linecap: round; }
+.dial .val { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
+.dial .cap { fill: none; stroke: none; }
+.dial .ptr { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
+.sel { grid-column: span 2; display: grid; gap: 4px; align-content: start; min-width: 0; }
+.sel label { font-family: var(--display); font-weight: 500; font-size: .8rem; text-transform: lowercase; }
+
+/* ---- pattern tab ---- */
 .tab-pattern, .tab-xfeed, .tab-mix { grid-template-columns: minmax(0, 1fr); }
-.tab-pattern .seq { max-width: 1000px; width: 100%; justify-self: center; }
-.tab-pattern .bigdial svg { width: 130px; height: 130px; }
-.tab-pattern .bigdial label { font-size: 1.05rem; }
-.tab-pattern .bigdial output { font-size: .85rem; }
-.tab-pattern .perform { padding-block: 30px; }
-.tab-pattern .grid { gap: 4px; }
-.tab-xfeed .xfeed { border-top: 0; padding-top: 0; max-width: 820px; width: 100%; justify-self: center; gap: 12px; }
-.tab-xfeed .xcell { aspect-ratio: 2.6; }
-.tab-mix .mixer { max-width: 1100px; width: 100%; justify-self: center; }
-.tab-mix .strips { grid-template-columns: repeat(6, minmax(0, 1fr)) minmax(0, 2.2fr); gap: 8px; }
-.tab-mix .strip .fader { height: 220px; }
-.tab-mix .fx { grid-column: auto; grid-template-columns: minmax(0, 1fr); align-content: start; }
-.tab-mix .fx #rv-gatetime-wrap { grid-column: auto; }
+.seq { display: grid; gap: 14px; max-width: 1000px; width: 100%; justify-self: center; }
+.perform { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding-block: 28px; }
+.dials { display: contents; }
+.bigdial { display: grid; justify-items: center; gap: 2px; user-select: none; touch-action: none; }
+.bigdial svg { width: 120px; height: 120px; cursor: ns-resize; border-radius: 50%; }
+.bigdial label { font-family: var(--display); font-weight: 600; font-size: 1.05rem; }
+.bigdial output { font-size: .85rem; color: var(--muted); text-align: center; white-space: nowrap; }
+.bigdial output b { color: var(--ink); font-weight: 500; }
+.bigdial .ring { fill: none; stroke: var(--line); stroke-width: 2; }
+.bigdial .arc { fill: none; stroke: var(--ink); stroke-width: 4; stroke-linecap: round; }
+.bigdial .dot { fill: var(--ink); }
+.mini { display: none; }
+.grid { display: grid; grid-template-columns: 4.6em repeat(16, minmax(0, 1fr)); gap: 4px; align-items: center; }
+.grid .row-name { font-family: var(--display); font-weight: 500; font-size: .78rem; color: var(--muted); background: none; border: 0;
+  text-align: left; padding: 0; cursor: pointer; white-space: nowrap; overflow: hidden; text-transform: lowercase; }
+.grid .row-name.active { color: var(--ink); font-weight: 600; }
+.cell { position: relative; aspect-ratio: 1.35; min-width: 0; border: 0; border-radius: 4px; background: var(--tint); cursor: pointer; padding: 0;
+  font-family: var(--mono); font-size: .7rem; font-weight: 500; color: #fff; line-height: 1; }
+.cell.q { background: var(--tint-2); }
+.cell.on { background: var(--blue); }
+.cell.on.acc { background: var(--led); }
+.cell.now { outline: 2px solid var(--ink); outline-offset: 1px; }
+
+/* ---- crossfeed tab ---- */
+.xfeed { display: grid; gap: 12px; max-width: 820px; width: 100%; justify-self: center; }
+.xfeed-head .field input[type=range] { width: 80px; }
+.xgrid { display: grid; grid-template-columns: 4.6em repeat(6, minmax(0, 1fr)); gap: 4px; align-items: center; }
+.xgrid .lab { font-size: .8rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: lowercase; }
+.xgrid .col { display: grid; gap: 3px; justify-items: center; font-size: .8rem; font-weight: 600; min-width: 0; text-transform: lowercase; }
+.xgrid .col select { font-size: .76rem; padding: 3px 2px; width: 100%; appearance: none; -webkit-appearance: none; text-align: center;
+  text-align-last: center; cursor: pointer; }
+.xgrid .short { display: none; }
+.xcell { aspect-ratio: 2.6; min-width: 0; border: 0; border-radius: 4px; cursor: ns-resize; touch-action: none; user-select: none;
+  background: var(--tint); color: var(--ink); font-family: var(--mono); font-size: .72rem; padding: 0; }
+.xcell.diag { box-shadow: inset 0 0 0 1px var(--line); }
+
+/* ---- mixer tab ---- */
+.mixer { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 520px); gap: 14px; max-width: 1340px; width: 100%; justify-self: center; align-items: start; }
+.strips { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.strip, .bus { background: var(--tint); border-radius: 8px; padding: 10px 8px; display: grid; gap: 8px; min-width: 0; }
+.strip { justify-items: center; }
+.strip .name { font-family: var(--display); font-weight: 600; font-size: .8rem; white-space: nowrap; text-transform: lowercase; }
+.sm { display: grid; gap: 2px; width: 100%; font-size: .76rem; color: var(--muted); text-transform: lowercase; }
+.sm output { font-family: var(--mono); font-size: .72rem; color: var(--ink); }
+.sm input[type=range], .sm select { width: 100%; }
+.strip .fader { writing-mode: vertical-lr; direction: rtl; width: 28px; height: 200px; }
+.strip > output { font-family: var(--mono); font-size: .74rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ms { display: flex; gap: 4px; }
+.ms button, .fxb { font-family: var(--display); font-weight: 600; font-size: .74rem; height: 24px; border-radius: 5px; border: 0;
+  background: var(--tint); color: var(--ink); cursor: pointer; padding: 0; }
+.ms button { width: 26px; }
+.fxb { width: 56px; text-transform: lowercase; }
+.ms button[aria-pressed="true"].m, .fxb[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
+.ms button[aria-pressed="true"].s { background: var(--led); color: #fff; }
+.buses { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
+.bus { padding: 12px 14px; gap: 9px; }
+.bus .gate { display: flex; align-items: center; gap: 8px; font-size: .86rem; text-transform: lowercase; }
+.fx-params { display: grid; gap: 9px; }
+#fx-mode-wrap:not([hidden]) + .sm { margin-top: 0; }
+.hint { margin: 0; font-size: .78rem; color: var(--muted); }
+
+/* ---- about tab ---- */
 .about { display: grid; gap: 14px; min-width: 0; }
 .about > * { min-width: 0; }
-.about pre { max-width: 100%; overflow: auto; }
-.about p { overflow-wrap: anywhere; }
+details { background: var(--panel); border-radius: 10px; }
+summary { cursor: pointer; padding: 12px 18px; font-family: var(--display); font-weight: 600; font-size: .95rem; text-transform: lowercase; }
+.body { padding: 0 18px 18px; display: grid; gap: 10px; max-width: 80ch; }
+.body p { margin: 0; overflow-wrap: anywhere; }
+.body code { font-family: var(--mono); font-size: .82em; }
+.src a { color: inherit; }
+.note { font-size: .86rem; color: var(--muted); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; padding: 0 18px 18px; }
+.stat { background: var(--tint); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; }
+.stat b { font-family: var(--display); font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.stat span { font-size: .8rem; color: var(--muted); }
+.code-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 18px 10px; flex-wrap: wrap; }
+pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background: var(--code-bg); font-family: var(--mono);
+  font-size: .76rem; line-height: 1.55; border-radius: 0 0 10px 10px; max-height: 560px; }
+
+/* ---- smaller screens ---- */
 @media (max-width: 1180px) {
   .tab-sound .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .tab-mix .strips { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-  .tab-mix .fx { grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .mixer { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 760px) {
   .rack { grid-template-columns: minmax(0, 1fr); padding: 16px; }
-  .tab-sound .pad kbd { display: none; }
-  .tab-xfeed .xcell { aspect-ratio: 1; }
   .tabs { padding-left: 0; gap: 2px; }
-  .tabs { flex-wrap: nowrap; }
-  .tab { padding: 8px 4px; font-size: .8rem; flex: 1 1 0; min-width: 0; }
-  .tab-sound .pad span { display: none; }
-  .tab-sound .lcd canvas { height: 100px; }
-  .tab-sound .pad .led { width: 70px; height: 62px; }
-  .tab-sound .top { grid-template-columns: minmax(0, 1fr) 90px; }
-  .tab-pattern .bigdial svg { width: 96px; height: 96px; }
-  .tab-pattern .perform { padding-block: 10px; }
-  .tab-mix .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .tab-mix .strip .fader { height: 110px; }
-  .tab-mix .fx { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .perform { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tab { flex: 1 1 0; min-width: 0; padding: 8px 4px; font-size: .8rem; }
+  .top { grid-template-columns: minmax(0, 1fr) 76px; }
+  .lcd canvas { height: 100px; }
+  .pad kbd { display: none; }
+  .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .perform { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-block: 8px; gap: 18px 8px; }
+  .bigdial svg { width: 96px; height: 96px; }
+  .grid { grid-template-columns: 4em repeat(16, minmax(0, 1fr)); gap: 2px; }
+  .cell { aspect-ratio: .8; border-radius: 2px; }
   .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .fx { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .strip .fader { height: 110px; }
+  .buses { grid-template-columns: minmax(0, 1fr); }
   .transport .field input[type=range] { width: 70px; }
 }
+@media (max-width: 520px) {
+  .xgrid .full { display: none; } .xgrid .short { display: inline; }
+  .xgrid { grid-template-columns: 3.4em repeat(6, minmax(0, 1fr)); }
+  .xcell { aspect-ratio: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .pad, .vbtn i { transition: none; } }
 </style>
 
 <div class="wrap">
@@ -432,7 +279,7 @@ body { padding-block: 14px 32px; }
           <canvas id="scope" width="800" height="220" aria-label="Waveform of one hit of the selected voice, first 500 ms"></canvas>
         </div>
         <button class="pad" id="pad" type="button" aria-label="Trigger the selected voice">
-          <i class="led"></i><span>TRIG</span><kbd>space · 1–7</kbd>
+          <span>trig</span><kbd>space · 1–7</kbd>
         </button>
       </div>
       <div class="rand">
@@ -452,7 +299,6 @@ body { padding-block: 14px 32px; }
   <section class="panel rack tab-pattern" data-panel="pattern" role="tabpanel" aria-label="Pattern" hidden>
     <div class="col seq" aria-label="Pattern">
       <div class="seq-ctrl">
-        <h2>pattern</h2>
         <span class="seg" role="group" aria-label="Sequencer mode">
           <button class="btn" type="button" data-view="perform" aria-pressed="true">PERFORM</button>
           <button class="btn" type="button" data-view="steps" aria-pressed="false">STEPS</button>
@@ -483,7 +329,6 @@ body { padding-block: 14px 32px; }
   <section class="panel rack tab-xfeed" data-panel="xfeed" role="tabpanel" aria-label="Crossfeed" hidden>
       <div class="xfeed" aria-label="Crossfeed">
         <div class="xfeed-head">
-          <h2>crossfeed</h2>
           <label class="field" for="xdepth">depth <input id="xdepth" type="range" min="0" max="100" value="100"><output id="xdepth-out">100%</output></label>
           <button class="btn" id="xrand" type="button">randomise</button>
           <button class="btn" id="xclear" type="button">clear</button>
@@ -494,10 +339,18 @@ body { padding-block: 14px 32px; }
 
   <section class="panel rack tab-mix" data-panel="mix" role="tabpanel" aria-label="Mixer" hidden>
     <div class="col mixer" aria-label="Mixer">
-      <h2>mixer</h2>
-      <div class="strips" id="strips">
-          <div class="strip fx" role="group" aria-label="Reverb">
-            <h2>REVERB</h2>
+      <div class="strips" id="strips"></div>
+      <div class="buses">
+          <div class="bus" role="group" aria-label="FX bus">
+            <h2>fx bus</h2>
+            <label class="sm">type <select id="fx-type"></select></label>
+            <label class="sm" id="fx-mode-wrap"><span id="fx-mode-lab">mode</span> <select id="fx-mode"></select></label>
+            <label class="sm">amount <output id="fx-amt-out"></output><input id="fx-amt" type="range" min="0" max="100"></label>
+            <div class="fx-params" id="fx-params"></div>
+            <p class="hint">Voices with <b>fx</b> on run through this bus, the LXR-02's own effects.</p>
+          </div>
+          <div class="bus" role="group" aria-label="Reverb">
+            <h2>reverb</h2>
             <label class="sm">SIZE <input id="rv-size" type="range" min="0" max="100" value="55"></label>
             <label class="sm">TONE <input id="rv-tone" type="range" min="0" max="100" value="50"></label>
             <label class="sm">PRE-DELAY <input id="rv-pre" type="range" min="0" max="120" value="10"></label>
@@ -513,21 +366,21 @@ body { padding-block: 14px 32px; }
   <details open>
     <summary>HOW TO PLAY IT</summary>
     <div class="body">
-      <p class="src">Elexir by Johnny Hawk is an unofficial browser drum machine, not made or endorsed by Erica Synths. Its sound engine is a JavaScript port of the six drum voices of the Erica Synths LXR-02 firmware (<a href="https://github.com/erica-synths/lxr-desktop-app" target="_blank" rel="noopener">erica-synths/lxr-desktop-app</a>, GPL-3.0, commit a43cd4f), ported line by line; its output matches the original C code compiled for the Cortex-M7 sample for sample. The FX bus (delay, compressor, ring mod) is not ported; the mixer, reverb, crossfeed and pattern generator are new. The 16 kits after the init kit are Hrtl's free LXR-02 DLC kits, used with credit, and any LXR kit file (.SND) can be opened. Source and licence (GPL-3.0): <a href="https://github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir" target="_blank" rel="noopener">github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir</a>.</p>
-      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit; reverb send, mute and solo sit after the engine. Gated reverb opens on every hit sent to it, holds for the gate time and then cuts off. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of five electro grooves, and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. STEPS opens the same pattern in the step editor; going back to Perform rebuilds it from the sliders. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. Press R for the same; Randomise all (Shift-R) does every voice at once. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
+      <p class="src">Elexir by Johnny Hawk is an unofficial browser drum machine, not made or endorsed by Erica Synths. Its sound engine is a JavaScript port of the six drum voices and the FX bus of the Erica Synths LXR-02 firmware (<a href="https://github.com/erica-synths/lxr-desktop-app" target="_blank" rel="noopener">erica-synths/lxr-desktop-app</a>, GPL-3.0, commit a43cd4f), ported line by line; its output matches the original C code compiled for the Cortex-M7 sample for sample. The FX bus (distortion, ring mod, compressor, delay) is the firmware's too; the mixer, reverb, crossfeed and pattern generator are new. The 16 kits after the init kit are Hrtl's free LXR-02 DLC kits, used with credit, and any LXR kit file (.SND) can be opened. Source and licence (GPL-3.0): <a href="https://github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir" target="_blank" rel="noopener">github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir</a>.</p>
+      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit; reverb send, mute and solo sit after the engine. The FX bus is the LXR-02's effect slot: a voice with fx on goes through it instead of straight to the output, and kits bring their own FX settings. Gated reverb opens on every hit sent to it, holds for the gate time and then cuts off. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of five electro grooves, and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. STEPS opens the same pattern in the step editor; going back to Perform rebuilds it from the sliders. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. Press R for the same; Randomise all (Shift-R) does every voice at once. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
     </div>
   </details>
 
   <details>
     <summary>HOW THE PORT WAS CHECKED</summary>
     <div class="stats">
-      <div class="stat"><b>94.2 M</b><span>samples compared, 6 voices</span></div>
+      <div class="stat"><b>176 M</b><span>samples compared, 6 voices and the FX bus</span></div>
       <div class="stat"><b>0</b><span>samples that differ from the C</span></div>
-      <div class="stat"><b>500</b><span>random scenarios: kits, edits, triggers, LFO and velocity modulation</span></div>
+      <div class="stat"><b>700</b><span>random scenarios: kits, edits, triggers, FX settings, LFO and velocity modulation</span></div>
       <div class="stat"><b>−77 dB</b><span>difference to the -ffast-math firmware build, init kit</span></div>
     </div>
     <div class="body">
-      <p>The reference is the firmware's own sound engine (<code>Core/Src/Soundengine</code>: voices, oscillators, filter, envelopes, LFOs, modulation and the parameter handler), cross-compiled for the Cortex-M7 FPU and run under qemu with a small harness. <code>verify.mjs</code> sends the same parameter edits and triggers to both and compares every 64-sample block. The STM32's hardware random number generator is replaced by the same xorshift on both sides.</p>
+      <p>The reference is the firmware's own sound engine (<code>Core/Src/Soundengine</code>: voices, oscillators, filter, envelopes, LFOs, modulation, the parameter handler and the FX bus), cross-compiled for the Cortex-M7 FPU and run under qemu with a small harness. <code>verify.mjs</code> sends the same parameter edits and triggers to both and compares every 64-sample block. The STM32's hardware random number generator is replaced by the same xorshift on both sides.</p>
       <p>The port is exact against the C as written. The shipped firmware is built with <code>-O3 -ffast-math</code>, which lets the compiler fuse and reorder float operations, so the hardware rounds slightly differently: with the init kit, the largest difference is 9 LSB. With extreme random settings, self-oscillating filters can drift further apart, because a one-LSB difference grows in the feedback loop.</p>
       <p>The engine runs at the LXR's 44 140 Hz and is resampled to your sound card's rate in the browser.</p>
     </div>
@@ -635,6 +488,7 @@ class Player {
     this.sendAmt = new Float32Array([0, 0.2, 0.2, 0.35, 0.15, 0.1]); this.chan = new Float32Array(6).fill(1);
     this.chanAt = new Float32Array(6).fill(1); this.ret = 0.7;
     this.verb = new Reverb(LXR.REAL_FS); this.sendBuf = new Float32Array(64);
+    this.fxGain = new Float32Array(6);
     this.events = [];
     this._render(this.A); this._render(this.B);
   }
@@ -679,11 +533,17 @@ class Player {
     for (let n = 0; n < 6; n++) {
       // accent gain and mute/solo, both ramped over the block
       const g0 = this.gain[n] * this.chanAt[n], g1 = this.gainTo[n] * this.chan[n], dg = (g1 - g0) / 64;
-      const pl = pans[n].triggeredPanL / 32768, pr = pans[n].triggeredPanR / 32768, sa = this.sendAmt[n] / 32768;
+      // a voice routed to the FX bus reaches the outputs through the bus instead
+      const direct = e.audioRouting[n] !== LXR.MIXER_ROUTING_FX_BUS ? 1 : 0;
+      const pl = direct * pans[n].triggeredPanL / 32768, pr = direct * pans[n].triggeredPanR / 32768, sa = this.sendAmt[n] / 32768;
       const o = out[n];
       for (let i = 0; i < 64; i++) { const v = o[i] * (g0 + dg * i); L[i] += v * pl; R[i] += v * pr; snd[i] += v * sa; }
+      this.fxGain[n] = g1;
       this.gain[n] = this.gainTo[n]; this.chanAt[n] = this.chan[n];
     }
+    // the firmware's FX bus (distortion, ring mod, compressor or delay), sample-exact
+    const fx = e.renderFx(this.fxGain);
+    for (let i = 0; i < 64; i++) { L[i] += fx[2 * i] / 32768; R[i] += fx[2 * i + 1] / 32768; }
     this.verb.process(snd, L, R, this.ret);
   }
   process(L, R) {
@@ -1253,7 +1113,8 @@ function drawMini() {
 // ---- mixer ----
 const CH = ['DRUM 1', 'DRUM 2', 'DRUM 3', 'SNARE', 'CYMBAL', 'HIHAT'];
 const mix = { send: [0, 20, 20, 35, 15, 10], mute: new Array(6).fill(false), solo: new Array(6).fill(false) };
-const stripsEl = $('strips'), fxStrip = stripsEl.querySelector('.fx');
+const stripsEl = $('strips');
+const fxButtons = [];
 CH.forEach((name, n) => {
   const vol = PAR.VOL1 + n, pan = PAR.PAN1 + n;
   const el = document.createElement('div'); el.className = 'strip'; el.setAttribute('role', 'group'); el.setAttribute('aria-label', name);
@@ -1262,7 +1123,8 @@ CH.forEach((name, n) => {
     <label class="sm">PAN <input class="pan" type="range" min="0" max="127" value="${values[pan]}" aria-label="${name} pan"></label>
     <input class="fader" type="range" min="0" max="127" value="${values[vol]}" aria-label="${name} level">
     <output>${values[vol]}</output>
-    <span class="ms"><button class="m" type="button" aria-pressed="false" aria-label="Mute ${name}">M</button><button class="s" type="button" aria-pressed="false" aria-label="Solo ${name}">S</button></span>`;
+    <span class="ms"><button class="m" type="button" aria-pressed="false" aria-label="Mute ${name}">M</button><button class="s" type="button" aria-pressed="false" aria-label="Solo ${name}">S</button></span>
+    <button class="fxb" type="button" aria-pressed="false" aria-label="Route ${name} through the FX bus">fx</button>`;
   const fader = el.querySelector('.fader'), panEl = el.querySelector('.pan'), out = el.querySelector('output');
   mixInputs[vol] = fader; mixInputs[pan] = panEl;
   fader.addEventListener('input', () => { setValue(vol, Number(fader.value), true); out.textContent = fader.value; });
@@ -1277,9 +1139,51 @@ CH.forEach((name, n) => {
     const b = el.querySelector('.' + cls);
     b.addEventListener('click', () => { mix[key][n] = !mix[key][n]; b.setAttribute('aria-pressed', mix[key][n]); sendMix(); });
   }
-  stripsEl.insertBefore(el, fxStrip);
+  // the voice's AUDIO_OUT: 6 = the FX bus, 0 = the main stereo out
+  const fxb = el.querySelector('.fxb'), out6 = PAR.AUDIO_OUT1 + n;
+  fxButtons[n] = () => fxb.setAttribute('aria-pressed', values[out6] === LXR.MIXER_ROUTING_FX_BUS);
+  fxb.addEventListener('click', () => { setValue(out6, values[out6] === LXR.MIXER_ROUTING_FX_BUS ? 0 : LXR.MIXER_ROUTING_FX_BUS, true); fxButtons[n](); });
+  fxButtons[n]();
+  stripsEl.appendChild(el);
 });
+
+// ---- FX bus: the firmware's FX page. P1..P4 mean different things per effect ----
+const FX_PARAMS = {
+  1: { mode: ['style', PAR.FX_DIST_TYPE, LXR.DIST_NAMES], p: ['drive', 'color', 'tone', 'volume'] },
+  2: { mode: ['wave', PAR.FX_WAVE, OSC_WAVE_NAMES], p: ['freq'] },
+  3: { mode: ['ratio', PAR.FX_RATIO, LXR.RATIO_NAMES], p: ['attack', 'release', 'threshold', 'gain'] },
+  4: { mode: ['mode', PAR.FX_DELAY_TYPE, LXR.DELAY_NAMES], p: ['time', 'range', 'tone', 'feedback'] },
+};
+const fxType = $('fx-type'), fxMode = $('fx-mode');
+LXR.FX_NAMES.forEach((n, i) => fxType.appendChild(new Option(n.toLowerCase(), i)));
+function syncFx() {
+  const t = values[PAR.FX_TYPE], def = FX_PARAMS[t];
+  fxType.value = t in FX_PARAMS || t === 0 ? t : 0;
+  $('fx-amt').value = Math.min(100, values[PAR.FX_DRY_WET]);
+  $('fx-amt-out').textContent = values[PAR.FX_DRY_WET] + '%';
+  $('fx-mode-wrap').hidden = !def;
+  const box = $('fx-params'); box.innerHTML = '';
+  if (!def) return;
+  $('fx-mode-lab').textContent = def.mode[0];
+  fxMode.innerHTML = '';
+  def.mode[2].forEach((n, i) => fxMode.appendChild(new Option(n.toLowerCase(), i)));
+  fxMode.value = values[def.mode[1]];
+  def.p.forEach((label, k) => {
+    const par = PAR.FX_P1 + k;
+    const l = document.createElement('label'); l.className = 'sm';
+    l.innerHTML = `${label} <output>${values[par]}</output><input type="range" min="0" max="127" value="${values[par]}">`;
+    const inp = l.querySelector('input'), o = l.querySelector('output');
+    inp.addEventListener('input', () => { setValue(par, Number(inp.value), true); o.textContent = inp.value; });
+    box.appendChild(l);
+  });
+  fxButtons.forEach((b) => b());
+}
+fxType.addEventListener('change', () => { setValue(PAR.FX_TYPE, Number(fxType.value), true); syncFx(); });
+fxMode.addEventListener('change', () => { const def = FX_PARAMS[values[PAR.FX_TYPE]]; if (def) setValue(def.mode[1], Number(fxMode.value), true); });
+$('fx-amt').addEventListener('input', (e) => { setValue(PAR.FX_DRY_WET, Number(e.target.value), true); $('fx-amt-out').textContent = e.target.value + '%'; });
+syncFx();
 function syncMixer() {
+  if (typeof syncFx === 'function') syncFx();
   for (const par in mixInputs) { mixInputs[par].value = values[par]; mixInputs[par].dispatchEvent(new Event('sync')); }
 }
 function sendMix() {
@@ -1301,20 +1205,17 @@ function bigDial(input, label, out, opts = {}) {
   const el = document.createElement('div'); el.className = 'bigdial';
   const id = 'bd-' + input.id;
   el.innerHTML = `<svg id="${id}" viewBox="0 0 96 96" tabindex="0" role="slider" aria-label="${label}" aria-valuemin="${min}" aria-valuemax="${max}">
-    <circle class="ring" cx="48" cy="48" r="44"/><path class="arc"/><g class="cube"><polygon class="l"/><polygon class="r"/><polygon class="top"/></g></svg>
+    <circle class="ring" cx="48" cy="48" r="40"/><path class="arc"/><circle class="dot" r="5"/></svg>
     <label for="${id}">${label}</label>`;
   el.appendChild(out);
-  const svg = el.querySelector('svg'), arcEl = el.querySelector('.arc'), [pl, pr, pt] = el.querySelectorAll('.cube polygon');
+  const svg = el.querySelector('svg'), arcEl = el.querySelector('.arc'), dot = el.querySelector('.dot');
   const A0 = Math.PI * 0.75, A1 = Math.PI * 2.25;
   const draw = () => {
     const fr = (Number(input.value) - min) / (max - min), a = A0 + (A1 - A0) * fr;
     const pt0 = (r, t) => `${(48 + r * Math.cos(t)).toFixed(2)} ${(48 + r * Math.sin(t)).toFixed(2)}`;
-    arcEl.setAttribute('d', fr > 0.001 ? `M${pt0(44, A0)}A44 44 0 ${a - A0 > Math.PI ? 1 : 0} 1 ${pt0(44, a)}` : '');
-    // the cube in the middle grows with the value
-    const h = 6 + 26 * fr, cx = 48, cy = 60, w = 13, k = 7;
-    pl.setAttribute('points', `${cx - w},${cy - k} ${cx},${cy} ${cx},${cy - h} ${cx - w},${cy - k - h}`);
-    pr.setAttribute('points', `${cx},${cy} ${cx + w},${cy - k} ${cx + w},${cy - k - h} ${cx},${cy - h}`);
-    pt.setAttribute('points', `${cx - w},${cy - k - h} ${cx},${cy - h} ${cx + w},${cy - k - h} ${cx},${cy - 2 * k - h}`);
+    arcEl.setAttribute('d', fr > 0.001 ? `M${pt0(40, A0)}A40 40 0 ${a - A0 > Math.PI ? 1 : 0} 1 ${pt0(40, a)}` : '');
+    // a dot inside the ring points at the value
+    dot.setAttribute('cx', (48 + 26 * Math.cos(a)).toFixed(2)); dot.setAttribute('cy', (48 + 26 * Math.sin(a)).toFixed(2));
     svg.setAttribute('aria-valuenow', input.value); svg.setAttribute('aria-valuetext', out.textContent);
   };
   const set = (val) => {

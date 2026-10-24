@@ -4,7 +4,7 @@ A six-voice drum machine in the browser. **Play it: https://johnnyhawk02.github.
 
 This folder holds the Elexir app and its full source, published as part of johnnyhawk02.github.io.
 
-Elexir's sound engine is a JavaScript port of the drum voices in the Erica Synths LXR-02
+Elexir's sound engine is a JavaScript port of the drum voices and FX bus in the Erica Synths LXR-02
 firmware ([erica-synths/lxr-desktop-app](https://github.com/erica-synths/lxr-desktop-app),
 GPL-3.0, commit a43cd4f). Elexir is unofficial: it is not made, approved or endorsed by
 Erica Synths.
@@ -17,6 +17,8 @@ Erica Synths.
 - **Perform**: energy, beat and fills dials build electro patterns while it plays; a step editor
   with accents and bar conditions sits behind it.
 - **Randomise** a voice or the whole kit within drum-safe ranges (or wild).
+- **FX bus** from the firmware: distortion (tube, fold, rat), ring mod, compressor and delay
+  (normal or ping-pong). Each voice can be routed through it, and kits load their own settings.
 - **Mixer** with level, pan, reverb send, mute and solo, and a reverb with a gated mode.
 - **Crossfeed**: a 6 × 6 patchbay that feeds any voice into the FM, filter or ring modulation of
   any other, with a depth control and a randomiser.
@@ -26,14 +28,16 @@ Erica Synths.
 `src/lxr.js` follows the firmware's C line by line, including its float32 rounding and ARM
 integer behaviour. `src/verify.mjs` runs the same parameter edits and triggers through the
 port and through the firmware's own engine code (cross-compiled for the Cortex-M7 FPU and run
-under qemu) and compares every sample of all six voices. Over 500 random scenarios (94 million
-samples) they are identical. The mixer, reverb, crossfeed and pattern generator are new and
+under qemu) and compares every sample of all six voices and of the FX bus output. Over 700 random
+scenarios (176 million samples) they are identical. The compressor calls the C library's `logf`
+and `expf`, so those are ported too (glibc's and newlib's share the same algorithm). The mixer, reverb, crossfeed and pattern generator are new and
 sit outside that comparison; with crossfeed at zero the engine runs exactly as verified.
 
 The shipped firmware is built with `-O3 -ffast-math`, which rounds slightly differently: with
 the init kit the largest difference is 9 LSB (−77 dB).
 
-Not ported: the FX bus (delay, compressor, ring mod), user samples and the hardware sequencer.
+Not ported: the firmware's reverb (compiled out of the firmware, `USE_REVERB 0`), user samples
+and the hardware sequencer. Only the stereo outputs are modelled.
 
 ## Files
 

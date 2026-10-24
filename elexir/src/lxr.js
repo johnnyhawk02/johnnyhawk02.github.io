@@ -672,6 +672,440 @@ const drumSineStart = (offset) => f(1024 + f(((0x3ff << 20) - 1024) * offset));
 const otherSineStart = (offset) => f((0x3ff << 20) * offset);
 
 // ---------------------------------------------------------------------------------------
+// FX bus: FxBus.c, FX/Distortion.c, FX/Ringmod.c, FX/Compressor.c, FX/Delay.c (the reverb
+// is compiled out of the firmware, USE_REVERB 0). Voices routed to the FX bus (AUDIO_OUTn =
+// 6) are mixed into one stereo int16 buffer, processed by the selected effect and added to
+// the stereo output. Only the stereo output routings are modelled.
+// ---------------------------------------------------------------------------------------
+export const FX_OFF = 0, FX_DISTORTION = 1, FX_RING = 2, FX_COMPRESSOR = 3, FX_DELAY = 4;
+export const FX_NAMES = ['Off', 'Distortion', 'Ring mod', 'Compressor', 'Delay'];
+export const DIST_TUBE = 0, DIST_FOLD = 1, DIST_RAT = 2;
+export const DIST_NAMES = ['Tube', 'Fold', 'Rat'];
+export const RATIO_NAMES = ['1:1', '2:1', '3:1', '4:1', '6:1', '8:1'];
+export const DELAY_NAMES = ['Normal', 'Ping-pong'];
+export const MIXER_ROUTING_FX_BUS = 6;
+// Distortion.c: 1N914 diode transfer curve (float) and ECC83 tube curve (double)
+const TABLE_1N914 = new Float32Array([
+  -0.647479, -0.647111, -0.646743, -0.646375, -0.646007, -0.645639, -0.645271, -0.644903, -0.644535,
+  -0.644167, -0.643799, -0.643431, -0.642998, -0.642508, -0.642019, -0.641529, -0.641039, -0.640550,
+  -0.640060, -0.639571, -0.639081, -0.638591, -0.638102, -0.637604, -0.636993, -0.636382, -0.635771,
+  -0.635160, -0.634549, -0.633937, -0.633326, -0.632715, -0.632104, -0.631493, -0.630882, -0.630198,
+  -0.629465, -0.628733, -0.628000, -0.627267, -0.626535, -0.625802, -0.625069, -0.624337, -0.623604,
+  -0.622871, -0.622123, -0.621268, -0.620414, -0.619560, -0.618706, -0.617852, -0.616997, -0.616143,
+  -0.615289, -0.614435, -0.613581, -0.612727, -0.611791, -0.610816, -0.609840, -0.608864, -0.607889,
+  -0.606913, -0.605937, -0.604961, -0.603986, -0.603010, -0.602034, -0.601035, -0.599937, -0.598840,
+  -0.597743, -0.596646, -0.595548, -0.594451, -0.593354, -0.592256, -0.591159, -0.590062, -0.588965,
+  -0.587735, -0.586456, -0.585177, -0.583740, -0.582106, -0.580472, -0.578782, -0.576793, -0.574804,
+  -0.572815, -0.570515, -0.568172, -0.565828, -0.563275, -0.560576, -0.557877, -0.555070, -0.552016,
+  -0.548962, -0.545901, -0.542492, -0.539083, -0.535674, -0.531758, -0.527172, -0.521927, -0.516021,
+  -0.509456, -0.502230, -0.494344, -0.485269, -0.474132, -0.460956, -0.445352, -0.426263, -0.403305,
+  -0.376436, -0.346270, -0.313817, -0.280021, -0.245520, -0.210672, -0.175659, -0.140568, -0.105442,
+  -0.070300, -0.035152, -0.000001, 0.035152, 0.070301, 0.105442, 0.140567, 0.175658, 0.210671,
+  0.245520, 0.280021, 0.313817, 0.346270, 0.376436, 0.403304, 0.426263, 0.445263, 0.460964, 0.474058,
+  0.484899, 0.494282, 0.502657, 0.510037, 0.516238, 0.521415, 0.526164, 0.530741, 0.535030, 0.539196,
+  0.543024, 0.546779, 0.550148, 0.553492, 0.556400, 0.559308, 0.561781, 0.564229, 0.566291, 0.568278,
+  0.570024, 0.571681, 0.573337, 0.574994, 0.576651, 0.578308, 0.579964, 0.581585, 0.583058, 0.584532,
+  0.586005, 0.587478, 0.588951, 0.590424, 0.591898, 0.593250, 0.594539, 0.595829, 0.597119, 0.598408,
+  0.599698, 0.600988, 0.602254, 0.603360, 0.604467, 0.605573, 0.606679, 0.607785, 0.608891, 0.609997,
+  0.610995, 0.611918, 0.612840, 0.613763, 0.614685, 0.615608, 0.616530, 0.617443, 0.618182, 0.618921,
+  0.619660, 0.620399, 0.621138, 0.621877, 0.622616, 0.623260, 0.623816, 0.624371, 0.624927, 0.625482,
+  0.626038, 0.626593, 0.627149, 0.627683, 0.628217, 0.628752, 0.629286, 0.629820, 0.630354, 0.630888,
+  0.631422, 0.631957, 0.632491, 0.633025, 0.633559, 0.634093, 0.634627, 0.635161, 0.635696, 0.636230,
+  0.636764, 0.637298, 0.637832, 0.638366, 0.638901, 0.639435, 0.639969, 0.640503, 0.641037, 0.641571,
+  0.642106, 0.642640, 0.643174, 0.643708, 0.644242, 0.644776, 0.645288, 0.645727, 0.646165, 0.646604,
+  0.647042, 0.647042
+]);
+const ECC83_TABLE = new Float64Array([
+  -0.993818651334, -0.993773150866, -0.993727650399, -0.993682149931, -0.993636649463,
+  -0.993591148995, -0.993545648528, -0.99350014806, -0.993454647592, -0.993409147125,
+  -0.993363646657, -0.993256563682, -0.99276458144, -0.991803719025, -0.990332655629,
+  -0.988312889096, -0.98570873291, -0.982487310607, -0.978618547622, -0.974075160572,
+  -0.968832643965, -0.962869254345, -0.956165991871, -0.948706579323, -0.940477438545,
+  -0.931467664319, -0.921668995669, -0.911075784602, -0.899684962276, -0.887496002605,
+  -0.874510883293, -0.860734044301, -0.84617234375, -0.830835011248, -0.814733598658,
+  -0.797881928296, -0.780296038554, -0.76199412697, -0.742996490712, -0.723325464514,
+  -0.703005356026, -0.682062378609, -0.660524581556, -0.63842177775, -0.615785468748,
+  -0.592648767303, -0.569046317314, -0.545014211215, -0.520589904785, -0.495812129405,
+  -0.470720801731, -0.445356930816, -0.419762522648, -0.393980482135, -0.368054512512,
+  -0.342029012183, -0.315948969002, -0.289859851972, -0.263807500392, -0.237838010426,
+  -0.211997619107, -0.186332585777, -0.160889070952, -0.135713012624, -0.11085, -0.0863451446598,
+  -0.0622429491607, -0.0385871730651, -0.0154206964046, 0.00721461942549, 0.029278073338,
+  0.0507302687944, 0.0715332606125, 0.091650704342, 0.111048008208, 0.12969248762, 0.147553522255,
+  0.164602715698, 0.180814057661, 0.196164088761, 0.210632067871, 0.224200142038, 0.236853518967,
+  0.24858064207, 0.259373368093, 0.269227147298, 0.278141206221, 0.286118732995, 0.293167065239,
+  0.299297880521, 0.304527389379, 0.30887653092, 0.312371170976, 0.315042302838, 0.316926250553,
+  0.318064874785, 0.3188461248, 0.3196273748, 0.3204086248, 0.3211898748, 0.3219711248, 0.3227523748,
+  0.3235336248, 0.3243148748, 0.3250961248, 0.3258773748, 0.3266586248, 0.3274398748, 0.3282211248,
+  0.3290023748, 0.3297836248, 0.3305648748, 0.3313461248, 0.3321273748, 0.3329086248, 0.3336898748,
+  0.3344711248, 0.3352523748, 0.3360336248, 0.3368148748, 0.3375961248, 0.3383773748, 0.3391586248,
+  0.3399398748, 0.3407211248, 0.3415023748, 0.3422836248, 0.3430648748, 0.3438461248
+]);
+const FX_BUFFER_SIZE = 0x7fff;
+const F_32768 = f(32768);
+const F_REAL_FS = f(REAL_FS);
+const LOW_MIN = f(0.0006 * REAL_FS), LOW_MAX = f(0.02 * REAL_FS), HI_MIN = f(0.02 * REAL_FS), HI_MAX = f(FX_BUFFER_SIZE);
+const PP_MAX = f(FX_BUFFER_SIZE * f(0.48));
+const TONE_C0 = 0.06537948995454451662, TONE_C1 = 0.92410701734426630737;
+const SLEW_MAX = 6.79655641141821477118;
+
+/** float -> __fp16 (IEEE half, round to nearest even) -> float; |x| <= 1 here */
+function toHalf(x) {
+  const a = Math.abs(x);
+  if (a === 0) return x;
+  // half subnormals have a fixed quantum of 2^-24, normals 11 significant bits
+  const e = a < 6.103515625e-5 ? -14 : Math.floor(Math.log2(a));
+  let ee = e;
+  if (a >= 6.103515625e-5) { if (2 ** ee > a) ee--; else if (2 ** (ee + 1) <= a) ee++; }
+  const q = 2 ** (ee - 10);
+  const m = a / q;
+  let r = Math.floor(m);
+  const d = m - r;
+  if (d > 0.5 || (d === 0.5 && (r & 1))) r++;
+  const v = r * q;
+  return x < 0 ? -v : v;
+}
+/** __PKHBT(lo, hi, 16) keeps the low halfword of each: wrap to int16 */
+const wrap16 = (x) => (x << 16) >> 16;
+/** one channel of dry/wet: dry + SSAT((wet - dry) * dryWet) */
+const dryWetMix = (dry, wet, dryWet) => wrap16(dry + ssat16(toI32(f((wet - dry) * dryWet))));
+const fmodC = (a, b) => a % b; // C fmod (exact, sign of a)
+const setOnePoleCoef = (flt, v) => { flt.r = f(v); };
+
+function makeDistortion() {
+  return { type: DIST_TUBE, drive: f(1), p1: f(1), p2: 0, p3: 0, lastOut: [0, 0], hp1: [0, 0], hp3: [0, 0],
+    lp1: [0, 0], lp2: [0, 0], lp3: [0, 0], slew: [0, 0] };
+}
+function diode(x) {
+  x = f(x);
+  x = x < -1 ? f(-1) : x > 1 ? f(1) : x;
+  const index = f(f(x + 1) * 128);
+  const itg = toI32(index) & 0xffff;
+  const frac = f(index - itg);
+  // at in = 1 the firmware reads one past the table, with frac = 0 (any finite value works)
+  const a = TABLE_1N914[itg], b = itg < 256 ? TABLE_1N914[itg + 1] : 0;
+  // lerp: fma(t, b, fnms(t, a, a)); t*b of two floats is exact in a double
+  return f(frac * b + f(a - f(frac * a)));
+}
+function foldback(x, th) {
+  if (x > th || x < -th) x = f(Math.abs(Math.abs(fmodC(f(x - th), f(th * 4))) - f(th * 2)) - th);
+  return x;
+}
+function distortionProcess(d, fx, out, size, dryWet) {
+  const coff = TONE_C0 + d.p2 * TONE_C1;
+  if (d.type === DIST_TUBE) {
+    const outMod = f((1.0 + 0.55 * d.p1) + 0.55 * d.p1);
+    const g = f(1 + f(d.drive * 4));
+    for (let i = 0; i < size; i++) {
+      for (let c = 0; c < 2; c++) {
+        const x = fx[2 * i + c];
+        const input = toI32(f(x * g));
+        const itg = ((ssat16(input) >> 9) + 64) & 0xff;
+        const frac = f((input & 511) / 512);
+        let val = ECC83_TABLE[itg] + (ECC83_TABLE[itg + 1] - ECC83_TABLE[itg]) * frac;
+        d.lp3[c] += coff * (val - d.lp3[c]);
+        val = d.lp3[c] * outMod * d.p3;
+        const wet = ssat16(toI32(val * 32768));
+        out[2 * i + c] = qadd16(out[2 * i + c], dryWetMix(x, wet, dryWet));
+      }
+    }
+  } else if (d.type === DIST_FOLD) {
+    const g = f(1 + f(d.drive * 4));
+    for (let i = 0; i < size; i++) {
+      for (let c = 0; c < 2; c++) {
+        const x = fx[2 * i + c];
+        const input = f(x / F_32768);
+        const val = f(f(input * g) + d.p1);
+        d.lp3[c] += coff * (val - d.lp3[c]);
+        const y = f(foldback(f(d.lp3[c]), 1) * d.p3);
+        const wet = ssat16(toI32(f(y * 32768)));
+        out[2 * i + c] = qadd16(out[2 * i + c], dryWetMix(x, wet, dryWet));
+      }
+    }
+  } else { // DISTORTION_RAT (and any other value)
+    const gain = f(1 + f(d.drive * 2304));
+    for (let i = 0; i < size; i++) {
+      for (let c = 0; c < 2; c++) {
+        const x = fx[2 * i + c];
+        let s = x / 32768;
+        s += d.lastOut[c] * d.p1 * 0.125;
+        d.hp1[c] += 0.64116641920131193922 * (s - d.hp1[c]);
+        s = s - d.hp1[c];
+        d.lp1[c] += (1 - 0.1025353241628911807) * (s - d.lp1[c]);
+        s = d.lp1[c];
+        d.hp3[c] += (1 - 0.99149556438154282898) * (s - d.hp3[c]);
+        s = s - d.hp3[c];
+        d.lp2[c] += (1 - 0.93130041642945205043) * (s - d.lp2[c]);
+        s = d.lp2[c];
+        s *= gain;
+        let diff = s - d.slew[c];
+        const sign = diff > 0 ? 1 : -1;
+        if (Math.abs(diff) > SLEW_MAX) diff = SLEW_MAX * sign;
+        d.slew[c] += diff;
+        if (d.slew[c] > 4.2) d.slew[c] = 4.2;
+        else if (d.slew[c] < -4.2) d.slew[c] = -4.2;
+        s = diode(d.slew[c]);
+        d.lp3[c] += coff * (s - d.lp3[c]);
+        d.lastOut[c] = d.lp3[c] * d.p3;
+        const wet = ssat16(toI32(d.lastOut[c] * 32768));
+        out[2 * i + c] = qadd16(out[2 * i + c], dryWetMix(x, wet, dryWet));
+      }
+    }
+  }
+}
+
+function makeRingmod() {
+  const osc = makeOsc();
+  osc.freq = f(100); osc.modNodeValue = f(1); osc.waveform = REC; osc.fmMod = 0;
+  osc.midiFreq = 70 << 8 | 64; osc.pitchMod = f(1);
+  osc_setFreq(osc);
+  return { osc, buf: new Int16Array(BLOCK) };
+}
+function ringmodProcess(rm, fx, out, size, dryWet, rng) {
+  calcNextOscSampleBlock(rm.osc, rm.buf, size, f(1), f(0.3), rng);
+  for (let i = 0; i < size; i++) {
+    const m = rm.buf[i];
+    for (let c = 0; c < 2; c++) {
+      const x = fx[2 * i + c];
+      const wet = wrap16((x * m) >> 16);
+      out[2 * i + c] = qadd16(out[2 * i + c], dryWetMix(x, wet, dryWet));
+    }
+  }
+}
+
+const EXP2F_TAB_HI = new Uint32Array([0x3ff00000, 0x3fefd9b0, 0x3fefb558, 0x3fef9301, 0x3fef72b8, 0x3fef5487, 0x3fef387a, 0x3fef1e9d, 0x3fef06fe, 0x3feef1a7, 0x3feedea6, 0x3feece08, 0x3feebfda, 0x3feeb42b, 0x3feeab07, 0x3feea47e, 0x3feea09e, 0x3fee9f75, 0x3feea114, 0x3feea589, 0x3feeace5, 0x3feeb737, 0x3feec491, 0x3feed503, 0x3feee89f, 0x3feeff76, 0x3fef199b, 0x3fef3720, 0x3fef5818, 0x3fef7c97, 0x3fefa4af, 0x3fefd076]);
+const EXP2F_TAB_LO = new Uint32Array([0x0, 0xd3158574, 0x6cf9890f, 0xd0125b51, 0x3c7d517b, 0x3168b9aa, 0x6e756238, 0xf51fdee1, 0xa31b715, 0x373aa9cb, 0x4c123422, 0x6061892d, 0xd5362a27, 0x569d4f82, 0xdd485429, 0xb03a5585, 0x667f3bcd, 0xe8ec5f74, 0x73eb0187, 0x994cce13, 0x422aa0db, 0xb0cdc5e5, 0x82a3f090, 0xb23e255d, 0x995ad3ad, 0xf2fb5e47, 0xdd85529c, 0xdcef9069, 0xdcfba487, 0x337b9b5f, 0xa2a490da, 0x5b6e4540]);
+const EXPF_SHIFT = 6755399441055744.0, EXPF_INVLN2N = 46.16624130844683, EXPF_C = [1.6938359250920212e-06, 0.00023459809789509004, 0.021660849396613134];
+const LOGF_INVC = new Float64Array([1.398907162146528, 1.3403141896637998, 1.286432210124115, 1.2367150214269895, 1.1906977166711752, 1.1479821020556429, 1.1082251448272158, 1.0711297413057381, 1.036437278977283, 1.0, 0.9492859795739057, 0.8951049428609004, 0.8476821620351103, 0.8050314851692001, 0.7664671008843108, 0.731428603316328]);
+const LOGF_LOGC = new Float64Array([-0.33569133332882284, -0.2929040563774074, -0.2518726580937369, -0.21245868807117255, -0.17453945183745634, -0.1380057072319758, -0.10275976698545139, -0.06871392447020525, -0.0357891387398228, 0.0, 0.05204517742929496, 0.11081431298787942, 0.1652495223695143, 0.21687389031699977, 0.2659635028121397, 0.3127556664073557]);
+const LOGF_LN2 = 0.6931471805599453, LOGF_A = [-0.25089342214237154, 0.333456765744066, -0.4999997485802103];
+// glibc / ARM optimized-routines logf() and expf() (double evaluation with small tables),
+// which round differently from Math.log/Math.exp in the last bit now and then. The firmware's
+// newlib uses the same routines. Only normal positive inputs reach logf here.
+const f64 = new Float64Array(1), u64 = new Uint32Array(f64.buffer);
+function logf(x) {
+  fbuf[0] = x;
+  const ix = ibuf[0] >>> 0;
+  if (ix === 0x3f800000) return 0;
+  const tmp = (ix - 0x3f330000) >>> 0;
+  const i = (tmp >>> 19) & 15;
+  const k = (tmp | 0) >> 23;
+  ibuf[0] = (ix - ((tmp & 0xff800000) >>> 0)) | 0;
+  const z = fbuf[0];
+  const r = z * LOGF_INVC[i] - 1;
+  const y0 = LOGF_LOGC[i] + k * LOGF_LN2;
+  const r2 = r * r;
+  let y = LOGF_A[1] * r + LOGF_A[2];
+  y = LOGF_A[0] * r2 + y;
+  y = y * r2 + (y0 + r);
+  return f(y);
+}
+function expf(x) {
+  x = f(x);
+  if (x < -103.97207641601562) return 0; // underflow
+  const z = EXPF_INVLN2N * x;
+  const kd = (z + EXPF_SHIFT) - EXPF_SHIFT;
+  const r = z - kd;
+  const k = kd | 0;
+  u64[0] = EXP2F_TAB_LO[k & 31];
+  u64[1] = (EXP2F_TAB_HI[k & 31] + ((k & 0x1ffff) << 15)) >>> 0;
+  const s = f64[0];
+  const zz = EXPF_C[0] * r + EXPF_C[1];
+  const r2 = r * r;
+  let y = EXPF_C[2] * r + 1;
+  y = zz * r2 + y;
+  y = y * s;
+  return f(y);
+}
+
+const LOG_2_DB = 8.6858896380650365530225783783321, DB_2_LOG = 0.11512925464970228420089957273422;
+function makeCompressor() {
+  return { tresh: f(3), attack: f(0.1), release: f(300), ratio: 0, markupGain: f(1), env: 0 };
+}
+function compressorProcess(c, fx, out, size, dryWet) {
+  for (let i = 0; i < size; i++) {
+    const x0 = fx[2 * i], x1 = fx[2 * i + 1];
+    const inp = f(0.5 * f(x0 / F_32768) + 0.5 * f(x1 / F_32768));
+    let peak = Math.abs(inp);
+    peak += 1.0E-25;
+    const peakdB = logf(f(peak)) * LOG_2_DB;
+    let overdB = peakdB - c.tresh;
+    if (overdB < 0) overdB = 0;
+    const coeff = overdB > c.env ? c.attack : c.release;
+    c.env = overdB + coeff * (c.env - overdB);
+    let gr = c.env * (c.ratio - 1.0);
+    gr = expf(f(gr * DB_2_LOG));
+    const l = ssat16(toI32(x0 * gr * c.markupGain));
+    const r = ssat16(toI32(x1 * gr * c.markupGain));
+    out[2 * i] = qadd16(out[2 * i], dryWetMix(x0, l, dryWet));
+    out[2 * i + 1] = qadd16(out[2 * i + 1], dryWetMix(x1, r, dryWet));
+  }
+}
+const compExpCoef = (ms) => f(Math.exp(-1000.0 / f(ms * F_REAL_FS)));
+function compressorSetRatio(c, r) {
+  c.ratio = [f(1), f(0.5), f(1 / 3), f(0.25), f(1 / 6), f(0.125)][r] ?? f(1);
+}
+
+const DELAY_NORMAL = 0;
+function makeDelay() {
+  return { oldRead: 0, newRead: 0, write: Math.trunc(FX_BUFFER_SIZE / 20) - 10, fracReadNew: 0, fracReadOld: 0,
+    interpValue: 0, interpStep: 0, tmp: new Int16Array(2), tmp2: new Int16Array(2), feedback: f(0.7), range: 0,
+    delayTime: 0, pendingDelayTime: 0, timePending: 0, tone: makeOnePole(), tone2: makeOnePole(), type: DELAY_NORMAL };
+}
+const interpF = (a, b, x) => f(f(a * f(1 - x)) + f(b * x));
+function calcDelayTime(d, cv) {
+  const min = interpF(LOW_MIN, HI_MIN, d.range);
+  const max = interpF(LOW_MAX, d.type === DELAY_NORMAL ? HI_MAX : PP_MAX, d.range);
+  return interpF(min, max, cv);
+}
+function delaySetDelayTime(d, t) {
+  if (d.interpValue <= 0) {
+    d.delayTime = t;
+    const offset = calcDelayTime(d, f(d.delayTime * d.range));
+    const offItg = toU32(offset);
+    d.fracReadNew = f(offset - offItg);
+    d.newRead = (d.write - 1 - offItg) >>> 0;
+    d.newRead &= d.type === DELAY_NORMAL ? FX_BUFFER_SIZE : FX_BUFFER_SIZE >> 1;
+    d.interpValue = f(1);
+    d.interpStep = f(1 / f(F_REAL_FS * f(0.01)));
+  } else {
+    d.pendingDelayTime = t;
+    d.timePending = 1;
+  }
+}
+function delayRead(buf, base, pos, mask, frac) {
+  const pos2 = (pos + 1) & mask;
+  return toI16(f(interpF(buf[base + pos], buf[base + pos2], frac) * F_32767));
+}
+function delayCalcBuffer(d, buf, idx) {
+  if (idx === 0) {
+    d.tmp[0] = delayRead(buf, 0, d.oldRead, FX_BUFFER_SIZE, d.fracReadOld);
+    d.oldRead = (d.oldRead + 1) & FX_BUFFER_SIZE;
+  } else {
+    d.tmp[1] = delayRead(buf, 0, d.newRead, FX_BUFFER_SIZE, d.fracReadNew);
+    d.newRead = (d.newRead + 1) & FX_BUFFER_SIZE;
+  }
+}
+function delayCalcBufferPingPong(d, buf, idx) {
+  const half = FX_BUFFER_SIZE >> 1;
+  if (idx === 0) {
+    d.tmp[0] = delayRead(buf, 0, d.oldRead, half, d.fracReadOld);
+    d.tmp2[0] = delayRead(buf, half, d.oldRead, half, d.fracReadOld);
+    d.oldRead = (d.oldRead + 1) & half;
+  } else {
+    d.tmp[1] = delayRead(buf, 0, d.newRead, half, d.fracReadNew);
+    d.tmp2[1] = delayRead(buf, half, d.newRead, half, d.fracReadNew);
+    d.newRead = (d.newRead + 1) & half;
+  }
+}
+const crossfade = (a, b, v) => toI16(f(a * v) + b * (1.0 - v));
+const toBuf = (itg) => { let v = f(itg / F_32767); if (v > 1) v = f(1); else if (v < -1) v = f(-1); return toHalf(v); };
+function delayStep(d, pingPong, buf) {
+  const calc = pingPong ? delayCalcBufferPingPong : delayCalcBuffer;
+  let l, r;
+  if (d.interpValue <= 0) {
+    calc(d, buf, 0);
+    l = d.tmp[0]; r = d.tmp2[0];
+    if (d.timePending) { d.timePending = 0; delaySetDelayTime(d, d.pendingDelayTime); }
+  } else {
+    calc(d, buf, 0);
+    calc(d, buf, 1);
+    l = crossfade(d.tmp[0], d.tmp[1], d.interpValue);
+    if (pingPong) r = crossfade(d.tmp2[0], d.tmp2[1], d.interpValue);
+    d.interpValue = f(d.interpValue - d.interpStep);
+    if (d.interpValue <= 0) { d.oldRead = d.newRead; d.fracReadOld = d.fracReadNew; }
+  }
+  return [l, r];
+}
+function delayProcess(d, buf, fx, out, size, dryWet) {
+  for (let i = 0; i < size; i++) {
+    const x0 = fx[2 * i], x1 = fx[2 * i + 1];
+    let [o] = delayStep(d, false, buf);
+    o = toI16(calcOnePole(d.tone, o));
+    const itg = qadd16(qadd16(x0, x1), toI16(f(o * d.feedback)));
+    buf[d.write++] = toBuf(itg);
+    d.write &= FX_BUFFER_SIZE;
+    out[2 * i] = qadd16(out[2 * i], wrap16(ssat16(x0 + ssat16(toI32(f((o - x0) * dryWet))))));
+    out[2 * i + 1] = qadd16(out[2 * i + 1], wrap16(ssat16(x1 + ssat16(toI32(f((o - x1) * dryWet))))));
+  }
+}
+function delayProcessPingPong(d, buf, fx, out, size, dryWet) {
+  const half = FX_BUFFER_SIZE >> 1;
+  for (let i = 0; i < size; i++) {
+    const x0 = fx[2 * i], x1 = fx[2 * i + 1];
+    let [l, r] = delayStep(d, true, buf);
+    l = toI16(calcOnePole(d.tone, l));
+    r = toI16(calcOnePole(d.tone2, r));
+    buf[half + d.write] = toBuf(qadd16(x0, toI16(f(l * d.feedback))));
+    buf[d.write++] = toBuf(qadd16(x1, toI16(f(r * d.feedback))));
+    d.write &= half;
+    out[2 * i] = qadd16(out[2 * i], wrap16(ssat16(x0 + ssat16(toI32(f((l - x0) * dryWet))))));
+    out[2 * i + 1] = qadd16(out[2 * i + 1], wrap16(ssat16(x1 + ssat16(toI32(f((r - x1) * dryWet))))));
+  }
+}
+
+export class FxBus {
+  constructor() {
+    this.dryWet = 0;
+    this.audioRouting = 0;
+    this.fxType = FX_OFF;
+    this.parameter = new Float32Array(4);
+    this.distortion = makeDistortion();
+    this.ringmod = makeRingmod();
+    this.compressor = makeCompressor();
+    this.delay = makeDelay();
+    this.buffer = new Float32Array(FX_BUFFER_SIZE + 1); // __fp16 FX_BUFFER, kept as float values
+    this.input = new Int16Array(BLOCK * 2);
+  }
+  setParameter(idx, value) { this.parameter[idx] = value; this.updateParameter(); }
+  updateParameter() {
+    const p = this.parameter;
+    switch (this.fxType) {
+      case FX_DISTORTION:
+        Object.assign(this.distortion, { drive: p[0], p1: p[1], p2: p[2], p3: p[3] });
+        break;
+      case FX_RING:
+        this.ringmod.osc.freq = f(p[0] * 880);
+        osc_setFreq(this.ringmod.osc);
+        break;
+      case FX_COMPRESSOR: {
+        const c = this.compressor;
+        c.attack = compExpCoef(f(f(0.03) + f(p[0] * 100)));
+        c.release = compExpCoef(f(25 + f(p[1] * 175)));
+        c.tresh = f(-96 + f(p[2] * 96));
+        c.markupGain = f(1 + f(p[3] * 2));
+        break;
+      }
+      case FX_DELAY: {
+        const d = this.delay;
+        d.range = p[1]; delaySetDelayTime(d, d.delayTime);
+        delaySetDelayTime(d, p[0]);
+        setOnePoleCoef(d.tone, f(p[2] * p[2]));
+        setOnePoleCoef(d.tone2, f(p[2] * p[2]));
+        d.feedback = p[3];
+        break;
+      }
+      default: break;
+    }
+  }
+  /** FxBus_process: this.input (stereo, interleaved) -> added into out (stereo, interleaved) */
+  process(out, size, rng) {
+    const fx = this.input;
+    switch (this.fxType) {
+      case FX_DISTORTION: distortionProcess(this.distortion, fx, out, size, this.dryWet); break;
+      case FX_RING: ringmodProcess(this.ringmod, fx, out, size, this.dryWet, rng); break;
+      case FX_COMPRESSOR: compressorProcess(this.compressor, fx, out, size, this.dryWet); break;
+      case FX_DELAY:
+        if (this.delay.type === DELAY_NORMAL) delayProcess(this.delay, this.buffer, fx, out, size, this.dryWet);
+        else delayProcessPingPong(this.delay, this.buffer, fx, out, size, this.dryWet);
+        break;
+      default: // FX_OFF
+        for (let i = 0; i < size * 2; i++) out[i] = qadd16(out[i], fx[i]);
+        break;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------------------
 // The engine
 // ---------------------------------------------------------------------------------------
 export class LxrEngine {
@@ -697,6 +1131,8 @@ export class LxrEngine {
     this._modBuf = new Int16Array(BLOCK);
     this._buf2 = new Int16Array(BLOCK);
     this._buf3 = new Int16Array(BLOCK);
+    this.fx = new FxBus(); // FxBus_init()
+    this.fxOut = new Int16Array(BLOCK * 2);
     this.xmod = null; // crossfeed matrix, see setCrossMod(); null = the firmware's signal path
   }
 
@@ -1048,6 +1484,32 @@ export class LxrEngine {
     return o;
   }
 
+  /**
+   * The FX bus part of mixer_calcNextSampleBlock(): voices whose AUDIO_OUT is the FX bus
+   * are panned into one stereo int16 buffer and run through the selected effect.
+   * Returns this.fxOut: the bus's stereo output (interleaved int16) for the last renderBlock().
+   * gains[n], if given, scales voice n first (mute, accent; not in the firmware).
+   */
+  renderFx(gains = null) {
+    const fx = this.fx, inp = fx.input, out = this.fxOut;
+    inp.fill(0); out.fill(0);
+    const pans = [this.drums[0], this.drums[1], this.drums[2], this.snare, this.cymbal, this.hat];
+    let any = false;
+    for (let n = 0; n < 6; n++) {
+      if (this.audioRouting[n] !== MIXER_ROUTING_FX_BUS) continue;
+      any = true;
+      const v = pans[n], o = this.out[n], g = gains ? gains[n] : 1;
+      for (let i = 0; i < BLOCK; i++) {
+        const s = g === 1 ? o[i] : toI16(f(o[i] * g));
+        inp[2 * i] = qadd16(toI16(f(s * v.triggeredPanL)), inp[2 * i]);
+        inp[2 * i + 1] = qadd16(toI16(f(s * v.triggeredPanR)), inp[2 * i + 1]);
+      }
+    }
+    // FxBus_process runs every block, routed voices or not (delay tails, compressor envelope)
+    fx.process(out, BLOCK, this.rng);
+    return out;
+  }
+
   /** stereo mix of this.out using each voice's pan from its last trigger, as floats -1..1 */
   mixStereo(left, right, offset = 0) {
     const pans = [this.drums[0], this.drums[1], this.drums[2], this.snare, this.cymbal, this.hat];
@@ -1264,10 +1726,19 @@ export class LxrEngine {
         this.audioRouting[num - CC2.AUDIO_OUT1] = itg; break;
       case CC2.PWM_1: case CC2.PWM_2: case CC2.PWM_3:
         drums[num - CC2.PWM_1].pwm = flt; break;
+      case CC2.FX_TYPE: this.fx.fxType = itg; this.fx.updateParameter(); break;
+      case CC2.FX_ROUTING: this.fx.audioRouting = itg; break;
+      case CC2.FX_AMOUNT: this.fx.dryWet = f(itg / 100); break;
+      case CC2.FX_DIST_TYPE: this.fx.distortion.type = itg; break;
+      case CC2.FX_P1: case CC2.FX_P2: case CC2.FX_P3: case CC2.FX_P4:
+        this.fx.setParameter(num - CC2.FX_P1, flt); break;
+      case CC2.FX_RATIO: compressorSetRatio(this.fx.compressor, itg); break;
+      case CC2.FX_WAVE: this.fx.ringmod.osc.waveform = itg; break;
+      case CC2.FX_DELAY_TYPE: this.fx.delay.type = itg; break;
       case CC2.PWM_4: sn.pwm = flt; break;
       case CC2.PWM_5: cy.pwm = flt; break;
       case CC2.PWM_6: hh.pwm = flt; break;
-      // FX bus, mutes, LFO/velocity target selection: not part of the voice engine
+      // mutes, LFO/velocity target selection: not part of the voice engine
       default: break;
     }
   }

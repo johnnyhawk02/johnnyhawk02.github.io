@@ -19,7 +19,8 @@ S=$LXR/Core/Src/Soundengine
 for f in DSPAudio/1PoleLp DSPAudio/CymbalVoice DSPAudio/Decay DSPAudio/distortion DSPAudio/DrumVoice DSPAudio/HiHat \
   DSPAudio/lfo DSPAudio/modulationNode DSPAudio/Oscillator DSPAudio/ResonantFilter DSPAudio/SlopeEg2 DSPAudio/Snare \
   DSPAudio/snapEg DSPAudio/transientGenerator DSPAudio/transientTables DSPAudio/wavetable DSPAudio/random DSPAudio/mixer \
-  MIDI/MidiParser MIDI/ParameterArray; do
+  MIDI/MidiParser MIDI/ParameterArray FxBus DSPAudio/FX/Distortion DSPAudio/FX/Ringmod DSPAudio/FX/Compressor \
+  DSPAudio/FX/Delay DSPAudio/FX/FxRamBuffer; do
   $CC $INC -c $S/$f.c -o $B/$(basename $f).o
 done
 $CC $INC -c $LXR/Core/Src/Parameters.c -o $B/Parameters.o
