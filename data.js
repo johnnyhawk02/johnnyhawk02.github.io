@@ -40,11 +40,11 @@ export const work = [
   },
   {
     kind: "Plugin",
-    title: "Elexir",
+    title: "Elixir",
     year: 2026,
     blurb: "Six-voice electro drum machine running a sample-exact port of the LXR-02 drum engine: energy, beat and fills dials build the groove, with a 6 × 6 crossfeed patchbay, gated reverb and kit randomiser.",
-    image: "img/elexir.jpg",
-    link: "https://johnnyhawk02.github.io/elexir/",
+    image: "img/elixir.jpg",
+    link: "https://johnnyhawk02.github.io/elixir/",
     cta: "Play it in your browser",
   },
   {

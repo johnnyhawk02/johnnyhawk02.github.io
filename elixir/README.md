@@ -1,12 +1,12 @@
-# Elexir
+# Elixir
 
-A six-voice drum machine in the browser. **Play it: https://johnnyhawk02.github.io/elexir/**
+A six-voice drum machine in the browser. **Play it: https://johnnyhawk02.github.io/elixir/**
 
-This folder holds the Elexir app and its full source, published as part of johnnyhawk02.github.io.
+This folder holds the Elixir app and its full source, published as part of johnnyhawk02.github.io.
 
-Elexir's sound engine is a JavaScript port of the drum voices and FX bus in the Erica Synths LXR-02
+Elixir's sound engine is a JavaScript port of the drum voices and FX bus in the Erica Synths LXR-02
 firmware ([erica-synths/lxr-desktop-app](https://github.com/erica-synths/lxr-desktop-app),
-GPL-3.0, commit a43cd4f). Elexir is unofficial: it is not made, approved or endorsed by
+GPL-3.0, commit a43cd4f). Elixir is unofficial: it is not made, approved or endorsed by
 Erica Synths.
 
 - **Six voices** from the firmware: three drum/tom voices, snare/clap, cymbal and a closed/open
