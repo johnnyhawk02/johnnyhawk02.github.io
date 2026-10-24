@@ -162,12 +162,12 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 /* perform: pattern and randomise cards on the left, the mixer card on the right */
 .card { background: var(--tint); border-radius: 10px; padding: 14px 16px 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
 .card > h2 { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
-.tab-perform { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: 1fr auto; gap: 14px; align-items: stretch; }
+.tab-perform { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); grid-template-rows: 1fr auto; gap: 14px; align-items: stretch; }
 .pattern-card { grid-column: 1; grid-row: 1; grid-template-rows: auto 1fr; align-content: stretch; }
 .rand-card { grid-column: 1; grid-row: 2; }
 .mix-card { grid-column: 2; grid-row: 1 / span 2; }
 .tab-perform .perform { grid-template-columns: minmax(0, 1fr); gap: 4px; padding-block: 4px; align-self: center; }
-.bslider { display: grid; grid-template-columns: 4.6em minmax(0, 1fr) 9.5em; align-items: center; gap: 16px; padding-block: 10px; }
+.bslider { display: grid; grid-template-columns: 4.2em minmax(0, 1fr) 8.6em; align-items: center; gap: 14px; padding-block: 10px; }
 .bslider label { font-family: var(--display); font-weight: 600; font-size: 1rem; }
 .bslider output { font-size: .88rem; color: var(--muted); white-space: nowrap; }
 .bslider output b { color: var(--ink); font-weight: 500; }
@@ -181,12 +181,16 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .rand-opts { display: flex; align-items: center; gap: 14px; white-space: nowrap; }
 .spacer { flex: 1; }
 .tab-perform .strips { gap: 0; }
-.tab-perform .strip { background: none; padding: 2px 6px; gap: 6px; border-left: 1px solid var(--line); border-radius: 0; }
+.tab-perform .strip { background: none; padding: 2px 12px; gap: 10px; border-left: 1px solid var(--line); border-radius: 0; }
 .tab-perform .strip:first-child { border-left: 0; }
-.tab-perform .strip .name { font-size: .78rem; }
+.tab-perform .strip .name { font-size: .84rem; }
+.tab-perform .sends { gap: 10px; }
+.tab-perform .sdial .dial { width: 38px; height: 38px; }
+.tab-perform .sdial span { font-size: .7rem; margin-top: 2px; }
+.tab-perform .ms { gap: 6px; }
 .tab-perform .sm { font-size: .68rem; }
 .tab-perform .strip .fader { height: 230px; }
-.tab-perform .ms button { width: 24px; height: 22px; font-size: .7rem; }
+.tab-perform .ms button { width: 28px; height: 24px; font-size: .74rem; }
 .tab-fx { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 14px; align-items: stretch; }
 .sends-card { grid-column: 1 / -1; }
 .fx-sels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
