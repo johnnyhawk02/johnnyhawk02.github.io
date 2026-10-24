@@ -158,15 +158,16 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .sel label { font-family: var(--display); font-weight: 500; font-size: .8rem; text-transform: lowercase; }
 
 /* ---- pattern tab ---- */
-.tab-steps, .tab-xfeed, .tab-fx { grid-template-columns: minmax(0, 1fr); }
+.tab-steps, .tab-xfeed { grid-template-columns: minmax(0, 1fr); }
 /* perform: pattern and randomise cards on the left, the mixer card on the right */
 .card { background: var(--tint); border-radius: 10px; padding: 14px 16px 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
 .card > h2 { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
 .tab-perform { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); grid-template-rows: 1fr auto; gap: 14px; align-items: stretch; }
 .pattern-card { grid-column: 1; grid-row: 1; grid-template-rows: auto 1fr; align-content: stretch; }
 .rand-card { grid-column: 1; grid-row: 2; }
-.right-col { grid-column: 2; grid-row: 1 / span 2; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 14px; min-height: 0; min-width: 0; }
-.master-card { padding: 12px 16px; gap: 6px; }
+.right-col { grid-column: 2; grid-row: 1 / span 2; display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 14px; min-height: 0; min-width: 0; }
+.master-card { padding: 10px 16px; gap: 6px; }
+.master-card, .fx-card { grid-template-columns: 56px minmax(0, 1fr); align-items: center; column-gap: 8px; }
 .master-row { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 2fr); gap: 16px; }
 .mgroup { display: grid; gap: 4px; min-width: 0; }
 .mgroup + .mgroup { border-left: 1px solid var(--line); padding-left: 16px; }
@@ -175,9 +176,9 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .btn.tiny { font-size: .76rem; padding: 2px 10px; }
 #comp-knobs { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
 #duck-knobs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
-.master-card .knob .dial { width: 36px; height: 36px; }
-.master-card .knob label { font-size: .7rem; line-height: 1.3; }
-.master-card .knob output { font-size: .66rem; line-height: 1.3; }
+.master-card .knob .dial, .fx-card .knob .dial { width: 36px; height: 36px; }
+.master-card .knob label, .fx-card .knob label { font-size: .7rem; line-height: 1.3; }
+.master-card .knob output, .fx-card .knob output { font-size: .66rem; line-height: 1.3; }
 .tab-perform .perform { grid-template-columns: minmax(0, 1fr); gap: 4px; padding-block: 4px; align-self: center; }
 .bslider { display: grid; grid-template-columns: 4.2em minmax(0, 1fr) 8.6em; align-items: center; gap: 14px; padding-block: 10px; }
 .bslider label { font-family: var(--display); font-weight: 600; font-size: 1rem; }
@@ -203,17 +204,11 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .tab-perform .sm { font-size: .68rem; }
 .tab-perform .strip .fader { height: 230px; }
 .tab-perform .ms button { width: 28px; height: 24px; font-size: .74rem; }
-.tab-fx { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 14px; align-items: stretch; }
-.sends-card { grid-column: 1 / -1; }
-.fx-sels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.fx-sels .sel { grid-column: auto; }
-.fx-knobs { grid-template-columns: repeat(5, minmax(0, 1fr)); padding-block: 6px; }
-.verb-card .gate { display: flex; align-items: center; gap: 8px; font-size: .86rem; }
-.send-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
-.send-row { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 6px 4px; border-left: 1px solid var(--line); }
-.send-row:first-child { border-left: 0; }
-.send-row .name { font-family: var(--display); font-weight: 600; font-size: .8rem; text-transform: lowercase; white-space: nowrap; }
-.send-row .sdial .dial { width: 44px; height: 44px; }
+.fx-card { padding: 10px 16px; gap: 4px; }
+.fx-row { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 16px; align-items: center; }
+.fx-sels { display: grid; gap: 6px; }
+.fx-sels select { width: 100%; padding: 4px 8px; font-size: .84rem; }
+.fx-knobs { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
 .sends { display: flex; gap: 4px; justify-content: center; }
 .sdial { display: grid; justify-items: center; gap: 0; user-select: none; touch-action: none; }
 .sdial .dial { width: 34px; height: 34px; cursor: ns-resize; border-radius: 50%; }
@@ -318,11 +313,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-sound .pad { height: 48px; }
   .tab-sound .rand .hint { display: none; }
   .vbtn { padding: 4px 10px; font-size: .82rem; }
-  .tab-fx { gap: 10px; }
-  .tab-fx .card { padding: 12px 14px; gap: 8px; }
-  .fx-knobs { padding-block: 0; }
-  .tab-fx .hint { font-size: .78rem; margin: 0; }
-  .send-row { padding-block: 2px; }
   /* steps: the grid's rows share the height, up to a comfortable size */
   .tab-steps .seq { height: 100%; grid-template-rows: auto auto minmax(0, 1fr); }
   .tab-steps .grid { grid-auto-rows: minmax(18px, 1fr); max-height: 470px; min-height: 0; }
@@ -338,8 +328,9 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 @media (min-width: 761px) and (max-width: 1250px) { .tab-sound { grid-template-columns: 220px minmax(0, 1fr); } .tab-sound .lcd-line span { display: none; } }
 @media (min-width: 761px) and (max-height: 640px) {
   .right-col { gap: 10px; }
-  .master-card, .mix-card { padding: 8px 14px 10px; gap: 4px; }
+  .master-card, .mix-card, .fx-card { padding: 8px 14px 10px; gap: 4px; }
   .tab-perform .strip { gap: 4px; }
+  .mix-card > h2 { display: none; }
   .tab-perform .sdial .dial { width: 30px; height: 30px; }
   .tab-perform .strip .sm { font-size: 0; } /* the pan label; the slider stays */
 }
@@ -349,13 +340,12 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-perform { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
   .pattern-card, .rand-card, .right-col { grid-column: 1; grid-row: auto; }
   .master-row { grid-template-columns: minmax(0, 1fr); }
+  .master-card, .fx-card { grid-template-columns: minmax(0, 1fr); }
+  .fx-row { grid-template-columns: minmax(0, 1fr); }
   .mgroup + .mgroup { border-left: 0; padding-left: 0; }
   .tab-perform .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 16px; }
   .tab-perform .strip:nth-child(4) { border-left: 0; }
   .tab-perform .strip .fader { height: 140px; }
-  .send-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 4px; }
-  .send-row { border-left: 0; justify-content: flex-start; }
-  .send-row .name { width: 4.2em; }
   .pcard .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
   .tabs { padding-left: 0; gap: 2px; }
   .tab { flex: 1 1 0; min-width: 0; padding: 8px 4px; font-size: .8rem; }
@@ -406,7 +396,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <button class="tab" type="button" role="tab" data-tab="sound" aria-selected="false">sound</button>
     <button class="tab" type="button" role="tab" data-tab="steps" aria-selected="false">steps</button>
     <button class="tab" type="button" role="tab" data-tab="xfeed" aria-selected="false">crossfeed</button>
-    <button class="tab" type="button" role="tab" data-tab="fx" aria-selected="false">fx</button>
     <button class="tab" type="button" role="tab" data-tab="about" aria-selected="false">about</button>
   </nav>
 
@@ -445,6 +434,16 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
       <div class="master-row">
         <div class="mgroup"><span class="mlab"><button class="btn tiny" id="comp-on" type="button" aria-pressed="true">compressor</button><output id="gr-out"></output></span><div class="knobs" id="comp-knobs"></div></div>
         <div class="mgroup"><span class="mlab">drum 1 sidechain<output id="duck-out"></output></span><div class="knobs" id="duck-knobs"></div></div>
+      </div>
+    </div>
+    <div class="card fx-card" role="group" aria-label="FX">
+      <h2>fx</h2>
+      <div class="fx-row">
+        <div class="fx-sels">
+          <select id="fx-type" aria-label="FX type"></select>
+          <span id="fx-mode-wrap"><select id="fx-mode" aria-label="FX mode"></select></span>
+        </div>
+        <div class="knobs fx-knobs" id="fx-params"></div>
       </div>
     </div>
     <div class="card mix-card">
@@ -503,38 +502,13 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
       </div>
   </section>
 
-  <section class="panel rack tab-fx" data-panel="fx" role="tabpanel" aria-label="FX" hidden>
-    <div class="card fx-card" role="group" aria-label="FX bus">
-      <h2>fx bus</h2>
-      <div class="fx-sels">
-        <label class="sel">type <select id="fx-type"></select></label>
-        <label class="sel" id="fx-mode-wrap"><span id="fx-mode-lab">mode</span> <select id="fx-mode"></select></label>
-      </div>
-      <div class="knobs fx-knobs" id="fx-params"></div>
-      <p class="hint">The LXR-02's own effect slot. Turn up a voice's <b>fx</b> send below or on the mixer to put it through.</p>
-    </div>
-    <div class="card verb-card" role="group" aria-label="Reverb">
-      <h2>reverb</h2>
-      <label class="gate"><input id="rv-gated" type="checkbox"> gated</label>
-      <div class="knobs fx-knobs" id="rv-knobs"></div>
-      <div hidden>
-        <input id="rv-size" type="range" min="0" max="100" value="55"><input id="rv-tone" type="range" min="0" max="100" value="50">
-        <input id="rv-pre" type="range" min="0" max="120" value="10"><input id="rv-ret" type="range" min="0" max="100" value="70">
-        <input id="rv-gate" type="range" min="60" max="600" step="10" value="250">
-      </div>
-    </div>
-    <div class="card sends-card" role="group" aria-label="Sends">
-      <h2>sends</h2>
-      <div class="send-grid" id="send-grid"></div>
-    </div>
-  </section>
 
   <div class="about" data-panel="about" role="tabpanel" aria-label="About" hidden>
   <details open>
     <summary>HOW TO PLAY IT</summary>
     <div class="body">
       <p class="src">Elexir by Johnny Hawk is an unofficial browser drum machine, not made or endorsed by Erica Synths. Its sound engine is a JavaScript port of the six drum voices and the FX bus of the Erica Synths LXR-02 firmware (<a href="https://github.com/erica-synths/lxr-desktop-app" target="_blank" rel="noopener">erica-synths/lxr-desktop-app</a>, GPL-3.0, commit a43cd4f), ported line by line; its output matches the original C code compiled for the Cortex-M7 sample for sample. The FX bus (distortion, ring mod, compressor, delay) is the firmware's too; the mixer, reverb, crossfeed and pattern generator are new. The 16 kits after the init kit are Hrtl's free LXR-02 DLC kits, used with credit, and any LXR kit file (.SND) can be opened. Source and licence (GPL-3.0): <a href="https://github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir" target="_blank" rel="noopener">github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir</a>.</p>
-      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit; reverb send, mute and solo sit after the engine. Save keeps the current sound (kit and crossfeed) in this browser under a made-up name, listed under saved in the kit menu; export downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). The FX bus is the LXR-02's effect slot: each mixer strip's fx dial sends that voice into it (all the way up, the voice only reaches the output through the bus, as on the hardware; in between, the rest goes straight out). Kits bring their own FX settings. The rev dial is the strip's reverb send. The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus and reverb) by up to the duck amount whenever drum 1 hits, and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the red figures show how far each is pulling down. Gated reverb opens on every hit sent to it, holds for the gate time and then cuts off. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. Press R for the same; Randomise all (Shift-R) does every voice at once. New kit builds a fresh kit from voices of the built-in kits, varies each by 10% and names it something ending in kit; it isn't kept until you press its save button. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
+      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit; mute and solo sit after the engine. Save keeps the current sound (kit and crossfeed) in this browser under a made-up name, listed under saved in the kit menu; export downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). The FX bus is the LXR-02's effect slot: each mixer strip's fx dial sends that voice into it (all the way up, the voice only reaches the output through the bus, as on the hardware; in between, the rest goes straight out). Kits bring their own FX settings. The FX section above the mixer picks the effect and sets it. The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits, and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the red figures show how far each is pulling down. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. Press R for the same; Randomise all (Shift-R) does every voice at once. New kit builds a fresh kit from voices of the built-in kits, varies each by 10% and names it something ending in kit; it isn't kept until you press its save button. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
     </div>
   </details>
 
@@ -4023,60 +3997,6 @@ function barOk(b, bar) {
   if (b > 0) return bar % b === b - 1;
   return bar % -b !== -b - 1;
 }
-// Stereo reverb: pre-delay, four input allpasses, then an 8-line feedback delay network
-// (Householder mixing, a damping low-pass in every line). Gated mode puts a gate on the
-// reverb's output that every hit sent to it opens: it holds for the gate time, then shuts
-// fast, the 80s gated-snare sound.
-class Reverb {
-  constructor(fs) {
-    this.fs = fs;
-    this.pre = new Float32Array(Math.ceil(fs * 0.25)); this.preW = 0; this.preLen = 1;
-    this.ap = [142, 107, 379, 277].map((n) => ({ buf: new Float32Array(n), i: 0 }));
-    this.lens = [1153, 1361, 1559, 1733, 1913, 2111, 2293, 2477];
-    this.lines = this.lens.map((n) => ({ buf: new Float32Array(n), i: 0, lp: 0 }));
-    this.fb = new Float32Array(8); this.damp = 0.3;
-    this.gated = false; this.gate = 0; this.hold = 0; this.gateLen = fs * 0.25;
-    this.set({ size: 55, tone: 50, predelay: 10, gated: false, gateMs: 250 });
-  }
-  set(p) {
-    const rt60 = p.gated ? 1.5 + p.size / 100 * 3 : 0.3 * Math.pow(30, p.size / 100); // 0.3 .. 9 s; gated runs a long dense room
-    this.lens.forEach((n, k) => { this.fb[k] = Math.pow(10, -3 * n / (rt60 * this.fs)); });
-    this.damp = 0.05 + (1 - p.tone / 100) * 0.7;
-    this.preLen = Math.max(1, Math.round(p.predelay / 1000 * this.fs));
-    this.gated = p.gated; this.gateLen = p.gateMs / 1000 * this.fs;
-  }
-  trigger() { this.hold = this.gateLen; }
-  process(inp, L, R, ret) {
-    const lines = this.lines, x = new Float32Array(8);
-    for (let i = 0; i < inp.length; i++) {
-      // pre-delay
-      this.pre[this.preW] = inp[i];
-      let v = this.pre[(this.preW - this.preLen + this.pre.length) % this.pre.length];
-      this.preW = (this.preW + 1) % this.pre.length;
-      // diffusion
-      for (const a of this.ap) { const d = a.buf[a.i]; const w = v + 0.6 * d; a.buf[a.i] = w; v = d - 0.6 * w; a.i = (a.i + 1) % a.buf.length; }
-      // FDN
-      let sum = 0;
-      for (let k = 0; k < 8; k++) { const ln = lines[k]; x[k] = ln.buf[ln.i]; sum += x[k]; }
-      sum *= 0.25; // 2 / N
-      let l = 0, r = 0;
-      for (let k = 0; k < 8; k++) {
-        const ln = lines[k];
-        ln.lp += (1 - this.damp) * (x[k] - sum - ln.lp);
-        ln.buf[ln.i] = ln.lp * this.fb[k] + v * 0.35;
-        ln.i = (ln.i + 1) % ln.buf.length;
-        if (k & 1) r += x[k] * (k & 2 ? -1 : 1); else l += x[k] * (k & 2 ? -1 : 1);
-      }
-      let g = 1;
-      if (this.gated) {
-        // gate: 1 ms open, hold, 12 ms close
-        if (this.hold > 0) { this.hold--; this.gate += (1 - this.gate) * 0.02; } else this.gate *= 0.9981;
-        g = this.gate;
-      }
-      L[i] += l * 0.5 * ret * g; R[i] += r * 0.5 * ret * g;
-    }
-  }
-}
 class Player {
   constructor(outRate) {
     this.e = new LXR.LxrEngine();
@@ -4090,12 +4010,10 @@ class Player {
     this.step = 0; this.bar = 0; this.toNext = 0;
     // accent: unaccented sequencer hits are turned down by the accent amount, after the engine
     this.gain = new Float32Array(6).fill(1); this.gainTo = new Float32Array(6).fill(1);
-    // mixer: reverb send and mute/solo per voice, reverb return
-    this.sendAmt = new Float32Array([0, 0.2, 0.2, 0.35, 0.15, 0.1]); this.chan = new Float32Array(6).fill(1);
-    this.chanAt = new Float32Array(6).fill(1); this.ret = 0.7;
-    this.verb = new Reverb(LXR.REAL_FS); this.sendBuf = new Float32Array(64);
+    // mixer: mute/solo per voice
+    this.chan = new Float32Array(6).fill(1); this.chanAt = new Float32Array(6).fill(1);
     this.fxGain = new Float32Array(6); this.fxAmt = new Float32Array(6).fill(1);
-    // master: drum 1 ducks the other voices (before the FX bus and reverb), then a compressor
+    // master: drum 1 ducks the other voices (before the FX bus), then a compressor
     // on the whole mix, the same design as the LXR-02's FX compressor
     this.master = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150 };
     this.duckEnv = 0; this.duckAt = 1; this.compEnv = 0; this.gr = 0; this.duckMin = 1;
@@ -4105,9 +4023,9 @@ class Player {
   msg(m) {
     if (m.type === 'param') this.e.setParam(m.par, m.value);
     else if (m.type === 'kit') this.e.loadKit(m.values);
-    else if (m.type === 'trig') { this.e.trigger(m.voice, m.vel, 60); this.gainTo[Math.min(m.voice, 5)] = 1; this._keyGate(m.voice); }
+    else if (m.type === 'trig') { this.e.trigger(m.voice, m.vel, 60); this.gainTo[Math.min(m.voice, 5)] = 1; }
     else if (m.type === 'xmod') this.e.setCrossMod(m.amt, m.target);
-    else if (m.type === 'mix') { if (m.master) Object.assign(this.master, m.master); this.sendAmt.set(m.send); this.fxAmt.set(m.fx); this.chan.set(m.chan); this.ret = m.ret; this.verb.set(m.verb); }
+    else if (m.type === 'mix') { if (m.master) Object.assign(this.master, m.master); this.fxAmt.set(m.fx); this.chan.set(m.chan); }
     else if (m.type === 'seq') {
       this.pattern = m.pattern; this.bpm = m.bpm; this.vel = m.vel; this.e.bpm = m.bpm;
       this.accGain = Math.pow(10, -m.accentDb / 20);
@@ -4115,7 +4033,6 @@ class Player {
       this.playing = m.playing;
     }
   }
-  _keyGate(t) { const n = Math.min(t, 5); if (this.sendAmt[n] > 0 && this.chan[n] > 0) this.verb.trigger(); }
   _render(dst) {
     if (this.playing) {
       if (this.toNext <= 0) {
@@ -4125,7 +4042,6 @@ class Player {
           if (!on[t][s] || !barOk(b, this.bar)) continue;
           this.e.trigger(t, acc[t][s] ? 127 : this.vel, 60);
           this.gainTo[Math.min(t, 5)] = acc[t][s] ? 1 : this.accGain;
-          this._keyGate(t);
           hits.push(t);
         }
         this.events.push({ type: 'step', step: this.step, bar: this.bar, hits, gr: this.gr, duck: this.duckMin });
@@ -4140,7 +4056,6 @@ class Player {
     const pans = [e.drums[0], e.drums[1], e.drums[2], e.snare, e.cymbal, e.hat];
     const [L, R] = dst;
     L.fill(0); R.fill(0);
-    const snd = this.sendBuf; snd.fill(0);
     // sidechain: follow drum 1's level (instant attack, set release) and turn the rest down
     const M = this.master, k = out[0];
     let pk = 0;
@@ -4156,16 +4071,15 @@ class Player {
       // a voice routed to the FX bus splits between the bus (fx send) and the outputs;
       // at a full send it only reaches the outputs through the bus, as in the firmware
       const fa = e.audioRouting[n] === LXR.MIXER_ROUTING_FX_BUS ? this.fxAmt[n] : 0, direct = 1 - fa;
-      const pl = direct * pans[n].triggeredPanL / 32768, pr = direct * pans[n].triggeredPanR / 32768, sa = this.sendAmt[n] / 32768;
+      const pl = direct * pans[n].triggeredPanL / 32768, pr = direct * pans[n].triggeredPanR / 32768;
       const o = out[n];
-      for (let i = 0; i < 64; i++) { const v = o[i] * (g0 + dg * i); L[i] += v * pl; R[i] += v * pr; snd[i] += v * sa; }
+      for (let i = 0; i < 64; i++) { const v = o[i] * (g0 + dg * i); L[i] += v * pl; R[i] += v * pr; }
       this.fxGain[n] = g1 * fa;
       this.gain[n] = this.gainTo[n]; this.chanAt[n] = this.chan[n];
     }
     // the firmware's FX bus (distortion, ring mod, compressor or delay), sample-exact
     const fx = e.renderFx(this.fxGain);
     for (let i = 0; i < 64; i++) { L[i] += fx[2 * i] / 32768; R[i] += fx[2 * i + 1] / 32768; }
-    this.verb.process(snd, L, R, this.ret);
     if (M.comp) {
       // peak detector in dB, attack/release smoothing, gain = over * (1/ratio - 1) + makeup
       const ca = Math.exp(-1000 / (M.attack * LXR.REAL_FS)), cr = Math.exp(-1000 / (M.release * LXR.REAL_FS));
@@ -4890,22 +4804,22 @@ function drawMini() {
 const MASTER0 = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150 };
 const master = { ...MASTER0 };
 const CH = ['DRUM 1', 'DRUM 2', 'DRUM 3', 'SNARE', 'CYMBAL', 'HIHAT'];
-const mix = { send: [0, 20, 20, 35, 15, 10], fx: new Array(6).fill(0), mute: new Array(6).fill(false), solo: new Array(6).fill(false) };
+const mix = { fx: new Array(6).fill(0), mute: new Array(6).fill(false), solo: new Array(6).fill(false) };
 const stripsEl = $('strips');
 const fxButtons = [];
 // small dial for the mixer's sends, 0..100
-function miniDial(label, aria, get, set, dflt) {
+function miniDial(label, aria, get, set, dflt, max = 100, show = (v) => v + '%', center = false) {
   const el = document.createElement('div'); el.className = 'sdial';
-  el.innerHTML = `<svg class="dial" viewBox="0 0 64 64" tabindex="0" role="slider" aria-label="${aria}" aria-valuemin="0" aria-valuemax="100">
+  el.innerHTML = `<svg class="dial" viewBox="0 0 64 64" tabindex="0" role="slider" aria-label="${aria}" aria-valuemin="0" aria-valuemax="${max}">
       <path class="track" d="${arc(27, A0, A1)}"/><path class="val"/><line class="ptr" x1="32" y1="32" x2="32" y2="14"/></svg><span>${label}</span>`;
   const dial = el.querySelector('svg'), val = el.querySelector('.val'), ptr = el.querySelector('.ptr');
   const draw = () => {
-    const v = get(), a = A0 + (A1 - A0) * v / 100;
-    val.setAttribute('d', v > 0 ? arc(27, A0, a) : '');
+    const v = get(), a = A0 + (A1 - A0) * v / max, from = center ? (A0 + A1) / 2 : A0;
+    val.setAttribute('d', Math.abs(a - from) > 0.02 ? arc(27, Math.min(a, from), Math.max(a, from)) : '');
     ptr.setAttribute('x2', (32 + 17 * Math.cos(a)).toFixed(2)); ptr.setAttribute('y2', (32 + 17 * Math.sin(a)).toFixed(2));
-    dial.setAttribute('aria-valuenow', v); dial.setAttribute('aria-valuetext', v + '%'); dial.title = `${label} ${v}%`;
+    dial.setAttribute('aria-valuenow', v); dial.setAttribute('aria-valuetext', show(v)); dial.title = `${label} ${show(v)}`;
   };
-  const put = (v) => { v = Math.max(0, Math.min(100, Math.round(v))); if (v !== get()) { set(v); draw(); } };
+  const put = (v) => { v = Math.max(0, Math.min(max, Math.round(v))); if (v !== get()) { set(v); draw(); } };
   let drag = null;
   dial.addEventListener('pointerdown', (e) => { dial.setPointerCapture(e.pointerId); drag = { y: e.clientY, v: get() }; dial.focus(); });
   dial.addEventListener('pointermove', (e) => { if (drag) put(drag.v + (drag.y - e.clientY) * 0.6); });
@@ -4925,38 +4839,29 @@ CH.forEach((name, n) => {
   const el = document.createElement('div'); el.className = 'strip'; el.setAttribute('role', 'group'); el.setAttribute('aria-label', name);
   el.innerHTML = `<span class="name">${name}</span>
     <span class="sends"></span>
-    <label class="sm">PAN <input class="pan" type="range" min="0" max="127" value="${values[pan]}" aria-label="${name} pan"></label>
     <input class="fader" type="range" min="0" max="127" value="${values[vol]}" aria-label="${name} level">
     <output>${values[vol]}</output>
     <span class="ms"><button class="m" type="button" aria-pressed="false" aria-label="Mute ${name}">M</button><button class="s" type="button" aria-pressed="false" aria-label="Solo ${name}">S</button></span>`;
-  const fader = el.querySelector('.fader'), panEl = el.querySelector('.pan'), out = el.querySelector('output');
+  const fader = el.querySelector('.fader'), out = el.querySelector('output');
+  // pan is a small dial; mixInputs gets an input-like stand-in so kit loads and knob edits redraw it
+  const panD = miniDial('pan', `${name} pan`, () => values[pan], (v) => setValue(pan, v, true), 63, 127,
+    (v) => (v === 63 ? 'C' : v < 63 ? 'L' + (63 - v) : 'R' + (v - 63)), true);
+  const panEl = { value: values[pan], addEventListener() {}, dispatchEvent: () => panD.draw() };
   mixInputs[vol] = fader; mixInputs[pan] = panEl;
   fader.addEventListener('input', () => { setValue(vol, Number(fader.value), true); out.textContent = fader.value; });
   fader.addEventListener('sync', () => { out.textContent = fader.value; });
   fader.addEventListener('change', buildKnobs);
   fader.addEventListener('dblclick', () => { setValue(vol, initValues[vol], true); buildKnobs(); });
-  panEl.addEventListener('input', () => setValue(pan, Number(panEl.value), true));
-  panEl.addEventListener('change', buildKnobs);
-  panEl.addEventListener('dblclick', () => { setValue(pan, 63, true); buildKnobs(); });
   const sends = el.querySelector('.sends'), out6 = PAR.AUDIO_OUT1 + n;
-  // the same two sends sit on the mixer strip and on the fx tab
-  const row = document.createElement('div'); row.className = 'send-row';
-  row.innerHTML = `<span class="name">${name}</span>`;
-  const draws = [];
-  const redraw = () => draws.forEach((d) => d());
-  for (const box of [sends, row]) {
-    const rev = miniDial('rev', `${name} reverb send`, () => mix.send[n], (v) => { mix.send[n] = v; sendMix(); redraw(); }, 0);
-    // fx send: above 0 the voice's AUDIO_OUT is the FX bus (6), at 0 the main stereo out (0)
-    const fxd = miniDial('fx', `${name} FX bus send`, () => mix.fx[n], (v) => {
-      mix.fx[n] = v;
-      const out = v > 0 ? LXR.MIXER_ROUTING_FX_BUS : 0;
-      if (values[out6] !== out) setValue(out6, out, true);
-      sendMix(); redraw();
-    }, 100);
-    box.append(rev.el, fxd.el);
-    draws.push(rev.draw, fxd.draw);
-  }
-  $('send-grid').appendChild(row);
+  // fx send: above 0 the voice's AUDIO_OUT is the FX bus (6), at 0 the main stereo out (0)
+  const fxd = miniDial('fx', `${name} FX send`, () => mix.fx[n], (v) => {
+    mix.fx[n] = v;
+    const out = v > 0 ? LXR.MIXER_ROUTING_FX_BUS : 0;
+    if (values[out6] !== out) setValue(out6, out, true);
+    sendMix();
+  }, 100);
+  sends.append(fxd.el, panD.el);
+  const redraw = fxd.draw;
   for (const [cls, key] of [['m', 'mute'], ['s', 'solo']]) {
     const b = el.querySelector('.' + cls);
     b.addEventListener('click', () => { mix[key][n] = !mix[key][n]; b.setAttribute('aria-pressed', mix[key][n]); sendMix(); });
@@ -4989,7 +4894,7 @@ function syncFx() {
   box.appendChild(amt);
   fxButtons.forEach((b) => b());
   if (!def) return;
-  $('fx-mode-lab').textContent = def.mode[0];
+  fxMode.setAttribute('aria-label', 'FX ' + def.mode[0]);
   fxMode.innerHTML = '';
   def.mode[2].forEach((n, i) => fxMode.appendChild(new Option(n.toLowerCase(), i)));
   fxMode.value = values[def.mode[1]];
@@ -5004,23 +4909,9 @@ function syncMixer() {
 }
 function sendMix() {
   const anySolo = mix.solo.some(Boolean);
-  const gated = $('rv-gated').checked;
-  const gw = $('rv-gatetime-wrap'); if (gw) gw.hidden = !gated;
-  send({ type: 'mix', master: { ...master }, send: mix.send.map((v) => v / 100), fx: mix.fx.map((v) => v / 100), ret: Number($('rv-ret').value) / 100 * 1.4,
-    chan: mix.mute.map((m, n) => (m || (anySolo && !mix.solo[n]) ? 0 : 1)),
-    verb: { size: Number($('rv-size').value), tone: Number($('rv-tone').value), predelay: Number($('rv-pre').value), gated, gateMs: Number($('rv-gate').value) } });
+  send({ type: 'mix', master: { ...master }, fx: mix.fx.map((v) => v / 100),
+    chan: mix.mute.map((m, n) => (m || (anySolo && !mix.solo[n]) ? 0 : 1)) });
 }
-// reverb dials over the hidden inputs that hold the settings
-const RV = [['size', 'rv-size', (v) => v + '%'], ['tone', 'rv-tone', (v) => v + '%'], ['pre-delay', 'rv-pre', (v) => v + ' ms'],
-  ['return', 'rv-ret', (v) => v + '%'], ['gate time', 'rv-gate', (v) => v + ' ms']];
-for (const [label, id, show] of RV) {
-  const inp = $(id), step = Number(inp.step) || 1, lo = Number(inp.min), init = Number(inp.value);
-  const k = dialKnob(label, { max: (Number(inp.max) - lo) / step, show: (v) => show(lo + v * step),
-    get: () => (Number(inp.value) - lo) / step, set: (v) => { inp.value = lo + v * step; sendMix(); }, dflt: () => (init - lo) / step });
-  if (id === 'rv-gate') k.id = 'rv-gatetime-wrap';
-  $('rv-knobs').appendChild(k);
-}
-$('rv-gated').addEventListener('change', sendMix);
 
 // ---- master: compressor and drum 1 sidechain ----
 const RATIOS = [1.5, 2, 3, 4, 6, 8, 20];
