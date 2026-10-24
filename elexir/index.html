@@ -136,13 +136,19 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .sel label { font-family: var(--display); font-weight: 500; font-size: .8rem; text-transform: lowercase; }
 
 /* ---- pattern tab ---- */
-.tab-perform, .tab-steps, .tab-xfeed, .tab-fx { grid-template-columns: minmax(0, 1fr); }
-.tab-perform { gap: 18px; }
-.tab-perform .perform { max-width: 900px; width: 100%; justify-self: center; padding-block: 4px; }
+.tab-steps, .tab-xfeed, .tab-fx { grid-template-columns: minmax(0, 1fr); }
+/* perform: dials and randomisers on the left, a compact mixer on the right */
+.tab-perform { grid-template-columns: minmax(0, 1fr) minmax(0, 470px); grid-template-rows: auto 1fr; gap: 18px 32px; }
+.tab-perform .perform { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 8px; padding-block: 6px; max-width: 560px; width: 100%; justify-self: center; }
 .tab-perform .bigdial svg { width: 104px; height: 104px; }
-.perform-rand { justify-content: center; }
-.tab-perform .strips { max-width: 1000px; width: 100%; justify-self: center; }
-.tab-perform .strip .fader { height: 150px; }
+.perform-rand { justify-content: center; align-self: start; grid-column: 1; }
+.tab-perform .strips { grid-column: 2; grid-row: 1 / span 2; gap: 4px; }
+.tab-perform .strip { padding: 8px 4px; gap: 5px; }
+.tab-perform .strip .name { font-size: .74rem; }
+.tab-perform .sm { font-size: .68rem; }
+.tab-perform .strip .fader { height: 170px; width: 22px; }
+.tab-perform .ms button { width: 22px; height: 22px; font-size: .68rem; }
+.tab-perform .fxb { width: 46px; height: 22px; font-size: .68rem; }
 .tab-sound .hint { font-size: .8rem; }
 .seq { display: grid; gap: 14px; max-width: 1000px; width: 100%; justify-self: center; }
 .perform { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding-block: 28px; }
@@ -225,11 +231,14 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 
 /* ---- smaller screens ---- */
 @media (max-width: 1180px) {
+  .tab-perform { grid-template-columns: minmax(0, 1fr) minmax(0, 400px); }
   .tab-sound .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .mixer { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 760px) {
   .rack { grid-template-columns: minmax(0, 1fr); padding: 16px; }
+  .tab-perform { grid-template-columns: minmax(0, 1fr); }
+  .tab-perform .strips { grid-column: 1; grid-row: auto; }
   .tabs { padding-left: 0; gap: 2px; }
   .tab { flex: 1 1 0; min-width: 0; padding: 8px 4px; font-size: .8rem; }
   .top { grid-template-columns: minmax(0, 1fr) 76px; }
