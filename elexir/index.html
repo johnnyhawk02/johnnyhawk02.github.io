@@ -477,7 +477,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
         <input id="beat" type="range" min="0" max="15" step="1" value="0" aria-hidden="true" tabindex="-1"><output id="beat-out"></output>
         <input id="fills" type="range" min="0" max="100" value="40" aria-hidden="true" tabindex="-1"><output id="fills-out"></output>
         <input id="level" type="range" min="1" max="127" value="100" aria-hidden="true" tabindex="-1"><output id="level-out"></output>
-        <input id="accent" type="range" min="0" max="12" value="6" aria-hidden="true" tabindex="-1"><output id="accent-out"></output>
+        <input id="accent" type="range" min="0" max="6" value="6" aria-hidden="true" tabindex="-1"><output id="accent-out"></output>
         <div class="mini" id="mini" aria-hidden="true"></div>
       </div>
     </div>
@@ -4866,7 +4866,7 @@ function songSnapshot() {
 }
 function useSong(g) {
   for (const id of ['energy', 'beat', 'fills', 'tempo']) { $(id).value = g[id]; $(id).dispatchEvent(new Event('sync')); }
-  $('level').value = g.vel; $('accent').value = g.accent;
+  $('level').value = g.vel; $('accent').value = Math.min(6, g.accent);
   for (const id of ['level', 'accent']) $(id).dispatchEvent(new Event('sync'));
   showLevels(); $('tempo').dispatchEvent(new Event('input'));
   Object.assign(master, g.master); buildMaster();
