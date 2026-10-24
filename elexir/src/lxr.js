@@ -741,6 +741,9 @@ const ECC83_TABLE = new Float64Array([
   0.3399398748, 0.3407211248, 0.3415023748, 0.3422836248, 0.3430648748, 0.3438461248
 ]);
 const FX_BUFFER_SIZE = 0x7fff;
+// not in the firmware: a tempo-synced delay needs up to a bar (3.4 s at 70 bpm), so the buffer
+// is allocated larger and the delay's index mask widens only while it is synced
+const SYNC_BUFFER_SIZE = 0x7ffff;
 const F_32768 = f(32768);
 const F_REAL_FS = f(REAL_FS);
 const LOW_MIN = f(0.0006 * REAL_FS), LOW_MAX = f(0.02 * REAL_FS), HI_MIN = f(0.02 * REAL_FS), HI_MAX = f(FX_BUFFER_SIZE);
@@ -947,7 +950,7 @@ function compressorSetRatio(c, r) {
 
 const DELAY_NORMAL = 0;
 function makeDelay() {
-  return { oldRead: 0, newRead: 0, write: Math.trunc(FX_BUFFER_SIZE / 20) - 10, fracReadNew: 0, fracReadOld: 0,
+  return { mask: FX_BUFFER_SIZE, sync: null, oldRead: 0, newRead: 0, write: Math.trunc(FX_BUFFER_SIZE / 20) - 10, fracReadNew: 0, fracReadOld: 0,
     interpValue: 0, interpStep: 0, tmp: new Int16Array(2), tmp2: new Int16Array(2), feedback: f(0.7), range: 0,
     delayTime: 0, pendingDelayTime: 0, timePending: 0, tone: makeOnePole(), tone2: makeOnePole(), type: DELAY_NORMAL };
 }
@@ -960,11 +963,11 @@ function calcDelayTime(d, cv) {
 function delaySetDelayTime(d, t) {
   if (d.interpValue <= 0) {
     d.delayTime = t;
-    const offset = calcDelayTime(d, f(d.delayTime * d.range));
+    const offset = d.sync !== null ? d.sync : calcDelayTime(d, f(d.delayTime * d.range));
     const offItg = toU32(offset);
     d.fracReadNew = f(offset - offItg);
     d.newRead = (d.write - 1 - offItg) >>> 0;
-    d.newRead &= d.type === DELAY_NORMAL ? FX_BUFFER_SIZE : FX_BUFFER_SIZE >> 1;
+    d.newRead &= d.type === DELAY_NORMAL ? d.mask : d.mask >> 1;
     d.interpValue = f(1);
     d.interpStep = f(1 / f(F_REAL_FS * f(0.01)));
   } else {
@@ -978,15 +981,15 @@ function delayRead(buf, base, pos, mask, frac) {
 }
 function delayCalcBuffer(d, buf, idx) {
   if (idx === 0) {
-    d.tmp[0] = delayRead(buf, 0, d.oldRead, FX_BUFFER_SIZE, d.fracReadOld);
-    d.oldRead = (d.oldRead + 1) & FX_BUFFER_SIZE;
+    d.tmp[0] = delayRead(buf, 0, d.oldRead, d.mask, d.fracReadOld);
+    d.oldRead = (d.oldRead + 1) & d.mask;
   } else {
-    d.tmp[1] = delayRead(buf, 0, d.newRead, FX_BUFFER_SIZE, d.fracReadNew);
-    d.newRead = (d.newRead + 1) & FX_BUFFER_SIZE;
+    d.tmp[1] = delayRead(buf, 0, d.newRead, d.mask, d.fracReadNew);
+    d.newRead = (d.newRead + 1) & d.mask;
   }
 }
 function delayCalcBufferPingPong(d, buf, idx) {
-  const half = FX_BUFFER_SIZE >> 1;
+  const half = d.mask >> 1;
   if (idx === 0) {
     d.tmp[0] = delayRead(buf, 0, d.oldRead, half, d.fracReadOld);
     d.tmp2[0] = delayRead(buf, half, d.oldRead, half, d.fracReadOld);
@@ -1023,13 +1026,13 @@ function delayProcess(d, buf, fx, out, size, dryWet) {
     o = toI16(calcOnePole(d.tone, o));
     const itg = qadd16(qadd16(x0, x1), toI16(f(o * d.feedback)));
     buf[d.write++] = toBuf(itg);
-    d.write &= FX_BUFFER_SIZE;
+    d.write &= d.mask;
     out[2 * i] = qadd16(out[2 * i], wrap16(ssat16(x0 + ssat16(toI32(f((o - x0) * dryWet))))));
     out[2 * i + 1] = qadd16(out[2 * i + 1], wrap16(ssat16(x1 + ssat16(toI32(f((o - x1) * dryWet))))));
   }
 }
 function delayProcessPingPong(d, buf, fx, out, size, dryWet) {
-  const half = FX_BUFFER_SIZE >> 1;
+  const half = d.mask >> 1;
   for (let i = 0; i < size; i++) {
     const x0 = fx[2 * i], x1 = fx[2 * i + 1];
     let [l, r] = delayStep(d, true, buf);
@@ -1053,10 +1056,27 @@ export class FxBus {
     this.ringmod = makeRingmod();
     this.compressor = makeCompressor();
     this.delay = makeDelay();
-    this.buffer = new Float32Array(FX_BUFFER_SIZE + 1); // __fp16 FX_BUFFER, kept as float values
+    this.buffer = new Float32Array(SYNC_BUFFER_SIZE + 1); // __fp16 FX_BUFFER, kept as float values
+    this.forceWet = false; // not in the firmware: the bus output is all effect (a send effect)
     this.input = new Int16Array(BLOCK * 2);
   }
   setParameter(idx, value) { this.parameter[idx] = value; this.updateParameter(); }
+  /**
+   * Not in the firmware: set the delay time directly in samples (tempo sync), or null to go
+   * back to the TIME/RANGE knobs. Up to SYNC_BUFFER_SIZE (ping-pong: half of it).
+   */
+  setDelaySync(samples) {
+    const d = this.delay;
+    if (samples === null) { if (d.sync === null) return; d.sync = null; d.mask = FX_BUFFER_SIZE; }
+    else {
+      d.mask = SYNC_BUFFER_SIZE;
+      const max = (d.type === DELAY_NORMAL ? d.mask : d.mask >> 1) - 2;
+      samples = Math.max(1, Math.min(max, samples));
+      if (d.sync !== null && Math.abs(samples - d.sync) < 0.5) return;
+      d.sync = samples;
+    }
+    delaySetDelayTime(d, d.delayTime);
+  }
   updateParameter() {
     const p = this.parameter;
     switch (this.fxType) {
@@ -1089,14 +1109,14 @@ export class FxBus {
   }
   /** FxBus_process: this.input (stereo, interleaved) -> added into out (stereo, interleaved) */
   process(out, size, rng) {
-    const fx = this.input;
+    const fx = this.input, dw = this.forceWet ? 1 : this.dryWet;
     switch (this.fxType) {
-      case FX_DISTORTION: distortionProcess(this.distortion, fx, out, size, this.dryWet); break;
+      case FX_DISTORTION: distortionProcess(this.distortion, fx, out, size, dw); break;
       case FX_RING: ringmodProcess(this.ringmod, fx, out, size, this.dryWet, rng); break;
-      case FX_COMPRESSOR: compressorProcess(this.compressor, fx, out, size, this.dryWet); break;
+      case FX_COMPRESSOR: compressorProcess(this.compressor, fx, out, size, dw); break;
       case FX_DELAY:
-        if (this.delay.type === DELAY_NORMAL) delayProcess(this.delay, this.buffer, fx, out, size, this.dryWet);
-        else delayProcessPingPong(this.delay, this.buffer, fx, out, size, this.dryWet);
+        if (this.delay.type === DELAY_NORMAL) delayProcess(this.delay, this.buffer, fx, out, size, dw);
+        else delayProcessPingPong(this.delay, this.buffer, fx, out, size, dw);
         break;
       default: // FX_OFF
         for (let i = 0; i < size * 2; i++) out[i] = qadd16(out[i], fx[i]);
