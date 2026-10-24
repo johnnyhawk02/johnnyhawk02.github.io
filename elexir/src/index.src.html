@@ -166,10 +166,19 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .pattern-card { grid-column: 1; grid-row: 1; grid-template-rows: auto 1fr; align-content: stretch; }
 .rand-card { grid-column: 1; grid-row: 2; }
 .mix-card { grid-column: 2; grid-row: 1 / span 2; }
-.tab-perform .perform { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding-block: 18px 6px; align-self: center; }
-.tab-perform .bigdial svg { width: 128px; height: 128px; }
-.tab-perform .bigdial label { font-size: .95rem; }
+.tab-perform .perform { grid-template-columns: minmax(0, 1fr); gap: 4px; padding-block: 4px; align-self: center; }
+.bslider { display: grid; grid-template-columns: 4.6em minmax(0, 1fr) 9.5em; align-items: center; gap: 16px; padding-block: 10px; }
+.bslider label { font-family: var(--display); font-weight: 600; font-size: 1rem; }
+.bslider output { font-size: .88rem; color: var(--muted); white-space: nowrap; }
+.bslider output b { color: var(--ink); font-weight: 500; }
+.bs-track { position: relative; height: 12px; border-radius: 6px; background: var(--line); cursor: pointer; touch-action: none; }
+.bs-track::before { content: ''; position: absolute; inset: -12px 0; } /* a taller hit area */
+.bs-fill { position: absolute; inset: 0 auto 0 0; border-radius: 6px; background: var(--ink); }
+.bs-thumb { position: absolute; top: 50%; width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 50%;
+  background: var(--panel); border: 3px solid var(--ink); box-sizing: border-box; }
+.bs-track:focus-visible { outline-offset: 6px; }
 .perform-rand { gap: 8px; }
+.rand-opts { display: flex; align-items: center; gap: 14px; white-space: nowrap; }
 .spacer { flex: 1; }
 .tab-perform .strips { gap: 0; }
 .tab-perform .strip { background: none; padding: 2px 6px; gap: 6px; border-left: 1px solid var(--line); border-radius: 0; }
@@ -199,14 +208,6 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .seq { display: grid; gap: 14px; width: 100%; }
 .perform { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding-block: 28px; }
 .dials { display: contents; }
-.bigdial { display: grid; justify-items: center; gap: 2px; user-select: none; touch-action: none; }
-.bigdial svg { width: 120px; height: 120px; cursor: ns-resize; border-radius: 50%; }
-.bigdial label { font-family: var(--display); font-weight: 600; font-size: 1.05rem; }
-.bigdial output { font-size: .85rem; color: var(--muted); text-align: center; white-space: nowrap; }
-.bigdial output b { color: var(--ink); font-weight: 500; }
-.bigdial .ring { fill: none; stroke: var(--line); stroke-width: 2; }
-.bigdial .arc { fill: none; stroke: var(--ink); stroke-width: 4; stroke-linecap: round; }
-.bigdial .dot { fill: var(--ink); }
 .mini { display: none; }
 .grid { display: grid; grid-template-columns: 4.6em repeat(16, minmax(0, 1fr)); gap: 4px; align-items: center; }
 .grid .row-name { font-family: var(--display); font-weight: 500; font-size: .78rem; color: var(--muted); background: none; border: 0;
@@ -276,10 +277,23 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 
 /* ---- smaller screens ---- */
 @media (max-width: 1180px) {
-  .tab-perform .perform { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 8px; }
   .tab-sound .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .mixer { grid-template-columns: minmax(0, 1fr); }
 }
+/* perform fits the window: the mixer's faders take whatever height is left */
+@media (min-width: 761px) and (min-height: 480px) {
+  body:has(.tab-perform:not([hidden])) { height: 100dvh; box-sizing: border-box; padding-bottom: 14px; overflow: hidden; }
+  body:has(.tab-perform:not([hidden])) .wrap { height: 100%; grid-template-rows: auto auto minmax(0, 1fr); }
+  .tab-perform { min-height: 0; grid-template-rows: minmax(0, 1fr) auto; padding: 16px; }
+  .mix-card { grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
+  .tab-perform .strips { min-height: 0; }
+  .tab-perform .strip { display: flex; flex-direction: column; align-items: center; min-height: 0; }
+  .tab-perform .strip .sm { align-self: stretch; }
+  .tab-perform .strip .fader { flex: 1 1 0; height: auto; min-height: 50px; }
+  .pattern-card { grid-template-rows: auto minmax(0, 1fr); }
+  .tab-perform .perform { align-content: space-evenly; align-self: stretch; padding-block: 0; }
+}
+@media (max-width: 1300px) { h1 small { display: none; } .field input[type=range] { width: 70px; } .topbar { gap: 8px 14px; } }
 @media (max-width: 760px) {
   .rack { grid-template-columns: minmax(0, 1fr); padding: 16px; }
   .tab-perform { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
@@ -298,7 +312,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .pad kbd { display: none; }
   .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .perform { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-block: 8px; gap: 18px 8px; }
-  .bigdial svg { width: 96px; height: 96px; }
+  .bslider { grid-template-columns: 4em minmax(0, 1fr); gap: 4px 12px; }
+  .bslider output { grid-column: 2; }
   .grid { grid-template-columns: 4em repeat(16, minmax(0, 1fr)); gap: 2px; }
   .cell { aspect-ratio: .8; border-radius: 2px; }
   .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -366,8 +381,10 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
         <button class="btn play" id="keep-kit" type="button" hidden>save</button>
         <button class="btn" id="undo" type="button" disabled>undo</button>
         <span class="spacer"></span>
-        <label class="field" for="depth">depth <input id="depth" type="range" min="1" max="100" value="30"><output id="depth-out">30%</output></label>
-        <label class="field" for="wild"><input id="wild" type="checkbox"> wild</label>
+        <span class="rand-opts">
+          <label class="field" for="depth">depth <input id="depth" type="range" min="1" max="100" value="30"><output id="depth-out">30%</output></label>
+          <label class="field" for="wild"><input id="wild" type="checkbox"> wild</label>
+        </span>
       </div>
     </div>
     <div class="card mix-card">
@@ -1462,36 +1479,32 @@ for (const [label, id, show] of RV) {
 $('rv-gated').addEventListener('change', sendMix);
 sendMix();
 
-// ---- big round dials for the perform controls ----
-function bigDial(input, label, out, opts = {}) {
+// ---- big sliders for the perform controls, over the hidden inputs that hold the values ----
+function bigSlider(input, label, out, opts = {}) {
   const min = opts.min ?? Number(input.min), max = opts.max ?? Number(input.max), step = opts.step ?? (Number(input.step) || 1);
-  const el = document.createElement('div'); el.className = 'bigdial';
-  const id = 'bd-' + input.id;
-  el.innerHTML = `<svg id="${id}" viewBox="0 0 96 96" tabindex="0" role="slider" aria-label="${label}" aria-valuemin="${min}" aria-valuemax="${max}">
-    <circle class="ring" cx="48" cy="48" r="40"/><path class="arc"/><circle class="dot" r="5"/></svg>
-    <label for="${id}">${label}</label>`;
+  const el = document.createElement('div'); el.className = 'bslider';
+  const id = 'bs-' + input.id;
+  el.innerHTML = `<label for="${id}">${label}</label>
+    <div class="bs-track" id="${id}" tabindex="0" role="slider" aria-label="${label}" aria-valuemin="${min}" aria-valuemax="${max}">
+      <div class="bs-fill"></div><div class="bs-thumb"></div></div>`;
   el.appendChild(out);
-  const svg = el.querySelector('svg'), arcEl = el.querySelector('.arc'), dot = el.querySelector('.dot');
-  const A0 = Math.PI * 0.75, A1 = Math.PI * 2.25;
+  const track = el.querySelector('.bs-track'), fill = el.querySelector('.bs-fill'), thumb = el.querySelector('.bs-thumb');
   const draw = () => {
-    const fr = (Number(input.value) - min) / (max - min), a = A0 + (A1 - A0) * fr;
-    const pt0 = (r, t) => `${(48 + r * Math.cos(t)).toFixed(2)} ${(48 + r * Math.sin(t)).toFixed(2)}`;
-    arcEl.setAttribute('d', fr > 0.001 ? `M${pt0(40, A0)}A40 40 0 ${a - A0 > Math.PI ? 1 : 0} 1 ${pt0(40, a)}` : '');
-    // a dot inside the ring points at the value
-    dot.setAttribute('cx', (48 + 26 * Math.cos(a)).toFixed(2)); dot.setAttribute('cy', (48 + 26 * Math.sin(a)).toFixed(2));
-    svg.setAttribute('aria-valuenow', input.value); svg.setAttribute('aria-valuetext', out.textContent);
+    const fr = Math.max(0, Math.min(1, (Number(input.value) - min) / (max - min)));
+    fill.style.width = fr * 100 + '%'; thumb.style.left = fr * 100 + '%';
+    track.setAttribute('aria-valuenow', input.value); track.setAttribute('aria-valuetext', out.textContent);
   };
   const set = (val) => {
     val = Math.max(min, Math.min(max, Math.round(val / step) * step));
     if (val === Number(input.value)) return;
     input.value = val; input.dispatchEvent(new Event(opts.event || 'input')); draw();
   };
-  let drag = null;
-  svg.addEventListener('pointerdown', (e) => { svg.setPointerCapture(e.pointerId); drag = { y: e.clientY, v: Number(input.value) }; svg.focus(); });
-  svg.addEventListener('pointermove', (e) => { if (drag) set(drag.v + (drag.y - e.clientY) * (max - min) / 180); });
-  svg.addEventListener('pointerup', () => { drag = null; }); svg.addEventListener('pointercancel', () => { drag = null; });
-  svg.addEventListener('wheel', (e) => { e.preventDefault(); set(Number(input.value) + (e.deltaY < 0 ? step : -step) * (max - min > 20 ? 2 : 1)); }, { passive: false });
-  svg.addEventListener('keydown', (e) => {
+  const fromX = (x) => { const r = track.getBoundingClientRect(); set(min + (x - r.left) / r.width * (max - min)); };
+  let drag = false;
+  track.addEventListener('pointerdown', (e) => { track.setPointerCapture(e.pointerId); drag = true; track.focus(); fromX(e.clientX); });
+  track.addEventListener('pointermove', (e) => { if (drag) fromX(e.clientX); });
+  track.addEventListener('pointerup', () => { drag = false; }); track.addEventListener('pointercancel', () => { drag = false; });
+  track.addEventListener('keydown', (e) => {
     const d = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 10, PageDown: -10 }[e.key];
     if (d) { e.preventDefault(); set(Number(input.value) + d * step * (Math.abs(d) > 1 && max - min <= 20 ? 0.1 : 1)); }
   });
@@ -1503,8 +1516,8 @@ function bigDial(input, label, out, opts = {}) {
 const tempoOut = document.createElement('output');
 const showTempo = () => { tempoOut.innerHTML = `<b>${$('tempo').value}</b> bpm`; };
 $('tempo').addEventListener('change', showTempo); $('tempo').addEventListener('input', showTempo); showTempo();
-$('dials-l').append(bigDial($('energy'), 'energy', $('energy-out')), bigDial($('beat'), 'beat', $('beat-out')));
-$('dials-r').append(bigDial($('fills'), 'fills', $('fills-out')), bigDial($('tempo'), 'tempo', tempoOut, { min: 70, max: 170, event: 'change' }));
+$('dials-l').append(bigSlider($('energy'), 'energy', $('energy-out')), bigSlider($('beat'), 'beat', $('beat-out')));
+$('dials-r').append(bigSlider($('fills'), 'fills', $('fills-out')), bigSlider($('tempo'), 'tempo', tempoOut, { min: 70, max: 170, event: 'change' }));
 
 // ---- crossfeed matrix ----
 const XN = ['drum 1', 'drum 2', 'drum 3', 'snare', 'cymbal', 'hihat'];
