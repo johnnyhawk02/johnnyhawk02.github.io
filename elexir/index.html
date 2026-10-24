@@ -393,6 +393,12 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-perform .sdial .dial { width: 30px; height: 30px; }
   .tab-perform .strip .sm { font-size: 0; } /* the pan label; the slider stays */
   .radios span { padding: 4px 5px; }
+  /* six pattern sliders in a short window */
+  .bslider { padding-block: 0; }
+  .tab-perform .perform { gap: 0; }
+  .bslider label { font-size: .9rem; }
+  .bs-thumb { width: 20px; height: 20px; margin: -10px 0 0 -10px; }
+  .pattern-card > h2 { margin-bottom: 0; }
   .fx-card .knob .dial { width: 30px; height: 30px; }
   .fx-groups { gap: 10px; } .fxg + .fxg { padding-left: 10px; }
 }
@@ -448,8 +454,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <div class="seq-ctrl transport">
       <button class="btn play" id="play" type="button" aria-pressed="false">PLAY</button>
       <label class="field" for="tempo">tempo <input id="tempo" type="number" min="40" max="300" value="118"></label>
-      <label class="field" for="level">velocity <input id="level" type="range" min="1" max="127" value="100"></label>
-      <label class="field" for="accent">accent <input id="accent" type="range" min="0" max="12" value="6"><output id="accent-out">+6 dB</output></label>
       <span class="bars" aria-label="Bar of 8"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
     </div>
   </header>
@@ -472,6 +476,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
         <input id="energy" type="range" min="0" max="100" value="60" aria-hidden="true" tabindex="-1"><output id="energy-out"></output>
         <input id="beat" type="range" min="0" max="15" step="1" value="0" aria-hidden="true" tabindex="-1"><output id="beat-out"></output>
         <input id="fills" type="range" min="0" max="100" value="40" aria-hidden="true" tabindex="-1"><output id="fills-out"></output>
+        <input id="level" type="range" min="1" max="127" value="100" aria-hidden="true" tabindex="-1"><output id="level-out"></output>
+        <input id="accent" type="range" min="0" max="12" value="6" aria-hidden="true" tabindex="-1"><output id="accent-out"></output>
         <div class="mini" id="mini" aria-hidden="true"></div>
       </div>
     </div>
@@ -4707,7 +4713,12 @@ function sendSeq() {
     bpm: Math.max(40, Math.min(300, Number($('tempo').value) || 120)), vel: Number($('level').value),
     accentDb: Number($('accent').value), playing });
 }
-$('accent').addEventListener('input', () => { $('accent-out').textContent = '+' + $('accent').value + ' dB'; });
+const showLevels = () => {
+  $('level-out').innerHTML = `<b>${$('level').value}</b> / 127`;
+  $('accent-out').innerHTML = `<b>+${$('accent').value}</b> dB`;
+};
+for (const id of ['level', 'accent']) for (const ev of ['input', 'change']) $(id).addEventListener(ev, showLevels);
+showLevels();
 $('accent').addEventListener('change', sendSeq);
 $('play').addEventListener('click', async () => {
   await startAudio();
@@ -4856,7 +4867,8 @@ function songSnapshot() {
 function useSong(g) {
   for (const id of ['energy', 'beat', 'fills', 'tempo']) { $(id).value = g[id]; $(id).dispatchEvent(new Event('sync')); }
   $('level').value = g.vel; $('accent').value = g.accent;
-  $('accent').dispatchEvent(new Event('input')); $('tempo').dispatchEvent(new Event('input'));
+  for (const id of ['level', 'accent']) $(id).dispatchEvent(new Event('sync'));
+  showLevels(); $('tempo').dispatchEvent(new Event('input'));
   Object.assign(master, g.master); buildMaster();
   mix.mute.splice(0, 6, ...g.mute); mix.solo.splice(0, 6, ...g.solo);
   stripsEl.querySelectorAll('.strip').forEach((el, n) => {
@@ -5292,7 +5304,8 @@ const tempoOut = document.createElement('output');
 const showTempo = () => { tempoOut.innerHTML = `<b>${$('tempo').value}</b> bpm`; };
 $('tempo').addEventListener('change', showTempo); $('tempo').addEventListener('input', showTempo); showTempo();
 $('dials-l').append(bigSlider($('energy'), 'energy', $('energy-out')), bigSlider($('beat'), 'beat', $('beat-out')));
-$('dials-r').append(bigSlider($('fills'), 'fills', $('fills-out')), bigSlider($('tempo'), 'tempo', tempoOut, { min: 70, max: 170, event: 'change' }));
+$('dials-r').append(bigSlider($('fills'), 'fills', $('fills-out')), bigSlider($('tempo'), 'tempo', tempoOut, { min: 70, max: 170, event: 'change' }),
+  bigSlider($('level'), 'velocity', $('level-out'), { event: 'change' }), bigSlider($('accent'), 'accent', $('accent-out'), { event: 'change' }));
 
 // ---- crossfeed matrix ----
 const XN = ['drum 1', 'drum 2', 'drum 3', 'snare', 'cymbal', 'hihat'];
