@@ -79,9 +79,11 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .kitbar, .transport, .seq-ctrl, .rand, .xfeed-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .kitbar { gap: 8px 6px; }
 .kitbar { flex: 1 1 auto; }
-.kitbar select { min-width: 9em; font-weight: 500; }
+.kitbar select { min-width: 9em; max-width: 13em; font-weight: 500; }
 .kitbar .file { position: relative; overflow: hidden; }
 .kitbar .btn { padding-inline: 10px; }
+.stepper { display: inline-flex; gap: 2px; }
+.stepper .btn { padding-inline: 9px; font-size: 1rem; line-height: 1.2; }
 .kitbar .file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .kitbar .file:focus-within { outline: 2px solid var(--ink); outline-offset: 2px; }
 .kitbar { position: relative; }
@@ -110,6 +112,9 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .pm-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .pm .file { position: relative; overflow: hidden; }
 .pm .file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.pm-sep { flex: 1; }
+.pm-foot .msg { flex-basis: 100%; }
+.pm-foot .msg:empty { display: none; }
 .pm-foot .msg { font-size: .8rem; color: var(--muted); }
 .bars { display: inline-flex; gap: 5px; }
 .bars i { width: 8px; height: 8px; border-radius: 50%; background: var(--tint-2); }
@@ -390,7 +395,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .fx-card .knob .dial { width: 30px; height: 30px; }
   .fx-groups { gap: 10px; } .fxg + .fxg { padding-left: 10px; }
 }
-@media (max-width: 1300px) { h1 small, .kitbar .lbl { display: none; } .field input[type=range] { width: 70px; } .topbar { gap: 8px 14px; } }
+@media (max-width: 1300px) { h1 small, .kitbar .lbl { display: none; } .field input[type=range] { width: 60px; } .topbar { gap: 8px 14px; } }
 @media (max-width: 760px) {
   .rack { grid-template-columns: minmax(0, 1fr); padding: 16px; }
   .tab-perform { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
@@ -434,10 +439,9 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <h1><b>elexir</b> <small>six-voice drum machine</small></h1>
     <div class="kitbar">
       <label class="field" for="kit"><span class="lbl">preset</span> <select id="kit" aria-label="Preset"></select></label>
+      <span class="stepper"><button class="btn" id="kit-prev" type="button" aria-label="Previous preset">‹</button><button class="btn" id="kit-next" type="button" aria-label="Next preset">›</button></span>
       <button class="btn" id="kit-save" type="button" title="Save everything (sound, pattern, tempo, mixer, FX and master) as a new preset">save<span id="dirty" class="dirty" hidden title="Unsaved changes"> ★</span></button>
       <button class="btn ghost" id="pm-open" type="button" aria-haspopup="dialog" title="Preset manager: load, favourite, delete, export">presets</button>
-      <button class="btn ghost" id="kit-export" type="button" title="Download the current sound as an LXR kit file">export</button>
-      <span class="btn ghost file" title="Open an LXR kit file (.SND)">open<input id="kit-file" type="file" accept=".snd,.SND" aria-label="Open a kit file (.SND) from an LXR SD card"></span>
       <span class="msg" id="kit-msg" aria-live="polite"></span>
     </div>
     <div class="seq-ctrl transport">
@@ -563,7 +567,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <summary>HOW TO PLAY IT</summary>
     <div class="body">
       <p class="src">Elexir by Johnny Hawk is an unofficial browser drum machine, not made or endorsed by Erica Synths. Its sound engine is a JavaScript port of the six drum voices and the FX bus of the Erica Synths LXR-02 firmware (<a href="https://github.com/erica-synths/lxr-desktop-app" target="_blank" rel="noopener">erica-synths/lxr-desktop-app</a>, GPL-3.0, commit a43cd4f), ported line by line; its output matches the original C code compiled for the Cortex-M7 sample for sample. The FX bus (distortion, ring mod, compressor, delay) is the firmware's too; the mixer, the three FX sends, crossfeed and the pattern generator are new. The generator's source kits include Hrtl's free LXR-02 DLC kits, used with credit, and any LXR kit file (.SND) can be opened. Source and licence (GPL-3.0): <a href="https://github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir" target="_blank" rel="noopener">github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir</a>.</p>
-      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit; mute and solo sit after the engine. Save keeps everything as a preset in this browser under a two-word alien name: the sound (kit, crossfeed, FX and sends) and the song (pattern, perform dials, tempo, velocity, accent, master, mute and solo), and loading it brings all of that back. A red star by save means a randomise has changed things since the last save or load. Presets opens the preset manager: load, delete, and star favourites; export favourites downloads them as a file, and favourites sent in that way are built into the next release. Open loads an LXR kit file (.SND) as the current sound; export downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). There are three effects, all the LXR-02's own FX-slot code run as sends: each mixer strip has a dist button on top and two dials left of its fader, fx1 for echo and fx3 for ring mod. There is one distortion: a voice with dist on leaves the mix and is heard only through it (its echo and ring mod sends still take the clean sound). Echo and ring mod are sends: every voice keeps its dry sound and their output is fully wet. The echo's time is synced to the tempo: from 1/128 of a bar fully left to one bar fully right, gliding through the musical lengths (the readout names the nearest, with ≈ when it is between); randomise puts it near a musical length but not exactly on it. The FX section above the mixer sets all three: echo mode (normal or ping-pong), time, tone and feedback; distortion type (tube, fold or rat), drive, color, tone and volume; ring mod carrier wave and frequency. A kit that used distortion or ring mod in its FX slot loads those settings into that effect with each routed voice switched to it (distortion) or sent a little (ring mod). The sync, the sends, the extra buses and the larger delay buffer are additions to the firmware. The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits, and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the red figures show how far each is pulling down. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. Press R for the same; Randomise all (Shift-R) does every voice at once. Everything builds a fresh sound from voices of the bundled kits (Hrtl's LXR-02 kits and twelve generated ones, which aren't listed as presets), varies each by 10%, and rolls new crossfeed, delay time, beat, energy and fills; save keeps it. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
+      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit; mute and solo sit after the engine. Save keeps everything as a preset in this browser under a two-word alien name: the sound (kit, crossfeed, FX and sends) and the song (pattern, perform dials, tempo, velocity, accent, master, mute and solo), and loading it brings all of that back. A red star by save means a randomise has changed things since the last save or load. ‹ and › step through the presets; while playing, a new preset comes in at the start of the next bar. Presets opens the preset manager: load, delete, and star favourites; export favourites downloads them as a file, and favourites sent in that way are built into the next release. Open .snd there loads an LXR kit file as the current sound, and export .snd downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). There are three effects, all the LXR-02's own FX-slot code run as sends: each mixer strip has a dist button on top and two dials left of its fader, fx1 for echo and fx3 for ring mod. There is one distortion: a voice with dist on leaves the mix and is heard only through it (its echo and ring mod sends still take the clean sound). Echo and ring mod are sends: every voice keeps its dry sound and their output is fully wet. The echo's time is synced to the tempo: from 1/128 of a bar fully left to one bar fully right, gliding through the musical lengths (the readout names the nearest, with ≈ when it is between); randomise puts it near a musical length but not exactly on it. The FX section above the mixer sets all three: echo mode (normal or ping-pong), time, tone and feedback; distortion type (tube, fold or rat), drive, color, tone and volume; ring mod carrier wave and frequency. A kit that used distortion or ring mod in its FX slot loads those settings into that effect with each routed voice switched to it (distortion) or sent a little (ring mod). The sync, the sends, the extra buses and the larger delay buffer are additions to the firmware. The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits, and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the red figures show how far each is pulling down. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. Press R for the same; Randomise all (Shift-R) does every voice at once. Everything builds a fresh sound from voices of the bundled kits (Hrtl's LXR-02 kits and twelve generated ones, which aren't listed as presets), varies each by 10%, and rolls new crossfeed, delay time, beat, energy and fills; save keeps it. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
     </div>
   </details>
 
@@ -605,6 +609,9 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   <div class="pm-foot">
     <button class="btn" id="pm-export" type="button">export favourites</button>
     <span class="btn ghost file">import<input id="pm-import" type="file" accept=".json,application/json" aria-label="Import presets from a file"></span>
+    <span class="pm-sep"></span>
+    <button class="btn ghost" id="kit-export" type="button" title="Download the current sound as an LXR kit file">export .snd</button>
+    <span class="btn ghost file" title="Open an LXR kit file (.SND) as the current sound">open .snd<input id="kit-file" type="file" accept=".snd,.SND" aria-label="Open a kit file (.SND) from an LXR SD card"></span>
     <span class="msg" id="pm-msg" aria-live="polite"></span>
   </div>
 </dialog>
@@ -4096,7 +4103,7 @@ class Player {
     this.idx = 0; this.frac = 0;
     this.pattern = { on: [], acc: [], bar: [] };
     this.playing = false; this.bpm = 120; this.vel = 100; this.accGain = 0.5;
-    this.step = 0; this.bar = 0; this.toNext = 0;
+    this.step = 0; this.bar = 0; this.toNext = 0; this.atBar = [];
     // accent: unaccented sequencer hits are turned down by the accent amount, after the engine
     this.gain = new Float32Array(6).fill(1); this.gainTo = new Float32Array(6).fill(1);
     // mixer: mute/solo per voice
@@ -4125,6 +4132,7 @@ class Player {
     else if (m.type === 'trig') { this.e.trigger(m.voice, m.vel, 60); this.gainTo[Math.min(m.voice, 5)] = 1; }
     else if (m.type === 'xmod') this.e.setCrossMod(m.amt, m.target);
     else if (m.type === 'delay') this.delayPos = m.pos;
+    else if (m.type === 'atBar') { if (this.playing) this.atBar.push(m.m); else this.msg(m.m); }
     else if (m.type === 'mix') {
       if (m.master) Object.assign(this.master, m.master);
       if (m.dist) {
@@ -4139,11 +4147,19 @@ class Player {
       this.accGain = Math.pow(10, -m.accentDb / 20);
       if (m.playing && !this.playing) { this.step = 0; this.bar = 0; this.toNext = 0; }
       this.playing = m.playing;
+      if (!this.playing) this.flushBar();
     }
+  }
+  // a preset loaded while playing: its messages wait for the first step of the next bar.
+  // A queued pattern never starts or stops the transport.
+  flushBar() {
+    const q = this.atBar; this.atBar = [];
+    for (const m of q) this.msg(m.type === 'seq' ? { ...m, playing: this.playing } : m);
   }
   _render(dst) {
     if (this.playing) {
       if (this.toNext <= 0) {
+        if (this.step === 0 && this.atBar.length) this.flushBar();
         const hits = [], { on, acc, bar } = this.pattern;
         for (let t = 0; t < 7; t++) {
           const s = this.step, b = bar[t][s];
@@ -4305,7 +4321,9 @@ function spec(par) {
 // ---- audio ----
 let ctx = null, node = null, fallback = null;
 const pending = [];
-function send(m) { if (node) node.port.postMessage(m); else if (fallback) fallback.msg(m); else pending.push(m); }
+// while barSync is set (loading a preset), messages are held by the player until the next bar
+let barSync = false;
+function send(m) { if (barSync) m = { type: 'atBar', m }; if (node) node.port.postMessage(m); else if (fallback) fallback.msg(m); else pending.push(m); }
 async function startAudio() {
   if (ctx) { if (ctx.state === 'suspended') await ctx.resume(); return; }
   ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -4811,10 +4829,19 @@ kitSel.addEventListener('change', () => {
 });
 function loadPreset(k) {
   kitSel.value = kitList.indexOf(k);
-  useKit(k);
-  if (k.song) useSong(k.song);
+  barSync = true;
+  try { useKit(k); if (k.song) useSong(k.song); } finally { barSync = false; }
   setDirty(false);
+  if (playing) kitNote(`${k.name} from the next bar`);
 }
+// ‹ › step through the presets in menu order
+function stepPreset(d) {
+  const opts = [...kitSel.options], i = opts.findIndex((o) => o.value === kitSel.value);
+  const o = opts[(i + d + opts.length) % opts.length];
+  if (o && o.value !== kitSel.value) loadPreset(kitList[Number(o.value)]);
+}
+$('kit-prev').addEventListener('click', () => stepPreset(-1));
+$('kit-next').addEventListener('click', () => stepPreset(1));
 // a star by save once the sound or song has been changed by a randomise since the last save or load
 let dirty = false;
 function setDirty(d) { dirty = d; $('dirty').hidden = !d; }
@@ -4964,7 +4991,7 @@ $('kit-file').addEventListener('change', async (e) => {
   }
   e.target.value = '';
   // an opened kit replaces the sound (pattern and the rest stay); save makes it a preset
-  if (last) { useKit(last); setDirty(true); kitNote(`opened ${last.name}`); }
+  if (last) { pm.close(); useKit(last); setDirty(true); kitNote(`opened ${last.name}`); }
 });
 // ---- perform: electro patterns from three sliders ----
 // Each groove gives every step of every track an energy level 1..9 at which it comes in
