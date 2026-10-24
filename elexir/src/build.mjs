@@ -18,12 +18,13 @@ const names = ['LxrEngine', 'PAR', 'CC', 'CC2', 'BLOCK', 'REAL_FS', 'PARAM_DTYPE
   'LFO_WAVE_NAMES', 'LFO_SYNC_NAMES', 'MIXER_ROUTING_FX_BUS', 'FX_NAMES', 'FX_DELAY', 'FX_DISTORTION', 'FX_RING', 'FxBus', 'Rng', 'DIST_NAMES', 'RATIO_NAMES', 'DELAY_NAMES'];
 const bundle = `const LXR = (() => {\n${engine}\nreturn { ${names.join(', ')} };\n})();\n`;
 
-// kit files (.SND) in kits/ are bundled into the page, hidden, as the generator's source kits
+// kit files (.SND) in kits/ and its subfolders are bundled into the page, hidden, as the generator's source kits
 const kitDir = new URL('kits/', here);
 const noKits = process.argv.includes('--no-kits');
 const outArg = process.argv.indexOf('--out');
 const outFile = outArg > 0 ? process.argv[outArg + 1] : null;
-const kits = !noKits && existsSync(kitDir) ? readdirSync(kitDir).filter((f) => /\.snd$/i.test(f)).sort()
+// (one folder per pack, e.g. kits/factory/, plus any loose .SND files)
+const kits = !noKits && existsSync(kitDir) ? readdirSync(kitDir, { recursive: true }).filter((f) => /\.snd$/i.test(f)).sort()
   .map((f) => ({ file: f, data: readFileSync(new URL(f, kitDir)).toString('base64') })) : [];
 
 // favourite presets exported from the preset manager (presets/*.json) become the built-in presets

@@ -1566,7 +1566,9 @@ function parseSnd(bytes) {
 let noteT;
 function kitNote(t) { $('kit-msg').textContent = t; clearTimeout(noteT); if (t) noteT = setTimeout(() => { $('kit-msg').textContent = ''; }, 5000); }
 // the bundled kits aren't presets: they are hidden and only feed the generator (everything)
+// (a transient that uses a user sample from the SD card would play silent, so it gets a built-in wave instead)
 const sourceKits = BUNDLED_KITS.map((k) => parseSnd(Uint8Array.from(atob(k.data), (c) => c.charCodeAt(0))));
+for (const { kit } of sourceKits) for (let n = 1; n <= 6; n++) if (kit[PAR['TRANS' + n + '_WAVE']] >= 14) kit[PAR['TRANS' + n + '_WAVE']] %= 14;
 // presets: the init kit, the built-in presets (favourites baked into the build), then the ones saved here
 const fromStored = (p, extra) => ({ name: p.name, kit: Uint8Array.from(p.kit), xm: p.xm, fx: p.fx, fx3: p.fx3, dpos: p.dpos, song: p.song,
   fav: !!p.fav, userSamples: 0, ...extra });
