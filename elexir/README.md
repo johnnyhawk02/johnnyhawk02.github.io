@@ -17,6 +17,7 @@ Erica Synths.
 - **Perform**: energy, beat and fills dials build electro patterns while it plays; a step editor
   with accents and bar conditions sits behind it.
 - **Randomise** a voice or the whole kit within drum-safe ranges (or wild).
+- **Save** a sound under a random alien name (kept in the browser), or export it as an LXR `.SND`.
 - **FX bus** from the firmware: distortion (tube, fold, rat), ring mod, compressor and delay
   (normal or ping-pong). Each voice can be routed through it, and kits load their own settings.
 - **Mixer** with level, pan, reverb send, mute and solo, and a reverb with a gated mode.
