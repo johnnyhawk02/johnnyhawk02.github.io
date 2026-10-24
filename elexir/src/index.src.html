@@ -136,7 +136,14 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .sel label { font-family: var(--display); font-weight: 500; font-size: .8rem; text-transform: lowercase; }
 
 /* ---- pattern tab ---- */
-.tab-pattern, .tab-xfeed, .tab-mix { grid-template-columns: minmax(0, 1fr); }
+.tab-perform, .tab-steps, .tab-xfeed, .tab-fx { grid-template-columns: minmax(0, 1fr); }
+.tab-perform { gap: 18px; }
+.tab-perform .perform { max-width: 900px; width: 100%; justify-self: center; padding-block: 4px; }
+.tab-perform .bigdial svg { width: 104px; height: 104px; }
+.perform-rand { justify-content: center; }
+.tab-perform .strips { max-width: 1000px; width: 100%; justify-self: center; }
+.tab-perform .strip .fader { height: 150px; }
+.tab-sound .hint { font-size: .8rem; }
 .seq { display: grid; gap: 14px; max-width: 1000px; width: 100%; justify-self: center; }
 .perform { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding-block: 28px; }
 .dials { display: contents; }
@@ -174,7 +181,7 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .xcell.diag { box-shadow: inset 0 0 0 1px var(--line); }
 
 /* ---- mixer tab ---- */
-.mixer { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 520px); gap: 14px; max-width: 1340px; width: 100%; justify-self: center; align-items: start; }
+.mixer { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; max-width: 760px; width: 100%; justify-self: center; align-items: start; }
 .strips { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
 .strip, .bus { background: var(--tint); border-radius: 8px; padding: 10px 8px; display: grid; gap: 8px; min-width: 0; }
 .strip { justify-items: center; }
@@ -267,14 +274,36 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   </header>
 
   <nav class="tabs" role="tablist" aria-label="Section">
-    <button class="tab" type="button" role="tab" data-tab="sound" aria-selected="true">sound</button>
-    <button class="tab" type="button" role="tab" data-tab="pattern" aria-selected="false">pattern</button>
+    <button class="tab" type="button" role="tab" data-tab="perform" aria-selected="true">perform</button>
+    <button class="tab" type="button" role="tab" data-tab="sound" aria-selected="false">sound</button>
+    <button class="tab" type="button" role="tab" data-tab="steps" aria-selected="false">steps</button>
     <button class="tab" type="button" role="tab" data-tab="xfeed" aria-selected="false">crossfeed</button>
-    <button class="tab" type="button" role="tab" data-tab="mix" aria-selected="false">mixer</button>
+    <button class="tab" type="button" role="tab" data-tab="fx" aria-selected="false">fx</button>
     <button class="tab" type="button" role="tab" data-tab="about" aria-selected="false">about</button>
   </nav>
 
-  <section class="panel rack tab-sound" data-panel="sound" role="tabpanel" aria-label="Sound">
+  <section class="panel rack tab-perform" data-panel="perform" role="tabpanel" aria-label="Perform">
+    <div class="perform" id="perform">
+      <div class="dials" id="dials-l"></div>
+      <div class="dials" id="dials-r"></div>
+      <div hidden>
+        <input id="energy" type="range" min="0" max="100" value="60" aria-hidden="true" tabindex="-1"><output id="energy-out"></output>
+        <input id="beat" type="range" min="0" max="4" step="1" value="0" aria-hidden="true" tabindex="-1"><output id="beat-out"></output>
+        <input id="fills" type="range" min="0" max="100" value="40" aria-hidden="true" tabindex="-1"><output id="fills-out"></output>
+        <div class="mini" id="mini" aria-hidden="true"></div>
+      </div>
+    </div>
+    <div class="rand perform-rand">
+      <button class="btn" id="rand-all" type="button">randomise kit</button>
+      <button class="btn" id="xrand2" type="button">randomise crossfeed</button>
+      <label class="field" for="depth">depth <input id="depth" type="range" min="1" max="100" value="30"><output id="depth-out">30%</output></label>
+      <label class="field" for="wild"><input id="wild" type="checkbox"> wild</label>
+      <button class="btn" id="undo" type="button" disabled>UNDO</button>
+    </div>
+    <div class="strips" id="strips"></div>
+  </section>
+
+  <section class="panel rack tab-sound" data-panel="sound" role="tabpanel" aria-label="Sound" hidden>
     <div class="col" aria-label="Voice">
       <div class="voices" id="voices" role="group" aria-label="Voice"></div>
       <div class="top">
@@ -288,10 +317,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
       </div>
       <div class="rand">
         <button class="btn" id="rand" type="button">RANDOMISE <span id="rand-name">DRUM 1</span></button>
-        <button class="btn" id="rand-all" type="button">ALL</button>
-        <label class="field" for="depth">depth <input id="depth" type="range" min="1" max="100" value="30"><output id="depth-out">30%</output></label>
-        <label class="field" for="wild"><input id="wild" type="checkbox"> wild</label>
-        <button class="btn" id="undo" type="button" disabled>UNDO</button>
+        <span class="hint">depth and wild are on the perform tab</span>
       </div>
     </div>
     <div class="col" aria-label="Parameters">
@@ -300,25 +326,9 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     </div>
   </section>
 
-  <section class="panel rack tab-pattern" data-panel="pattern" role="tabpanel" aria-label="Pattern" hidden>
-    <div class="col seq" aria-label="Pattern">
-      <div class="seq-ctrl">
-        <span class="seg" role="group" aria-label="Sequencer mode">
-          <button class="btn" type="button" data-view="perform" aria-pressed="true">PERFORM</button>
-          <button class="btn" type="button" data-view="steps" aria-pressed="false">STEPS</button>
-        </span>
-      </div>
-      <div class="perform" id="perform">
-        <div class="dials" id="dials-l"></div>
-        <div class="dials" id="dials-r"></div>
-        <div hidden>
-          <input id="energy" type="range" min="0" max="100" value="60" aria-hidden="true" tabindex="-1"><output id="energy-out"></output>
-          <input id="beat" type="range" min="0" max="4" step="1" value="0" aria-hidden="true" tabindex="-1"><output id="beat-out"></output>
-          <input id="fills" type="range" min="0" max="100" value="40" aria-hidden="true" tabindex="-1"><output id="fills-out"></output>
-          <div class="mini" id="mini" aria-hidden="true"></div>
-        </div>
-      </div>
-      <div class="seq-ctrl" id="steps-tools" hidden>
+  <section class="panel rack tab-steps" data-panel="steps" role="tabpanel" aria-label="Steps" hidden>
+    <div class="col seq" aria-label="Steps">
+      <div class="seq-ctrl" id="steps-tools">
         <button class="btn" id="clear" type="button">CLEAR</button>
         <span class="seg" role="group" aria-label="What a click on a step sets">
           <button class="btn" type="button" data-mode="step" aria-pressed="true">STEP</button>
@@ -326,7 +336,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
           <button class="btn" type="button" data-mode="bar" aria-pressed="false">BAR 2 / 4</button>
         </span>
       </div>
-      <div class="grid" id="grid" hidden role="group" aria-label="Step sequencer, 7 tracks by 16 steps"></div>
+      <p class="hint">Editing steps takes the pattern off the perform dials; back on the perform tab, the dials rebuild it.</p>
+      <div class="grid" id="grid" role="group" aria-label="Step sequencer, 7 tracks by 16 steps"></div>
     </div>
   </section>
 
@@ -341,9 +352,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
       </div>
   </section>
 
-  <section class="panel rack tab-mix" data-panel="mix" role="tabpanel" aria-label="Mixer" hidden>
-    <div class="col mixer" aria-label="Mixer">
-      <div class="strips" id="strips"></div>
+  <section class="panel rack tab-fx" data-panel="fx" role="tabpanel" aria-label="FX" hidden>
+    <div class="col mixer" aria-label="FX">
       <div class="buses">
           <div class="bus" role="group" aria-label="FX bus">
             <h2>fx bus</h2>
@@ -371,7 +381,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <summary>HOW TO PLAY IT</summary>
     <div class="body">
       <p class="src">Elexir by Johnny Hawk is an unofficial browser drum machine, not made or endorsed by Erica Synths. Its sound engine is a JavaScript port of the six drum voices and the FX bus of the Erica Synths LXR-02 firmware (<a href="https://github.com/erica-synths/lxr-desktop-app" target="_blank" rel="noopener">erica-synths/lxr-desktop-app</a>, GPL-3.0, commit a43cd4f), ported line by line; its output matches the original C code compiled for the Cortex-M7 sample for sample. The FX bus (distortion, ring mod, compressor, delay) is the firmware's too; the mixer, reverb, crossfeed and pattern generator are new. The 16 kits after the init kit are Hrtl's free LXR-02 DLC kits, used with credit, and any LXR kit file (.SND) can be opened. Source and licence (GPL-3.0): <a href="https://github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir" target="_blank" rel="noopener">github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir</a>.</p>
-      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit; reverb send, mute and solo sit after the engine. Save keeps the current sound (kit and crossfeed) in this browser under a made-up name, listed under saved in the kit menu; export downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). The FX bus is the LXR-02's effect slot: a voice with fx on goes through it instead of straight to the output, and kits bring their own FX settings. Gated reverb opens on every hit sent to it, holds for the gate time and then cuts off. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of five electro grooves, and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. STEPS opens the same pattern in the step editor; going back to Perform rebuilds it from the sliders. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. Press R for the same; Randomise all (Shift-R) does every voice at once. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
+      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit; reverb send, mute and solo sit after the engine. Save keeps the current sound (kit and crossfeed) in this browser under a made-up name, listed under saved in the kit menu; export downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). The FX bus is the LXR-02's effect slot: a voice with fx on goes through it instead of straight to the output, and kits bring their own FX settings. Gated reverb opens on every hit sent to it, holds for the gate time and then cuts off. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of five electro grooves, and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. Press R for the same; Randomise all (Shift-R) does every voice at once. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
     </div>
   </details>
 
@@ -1371,26 +1381,26 @@ function randomiseX() {
   xcells.forEach((d) => d()); sendX();
 }
 $('xrand').addEventListener('click', async () => { await startAudio(); randomiseX(); });
+$('xrand2').addEventListener('click', () => $('xrand').click());
 
 function setTab(t) {
+  // the steps tab edits the pattern by hand; the perform tab builds it from the dials
+  if (t === 'steps' && view !== 'steps') setView('steps');
+  if (t === 'perform' && view === 'steps') setView('perform');
   document.querySelectorAll('[data-tab]').forEach((b) => b.setAttribute('aria-selected', b.dataset.tab === t));
   document.querySelectorAll('[data-panel]').forEach((el) => { el.hidden = el.dataset.panel !== t; });
   try { localStorage.setItem('elexir-tab', t); } catch (e) {}
 }
 document.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.tab)));
-try { const t = localStorage.getItem('elexir-tab'); if (t && document.querySelector(`[data-tab="${t}"]`)) setTab(t); } catch (e) {}
 
 let view = 'perform';
 function setView(v) {
   view = v;
-  document.querySelectorAll('[data-view]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.view === v));
-  $('perform').hidden = v !== 'perform';
-  $('grid').hidden = $('steps-tools').hidden = v !== 'steps';
   if (v === 'steps') cells.forEach((row, r) => row.forEach((_, s) => drawCell(r, s)));
   else generate();
 }
-document.querySelectorAll('[data-view]').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
 for (const id of ['energy', 'beat', 'fills']) $(id).addEventListener('input', generate);
+try { const t = localStorage.getItem('elexir-tab'); if (t && document.querySelector(`[data-tab="${t}"]`)) setTab(t); } catch (e) {}
 
 function markStep(s) {
   if (nowStep >= 0) { cells.forEach((r) => r[nowStep].classList.remove('now')); miniCells.forEach((r) => r[nowStep].classList.remove('now')); }
