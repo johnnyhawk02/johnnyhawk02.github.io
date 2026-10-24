@@ -53,12 +53,24 @@ button, select, input { font: inherit; color: inherit; }
 .btn:hover { background: var(--tint-2); }
 .btn[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
 .btn:disabled { opacity: .45; cursor: default; }
+.btn.ghost { background: none; color: var(--muted); padding-inline: 8px; }
+.btn.ghost:hover { color: var(--ink); background: var(--tint); }
+.btn.play { background: var(--ink); color: var(--panel); padding-inline: 18px; }
+.btn.play[aria-pressed="true"] { background: var(--led); color: #fff; }
 .seg { display: inline-flex; gap: 2px; }
 .field { display: flex; align-items: center; gap: 8px; font-size: .88rem; color: var(--muted); white-space: nowrap; }
 .field output { font-family: var(--mono); font-size: .8rem; color: var(--ink); min-width: 3.2em; font-variant-numeric: tabular-nums; }
 select, .field input[type=number] { border: 0; border-radius: 6px; background: var(--tint); padding: 5px 8px; font-size: .88rem; max-width: 100%; }
 .field input[type=number] { width: 4.5em; font-family: var(--mono); }
-input[type=range] { accent-color: var(--ink); margin: 0; }
+/* sliders: hairline track, small round thumb */
+input[type=range] { -webkit-appearance: none; appearance: none; background: transparent; margin: 0; height: 18px; cursor: pointer; }
+input[type=range]::-webkit-slider-runnable-track { height: 3px; border-radius: 2px; background: var(--line); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 13px; height: 13px; border-radius: 50%; background: var(--ink); margin-top: -5px; border: 0; }
+input[type=range]::-moz-range-track { height: 3px; border-radius: 2px; background: var(--line); }
+input[type=range]::-moz-range-thumb { width: 13px; height: 13px; border-radius: 50%; background: var(--ink); border: 0; }
+.strip .fader::-webkit-slider-runnable-track { width: 3px; height: auto; }
+.strip .fader::-webkit-slider-thumb { width: 22px; height: 10px; border-radius: 3px; margin-top: 0; margin-left: -9.5px; }
+.strip .fader::-moz-range-thumb { width: 22px; height: 10px; border-radius: 3px; }
 .field input[type=range] { width: 90px; }
 input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; margin: 0; }
 
@@ -89,7 +101,17 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .rack > .col { display: grid; gap: 14px; align-content: start; min-width: 0; }
 
 /* ---- sound tab ---- */
-.tab-sound { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); }
+.tab-sound { grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); }
+.pcards { display: flex; flex-wrap: wrap; gap: 10px; }
+.pcard { padding: 10px 12px 12px; gap: 8px; }
+.pcard .knobs { gap: 8px 4px; }
+.pcard .sel select { width: 100%; min-width: 0; }
+.tab-sound .top { grid-template-columns: minmax(0, 1fr); }
+.tab-sound .lcd canvas { height: auto; aspect-ratio: 800 / 220; }
+.tab-sound .pad { height: 64px; grid-auto-flow: column; justify-content: center; gap: 14px; }
+.pcard .knob .dial { width: 46px; height: 46px; }
+.pcard .knob label { font-size: .74rem; }
+.pcard .knob output { font-size: .7rem; }
 .voices { display: flex; flex-wrap: wrap; gap: 4px; }
 .vbtn { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 999px; padding: 5px 11px;
   background: var(--tint); color: var(--ink); cursor: pointer; font-family: var(--display); font-weight: 500; font-size: .86rem; }
@@ -137,20 +159,44 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 
 /* ---- pattern tab ---- */
 .tab-steps, .tab-xfeed, .tab-fx { grid-template-columns: minmax(0, 1fr); }
-/* perform: dials and randomisers on the left, a compact mixer on the right */
-.tab-perform { grid-template-columns: minmax(0, 1fr) minmax(0, 470px); grid-template-rows: auto 1fr; gap: 18px 32px; }
-.tab-perform .perform { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 8px; padding-block: 6px; max-width: 560px; width: 100%; justify-self: center; }
-.tab-perform .bigdial svg { width: 104px; height: 104px; }
-.perform-rand { justify-content: center; align-self: start; grid-column: 1; }
-.tab-perform .strips { grid-column: 2; grid-row: 1 / span 2; gap: 4px; }
-.tab-perform .strip { padding: 8px 4px; gap: 5px; }
-.tab-perform .strip .name { font-size: .74rem; }
+/* perform: pattern and randomise cards on the left, the mixer card on the right */
+.card { background: var(--tint); border-radius: 10px; padding: 14px 16px 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.card > h2 { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.tab-perform { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: 1fr auto; gap: 14px; align-items: stretch; }
+.pattern-card { grid-column: 1; grid-row: 1; grid-template-rows: auto 1fr; align-content: stretch; }
+.rand-card { grid-column: 1; grid-row: 2; }
+.mix-card { grid-column: 2; grid-row: 1 / span 2; }
+.tab-perform .perform { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding-block: 18px 6px; align-self: center; }
+.tab-perform .bigdial svg { width: 128px; height: 128px; }
+.tab-perform .bigdial label { font-size: .95rem; }
+.perform-rand { gap: 8px; }
+.spacer { flex: 1; }
+.tab-perform .strips { gap: 0; }
+.tab-perform .strip { background: none; padding: 2px 6px; gap: 6px; border-left: 1px solid var(--line); border-radius: 0; }
+.tab-perform .strip:first-child { border-left: 0; }
+.tab-perform .strip .name { font-size: .78rem; }
 .tab-perform .sm { font-size: .68rem; }
-.tab-perform .strip .fader { height: 170px; width: 22px; }
-.tab-perform .ms button { width: 22px; height: 22px; font-size: .68rem; }
-.tab-perform .fxb { width: 46px; height: 22px; font-size: .68rem; }
+.tab-perform .strip .fader { height: 230px; }
+.tab-perform .ms button { width: 24px; height: 22px; font-size: .7rem; }
+.tab-fx { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 14px; align-items: stretch; }
+.sends-card { grid-column: 1 / -1; }
+.fx-sels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.fx-sels .sel { grid-column: auto; }
+.fx-knobs { grid-template-columns: repeat(5, minmax(0, 1fr)); padding-block: 6px; }
+.verb-card .gate { display: flex; align-items: center; gap: 8px; font-size: .86rem; }
+.send-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.send-row { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 6px 4px; border-left: 1px solid var(--line); }
+.send-row:first-child { border-left: 0; }
+.send-row .name { font-family: var(--display); font-weight: 600; font-size: .8rem; text-transform: lowercase; white-space: nowrap; }
+.send-row .sdial .dial { width: 44px; height: 44px; }
+.sends { display: flex; gap: 4px; justify-content: center; }
+.sdial { display: grid; justify-items: center; gap: 0; user-select: none; touch-action: none; }
+.sdial .dial { width: 34px; height: 34px; cursor: ns-resize; border-radius: 50%; }
+.sdial .dial .val { stroke-width: 4; }
+.sdial .dial .ptr { stroke-width: 4; }
+.sdial span { font-size: .66rem; color: var(--muted); text-transform: lowercase; line-height: 1; }
 .tab-sound .hint { font-size: .8rem; }
-.seq { display: grid; gap: 14px; max-width: 1000px; width: 100%; justify-self: center; }
+.seq { display: grid; gap: 14px; width: 100%; }
 .perform { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding-block: 28px; }
 .dials { display: contents; }
 .bigdial { display: grid; justify-items: center; gap: 2px; user-select: none; touch-action: none; }
@@ -174,7 +220,7 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .cell.now { outline: 2px solid var(--ink); outline-offset: 1px; }
 
 /* ---- crossfeed tab ---- */
-.xfeed { display: grid; gap: 12px; max-width: 820px; width: 100%; justify-self: center; }
+.xfeed { display: grid; gap: 12px; width: 100%; }
 .xfeed-head .field input[type=range] { width: 80px; }
 .xgrid { display: grid; grid-template-columns: 4.6em repeat(6, minmax(0, 1fr)); gap: 4px; align-items: center; }
 .xgrid .lab { font-size: .8rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: lowercase; }
@@ -182,7 +228,7 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .xgrid .col select { font-size: .76rem; padding: 3px 2px; width: 100%; appearance: none; -webkit-appearance: none; text-align: center;
   text-align-last: center; cursor: pointer; }
 .xgrid .short { display: none; }
-.xcell { aspect-ratio: 2.6; min-width: 0; border: 0; border-radius: 4px; cursor: ns-resize; touch-action: none; user-select: none;
+.xcell { aspect-ratio: 4.4; min-width: 0; border: 0; border-radius: 4px; cursor: ns-resize; touch-action: none; user-select: none;
   background: var(--tint); color: var(--ink); font-family: var(--mono); font-size: .72rem; padding: 0; }
 .xcell.diag { box-shadow: inset 0 0 0 1px var(--line); }
 
@@ -198,11 +244,10 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .strip .fader { writing-mode: vertical-lr; direction: rtl; width: 28px; height: 200px; }
 .strip > output { font-family: var(--mono); font-size: .74rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .ms { display: flex; gap: 4px; }
-.ms button, .fxb { font-family: var(--display); font-weight: 600; font-size: .74rem; height: 24px; border-radius: 5px; border: 0;
+.ms button { font-family: var(--display); font-weight: 600; font-size: .74rem; height: 24px; border-radius: 5px; border: 0;
   background: var(--tint); color: var(--ink); cursor: pointer; padding: 0; }
 .ms button { width: 26px; }
-.fxb { width: 56px; text-transform: lowercase; }
-.ms button[aria-pressed="true"].m, .fxb[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
+.ms button[aria-pressed="true"].m { background: var(--ink); color: var(--panel); }
 .ms button[aria-pressed="true"].s { background: var(--led); color: #fff; }
 .buses { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
 .bus { padding: 12px 14px; gap: 9px; }
@@ -231,14 +276,21 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 
 /* ---- smaller screens ---- */
 @media (max-width: 1180px) {
-  .tab-perform { grid-template-columns: minmax(0, 1fr) minmax(0, 400px); }
+  .tab-perform .perform { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 8px; }
   .tab-sound .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .mixer { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 760px) {
   .rack { grid-template-columns: minmax(0, 1fr); padding: 16px; }
-  .tab-perform { grid-template-columns: minmax(0, 1fr); }
-  .tab-perform .strips { grid-column: 1; grid-row: auto; }
+  .tab-perform { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  .pattern-card, .rand-card, .mix-card { grid-column: 1; grid-row: auto; }
+  .tab-perform .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 16px; }
+  .tab-perform .strip:nth-child(4) { border-left: 0; }
+  .tab-perform .strip .fader { height: 140px; }
+  .send-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 4px; }
+  .send-row { border-left: 0; justify-content: flex-start; }
+  .send-row .name { width: 4.2em; }
+  .pcard .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
   .tabs { padding-left: 0; gap: 2px; }
   .tab { flex: 1 1 0; min-width: 0; padding: 8px 4px; font-size: .8rem; }
   .top { grid-template-columns: minmax(0, 1fr) 76px; }
@@ -268,13 +320,13 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <div class="kitbar">
       <label class="field" for="kit">kit <select id="kit"></select></label>
       <button class="btn" id="kit-save" type="button" title="Save the current sound under a new name">save</button>
-      <button class="btn" id="kit-export" type="button" title="Download the current sound as an LXR kit file">export</button>
-      <button class="btn" id="kit-del" type="button" hidden>delete</button>
-      <span class="btn file">open .snd<input id="kit-file" type="file" accept=".snd,.SND" aria-label="Open a kit file (.SND) from an LXR SD card"></span>
+      <button class="btn ghost" id="kit-export" type="button" title="Download the current sound as an LXR kit file">export</button>
+      <button class="btn ghost" id="kit-del" type="button" hidden>delete</button>
+      <span class="btn ghost file">open .snd<input id="kit-file" type="file" accept=".snd,.SND" aria-label="Open a kit file (.SND) from an LXR SD card"></span>
       <span class="msg" id="kit-msg" aria-live="polite"></span>
     </div>
     <div class="seq-ctrl transport">
-      <button class="btn" id="play" type="button" aria-pressed="false">PLAY</button>
+      <button class="btn play" id="play" type="button" aria-pressed="false">PLAY</button>
       <label class="field" for="tempo">tempo <input id="tempo" type="number" min="40" max="300" value="118"></label>
       <label class="field" for="level">velocity <input id="level" type="range" min="1" max="127" value="100"></label>
       <label class="field" for="accent">accent <input id="accent" type="range" min="0" max="12" value="6"><output id="accent-out">+6 dB</output></label>
@@ -292,6 +344,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   </nav>
 
   <section class="panel rack tab-perform" data-panel="perform" role="tabpanel" aria-label="Perform">
+    <div class="card pattern-card">
+    <h2>pattern</h2>
     <div class="perform" id="perform">
       <div class="dials" id="dials-l"></div>
       <div class="dials" id="dials-r"></div>
@@ -302,14 +356,22 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
         <div class="mini" id="mini" aria-hidden="true"></div>
       </div>
     </div>
-    <div class="rand perform-rand">
-      <button class="btn" id="rand-all" type="button">randomise kit</button>
-      <button class="btn" id="xrand2" type="button">randomise crossfeed</button>
-      <label class="field" for="depth">depth <input id="depth" type="range" min="1" max="100" value="30"><output id="depth-out">30%</output></label>
-      <label class="field" for="wild"><input id="wild" type="checkbox"> wild</label>
-      <button class="btn" id="undo" type="button" disabled>UNDO</button>
     </div>
-    <div class="strips" id="strips"></div>
+    <div class="card rand-card">
+      <h2>randomise</h2>
+      <div class="rand perform-rand">
+        <button class="btn" id="rand-all" type="button">kit</button>
+        <button class="btn" id="xrand2" type="button">crossfeed</button>
+        <button class="btn" id="undo" type="button" disabled>undo</button>
+        <span class="spacer"></span>
+        <label class="field" for="depth">depth <input id="depth" type="range" min="1" max="100" value="30"><output id="depth-out">30%</output></label>
+        <label class="field" for="wild"><input id="wild" type="checkbox"> wild</label>
+      </div>
+    </div>
+    <div class="card mix-card">
+      <h2>mixer</h2>
+      <div class="strips" id="strips"></div>
+    </div>
   </section>
 
   <section class="panel rack tab-sound" data-panel="sound" role="tabpanel" aria-label="Sound" hidden>
@@ -330,8 +392,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
       </div>
     </div>
     <div class="col" aria-label="Parameters">
-      <div class="pages" id="pages" role="tablist" aria-label="Parameter page"></div>
-      <div class="knobs" id="knobs"></div>
+      <div class="pages" id="pages" hidden></div>
+      <div class="pcards" id="knobs"></div>
     </div>
   </section>
 
@@ -362,26 +424,28 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   </section>
 
   <section class="panel rack tab-fx" data-panel="fx" role="tabpanel" aria-label="FX" hidden>
-    <div class="col mixer" aria-label="FX">
-      <div class="buses">
-          <div class="bus" role="group" aria-label="FX bus">
-            <h2>fx bus</h2>
-            <label class="sm">type <select id="fx-type"></select></label>
-            <label class="sm" id="fx-mode-wrap"><span id="fx-mode-lab">mode</span> <select id="fx-mode"></select></label>
-            <label class="sm">amount <output id="fx-amt-out"></output><input id="fx-amt" type="range" min="0" max="100"></label>
-            <div class="fx-params" id="fx-params"></div>
-            <p class="hint">Voices with <b>fx</b> on run through this bus, the LXR-02's own effects.</p>
-          </div>
-          <div class="bus" role="group" aria-label="Reverb">
-            <h2>reverb</h2>
-            <label class="sm">SIZE <input id="rv-size" type="range" min="0" max="100" value="55"></label>
-            <label class="sm">TONE <input id="rv-tone" type="range" min="0" max="100" value="50"></label>
-            <label class="sm">PRE-DELAY <input id="rv-pre" type="range" min="0" max="120" value="10"></label>
-            <label class="sm">RETURN <input id="rv-ret" type="range" min="0" max="100" value="70"></label>
-            <label class="gate"><input id="rv-gated" type="checkbox"> GATED</label>
-            <label class="sm" id="rv-gatetime-wrap">GATE TIME <output id="rv-gate-out">250 ms</output><input id="rv-gate" type="range" min="60" max="600" step="10" value="250"></label>
-          </div>
+    <div class="card fx-card" role="group" aria-label="FX bus">
+      <h2>fx bus</h2>
+      <div class="fx-sels">
+        <label class="sel">type <select id="fx-type"></select></label>
+        <label class="sel" id="fx-mode-wrap"><span id="fx-mode-lab">mode</span> <select id="fx-mode"></select></label>
       </div>
+      <div class="knobs fx-knobs" id="fx-params"></div>
+      <p class="hint">The LXR-02's own effect slot. Turn up a voice's <b>fx</b> send below (or on the perform tab's mixer) to put it through.</p>
+    </div>
+    <div class="card verb-card" role="group" aria-label="Reverb">
+      <h2>reverb</h2>
+      <label class="gate"><input id="rv-gated" type="checkbox"> gated</label>
+      <div class="knobs fx-knobs" id="rv-knobs"></div>
+      <div hidden>
+        <input id="rv-size" type="range" min="0" max="100" value="55"><input id="rv-tone" type="range" min="0" max="100" value="50">
+        <input id="rv-pre" type="range" min="0" max="120" value="10"><input id="rv-ret" type="range" min="0" max="100" value="70">
+        <input id="rv-gate" type="range" min="60" max="600" step="10" value="250">
+      </div>
+    </div>
+    <div class="card sends-card" role="group" aria-label="Sends">
+      <h2>sends</h2>
+      <div class="send-grid" id="send-grid"></div>
     </div>
   </section>
 
@@ -390,7 +454,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <summary>HOW TO PLAY IT</summary>
     <div class="body">
       <p class="src">Elexir by Johnny Hawk is an unofficial browser drum machine, not made or endorsed by Erica Synths. Its sound engine is a JavaScript port of the six drum voices and the FX bus of the Erica Synths LXR-02 firmware (<a href="https://github.com/erica-synths/lxr-desktop-app" target="_blank" rel="noopener">erica-synths/lxr-desktop-app</a>, GPL-3.0, commit a43cd4f), ported line by line; its output matches the original C code compiled for the Cortex-M7 sample for sample. The FX bus (distortion, ring mod, compressor, delay) is the firmware's too; the mixer, reverb, crossfeed and pattern generator are new. The 16 kits after the init kit are Hrtl's free LXR-02 DLC kits, used with credit, and any LXR kit file (.SND) can be opened. Source and licence (GPL-3.0): <a href="https://github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir" target="_blank" rel="noopener">github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir</a>.</p>
-      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit; reverb send, mute and solo sit after the engine. Save keeps the current sound (kit and crossfeed) in this browser under a made-up name, listed under saved in the kit menu; export downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). The FX bus is the LXR-02's effect slot: a voice with fx on goes through it instead of straight to the output, and kits bring their own FX settings. Gated reverb opens on every hit sent to it, holds for the gate time and then cuts off. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of five electro grooves, and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. Press R for the same; Randomise all (Shift-R) does every voice at once. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
+      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit; reverb send, mute and solo sit after the engine. Save keeps the current sound (kit and crossfeed) in this browser under a made-up name, listed under saved in the kit menu; export downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). The FX bus is the LXR-02's effect slot: each mixer strip's fx dial sends that voice into it (all the way up, the voice only reaches the output through the bus, as on the hardware; in between, the rest goes straight out). Kits bring their own FX settings. The rev dial is the strip's reverb send. Gated reverb opens on every hit sent to it, holds for the gate time and then cuts off. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of five electro grooves, and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. Press R for the same; Randomise all (Shift-R) does every voice at once. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
     </div>
   </details>
 
@@ -3950,7 +4014,7 @@ class Player {
     this.sendAmt = new Float32Array([0, 0.2, 0.2, 0.35, 0.15, 0.1]); this.chan = new Float32Array(6).fill(1);
     this.chanAt = new Float32Array(6).fill(1); this.ret = 0.7;
     this.verb = new Reverb(LXR.REAL_FS); this.sendBuf = new Float32Array(64);
-    this.fxGain = new Float32Array(6);
+    this.fxGain = new Float32Array(6); this.fxAmt = new Float32Array(6).fill(1);
     this.events = [];
     this._render(this.A); this._render(this.B);
   }
@@ -3959,7 +4023,7 @@ class Player {
     else if (m.type === 'kit') this.e.loadKit(m.values);
     else if (m.type === 'trig') { this.e.trigger(m.voice, m.vel, 60); this.gainTo[Math.min(m.voice, 5)] = 1; this._keyGate(m.voice); }
     else if (m.type === 'xmod') this.e.setCrossMod(m.amt, m.target);
-    else if (m.type === 'mix') { this.sendAmt.set(m.send); this.chan.set(m.chan); this.ret = m.ret; this.verb.set(m.verb); }
+    else if (m.type === 'mix') { this.sendAmt.set(m.send); this.fxAmt.set(m.fx); this.chan.set(m.chan); this.ret = m.ret; this.verb.set(m.verb); }
     else if (m.type === 'seq') {
       this.pattern = m.pattern; this.bpm = m.bpm; this.vel = m.vel; this.e.bpm = m.bpm;
       this.accGain = Math.pow(10, -m.accentDb / 20);
@@ -3995,12 +4059,13 @@ class Player {
     for (let n = 0; n < 6; n++) {
       // accent gain and mute/solo, both ramped over the block
       const g0 = this.gain[n] * this.chanAt[n], g1 = this.gainTo[n] * this.chan[n], dg = (g1 - g0) / 64;
-      // a voice routed to the FX bus reaches the outputs through the bus instead
-      const direct = e.audioRouting[n] !== LXR.MIXER_ROUTING_FX_BUS ? 1 : 0;
+      // a voice routed to the FX bus splits between the bus (fx send) and the outputs;
+      // at a full send it only reaches the outputs through the bus, as in the firmware
+      const fa = e.audioRouting[n] === LXR.MIXER_ROUTING_FX_BUS ? this.fxAmt[n] : 0, direct = 1 - fa;
       const pl = direct * pans[n].triggeredPanL / 32768, pr = direct * pans[n].triggeredPanR / 32768, sa = this.sendAmt[n] / 32768;
       const o = out[n];
       for (let i = 0; i < 64; i++) { const v = o[i] * (g0 + dg * i); L[i] += v * pl; R[i] += v * pr; snd[i] += v * sa; }
-      this.fxGain[n] = g1;
+      this.fxGain[n] = g1 * fa;
       this.gain[n] = this.gainTo[n]; this.chanAt[n] = this.chan[n];
     }
     // the firmware's FX bus (distortion, ring mod, compressor or delay), sample-exact
@@ -4145,6 +4210,7 @@ function visiblePages() {
 const pagesEl = $('pages');
 function buildPages() {
   pagesEl.innerHTML = '';
+  if (pagesEl.hidden) return; // the sound tab shows every page at once
   visiblePages().forEach((g, i) => {
     const b = document.createElement('button');
     b.className = 'pbtn'; b.type = 'button'; b.role = 'tab';
@@ -4169,16 +4235,26 @@ const knobsEl = $('knobs');
 function buildKnobs() {
   knobsEl.innerHTML = '';
   const voice = TRACKS[track].voice;
-  const g = visiblePages()[page];
-  const seen = {};
-  for (const [text, parName] of g.params) {
-    const par = PAR[parName];
-    if (text === 'VEL_DEST') { knobsEl.appendChild(targetSelect('VELOCITY TARGET', par, voice, false)); continue; }
-    seen[text] = (seen[text] || 0) + 1;
-    const dup = g.params.filter((p) => p[0] === text).length > 1;
-    knobsEl.appendChild(knob((LABELS[text] || text) + (dup ? ' ' + seen[text] : ''), par));
+  // every page of the voice at once, one card each, sized by how many controls it holds
+  for (const g of visiblePages()) {
+    const card = document.createElement('div'); card.className = 'card pcard';
+    const h = document.createElement('h2'); h.textContent = PAGE_NAMES[g.name.replace(/ \(.*\)/, '')] || g.name;
+    const box = document.createElement('div'); box.className = 'knobs';
+    card.append(h, box);
+    const seen = {};
+    let n = 0;
+    for (const [text, parName] of g.params) {
+      const par = PAR[parName];
+      if (text === 'VEL_DEST') { box.appendChild(targetSelect('VELOCITY TARGET', par, voice, false)); n += 2; continue; }
+      seen[text] = (seen[text] || 0) + 1;
+      const dup = g.params.filter((p) => p[0] === text).length > 1;
+      box.appendChild(knob((LABELS[text] || text) + (dup ? ' ' + seen[text] : ''), par)); n++;
+    }
+    if (g.name === 'LFO') { box.appendChild(targetSelect('LFO TARGET', PAR.TARGET_LFO1 + voice, voice, true)); n += 2; }
+    card.style.flex = `${n} 1 min(100%, ${n * 66 + 32}px)`;
+    box.style.gridTemplateColumns = `repeat(${n}, minmax(0, 1fr))`;
+    knobsEl.appendChild(card);
   }
-  if (g.name === 'LFO') knobsEl.appendChild(targetSelect('LFO TARGET', PAR.TARGET_LFO1 + voice, voice, true));
 }
 
 // a select over modTargets: velocity targets stay in the voice, LFO targets can reach any voice
@@ -4217,45 +4293,53 @@ const arc = (r, a, b) => {
   const x0 = 32 + r * Math.cos(a), y0 = 32 + r * Math.sin(a), x1 = 32 + r * Math.cos(b), y1 = 32 + r * Math.sin(b);
   return `M${x0.toFixed(2)} ${y0.toFixed(2)}A${r} ${r} 0 ${b - a > Math.PI ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
 };
-function knob(label, par) {
-  const sp = spec(par);
+// a knob over any value: o = { max, get, set, show, dflt, changed }
+function dialKnob(label, o) {
   const el = document.createElement('div'); el.className = 'knob';
-  const id = 'k' + par;
-  el.innerHTML = `<svg class="dial" id="${id}" viewBox="0 0 64 64" tabindex="0" role="slider" aria-label="${label}" aria-valuemin="0" aria-valuemax="${sp.max}">
+  const id = 'k' + (++dialKnob.n);
+  el.innerHTML = `<svg class="dial" id="${id}" viewBox="0 0 64 64" tabindex="0" role="slider" aria-label="${label}" aria-valuemin="0" aria-valuemax="${o.max}">
       <path class="track" d="${arc(27, A0, A1)}"/><path class="val"/><circle class="cap" cx="32" cy="32" r="20"/><line class="ptr" x1="32" y1="32" x2="32" y2="16"/></svg>
     <label for="${id}">${label}</label><output></output>`;
   const dial = el.querySelector('svg'), val = el.querySelector('.val'), ptr = el.querySelector('.ptr'), out = el.querySelector('output');
   const draw = () => {
-    const v = Math.min(values[par], sp.max), a = A0 + (A1 - A0) * (sp.max ? v / sp.max : 0);
+    const v = Math.min(o.get(), o.max), a = A0 + (A1 - A0) * (o.max ? v / o.max : 0);
     val.setAttribute('d', v > 0 ? arc(27, A0, a) : '');
     ptr.setAttribute('x2', (32 + 15 * Math.cos(a)).toFixed(2)); ptr.setAttribute('y2', (32 + 15 * Math.sin(a)).toFixed(2));
-    out.textContent = sp.show(v);
-    dial.setAttribute('aria-valuenow', v); dial.setAttribute('aria-valuetext', sp.show(v));
-    el.classList.toggle('changed', values[par] !== initValues[par]);
+    out.textContent = o.show(v);
+    dial.setAttribute('aria-valuenow', v); dial.setAttribute('aria-valuetext', o.show(v));
+    el.classList.toggle('changed', !!(o.changed && o.changed()));
   };
   const set = (v) => {
-    v = Math.max(0, Math.min(sp.max, Math.round(v)));
-    if (v === values[par]) return;
-    setValue(par, v); draw();
-    detail(`${label} <em>${sp.show(v)}</em>`);
+    v = Math.max(0, Math.min(o.max, Math.round(v)));
+    if (v === o.get()) return;
+    o.set(v); draw();
+    detail(`${label} <em>${o.show(v)}</em>`);
   };
   let drag = null;
-  dial.addEventListener('pointerdown', (e) => { dial.setPointerCapture(e.pointerId); drag = { y: e.clientY, v: values[par] }; dial.focus(); });
-  dial.addEventListener('pointermove', (e) => { if (drag) set(drag.v + (drag.y - e.clientY) * (sp.max / 160)); });
+  dial.addEventListener('pointerdown', (e) => { dial.setPointerCapture(e.pointerId); drag = { y: e.clientY, v: o.get() }; dial.focus(); });
+  dial.addEventListener('pointermove', (e) => { if (drag) set(drag.v + (drag.y - e.clientY) * (o.max / 160)); });
   dial.addEventListener('pointerup', () => { drag = null; });
   dial.addEventListener('pointercancel', () => { drag = null; });
-  dial.addEventListener('wheel', (e) => { e.preventDefault(); set(values[par] + (e.deltaY < 0 ? 1 : -1)); }, { passive: false });
+  dial.addEventListener('wheel', (e) => { e.preventDefault(); set(o.get() + (e.deltaY < 0 ? 1 : -1)); }, { passive: false });
   dial.addEventListener('keydown', (e) => {
-    const big = sp.max > 20 ? 8 : 1;
-    if (e.key === 'ArrowUp' || e.key === 'ArrowRight') { set(values[par] + 1); e.preventDefault(); }
-    else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') { set(values[par] - 1); e.preventDefault(); }
-    else if (e.key === 'PageUp') { set(values[par] + big); e.preventDefault(); }
-    else if (e.key === 'PageDown') { set(values[par] - big); e.preventDefault(); }
+    const big = o.max > 20 ? 8 : 1;
+    if (e.key === 'ArrowUp' || e.key === 'ArrowRight') { set(o.get() + 1); e.preventDefault(); }
+    else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') { set(o.get() - 1); e.preventDefault(); }
+    else if (e.key === 'PageUp') { set(o.get() + big); e.preventDefault(); }
+    else if (e.key === 'PageDown') { set(o.get() - big); e.preventDefault(); }
   });
-  dial.addEventListener('dblclick', () => set(initValues[par]));
-  dial.addEventListener('focus', () => detail(`${label} <em>${sp.show(values[par])}</em>`));
+  dial.addEventListener('dblclick', () => set(o.dflt()));
+  dial.addEventListener('focus', () => detail(`${label} <em>${o.show(o.get())}</em>`));
   draw();
+  el.draw = draw;
   return el;
+}
+dialKnob.n = 0;
+// a knob over one of the voice's parameters
+function knob(label, par, quiet) {
+  const sp = spec(par);
+  return dialKnob(label, { max: sp.max, show: sp.show, get: () => values[par], set: (v) => setValue(par, v, quiet),
+    dflt: () => initValues[par], changed: () => values[par] !== initValues[par] });
 }
 
 // ---- randomiser ----
@@ -4484,10 +4568,10 @@ const kitSel = $('kit');
 const SAVE_KEY = 'elexir-presets';
 function storedPresets() { try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || []; } catch (e) { return []; } }
 function storePresets() {
-  const list = kitList.filter((k) => k.saved).map((k) => ({ name: k.name, kit: Array.from(k.kit), xm: k.xm }));
+  const list = kitList.filter((k) => k.saved).map((k) => ({ name: k.name, kit: Array.from(k.kit), xm: k.xm, fx: k.fx }));
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(list)); } catch (e) {}
 }
-for (const p of storedPresets()) kitList.push({ name: p.name, kit: Uint8Array.from(p.kit), xm: p.xm, saved: true, userSamples: 0 });
+for (const p of storedPresets()) kitList.push({ name: p.name, kit: Uint8Array.from(p.kit), xm: p.xm, fx: p.fx, saved: true, userSamples: 0 });
 function fillKits() {
   kitSel.innerHTML = '';
   const groups = [['kits', (k) => !k.saved], ['saved', (k) => k.saved]];
@@ -4518,7 +4602,8 @@ function useKit(k) {
   initValues.set(k.kit); values.set(k.kit);
   if (k.xm) { xm.amt.splice(0, 36, ...k.xm.amt); xm.target.splice(0, 6, ...k.xm.target); xm.target.forEach((t, d) => { xSelects[d].value = t; }); xcells.forEach((d) => d()); sendX(); }
   $('kit-del').hidden = !k.saved;
-  syncMixer();
+  mix.fx.splice(0, 6, ...(k.fx || new Array(6).fill(0)));
+  syncMixer(); sendMix();
   for (const h in homes) delete homes[h];
   undoValues = null; $('undo').disabled = true;
   send({ type: 'kit', values: Array.from(values) });
@@ -4528,7 +4613,7 @@ function useKit(k) {
 }
 kitSel.addEventListener('change', () => useKit(kitList[Number(kitSel.value)]));
 $('kit-save').addEventListener('click', () => {
-  const k = { name: alienName(), kit: Uint8Array.from(values), xm: { amt: xm.amt.slice(), target: xm.target.slice() }, saved: true, userSamples: 0 };
+  const k = { name: alienName(), kit: Uint8Array.from(values), xm: { amt: xm.amt.slice(), target: xm.target.slice() }, fx: mix.fx.slice(), saved: true, userSamples: 0 };
   kitList.push(k); storePresets(); fillKits();
   kitSel.value = kitList.length - 1;
   initValues.set(values); buildKnobs(); // the saved sound is now the reference for changed knobs
@@ -4632,19 +4717,45 @@ function drawMini() {
 }
 // ---- mixer ----
 const CH = ['DRUM 1', 'DRUM 2', 'DRUM 3', 'SNARE', 'CYMBAL', 'HIHAT'];
-const mix = { send: [0, 20, 20, 35, 15, 10], mute: new Array(6).fill(false), solo: new Array(6).fill(false) };
+const mix = { send: [0, 20, 20, 35, 15, 10], fx: new Array(6).fill(0), mute: new Array(6).fill(false), solo: new Array(6).fill(false) };
 const stripsEl = $('strips');
 const fxButtons = [];
+// small dial for the mixer's sends, 0..100
+function miniDial(label, aria, get, set, dflt) {
+  const el = document.createElement('div'); el.className = 'sdial';
+  el.innerHTML = `<svg class="dial" viewBox="0 0 64 64" tabindex="0" role="slider" aria-label="${aria}" aria-valuemin="0" aria-valuemax="100">
+      <path class="track" d="${arc(27, A0, A1)}"/><path class="val"/><line class="ptr" x1="32" y1="32" x2="32" y2="14"/></svg><span>${label}</span>`;
+  const dial = el.querySelector('svg'), val = el.querySelector('.val'), ptr = el.querySelector('.ptr');
+  const draw = () => {
+    const v = get(), a = A0 + (A1 - A0) * v / 100;
+    val.setAttribute('d', v > 0 ? arc(27, A0, a) : '');
+    ptr.setAttribute('x2', (32 + 17 * Math.cos(a)).toFixed(2)); ptr.setAttribute('y2', (32 + 17 * Math.sin(a)).toFixed(2));
+    dial.setAttribute('aria-valuenow', v); dial.setAttribute('aria-valuetext', v + '%'); dial.title = `${label} ${v}%`;
+  };
+  const put = (v) => { v = Math.max(0, Math.min(100, Math.round(v))); if (v !== get()) { set(v); draw(); } };
+  let drag = null;
+  dial.addEventListener('pointerdown', (e) => { dial.setPointerCapture(e.pointerId); drag = { y: e.clientY, v: get() }; dial.focus(); });
+  dial.addEventListener('pointermove', (e) => { if (drag) put(drag.v + (drag.y - e.clientY) * 0.6); });
+  dial.addEventListener('pointerup', () => { drag = null; });
+  dial.addEventListener('pointercancel', () => { drag = null; });
+  dial.addEventListener('wheel', (e) => { e.preventDefault(); put(get() + (e.deltaY < 0 ? 2 : -2)); }, { passive: false });
+  dial.addEventListener('keydown', (e) => {
+    const d = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 10, PageDown: -10 }[e.key];
+    if (d) { put(get() + d); e.preventDefault(); }
+  });
+  dial.addEventListener('dblclick', () => put(dflt));
+  draw();
+  return { el, draw };
+}
 CH.forEach((name, n) => {
   const vol = PAR.VOL1 + n, pan = PAR.PAN1 + n;
   const el = document.createElement('div'); el.className = 'strip'; el.setAttribute('role', 'group'); el.setAttribute('aria-label', name);
   el.innerHTML = `<span class="name">${name}</span>
-    <label class="sm">SEND <input class="send" type="range" min="0" max="100" value="${mix.send[n]}" aria-label="${name} reverb send"></label>
+    <span class="sends"></span>
     <label class="sm">PAN <input class="pan" type="range" min="0" max="127" value="${values[pan]}" aria-label="${name} pan"></label>
     <input class="fader" type="range" min="0" max="127" value="${values[vol]}" aria-label="${name} level">
     <output>${values[vol]}</output>
-    <span class="ms"><button class="m" type="button" aria-pressed="false" aria-label="Mute ${name}">M</button><button class="s" type="button" aria-pressed="false" aria-label="Solo ${name}">S</button></span>
-    <button class="fxb" type="button" aria-pressed="false" aria-label="Route ${name} through the FX bus">fx</button>`;
+    <span class="ms"><button class="m" type="button" aria-pressed="false" aria-label="Mute ${name}">M</button><button class="s" type="button" aria-pressed="false" aria-label="Solo ${name}">S</button></span>`;
   const fader = el.querySelector('.fader'), panEl = el.querySelector('.pan'), out = el.querySelector('output');
   mixInputs[vol] = fader; mixInputs[pan] = panEl;
   fader.addEventListener('input', () => { setValue(vol, Number(fader.value), true); out.textContent = fader.value; });
@@ -4654,15 +4765,34 @@ CH.forEach((name, n) => {
   panEl.addEventListener('input', () => setValue(pan, Number(panEl.value), true));
   panEl.addEventListener('change', buildKnobs);
   panEl.addEventListener('dblclick', () => { setValue(pan, 63, true); buildKnobs(); });
-  el.querySelector('.send').addEventListener('input', (e) => { mix.send[n] = Number(e.target.value); sendMix(); });
+  const sends = el.querySelector('.sends'), out6 = PAR.AUDIO_OUT1 + n;
+  // the same two sends sit on the mixer strip and on the fx tab
+  const row = document.createElement('div'); row.className = 'send-row';
+  row.innerHTML = `<span class="name">${name}</span>`;
+  const draws = [];
+  const redraw = () => draws.forEach((d) => d());
+  for (const box of [sends, row]) {
+    const rev = miniDial('rev', `${name} reverb send`, () => mix.send[n], (v) => { mix.send[n] = v; sendMix(); redraw(); }, 0);
+    // fx send: above 0 the voice's AUDIO_OUT is the FX bus (6), at 0 the main stereo out (0)
+    const fxd = miniDial('fx', `${name} FX bus send`, () => mix.fx[n], (v) => {
+      mix.fx[n] = v;
+      const out = v > 0 ? LXR.MIXER_ROUTING_FX_BUS : 0;
+      if (values[out6] !== out) setValue(out6, out, true);
+      sendMix(); redraw();
+    }, 100);
+    box.append(rev.el, fxd.el);
+    draws.push(rev.draw, fxd.draw);
+  }
+  $('send-grid').appendChild(row);
   for (const [cls, key] of [['m', 'mute'], ['s', 'solo']]) {
     const b = el.querySelector('.' + cls);
     b.addEventListener('click', () => { mix[key][n] = !mix[key][n]; b.setAttribute('aria-pressed', mix[key][n]); sendMix(); });
   }
-  // the voice's AUDIO_OUT: 6 = the FX bus, 0 = the main stereo out
-  const fxb = el.querySelector('.fxb'), out6 = PAR.AUDIO_OUT1 + n;
-  fxButtons[n] = () => fxb.setAttribute('aria-pressed', values[out6] === LXR.MIXER_ROUTING_FX_BUS);
-  fxb.addEventListener('click', () => { setValue(out6, values[out6] === LXR.MIXER_ROUTING_FX_BUS ? 0 : LXR.MIXER_ROUTING_FX_BUS, true); fxButtons[n](); });
+  // after a kit load: a routed voice keeps its send (full if it had none), an unrouted one is 0
+  fxButtons[n] = () => {
+    if (values[out6] !== LXR.MIXER_ROUTING_FX_BUS) mix.fx[n] = 0; else if (!mix.fx[n]) mix.fx[n] = 100;
+    redraw();
+  };
   fxButtons[n]();
   stripsEl.appendChild(el);
 });
@@ -4679,28 +4809,21 @@ LXR.FX_NAMES.forEach((n, i) => fxType.appendChild(new Option(n.toLowerCase(), i)
 function syncFx() {
   const t = values[PAR.FX_TYPE], def = FX_PARAMS[t];
   fxType.value = t in FX_PARAMS || t === 0 ? t : 0;
-  $('fx-amt').value = Math.min(100, values[PAR.FX_DRY_WET]);
-  $('fx-amt-out').textContent = values[PAR.FX_DRY_WET] + '%';
   $('fx-mode-wrap').hidden = !def;
   const box = $('fx-params'); box.innerHTML = '';
+  const amt = dialKnob('amount', { max: 100, show: (v) => v + '%', get: () => Math.min(100, values[PAR.FX_DRY_WET]),
+    set: (v) => setValue(PAR.FX_DRY_WET, v, true), dflt: () => initValues[PAR.FX_DRY_WET], changed: () => values[PAR.FX_DRY_WET] !== initValues[PAR.FX_DRY_WET] });
+  box.appendChild(amt);
+  fxButtons.forEach((b) => b());
   if (!def) return;
   $('fx-mode-lab').textContent = def.mode[0];
   fxMode.innerHTML = '';
   def.mode[2].forEach((n, i) => fxMode.appendChild(new Option(n.toLowerCase(), i)));
   fxMode.value = values[def.mode[1]];
-  def.p.forEach((label, k) => {
-    const par = PAR.FX_P1 + k;
-    const l = document.createElement('label'); l.className = 'sm';
-    l.innerHTML = `${label} <output>${values[par]}</output><input type="range" min="0" max="127" value="${values[par]}">`;
-    const inp = l.querySelector('input'), o = l.querySelector('output');
-    inp.addEventListener('input', () => { setValue(par, Number(inp.value), true); o.textContent = inp.value; });
-    box.appendChild(l);
-  });
-  fxButtons.forEach((b) => b());
+  def.p.forEach((label, k) => box.appendChild(knob(label, PAR.FX_P1 + k, true)));
 }
 fxType.addEventListener('change', () => { setValue(PAR.FX_TYPE, Number(fxType.value), true); syncFx(); });
 fxMode.addEventListener('change', () => { const def = FX_PARAMS[values[PAR.FX_TYPE]]; if (def) setValue(def.mode[1], Number(fxMode.value), true); });
-$('fx-amt').addEventListener('input', (e) => { setValue(PAR.FX_DRY_WET, Number(e.target.value), true); $('fx-amt-out').textContent = e.target.value + '%'; });
 syncFx();
 function syncMixer() {
   if (typeof syncFx === 'function') syncFx();
@@ -4709,13 +4832,21 @@ function syncMixer() {
 function sendMix() {
   const anySolo = mix.solo.some(Boolean);
   const gated = $('rv-gated').checked;
-  $('rv-gatetime-wrap').hidden = !gated;
-  $('rv-gate-out').textContent = $('rv-gate').value + ' ms';
-  send({ type: 'mix', send: mix.send.map((v) => v / 100), ret: Number($('rv-ret').value) / 100 * 1.4,
+  const gw = $('rv-gatetime-wrap'); if (gw) gw.hidden = !gated;
+  send({ type: 'mix', send: mix.send.map((v) => v / 100), fx: mix.fx.map((v) => v / 100), ret: Number($('rv-ret').value) / 100 * 1.4,
     chan: mix.mute.map((m, n) => (m || (anySolo && !mix.solo[n]) ? 0 : 1)),
     verb: { size: Number($('rv-size').value), tone: Number($('rv-tone').value), predelay: Number($('rv-pre').value), gated, gateMs: Number($('rv-gate').value) } });
 }
-for (const id of ['rv-size', 'rv-tone', 'rv-pre', 'rv-ret', 'rv-gate']) $(id).addEventListener('input', sendMix);
+// reverb dials over the hidden inputs that hold the settings
+const RV = [['size', 'rv-size', (v) => v + '%'], ['tone', 'rv-tone', (v) => v + '%'], ['pre-delay', 'rv-pre', (v) => v + ' ms'],
+  ['return', 'rv-ret', (v) => v + '%'], ['gate time', 'rv-gate', (v) => v + ' ms']];
+for (const [label, id, show] of RV) {
+  const inp = $(id), step = Number(inp.step) || 1, lo = Number(inp.min), init = Number(inp.value);
+  const k = dialKnob(label, { max: (Number(inp.max) - lo) / step, show: (v) => show(lo + v * step),
+    get: () => (Number(inp.value) - lo) / step, set: (v) => { inp.value = lo + v * step; sendMix(); }, dflt: () => (init - lo) / step });
+  if (id === 'rv-gate') k.id = 'rv-gatetime-wrap';
+  $('rv-knobs').appendChild(k);
+}
 $('rv-gated').addEventListener('change', sendMix);
 sendMix();
 
