@@ -24,7 +24,7 @@ Erica Synths.
   exported as an LXR `.SND`.
 - **FX bus** from the firmware: distortion (tube, fold, rat), ring mod, compressor and delay
   (normal or ping-pong). Each voice can be routed through it, and kits load their own settings.
-- **Mixer** with level, pan, mute and solo, and echo and ring mod sends and a distortion on/off switch per voice (one shared distortion), using the firmware's FX code; a master compressor with a drum 1 sidechain duck.
+- **Mixer** with level, pan, mute and solo, and echo, distortion and ring mod sends per voice, using the firmware's FX code; a master compressor with a drum 1 sidechain duck.
 - **Crossfeed**: a 6 × 6 patchbay that feeds any voice into the FM, filter or ring modulation of
   any other, with a depth control and a randomiser.
 

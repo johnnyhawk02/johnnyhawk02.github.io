@@ -254,10 +254,6 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .chan .sends { flex-direction: column; justify-content: center; gap: 8px; }
 .tab-perform .chan .sdial .dial { width: 26px; height: 26px; }
 .chan .sdial span { font-size: .6rem; }
-.strip .dist { align-self: stretch; font-family: var(--display); font-weight: 600; font-size: .7rem; height: 20px; border: 0; border-radius: 5px;
-  background: var(--tint-2); color: var(--ink); cursor: pointer; text-transform: lowercase; }
-.strip .dist[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
-.strip .dist:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
 .shead { display: flex; align-items: center; justify-content: center; gap: 8px; }
 .shead .sdial span { display: none; } /* the dial's own tooltip names it pan */
 .sfoot { display: flex; align-items: center; justify-content: center; gap: 8px; }
@@ -265,7 +261,7 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .tab-perform .shead .sdial .dial { width: 30px; height: 30px; }
 /* each send's label sits to the left of its dial so three stack beside a short fader */
 .chan .sends .sdial { display: flex; align-items: center; gap: 3px; }
-.chan .sends .sdial span { order: -1; margin: 0; }
+.chan .sends .sdial span { order: -1; margin: 0; min-width: 2.3em; text-align: right; }
 .tab-perform .chan .sends .sdial .dial { width: 24px; height: 24px; }
 .fx-knobs { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
 .sends { display: flex; gap: 4px; justify-content: center; }
@@ -379,7 +375,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-perform .strips { min-height: 0; }
   .tab-perform .strip { display: flex; flex-direction: column; align-items: center; min-height: 0; }
   .tab-perform .strip .sm { align-self: stretch; }
-  .tab-perform .chan { flex: 1 1 0; min-height: 60px; }
+  .tab-perform .chan { flex: 1 1 0; min-height: 80px; }
   .tab-perform .strip .fader { height: auto; }
   .pattern-card { grid-template-rows: auto minmax(0, 1fr); }
   .tab-perform .perform { align-content: space-evenly; align-self: stretch; padding-block: 0; }
@@ -574,7 +570,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <summary>HOW TO PLAY IT</summary>
     <div class="body">
       <p class="src">Elexir by Johnny Hawk is an unofficial browser drum machine, not made or endorsed by Erica Synths. Its sound engine is a JavaScript port of the six drum voices and the FX bus of the Erica Synths LXR-02 firmware (<a href="https://github.com/erica-synths/lxr-desktop-app" target="_blank" rel="noopener">erica-synths/lxr-desktop-app</a>, GPL-3.0, commit a43cd4f), ported line by line; its output matches the original C code compiled for the Cortex-M7 sample for sample. The FX bus (distortion, ring mod, compressor, delay) is the firmware's too; the mixer, the three FX sends, crossfeed and the pattern generator are new. The generator's source kits include Hrtl's free LXR-02 DLC kits, used with credit, and any LXR kit file (.SND) can be opened. Source and licence (GPL-3.0): <a href="https://github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir" target="_blank" rel="noopener">github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir</a>.</p>
-      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit; mute and solo sit after the engine. Save keeps everything as a preset in this browser under a two-word alien name: the sound (kit, crossfeed, FX and sends) and the song (pattern, perform dials, tempo, velocity, accent, master, mute and solo), and loading it brings all of that back. A red star by save means a randomise has changed things since the last save or load. ‹ and › step through the presets; while playing, a new preset comes in at the start of the next bar. Presets opens the preset manager: load, delete, and star favourites; export favourites downloads them as a file, and favourites sent in that way are built into the next release. Open .snd there loads an LXR kit file as the current sound, and export .snd downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). There are three effects, all the LXR-02's own FX-slot code run as sends: each mixer strip has a dist button on top and two dials left of its fader, fx1 for echo and fx3 for ring mod. There is one distortion: a voice with dist on leaves the mix and is heard only through it (its echo and ring mod sends still take the clean sound). Echo and ring mod are sends: every voice keeps its dry sound and their output is fully wet. The echo's time is synced to the tempo: from 1/128 of a bar fully left to one bar fully right, gliding through the musical lengths (the readout names the nearest, with ≈ when it is between); randomise puts it near a musical length but not exactly on it. The FX section above the mixer sets all three: echo mode (normal or ping-pong), time, tone and feedback; distortion type (tube, fold or rat), drive, color, tone and volume; ring mod carrier wave and frequency. A kit that used distortion or ring mod in its FX slot loads those settings into that effect with each routed voice switched to it (distortion) or sent a little (ring mod). The sync, the sends, the extra buses and the larger delay buffer are additions to the firmware. The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits, and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the red figures show how far each is pulling down. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. Randomise kit does the same for all six drum sounds and leaves the mixer, FX, crossfeed and pattern alone. Press R for the same; Randomise all (Shift-R) does every voice at once. Everything builds a fresh sound from voices of the bundled kits (Hrtl's LXR-02 kits and twelve generated ones, which aren't listed as presets), varies each by 10%, and rolls new crossfeed, delay time, beat, energy and fills, keeping the mixer levels; save keeps it. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
+      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit; mute and solo sit after the engine. Save keeps everything as a preset in this browser under a two-word alien name: the sound (kit, crossfeed, FX and sends) and the song (pattern, perform dials, tempo, velocity, accent, master, mute and solo), and loading it brings all of that back. A red star by save means a randomise has changed things since the last save or load. ‹ and › step through the presets; while playing, a new preset comes in at the start of the next bar. Presets opens the preset manager: load, delete, and star favourites; export favourites downloads them as a file, and favourites sent in that way are built into the next release. Open .snd there loads an LXR kit file as the current sound, and export .snd downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). There are three effects, all the LXR-02's own FX-slot code run as sends: each mixer strip has three send dials left of its fader: echo, dist and ring. Every voice keeps its dry sound and each effect's output is fully wet. The echo's time is synced to the tempo: from 1/128 of a bar fully left to one bar fully right, gliding through the musical lengths (the readout names the nearest, with ≈ when it is between); randomise puts it near a musical length but not exactly on it. The FX section above the mixer sets all three: echo mode (normal or ping-pong), time, tone and feedback; distortion type (tube, fold or rat), drive, color, tone and volume; ring mod carrier wave and frequency. A kit that used distortion or ring mod in its FX slot loads those settings into that effect with a little of each routed voice sent to it. The sync, the sends, the extra buses and the larger delay buffer are additions to the firmware. The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits, and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the red figures show how far each is pulling down. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. Randomise kit does the same for all six drum sounds and leaves the mixer, FX, crossfeed and pattern alone. Press R for the same; Randomise all (Shift-R) does every voice at once. Everything builds a fresh sound from voices of the bundled kits (Hrtl's LXR-02 kits and twelve generated ones, which aren't listed as presets), varies each by 10%, and rolls new crossfeed, delay time, beat, energy and fills, keeping the mixer levels; save keeps it. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
     </div>
   </details>
 
@@ -668,7 +664,7 @@ class Player {
     this.dist = new LXR.FxBus(); this.dist.fxType = LXR.FX_DISTORTION; this.dist.forceWet = true;
     this.ring = new LXR.FxBus(); this.ring.fxType = LXR.FX_RING; this.ring.forceWet = true;
     this.fxRng = new LXR.Rng(0x2545f491);
-    this.sendD = new Float32Array(6); this.sendR = new Float32Array(6); this.directAt = new Float32Array(6).fill(1);
+    this.sendD = new Float32Array(6); this.sendR = new Float32Array(6);
     this.busIn = new Float32Array(128); this.busOut = new Int16Array(128);
     this.duckEnv = 0; this.duckAt = 1; this.compEnv = 0; this.gr = 0; this.duckMin = 1;
     this.events = [];
@@ -746,18 +742,16 @@ class Player {
       const d0 = n ? duck0 : 1, d1 = n ? duck1 : 1;
       const g0 = this.gain[n] * this.chanAt[n] * d0, g1 = this.gainTo[n] * this.chan[n] * d1, dg = (g1 - g0) / 64;
       // every voice reaches the outputs; one routed to the echo bus also feeds it at its send
-      // a voice switched to the distortion leaves the outputs (ramped over the block) and reaches them only through it
       const fa = e.audioRouting[n] === LXR.MIXER_ROUTING_FX_BUS ? this.fxAmt[n] : 0;
       const pl = pans[n].triggeredPanL / 32768, pr = pans[n].triggeredPanR / 32768;
-      const o = out[n], x0 = this.directAt[n], x1 = this.sendD[n] ? 0 : 1, dx = (x1 - x0) / 64;
-      this.directAt[n] = x1;
-      for (let i = 0; i < 64; i++) { const v = o[i] * (g0 + dg * i) * (x0 + dx * i); L[i] += v * pl; R[i] += v * pr; }
+      const o = out[n];
+      for (let i = 0; i < 64; i++) { const v = o[i] * (g0 + dg * i); L[i] += v * pl; R[i] += v * pr; }
       this.fxGain[n] = g1 * fa;
       this.gain[n] = this.gainTo[n]; this.chanAt[n] = this.chan[n];
     }
     // the firmware's FX bus (distortion, ring mod, compressor or delay), sample-exact
     const fx = e.renderFx(this.fxGain);
-    // distortion and ring mod buses: each voice panned in (distortion: on or off, ring mod: at its send), saturated to int16.
+    // distortion and ring mod buses: each voice panned in at its send, saturated to int16.
     // The firmware's ring mod carrier is quiet (about a third of a plain multiply), so its bus gets makeup gain.
     for (const [bus, sends, mk] of [[this.dist, this.sendD, 1], [this.ring, this.sendR, RING_MAKEUP]]) {
       const bi = this.busIn; bi.fill(0);
@@ -1361,8 +1355,8 @@ function useKit(k) {
   initValues.set(k.kit); asDelay(initValues); values.set(initValues);
   if (k.xm) { xm.amt.splice(0, 36, ...k.xm.amt); xm.target.splice(0, 6, ...k.xm.target); xm.target.forEach((t, d) => { xSelects[d].value = t; }); xcells.forEach((d) => d()); sendX(); }
   mix.fx.splice(0, 6, ...(k.fx || deflt(LXR.FX_DELAY)));
-  // distortion is on (1) or off (0) per voice
-  mix.dist.splice(0, 6, ...(k.fx3 ? k.fx3.dist.map((v) => (v ? 1 : 0)) : deflt(LXR.FX_DISTORTION, 1)));
+  // distortion send 0..100 (dsend); presets from when it was an on/off switch (dist 0/1) count on as a full send
+  mix.dist.splice(0, 6, ...(k.fx3 ? (k.fx3.dsend || k.fx3.dist.map((v) => (v ? 100 : 0))) : deflt(LXR.FX_DISTORTION)));
   mix.ring.splice(0, 6, ...(k.fx3 ? k.fx3.ring : deflt(LXR.FX_RING)));
   // a kit's own delay time, unless it has none worth keeping (another effect, or a time
   // under 1/32 of a bar, a comb more than an echo): then a dotted eighth
@@ -1636,7 +1630,7 @@ const mix = { fx: new Array(6).fill(0), dist: new Array(6).fill(0), ring: new Ar
   mute: new Array(6).fill(false), solo: new Array(6).fill(false) };
 const FX3_0 = { dist: { type: 0, p: [70, 64, 80, 90] }, ring: { wave: 0, freq: 40 } };
 const fx3 = structuredClone(FX3_0);
-const fx3Snapshot = () => ({ params: structuredClone(fx3), dist: mix.dist.slice(), ring: mix.ring.slice() });
+const fx3Snapshot = () => ({ params: structuredClone(fx3), dsend: mix.dist.slice(), ring: mix.ring.slice() });
 const stripsEl = $('strips');
 const fxButtons = [];
 // small dial for the mixer's sends, 0..100
@@ -1669,8 +1663,7 @@ function miniDial(label, aria, get, set, dflt, max = 100, show = (v) => v + '%',
 CH.forEach((name, n) => {
   const vol = PAR.VOL1 + n, pan = PAR.PAN1 + n;
   const el = document.createElement('div'); el.className = 'strip'; el.setAttribute('role', 'group'); el.setAttribute('aria-label', name);
-  el.innerHTML = `<button class="dist" type="button" aria-pressed="false" title="Send ${name} only through the distortion">dist</button>
-    <div class="shead"><span class="name">${name}</span><span class="pan-wrap"></span></div>
+  el.innerHTML = `    <div class="shead"><span class="name">${name}</span><span class="pan-wrap"></span></div>
     <div class="chan"><span class="sends"></span><input class="fader" type="range" min="0" max="127" value="${values[vol]}" aria-label="${name} level"></div>
     <div class="sfoot"><output>${values[vol]}</output><span class="ms"><button class="m" type="button" aria-pressed="false" aria-label="Mute ${name}">M</button><button class="s" type="button" aria-pressed="false" aria-label="Solo ${name}">S</button></span></div>`;
   const fader = el.querySelector('.fader'), out = el.querySelector('output');
@@ -1685,20 +1678,17 @@ CH.forEach((name, n) => {
   fader.addEventListener('dblclick', () => { setValue(vol, initValues[vol], true); buildKnobs(); });
   const sends = el.querySelector('.sends'), out6 = PAR.AUDIO_OUT1 + n;
   // echo send: above 0 the voice's AUDIO_OUT is the FX bus (6), at 0 the main stereo out (0)
-  const fxd = miniDial('fx1', `${name} echo send`, () => mix.fx[n], (v) => {
+  const fxd = miniDial('echo', `${name} echo send`, () => mix.fx[n], (v) => {
     mix.fx[n] = v;
     const out = v > 0 ? LXR.MIXER_ROUTING_FX_BUS : 0;
     if (values[out6] !== out) setValue(out6, out, true);
     sendMix();
   }, 0);
-  const rd = miniDial('fx3', `${name} ring mod send`, () => mix.ring[n], (v) => { mix.ring[n] = v; sendMix(); }, 0);
-  sends.append(fxd.el, rd.el);
+  const dd = miniDial('dist', `${name} distortion send`, () => mix.dist[n], (v) => { mix.dist[n] = v; sendMix(); }, 0);
+  const rd = miniDial('ring', `${name} ring mod send`, () => mix.ring[n], (v) => { mix.ring[n] = v; sendMix(); }, 0);
+  sends.append(fxd.el, dd.el, rd.el);
   el.querySelector('.pan-wrap').append(panD.el);
-  // distortion: on sends the voice only through the one shared distortion
-  const db = el.querySelector('.dist');
-  const drawDist = () => db.setAttribute('aria-pressed', !!mix.dist[n]);
-  db.addEventListener('click', () => { mix.dist[n] = mix.dist[n] ? 0 : 1; drawDist(); sendMix(); });
-  const redraw = () => { fxd.draw(); rd.draw(); drawDist(); };
+  const redraw = () => { fxd.draw(); dd.draw(); rd.draw(); };
   for (const [cls, key] of [['m', 'mute'], ['s', 'solo']]) {
     const b = el.querySelector('.' + cls);
     b.addEventListener('click', () => { mix[key][n] = !mix[key][n]; b.setAttribute('aria-pressed', mix[key][n]); sendMix(); });
@@ -1783,7 +1773,7 @@ function syncMixer() {
 function sendMix() {
   const anySolo = mix.solo.some(Boolean);
   send({ type: 'mix', master: { ...master }, fx: mix.fx.map((v) => v / 100), dist: fx3.dist, ring: fx3.ring,
-    sendD: mix.dist.map((v) => (v ? 1 : 0)), sendR: mix.ring.map((v) => v / 100),
+    sendD: mix.dist.map((v) => v / 100), sendR: mix.ring.map((v) => v / 100),
     chan: mix.mute.map((m, n) => (m || (anySolo && !mix.solo[n]) ? 0 : 1)) });
 }
 
