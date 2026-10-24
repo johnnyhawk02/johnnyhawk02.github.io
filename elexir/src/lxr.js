@@ -1510,7 +1510,7 @@ export class LxrEngine {
    * Returns this.fxOut: the bus's stereo output (interleaved int16) for the last renderBlock().
    * gains[n], if given, scales voice n first (mute, accent; not in the firmware).
    */
-  renderFx(gains = null) {
+  renderFx(gains = null, width = null) {
     const fx = this.fx, inp = fx.input, out = this.fxOut;
     inp.fill(0); out.fill(0);
     const pans = [this.drums[0], this.drums[1], this.drums[2], this.snare, this.cymbal, this.hat];
@@ -1525,8 +1525,20 @@ export class LxrEngine {
         inp[2 * i + 1] = qadd16(toI16(f(s * v.triggeredPanR)), inp[2 * i + 1]);
       }
     }
+    // Not in the firmware (width 0..1, null = as the firmware): the delay's stereo width. Ping-pong
+    // only bounces what reaches it off-centre, so its input becomes the mid signal pushed to the left
+    // by the width; a normal delay keeps its input and has the side of its output scaled by the width.
+    const delay = width !== null && fx.fxType === FX_DELAY, pp = delay && fx.delay.type !== DELAY_NORMAL;
+    if (pp) for (let i = 0; i < BLOCK; i++) {
+      const mid = (inp[2 * i] + inp[2 * i + 1]) / 2;
+      inp[2 * i] = ssat16(Math.round(mid * (1 + width))); inp[2 * i + 1] = ssat16(Math.round(mid * (1 - width)));
+    }
     // FxBus_process runs every block, routed voices or not (delay tails, compressor envelope)
     fx.process(out, BLOCK, this.rng);
+    if (delay && !pp && width !== 1) for (let i = 0; i < BLOCK; i++) {
+      const mid = (out[2 * i] + out[2 * i + 1]) / 2, side = (out[2 * i] - out[2 * i + 1]) / 2 * width;
+      out[2 * i] = ssat16(Math.round(mid + side)); out[2 * i + 1] = ssat16(Math.round(mid - side));
+    }
     return out;
   }
 
