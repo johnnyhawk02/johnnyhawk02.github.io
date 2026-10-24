@@ -133,14 +133,37 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .rack > .col { display: grid; gap: 14px; align-content: start; min-width: 0; }
 
 /* ---- sound tab ---- */
-.tab-sound { grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); }
+.tab-sound { grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; }
+/* sound: voice picker, trig and randomise in a bar over the parameter cards; scope and crossfeed on the right */
+.snd-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.snd-bar .voices { flex: 0 1 auto; }
+.tab-sound .snd-bar .pad { height: 32px; padding: 0 14px; border-radius: 8px; }
+.tab-sound .snd-bar .pad kbd { font-size: .7rem; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.snd-side { align-content: start; }
+.xcard { padding: 10px 12px 12px; gap: 8px; }
+.tab-sound .xfeed { gap: 8px; }
+.tab-sound .xfeed-head { gap: 6px 8px; }
+.tab-sound .xfeed-head { flex-wrap: nowrap; gap: 4px; }
+.snd-side { gap: 10px !important; }
+.tab-sound .xfeed-head .field { gap: 4px; font-size: .78rem; }
+.tab-sound .xfeed-head .field input[type=range] { width: 40px; }
+.tab-sound .xfeed-head .field output { min-width: 0; }
+.tab-sound .xfeed-head .btn { padding: 4px 8px; font-size: .78rem; }
+.tab-sound .xgrid { grid-template-columns: 2.4em repeat(6, minmax(0, 1fr)); gap: 3px; }
+.tab-sound .xgrid .full { display: none; } .tab-sound .xgrid .short { display: inline; }
+.tab-sound .xgrid .col select { font-size: .64rem; padding: 2px 0; }
+.tab-sound .xgrid .lab, .tab-sound .xgrid .col { font-size: .72rem; }
+.tab-sound .xcell { aspect-ratio: 1.8; }
+.tab-sound .lcd { padding: 8px 12px; }
+.tab-sound .lcd canvas { aspect-ratio: auto; height: 56px; }
+.tab-sound .lcd { min-height: 0; }
 .pcards { display: flex; flex-wrap: wrap; gap: 10px; }
 .pcard { padding: 10px 12px 12px; gap: 8px; }
 .pcard .knobs { gap: 8px 4px; }
 .pcard .sel select { width: 100%; min-width: 0; }
-.tab-sound .top { grid-template-columns: minmax(0, 1fr); }
 .tab-sound .lcd canvas { height: auto; aspect-ratio: 800 / 220; }
-.tab-sound .pad { height: 64px; grid-auto-flow: column; justify-content: center; gap: 14px; }
+.tab-sound .pad { grid-auto-flow: column; justify-content: center; gap: 10px; }
 .pcard .knob .dial { width: 46px; height: 46px; }
 .pcard .knob label { font-size: .74rem; }
 .pcard .knob output { font-size: .7rem; }
@@ -192,7 +215,7 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .sel label { font-family: var(--display); font-weight: 500; font-size: .8rem; text-transform: lowercase; }
 
 /* ---- pattern tab ---- */
-.tab-steps, .tab-xfeed { grid-template-columns: minmax(0, 1fr); }
+.tab-steps { grid-template-columns: minmax(0, 1fr); }
 /* perform: pattern and randomise cards on the left, the mixer card on the right */
 .card { background: var(--tint); border-radius: 10px; padding: 14px 16px 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
 .card > h2 { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
@@ -363,8 +386,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .wrap > .panel, .wrap > .about { min-height: 0; overflow: auto; padding: 16px; }
   .tab-perform { overflow: hidden; grid-template-rows: minmax(0, 1fr) auto; }
   /* sound: compact cards, the scope takes the spare height on the left */
-  .tab-sound { grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: 16px; }
-  .pcards { gap: 8px; --kw: 52px; }
+  .pcards { gap: 8px; --kw: 46px; }
   .pcard { padding: 8px 10px 8px; gap: 4px; }
   .pcard > h2 { font-size: .68rem; }
   .pcard .knobs { gap: 4px; }
@@ -374,8 +396,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .pcard .knob output { font-size: .66rem; line-height: 1.3; }
   .pcard .sel label { font-size: .7rem; }
   .pcard .sel select { padding: 3px 6px; font-size: .8rem; }
-  .tab-sound .pad { height: 48px; }
-  .tab-sound .rand .hint { display: none; }
   .vbtn { padding: 4px 10px; font-size: .82rem; }
   /* steps: the grid's rows share the height, up to a comfortable size */
   .tab-steps .seq { height: 100%; grid-template-rows: auto auto minmax(0, 1fr); }
@@ -390,7 +410,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .pattern-card { grid-template-rows: auto minmax(0, 1fr); }
   .tab-perform .perform { align-content: space-evenly; align-self: stretch; padding-block: 0; }
 }
-@media (min-width: 761px) and (max-width: 1250px) { .tab-sound { grid-template-columns: 220px minmax(0, 1fr); } .tab-sound .lcd-line span { display: none; } }
+@media (min-width: 761px) and (max-width: 1250px) { .tab-sound { grid-template-columns: minmax(0, 1fr) 270px; } .tab-sound .lcd-line span { display: none; } }
 @media (min-width: 761px) and (max-height: 640px) {
   .right-col { gap: 10px; }
   .master-card, .mix-card, .fx-card { padding: 8px 14px 10px; gap: 4px; }
@@ -469,7 +489,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <button class="tab" type="button" role="tab" data-tab="perform" aria-selected="true">perform</button>
     <button class="tab" type="button" role="tab" data-tab="sound" aria-selected="false">sound</button>
     <button class="tab" type="button" role="tab" data-tab="steps" aria-selected="false">steps</button>
-    <button class="tab" type="button" role="tab" data-tab="xfeed" aria-selected="false">crossfeed</button>
     <button class="tab" type="button" role="tab" data-tab="about" aria-selected="false">about</button>
   </nav>
 
@@ -527,25 +546,31 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   </section>
 
   <section class="panel rack tab-sound" data-panel="sound" role="tabpanel" aria-label="Sound" hidden>
-    <div class="col" aria-label="Voice">
-      <div class="voices" id="voices" role="group" aria-label="Voice"></div>
-      <div class="top">
-        <div class="lcd" aria-live="polite">
-          <div class="lcd-line"><b id="lcd-name">DRUM 1</b><span id="lcd-detail"></span></div>
-          <canvas id="scope" width="800" height="220" aria-label="Waveform of one hit of the selected voice, first 500 ms"></canvas>
-        </div>
-        <button class="pad" id="pad" type="button" aria-label="Trigger the selected voice">
-          <span>trig</span><kbd>space · 1–7</kbd>
-        </button>
+    <div class="col snd-main" aria-label="Voice">
+      <div class="snd-bar">
+        <div class="voices" id="voices" role="group" aria-label="Voice"></div>
+        <button class="pad" id="pad" type="button" aria-label="Trigger the selected voice"><span>trig</span><kbd>space · 1–7</kbd></button>
+        <div class="rand"><button class="btn" id="rand" type="button">randomise <span id="rand-name" class="sr">DRUM 1</span></button></div>
       </div>
-      <div class="rand">
-        <button class="btn" id="rand" type="button">RANDOMISE <span id="rand-name">DRUM 1</span></button>
-        <span class="hint">depth and wild are on the perform tab</span>
-      </div>
-    </div>
-    <div class="col" aria-label="Parameters">
       <div class="pages" id="pages" hidden></div>
       <div class="pcards" id="knobs"></div>
+    </div>
+    <div class="col snd-side">
+      <div class="lcd" aria-live="polite">
+        <div class="lcd-line"><b id="lcd-name">DRUM 1</b><span id="lcd-detail"></span></div>
+        <canvas id="scope" width="800" height="220" aria-label="Waveform of one hit of the selected voice, first 500 ms"></canvas>
+      </div>
+      <div class="card xcard">
+        <h2>crossfeed</h2>
+        <div class="xfeed" aria-label="Crossfeed">
+          <div class="xfeed-head">
+            <label class="field" for="xdepth">depth <input id="xdepth" type="range" min="0" max="100" value="100"><output id="xdepth-out">100%</output></label>
+            <button class="btn" id="xrand" type="button">randomise</button>
+            <button class="btn" id="xclear" type="button">clear</button>
+          </div>
+          <div class="xgrid" id="xgrid"></div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -564,16 +589,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     </div>
   </section>
 
-  <section class="panel rack tab-xfeed" data-panel="xfeed" role="tabpanel" aria-label="Crossfeed" hidden>
-      <div class="xfeed" aria-label="Crossfeed">
-        <div class="xfeed-head">
-          <label class="field" for="xdepth">depth <input id="xdepth" type="range" min="0" max="100" value="100"><output id="xdepth-out">100%</output></label>
-          <button class="btn" id="xrand" type="button">randomise</button>
-          <button class="btn" id="xclear" type="button">clear</button>
-        </div>
-        <div class="xgrid" id="xgrid"></div>
-      </div>
-  </section>
 
 
   <div class="about" data-panel="about" role="tabpanel" aria-label="About" hidden>
@@ -1893,7 +1908,7 @@ XN.forEach((name, d) => {
 });
 const xcells = [];
 XN.forEach((src, sIdx) => {
-  const lab = document.createElement('span'); lab.className = 'lab'; lab.textContent = src; xgrid.appendChild(lab);
+  const lab = document.createElement('span'); lab.className = 'lab'; lab.innerHTML = `<span class="full">${src}</span><span class="short">${['d1', 'd2', 'd3', 'sn', 'cy', 'hh'][sIdx]}</span>`; xgrid.appendChild(lab);
   XN.forEach((dst, d) => {
     const k = sIdx * 6 + d, c = document.createElement('button');
     c.type = 'button'; c.className = 'xcell' + (sIdx === d ? ' diag' : ''); c.setAttribute('role', 'slider');
