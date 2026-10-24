@@ -96,6 +96,26 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
   max-height: min(640px, calc(100dvh - 32px)); box-shadow: 0 20px 60px rgb(0 0 0 / .35); }
 .pm[open] { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 10px; }
 .pm::backdrop { background: rgb(0 0 0 / .35); }
+/* recorder */
+.recbtn { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--ink); background: none; padding: 0; cursor: pointer; display: grid; place-items: center; flex: none; }
+.recbtn i, .rec-go-btn i { display: block; width: 12px; height: 12px; border-radius: 50%; background: #d8322b; }
+.recbtn.on { border-color: #d8322b; animation: recpulse 1s ease-in-out infinite; }
+.recbtn.wait i { animation: recpulse .5s ease-in-out infinite; }
+@keyframes recpulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .recbtn.on, .recbtn.wait i { animation: none; } }
+.rec[open] { grid-template-rows: auto auto auto auto minmax(0, 1fr); }
+.rec-opts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 12px; align-items: center; }
+.rec-opts .rlab { font-size: .78rem; color: var(--muted); }
+.rec-opts .radios span { font-size: .8rem; padding: 6px 9px; }
+.rec-fmt { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.rec-go { display: flex; align-items: center; gap: 12px; }
+.rec-go-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; }
+.rec-go-btn.on i { border-radius: 2px; }
+.rec-status { font-size: .84rem; font-family: var(--mono); }
+.pm-list.rec-takes li { grid-template-columns: minmax(0, 1fr) auto auto; }
+.pm-list.rec-takes li.group { grid-column: 1 / -1; }
+.rec-takes audio { grid-column: 1 / -1; width: 100%; height: 32px; }
+.rec-takes a.btn { text-decoration: none; padding: 3px 9px; font-size: .78rem; }
 .pm-head { display: flex; align-items: center; justify-content: space-between; }
 .pm-head h2 { margin: 0; font-family: var(--display); font-size: 1.05rem; }
 .pm-hint { margin: 0; font-size: .8rem; color: var(--muted); }
@@ -543,6 +563,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     </div>
     <div class="seq-ctrl transport">
       <button class="btn play" id="play" type="button" aria-pressed="false">PLAY</button>
+      <button class="recbtn" id="rec-open" type="button" aria-haspopup="dialog" title="Recorder: record your jam and export a WAV" aria-label="Recorder"><i></i></button>
       <label class="field" for="tempo">tempo <input id="tempo" type="number" min="40" max="300" value="118"></label>
       <span class="bars" aria-label="Bar of 8"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
     </div>
@@ -672,7 +693,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <summary>HOW TO PLAY IT</summary>
     <div class="body">
       <p class="src">Elexir by Johnny Hawk is an unofficial browser drum machine, not made or endorsed by Erica Synths. Its sound engine is a JavaScript port of the six drum voices and the FX bus of the Erica Synths LXR-02 firmware (<a href="https://github.com/erica-synths/lxr-desktop-app" target="_blank" rel="noopener">erica-synths/lxr-desktop-app</a>, GPL-3.0, commit a43cd4f), ported line by line; its output matches the original C code compiled for the Cortex-M7 sample for sample. The FX bus (distortion, ring mod, compressor, delay) is the firmware's too; the mixer, the three FX sends, crossfeed and the pattern generator are new. The generator's source kits include Hrtl's free LXR-02 DLC kits, used with credit, and any LXR kit file (.SND) can be opened. Source and licence (GPL-3.0): <a href="https://github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir" target="_blank" rel="noopener">github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir</a>.</p>
-      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit. Drag a fader for fine control (it moves less than the mouse; hold Shift for finer still) or scroll on it; the strip's name shows the level while it moves. Save keeps everything as a preset in this browser under a two-word alien name: the sound (kit, crossfeed, FX and sends) and the song (pattern, perform dials, tempo, velocity, accent, master), and loading it brings all of that back. A red star by save means a randomise has changed things since the last save or load. ‹ and › step through the presets; while playing, a new preset comes in at the start of the next bar. Presets opens the preset manager: load, delete, and star favourites; export favourites downloads them as a file, and favourites sent in that way are built into the next release. Open .snd there loads an LXR kit file as the current sound, and export .snd downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). There are three effects, all the LXR-02's own FX-slot code run as sends: each mixer strip has three send dials left of its fader: echo, dist and ring. Every voice keeps its dry sound and each effect's output is fully wet. The echo's time is synced to the tempo: from 1/128 of a bar fully left to one bar fully right, gliding through the musical lengths (the readout names the nearest, with ≈ when it is between); randomise puts it near a musical length but not exactly on it. Ticks round the time dial mark the musical lengths (long for straight notes, short for dotted and triplet); a drag catches on them, and the scroll wheel and arrow keys step from one to the next (Shift + arrow for fine steps). The FX section above the mixer sets all three: echo mode (normal or ping-pong), time, tone, feedback and width (100% is the firmware's own; 0% is mono; the firmware's ping-pong only bounces sound that reaches it off-centre, and most drums sit in the middle, so above 100% width pushes the echo's input to one side, and at 200% a centred drum bounces fully; on a normal echo, above 100% widens the echoes' stereo); distortion type (tube, fold or rat), drive, color, tone and volume; ring mod carrier wave and frequency. A kit that used distortion or ring mod in its FX slot loads those settings into that effect with a little of each routed voice sent to it. The sync, the sends, the extra buses and the larger delay buffer are additions to the firmware. The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits, and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the red figures show how far each is pulling down. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The switch on the pattern card turns the pattern off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge). The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise (sound tab) varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. In the mixer, r by each name gives that voice a random sound from the bundled kits, varied by 10%, and a varies the voice's current sound by 10%; undo takes either back. The randomise card on the perform tab (beside the master section): kit does the same for all six drum sounds and leaves the mixer, FX, crossfeed and pattern alone. Press R for the same; Randomise all (Shift-R) does every voice at once. Everything builds a fresh sound from voices of the bundled kits (Hrtl's LXR-02 kits and twelve generated ones, which aren't listed as presets), varies each by 10%, and rolls new crossfeed, delay time, echo feedback (usually low, now and then high), beat, energy and fills, keeping the mixer levels; save keeps it. Swing (on the pattern card, and on the steps tab) delays every second 16th: 50% is straight, 66% a triplet feel, 75% the most. Each track has two dials (under the pattern sliders, and at the end of its row on the steps tab): swing sets how much of the swing that track takes (so the hats can swing while the kick stays straight), and push moves the whole track early (left) or late (right) by up to a quarter of a 16th, centre being on the grid. The groove applies to the perform patterns too and is saved with presets. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
+      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit. Drag a fader for fine control (it moves less than the mouse; hold Shift for finer still) or scroll on it; the strip's name shows the level while it moves. Save keeps everything as a preset in this browser under a two-word alien name: the sound (kit, crossfeed, FX and sends) and the song (pattern, perform dials, tempo, velocity, accent, master), and loading it brings all of that back. A red star by save means a randomise has changed things since the last save or load. ‹ and › step through the presets; while playing, a new preset comes in at the start of the next bar. Presets opens the preset manager: load, delete, and star favourites; export favourites downloads them as a file, and favourites sent in that way are built into the next release. Open .snd there loads an LXR kit file as the current sound, and export .snd downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). There are three effects, all the LXR-02's own FX-slot code run as sends: each mixer strip has three send dials left of its fader: echo, dist and ring. Every voice keeps its dry sound and each effect's output is fully wet. The echo's time is synced to the tempo: from 1/128 of a bar fully left to one bar fully right, gliding through the musical lengths (the readout names the nearest, with ≈ when it is between); randomise puts it near a musical length but not exactly on it. Ticks round the time dial mark the musical lengths (long for straight notes, short for dotted and triplet); a drag catches on them, and the scroll wheel and arrow keys step from one to the next (Shift + arrow for fine steps). The FX section above the mixer sets all three: echo mode (normal or ping-pong), time, tone, feedback and width (100% is the firmware's own; 0% is mono; the firmware's ping-pong only bounces sound that reaches it off-centre, and most drums sit in the middle, so above 100% width pushes the echo's input to one side, and at 200% a centred drum bounces fully; on a normal echo, above 100% widens the echoes' stereo); distortion type (tube, fold or rat), drive, color, tone and volume; ring mod carrier wave and frequency. A kit that used distortion or ring mod in its FX slot loads those settings into that effect with a little of each routed voice sent to it. The sync, the sends, the extra buses and the larger delay buffer are additions to the firmware. The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits, and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the red figures show how far each is pulling down. The red circle by play opens the recorder: pick free (records until you press stop, up to ten minutes) or a loop of 1 to 16 bars, which starts on the next bar (starting playback from bar 1 if it is stopped) and is cut to exactly that many bars at the tempo, with the echo carried in from before so it loops cleanly. Choose 44.1 or 48 kHz, 16-bit (dithered) or 24-bit, and normalise (peak at −0.3 dB). Each take is listed with a player and a save .wav button; takes are kept until you reload the page. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The switch on the pattern card turns the pattern off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge). The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise (sound tab) varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. In the mixer, r by each name gives that voice a random sound from the bundled kits, varied by 10%, and a varies the voice's current sound by 10%; undo takes either back. The randomise card on the perform tab (beside the master section): kit does the same for all six drum sounds and leaves the mixer, FX, crossfeed and pattern alone. Press R for the same; Randomise all (Shift-R) does every voice at once. Everything builds a fresh sound from voices of the bundled kits (Hrtl's LXR-02 kits and twelve generated ones, which aren't listed as presets), varies each by 10%, and rolls new crossfeed, delay time, echo feedback (usually low, now and then high), beat, energy and fills, keeping the mixer levels; save keeps it. Swing (on the pattern card, and on the steps tab) delays every second 16th: 50% is straight, 66% a triplet feel, 75% the most. Each track has two dials (under the pattern sliders, and at the end of its row on the steps tab): swing sets how much of the swing that track takes (so the hats can swing while the kick stays straight), and push moves the whole track early (left) or late (right) by up to a quarter of a 16th, centre being on the grid. The groove applies to the perform patterns too and is saved with presets. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
     </div>
   </details>
 
@@ -707,6 +728,18 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   </div>
   </dialog>
 </div>
+
+<dialog class="pm rec" id="rec" aria-labelledby="rec-title">
+  <div class="pm-head"><h2 id="rec-title">recorder</h2><button class="btn ghost" id="rec-close" type="button" aria-label="Close">close</button></div>
+  <div class="rec-opts">
+    <span class="rlab">length</span><div class="radios" id="rec-len"></div>
+    <span class="rlab">format</span><div class="rec-fmt"><div class="radios" id="rec-rate"></div><div class="radios" id="rec-bits"></div>
+      <label class="field" for="rec-norm"><input id="rec-norm" type="checkbox"> normalise</label></div>
+  </div>
+  <p class="pm-hint" id="rec-hint"></p>
+  <div class="rec-go"><button class="btn rec-go-btn" id="rec-go" type="button"><i></i><span>record</span></button><span class="rec-status" id="rec-status" aria-live="polite"></span></div>
+  <ul class="pm-list rec-takes" id="rec-takes"></ul>
+</dialog>
 
 <dialog class="pm" id="pm" aria-labelledby="pm-title">
   <div class="pm-head"><h2 id="pm-title">presets</h2><button class="btn ghost" id="pm-close" type="button" aria-label="Close">close</button></div>
@@ -4226,7 +4259,7 @@ class Player {
     this.step = 0; this.bar = 0; this.toNext = 0; this.atBar = [];
     // groove: odd 16ths late by swing (in steps) times each track's share, plus each track's push (-) or pull (+)
     this.groove = { swing: 0, share: new Array(7).fill(1), nudge: new Array(7).fill(0) };
-    this.queue = []; this.sched = []; this.fresh = false;
+    this.queue = []; this.sched = []; this.fresh = false; this.rec = null;
     // accent: unaccented sequencer hits are turned down by the accent amount, after the engine
     this.gain = new Float32Array(6).fill(1); this.gainTo = new Float32Array(6).fill(1);
     // mixer: mute/solo per voice
@@ -4265,6 +4298,11 @@ class Player {
         this.ring.setParameter(0, m.ring.freq / 127);
         this.sendD.set(m.sendD); this.sendR.set(m.sendR); this.echoWidth = m.echo.pct / 100;
       } this.fxAmt.set(m.fx); this.chan.set(m.chan); }
+    else if (m.type === 'rec') {
+      // recorder: free starts now; a loop waits for the first step of a bar and stops after its bars
+      this.rec = { loop: m.bars > 0, bars: m.bars, on: !(m.bars > 0), done: 0, L: new Float32Array(16384), R: new Float32Array(16384), n: 0 };
+      this.events.push({ type: 'rec', state: this.rec.on ? 'on' : 'wait' });
+    } else if (m.type === 'recStop') { if (this.rec) this.recEnd(); }
     else if (m.type === 'seq') {
       // a live pattern change (the perform sliders, the grid) wins over one still waiting for the bar
       this.atBar = this.atBar.filter((q) => q.type !== 'seq');
@@ -4273,11 +4311,17 @@ class Player {
       this.accGain = Math.pow(10, -m.accentDb / 20);
       if (m.playing && !this.playing) { this.step = 0; this.bar = 0; this.toNext = 0; this.queue = []; this.fresh = true; }
       this.playing = m.playing;
-      if (!this.playing) this.flushBar();
+      if (!this.playing) { this.flushBar(); if (this.rec && this.rec.loop) this.recEnd(); }
     }
   }
   // a preset loaded while playing: its messages wait for the first step of the next bar.
   // A queued pattern never starts or stops the transport.
+  recFlush() {
+    const r = this.rec;
+    if (r.n) this.events.push({ type: 'recData', L: r.L.slice(0, r.n), R: r.R.slice(0, r.n) });
+    r.n = 0;
+  }
+  recEnd() { this.recFlush(); this.events.push({ type: 'rec', state: 'done', bars: this.rec.done, bpm: this.bpm }); this.rec = null; }
   flushBar() {
     const q = this.atBar; this.atBar = [];
     for (const m of q) this.msg(m.type === 'seq' ? { ...m, playing: this.playing } : m);
@@ -4297,6 +4341,12 @@ class Player {
     if (this.playing) {
       if (this.toNext <= 0) {
         if (this.step === 0 && this.atBar.length) this.flushBar();
+        if (this.step === 0 && this.rec && this.rec.loop) {
+          const r = this.rec;
+          if (!r.on) { r.on = true; this.events.push({ type: 'rec', state: 'on' }); }
+          else if (++r.done >= r.bars) this.recEnd();
+          if (this.rec) this.events.push({ type: 'rec', state: 'bar', done: r.done });
+        } else if (this.step === 0 && this.rec) this.rec.done++;
         const len = LXR.REAL_FS * 60 / this.bpm / 4;
         // on starting, this step's own hits; after that each tick books the next step's, a step ahead,
         // so a track pushed early can still come in before its grid time
@@ -4383,6 +4433,9 @@ class Player {
       }
       this.compEnv = env; this.gr = gr;
     }
+    // the recorder takes the finished mix at the engine's own rate
+    const r = this.rec;
+    if (r && r.on) { r.L.set(L, r.n); r.R.set(R, r.n); r.n += 64; if (r.n === r.L.length) this.recFlush(); }
   }
   process(L, R) {
     for (let n = 0; n < L.length; n++) {
@@ -5213,6 +5266,124 @@ function drawManager() {
   kitList.filter((k) => k.builtin).forEach(row);
 }
 $('pm-open').addEventListener('click', () => { drawManager(); $('pm-msg').textContent = ''; pm.showModal(); });
+
+// ---- recorder: the finished mix, taken at the engine's own rate, written out as a WAV ----
+// A loop starts on the first step of a bar (starting playback if it is stopped) and stops after its bars,
+// so the take is exactly that many bars and the echo carried over from before the loop keeps it seamless.
+const recDlg = $('rec'), LENS = [0, 1, 2, 4, 8, 16], RATES = [44100, 48000], BITS = [16, 24];
+const recSet = { len: 3, rate: 0, bits: 0, norm: false };
+try { Object.assign(recSet, JSON.parse(localStorage.getItem('elexir-rec') || '{}')); } catch (e) { /* defaults */ }
+const saveRecSet = () => { try { localStorage.setItem('elexir-rec', JSON.stringify(recSet)); } catch (e) { /* not kept */ } };
+let recState = 'off', recChunks = [], recT0 = 0, recTimer = 0, recBars = 0, recLoop = false, takeNo = 0;
+const RECMAX = 10 * 60; // seconds; a free take stops itself after ten minutes
+radios($('rec-len'), 'rec-len', LENS.map((b) => (b ? `${b} bar${b > 1 ? 's' : ''}` : 'free')), () => recSet.len, (i) => { recSet.len = i; saveRecSet(); recHint(); });
+radios($('rec-rate'), 'rec-rate', ['44.1k', '48k'], () => recSet.rate, (i) => { recSet.rate = i; saveRecSet(); });
+radios($('rec-bits'), 'rec-bits', ['16-bit', '24-bit'], () => recSet.bits, (i) => { recSet.bits = i; saveRecSet(); });
+$('rec-norm').checked = recSet.norm;
+$('rec-norm').addEventListener('change', () => { recSet.norm = $('rec-norm').checked; saveRecSet(); });
+function recHint() {
+  const b = LENS[recSet.len];
+  $('rec-hint').textContent = b
+    ? `Records exactly ${b} bar${b > 1 ? 's' : ''} from the start of the next bar (from bar 1 if stopped), ready to loop. Changes you make while it records are in the take.`
+    : 'Records everything from now until you press stop, up to ten minutes.';
+}
+recHint();
+function recUi() {
+  const b = $('rec-open'), go = $('rec-go');
+  b.classList.toggle('on', recState === 'on'); b.classList.toggle('wait', recState === 'wait');
+  go.classList.toggle('on', recState !== 'off'); go.querySelector('span').textContent = recState === 'off' ? 'record' : 'stop';
+  recDlg.querySelectorAll('.rec-opts input').forEach((i) => { i.disabled = recState !== 'off'; });
+}
+function recStatus() {
+  const st = $('rec-status');
+  if (recState === 'wait') st.textContent = 'waiting for the next bar…';
+  else if (recState === 'on' && recLoop) st.textContent = `● bar ${Math.min(recBars + 1, LENS[recSet.len])} of ${LENS[recSet.len]}`;
+  else if (recState === 'on') {
+    const t = (performance.now() - recT0) / 1000;
+    st.textContent = `● ${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+    if (t > RECMAX) send({ type: 'recStop' });
+  }
+}
+async function recStart() {
+  await startAudio();
+  recChunks = []; recBars = 0; recLoop = LENS[recSet.len] > 0;
+  recState = recLoop ? 'wait' : 'on'; recT0 = performance.now();
+  if (node) node.port.postMessage({ type: 'rec', bars: LENS[recSet.len] }); else if (fallback) fallback.msg({ type: 'rec', bars: LENS[recSet.len] });
+  if (recLoop && !playing) $('play').click(); // a loop needs the transport; it starts at bar 1
+  clearInterval(recTimer); recTimer = setInterval(recStatus, 250);
+  recUi(); recStatus();
+}
+function recEvent(ev) {
+  if (ev.type === 'recData') { recChunks.push(ev); return; }
+  if (ev.state === 'on') { recState = 'on'; recT0 = performance.now(); }
+  if (ev.state === 'bar') recBars = ev.done;
+  if (ev.state === 'done') { clearInterval(recTimer); recState = 'off'; finishTake(ev); }
+  recUi(); recStatus();
+}
+$('rec-go').addEventListener('click', () => {
+  if (recState === 'off') recStart();
+  else { const m = { type: 'recStop' }; if (node) node.port.postMessage(m); else if (fallback) fallback.msg(m); }
+});
+$('rec-open').addEventListener('click', () => { recUi(); recDlg.showModal(); });
+$('rec-close').addEventListener('click', () => recDlg.close());
+recDlg.addEventListener('click', (e) => { if (e.target === recDlg) recDlg.close(); });
+
+async function finishTake(ev) {
+  const n = recChunks.reduce((a, c) => a + c.L.length, 0);
+  if (!n) { $('rec-status').textContent = 'nothing recorded'; return; }
+  $('rec-status').textContent = 'writing…';
+  const rate = RATES[recSet.rate], bits = BITS[recSet.bits], loop = recLoop && ev.bars >= LENS[recSet.len];
+  // resample to the file's rate; a loop is padded with its own ends so the join stays clean
+  const pad = loop ? 256 : 0, src = new AudioBuffer({ numberOfChannels: 2, length: n + 2 * pad, sampleRate: LXR.REAL_FS });
+  for (const [ch, key] of [[0, 'L'], [1, 'R']]) {
+    const d = src.getChannelData(ch);
+    let o = pad; for (const c of recChunks) { d.set(c[key], o); o += c[key].length; }
+    if (loop) { d.copyWithin(0, n, n + pad); d.copyWithin(n + pad, pad, 2 * pad); }
+  }
+  recChunks = [];
+  // a loop is cut to the exact length of its bars at the tempo (the engine works in 64-sample blocks)
+  const frames = loop ? Math.round(LENS[recSet.len] * 240 / ev.bpm * rate) : Math.round(n * rate / LXR.REAL_FS), padOut = Math.round(pad * rate / LXR.REAL_FS);
+  const off = new OfflineAudioContext(2, frames + 2 * padOut, rate);
+  const bs = off.createBufferSource(); bs.buffer = src; bs.connect(off.destination); bs.start();
+  const out = await off.startRendering();
+  const L = out.getChannelData(0).subarray(padOut, padOut + frames), R = out.getChannelData(1).subarray(padOut, padOut + frames);
+  let peak = 0;
+  for (let i = 0; i < frames; i++) peak = Math.max(peak, Math.abs(L[i]), Math.abs(R[i]));
+  const gain = recSet.norm && peak > 1e-6 ? Math.pow(10, -0.3 / 20) / peak : 1;
+  const blob = wavBlob(L, R, rate, bits, gain);
+  const bpm = ev.bpm, preset = ($('kit').selectedOptions[0] || {}).textContent || 'take';
+  const len = loop ? `${LENS[recSet.len]} bar${LENS[recSet.len] > 1 ? "s" : ""}` : `${(frames / rate).toFixed(1)} s`;
+  const name = `elexir ${preset.replace(/[^\w' -]/g, '').trim()} ${bpm}bpm ${loop ? LENS[recSet.len] + 'bar' : 'take'} ${++takeNo}.wav`;
+  addTake({ name, blob, len, peak: peak * gain, rate, bits });
+  $('rec-status').textContent = `took ${len}`;
+}
+function wavBlob(L, R, rate, bits, gain) {
+  const n = L.length, bps = bits / 8, buf = new ArrayBuffer(44 + n * 2 * bps), v = new DataView(buf);
+  const str = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+  str(0, 'RIFF'); v.setUint32(4, 36 + n * 2 * bps, true); str(8, 'WAVE'); str(12, 'fmt '); v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true); v.setUint16(22, 2, true); v.setUint32(24, rate, true); v.setUint32(28, rate * 2 * bps, true);
+  v.setUint16(32, 2 * bps, true); v.setUint16(34, bits, true); str(36, 'data'); v.setUint32(40, n * 2 * bps, true);
+  const full = bits === 16 ? 32767 : 8388607;
+  let o = 44;
+  for (let i = 0; i < n; i++) for (const x of [L[i], R[i]]) {
+    // 16-bit gets triangular dither; both are clipped at full scale
+    const d = bits === 16 ? Math.random() - Math.random() : 0;
+    const s = Math.max(-full - 1, Math.min(full, Math.round(x * gain * full + d)));
+    if (bits === 16) v.setInt16(o, s, true); else { v.setUint8(o, s & 255); v.setUint8(o + 1, (s >> 8) & 255); v.setUint8(o + 2, (s >> 16) & 255); }
+    o += bps;
+  }
+  return new Blob([buf], { type: 'audio/wav' });
+}
+function addTake(t) {
+  const list = $('rec-takes'), li = document.createElement('li'), url = URL.createObjectURL(t.blob);
+  const db = t.peak > 0 ? (20 * Math.log10(t.peak)).toFixed(1) : '−∞';
+  li.innerHTML = `<span><span class="pm-name"></span><br><span class="pm-sub">${t.len} · ${t.rate / 1000} kHz ${t.bits}-bit · peak ${db} dB${t.peak >= 1 ? ' (clipped)' : ''}</span></span>
+    <a class="btn" download>save .wav</a><button class="btn ghost pm-del" type="button">delete</button><audio controls preload="none"></audio>`;
+  li.querySelector('.pm-name').textContent = t.name;
+  li.querySelector('a').href = url; li.querySelector('a').download = t.name; li.querySelector('audio').src = url;
+  li.querySelector('.pm-del').addEventListener('click', () => { URL.revokeObjectURL(url); li.remove(); });
+  list.prepend(li);
+}
 $('pm-close').addEventListener('click', () => pm.close());
 pm.addEventListener('click', (e) => { if (e.target === pm) pm.close(); }); // a click on the backdrop
 $('pm-export').addEventListener('click', () => {
@@ -5677,6 +5848,7 @@ function markStep(s) {
 const barLeds = document.querySelectorAll('.bars i');
 function markBar(b) { barLeds.forEach((l, i) => l.classList.toggle('lit', b >= 0 && b % barLeds.length === i)); }
 function onEvent(ev) {
+  if (ev.type === 'rec' || ev.type === 'recData') return recEvent(ev);
   if (ev.type !== 'step' || !playing) return;
   const delay = ctx && ctx.outputLatency ? ctx.outputLatency * 1000 : 0;
   setTimeout(() => {
