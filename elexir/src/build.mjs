@@ -18,7 +18,7 @@ const names = ['LxrEngine', 'PAR', 'CC', 'CC2', 'BLOCK', 'REAL_FS', 'PARAM_DTYPE
   'LFO_WAVE_NAMES', 'LFO_SYNC_NAMES', 'MIXER_ROUTING_FX_BUS', 'FX_NAMES', 'FX_DELAY', 'FX_DISTORTION', 'FX_RING', 'FxBus', 'Rng', 'DIST_NAMES', 'RATIO_NAMES', 'DELAY_NAMES'];
 const bundle = `const LXR = (() => {\n${engine}\nreturn { ${names.join(', ')} };\n})();\n`;
 
-// kit files (.SND) in kits/ are bundled into the page's kit menu
+// kit files (.SND) in kits/ are bundled into the page, hidden, as the generator's source kits
 const kitDir = new URL('kits/', here);
 const noKits = process.argv.includes('--no-kits');
 const outArg = process.argv.indexOf('--out');
@@ -26,10 +26,16 @@ const outFile = outArg > 0 ? process.argv[outArg + 1] : null;
 const kits = !noKits && existsSync(kitDir) ? readdirSync(kitDir).filter((f) => /\.snd$/i.test(f)).sort()
   .map((f) => ({ file: f, data: readFileSync(new URL(f, kitDir)).toString('base64') })) : [];
 
+// favourite presets exported from the preset manager (presets/*.json) become the built-in presets
+const presetDir = new URL('presets/', here);
+const presets = existsSync(presetDir) ? readdirSync(presetDir).filter((f) => /\.json$/i.test(f)).sort()
+  .flatMap((f) => JSON.parse(readFileSync(new URL(f, presetDir), 'utf8')).presets || []).map((p) => ({ ...p, fav: false })) : [];
+
 const sources = { lxr: read('lxr.js'), verify: read('verify.mjs') };
 const page = read('index.src.html')
   .replace('/*@ENGINE@*/', () => bundle.replace(/<\/script/gi, '<\\/script'))
   .replace('/*@KITS@*/', () => `const BUNDLED_KITS = ${JSON.stringify(kits)};`)
+  .replace('/*@PRESETS@*/', () => `const BUILTIN_PRESETS = ${JSON.stringify(presets).replace(/<\/script/gi, '<\\/script')};`)
   .replace('/*@SOURCES@*/', () => `const SOURCES = ${JSON.stringify(sources).replace(/<\/script/gi, '<\\/script')};`);
 writeFileSync(outFile || new URL('index.html', here), page);
 console.log(`${outFile || 'index.html'}: ${(page.length / 1024).toFixed(1)} KB`);

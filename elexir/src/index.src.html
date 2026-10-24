@@ -81,10 +81,36 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .kitbar { flex: 1 1 auto; }
 .kitbar select { min-width: 9em; font-weight: 500; }
 .kitbar .file { position: relative; overflow: hidden; }
+.kitbar .btn { padding-inline: 10px; }
 .kitbar .file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .kitbar .file:focus-within { outline: 2px solid var(--ink); outline-offset: 2px; }
-.kitbar .msg { font-size: .82rem; color: var(--muted); }
+.kitbar { position: relative; }
+.kitbar .msg { position: absolute; top: calc(100% + 4px); left: 0; z-index: 5; font-size: .82rem; color: var(--ink); background: var(--panel);
+  padding: 3px 10px; border-radius: 6px; white-space: nowrap; box-shadow: 0 4px 14px rgb(0 0 0 / .15); }
 #kit-msg:empty { display: none; }
+.dirty { color: var(--led); }
+.pm { border: 0; border-radius: 14px; padding: 18px 20px; background: var(--panel); color: var(--ink); width: min(520px, calc(100vw - 32px));
+  max-height: min(640px, calc(100dvh - 32px)); box-shadow: 0 20px 60px rgb(0 0 0 / .35); }
+.pm[open] { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 10px; }
+.pm::backdrop { background: rgb(0 0 0 / .35); }
+.pm-head { display: flex; align-items: center; justify-content: space-between; }
+.pm-head h2 { margin: 0; font-family: var(--display); font-size: 1.05rem; }
+.pm-hint { margin: 0; font-size: .8rem; color: var(--muted); }
+.pm-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; min-height: 0; }
+.pm-list li { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto auto; align-items: center; gap: 6px; padding: 4px 0; border-top: 1px solid var(--line); }
+.pm-list li.group { display: block; border: 0; padding: 10px 0 2px; font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.pm-list li.current .pm-name { font-weight: 700; }
+.pm-list .fav { border: 0; background: none; font-size: 1.1rem; line-height: 1; cursor: pointer; color: var(--muted); padding: 2px; }
+.pm-list .fav[aria-pressed="true"] { color: var(--led); }
+.pm-list .pm-name { border: 0; background: none; text-align: left; font: inherit; color: var(--ink); cursor: pointer; padding: 4px 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pm-list .pm-name:hover { text-decoration: underline; }
+.pm-list .pm-sub { font-size: .74rem; color: var(--muted); font-family: var(--mono, monospace); }
+.pm-list .pm-del { padding: 3px 9px; font-size: .78rem; }
+.pm-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pm .file { position: relative; overflow: hidden; }
+.pm .file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.pm-foot .msg { font-size: .8rem; color: var(--muted); }
 .bars { display: inline-flex; gap: 5px; }
 .bars i { width: 8px; height: 8px; border-radius: 50%; background: var(--tint-2); }
 .bars i.lit { background: var(--ink); }
@@ -190,7 +216,8 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .bs-thumb { position: absolute; top: 50%; width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 50%;
   background: var(--panel); border: 3px solid var(--ink); box-sizing: border-box; }
 .bs-track:focus-visible { outline-offset: 6px; }
-.perform-rand { gap: 8px; }
+.perform-rand { gap: 8px 6px; }
+.perform-rand .btn { padding: 6px 9px; }
 .rand-opts { display: flex; align-items: center; gap: 14px; white-space: nowrap; }
 .spacer { flex: 1; }
 .tab-perform .strips { gap: 0; }
@@ -363,7 +390,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .fx-card .knob .dial { width: 30px; height: 30px; }
   .fx-groups { gap: 10px; } .fxg + .fxg { padding-left: 10px; }
 }
-@media (max-width: 1300px) { h1 small { display: none; } .field input[type=range] { width: 70px; } .topbar { gap: 8px 14px; } }
+@media (max-width: 1300px) { h1 small, .kitbar .lbl { display: none; } .field input[type=range] { width: 70px; } .topbar { gap: 8px 14px; } }
 @media (max-width: 760px) {
   .rack { grid-template-columns: minmax(0, 1fr); padding: 16px; }
   .tab-perform { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
@@ -406,11 +433,11 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   <header class="topbar">
     <h1><b>elexir</b> <small>six-voice drum machine</small></h1>
     <div class="kitbar">
-      <label class="field" for="kit">kit <select id="kit"></select></label>
-      <button class="btn" id="kit-save" type="button" title="Save everything (sound, pattern, tempo, mixer, FX and master) under a new name">save</button>
+      <label class="field" for="kit"><span class="lbl">preset</span> <select id="kit" aria-label="Preset"></select></label>
+      <button class="btn" id="kit-save" type="button" title="Save everything (sound, pattern, tempo, mixer, FX and master) as a new preset">save<span id="dirty" class="dirty" hidden title="Unsaved changes"> ★</span></button>
+      <button class="btn ghost" id="pm-open" type="button" aria-haspopup="dialog" title="Preset manager: load, favourite, delete, export">presets</button>
       <button class="btn ghost" id="kit-export" type="button" title="Download the current sound as an LXR kit file">export</button>
-      <button class="btn ghost" id="kit-del" type="button" hidden>delete</button>
-      <span class="btn ghost file">open .snd<input id="kit-file" type="file" accept=".snd,.SND" aria-label="Open a kit file (.SND) from an LXR SD card"></span>
+      <span class="btn ghost file" title="Open an LXR kit file (.SND)">open<input id="kit-file" type="file" accept=".snd,.SND" aria-label="Open a kit file (.SND) from an LXR SD card"></span>
       <span class="msg" id="kit-msg" aria-live="polite"></span>
     </div>
     <div class="seq-ctrl transport">
@@ -449,8 +476,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
       <div class="rand perform-rand">
         <button class="btn" id="rand-all" type="button">kit</button>
         <button class="btn" id="xrand2" type="button">crossfeed</button>
-        <button class="btn" id="new-kit" type="button" title="Build a new kit from voices of the built-in kits and vary each by 10%">new kit</button>
-        <button class="btn play" id="keep-kit" type="button" hidden>save</button>
+        <button class="btn" id="new-kit" type="button" title="A new sound from voices of the built-in kits, varied by 10%, with new crossfeed, delay time and pattern">everything</button>
         <button class="btn" id="undo" type="button" disabled>undo</button>
         <span class="spacer"></span>
         <span class="rand-opts">
@@ -536,8 +562,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   <details open>
     <summary>HOW TO PLAY IT</summary>
     <div class="body">
-      <p class="src">Elexir by Johnny Hawk is an unofficial browser drum machine, not made or endorsed by Erica Synths. Its sound engine is a JavaScript port of the six drum voices and the FX bus of the Erica Synths LXR-02 firmware (<a href="https://github.com/erica-synths/lxr-desktop-app" target="_blank" rel="noopener">erica-synths/lxr-desktop-app</a>, GPL-3.0, commit a43cd4f), ported line by line; its output matches the original C code compiled for the Cortex-M7 sample for sample. The FX bus (distortion, ring mod, compressor, delay) is the firmware's too; the mixer, the three FX sends, crossfeed and the pattern generator are new. The 16 kits after the init kit are Hrtl's free LXR-02 DLC kits, used with credit, and any LXR kit file (.SND) can be opened. Source and licence (GPL-3.0): <a href="https://github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir" target="_blank" rel="noopener">github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir</a>.</p>
-      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit; mute and solo sit after the engine. Save keeps everything in this browser under a made-up name, listed under saved in the kit menu: the sound (kit, crossfeed, FX and sends) and the song (pattern, perform dials, tempo, velocity, accent, master, mute and solo), and loading it brings all of that back; export downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). There are three effects, all the LXR-02's own FX-slot code run as sends: each mixer strip has a dist button on top and two dials left of its fader, fx1 for echo and fx3 for ring mod. There is one distortion: a voice with dist on leaves the mix and is heard only through it (its echo and ring mod sends still take the clean sound). Echo and ring mod are sends: every voice keeps its dry sound and their output is fully wet. The echo's time is synced to the tempo: from 1/128 of a bar fully left to one bar fully right, gliding through the musical lengths (the readout names the nearest, with ≈ when it is between); randomise puts it near a musical length but not exactly on it. The FX section above the mixer sets all three: echo mode (normal or ping-pong), time, tone and feedback; distortion type (tube, fold or rat), drive, color, tone and volume; ring mod carrier wave and frequency. A kit that used distortion or ring mod in its FX slot loads those settings into that effect with each routed voice switched to it (distortion) or sent a little (ring mod). The sync, the sends, the extra buses and the larger delay buffer are additions to the firmware. The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits, and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the red figures show how far each is pulling down. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. Press R for the same; Randomise all (Shift-R) does every voice at once. New kit builds a fresh kit from voices of the built-in kits, varies each by 10% and names it something ending in kit; it isn't kept until you press its save button. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
+      <p class="src">Elexir by Johnny Hawk is an unofficial browser drum machine, not made or endorsed by Erica Synths. Its sound engine is a JavaScript port of the six drum voices and the FX bus of the Erica Synths LXR-02 firmware (<a href="https://github.com/erica-synths/lxr-desktop-app" target="_blank" rel="noopener">erica-synths/lxr-desktop-app</a>, GPL-3.0, commit a43cd4f), ported line by line; its output matches the original C code compiled for the Cortex-M7 sample for sample. The FX bus (distortion, ring mod, compressor, delay) is the firmware's too; the mixer, the three FX sends, crossfeed and the pattern generator are new. The generator's source kits include Hrtl's free LXR-02 DLC kits, used with credit, and any LXR kit file (.SND) can be opened. Source and licence (GPL-3.0): <a href="https://github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir" target="_blank" rel="noopener">github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir</a>.</p>
+      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit; mute and solo sit after the engine. Save keeps everything as a preset in this browser under a two-word alien name: the sound (kit, crossfeed, FX and sends) and the song (pattern, perform dials, tempo, velocity, accent, master, mute and solo), and loading it brings all of that back. A red star by save means a randomise has changed things since the last save or load. Presets opens the preset manager: load, delete, and star favourites; export favourites downloads them as a file, and favourites sent in that way are built into the next release. Open loads an LXR kit file (.SND) as the current sound; export downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). There are three effects, all the LXR-02's own FX-slot code run as sends: each mixer strip has a dist button on top and two dials left of its fader, fx1 for echo and fx3 for ring mod. There is one distortion: a voice with dist on leaves the mix and is heard only through it (its echo and ring mod sends still take the clean sound). Echo and ring mod are sends: every voice keeps its dry sound and their output is fully wet. The echo's time is synced to the tempo: from 1/128 of a bar fully left to one bar fully right, gliding through the musical lengths (the readout names the nearest, with ≈ when it is between); randomise puts it near a musical length but not exactly on it. The FX section above the mixer sets all three: echo mode (normal or ping-pong), time, tone and feedback; distortion type (tube, fold or rat), drive, color, tone and volume; ring mod carrier wave and frequency. A kit that used distortion or ring mod in its FX slot loads those settings into that effect with each routed voice switched to it (distortion) or sent a little (ring mod). The sync, the sends, the extra buses and the larger delay buffer are additions to the firmware. The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits, and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the red figures show how far each is pulling down. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. Press R for the same; Randomise all (Shift-R) does every voice at once. Everything builds a fresh sound from voices of the bundled kits (Hrtl's LXR-02 kits and twelve generated ones, which aren't listed as presets), varies each by 10%, and rolls new crossfeed, delay time, beat, energy and fills; save keeps it. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
     </div>
   </details>
 
@@ -571,6 +597,17 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   </details>
   </div>
 </div>
+
+<dialog class="pm" id="pm" aria-labelledby="pm-title">
+  <div class="pm-head"><h2 id="pm-title">presets</h2><button class="btn ghost" id="pm-close" type="button" aria-label="Close">close</button></div>
+  <p class="pm-hint">Star the ones you like. Export favourites downloads them as a file; send it over and they become built-in presets in the next release.</p>
+  <ul class="pm-list" id="pm-list"></ul>
+  <div class="pm-foot">
+    <button class="btn" id="pm-export" type="button">export favourites</button>
+    <span class="btn ghost file">import<input id="pm-import" type="file" accept=".json,application/json" aria-label="Import presets from a file"></span>
+    <span class="msg" id="pm-msg" aria-live="polite"></span>
+  </div>
+</dialog>
 
 <script id="engine">
 /*@ENGINE@*/
@@ -767,6 +804,7 @@ asDelay(initValues);
 const values = initValues.slice();
 const factoryInit = initValues.slice();
 /*@KITS@*/
+/*@PRESETS@*/
 
 const TRACKS = [
   { name: 'DRUM 1', voice: 0 }, { name: 'DRUM 2', voice: 1 }, { name: 'DRUM 3', voice: 2 }, { name: 'SNARE', voice: 3 },
@@ -1069,8 +1107,8 @@ function randomiseVoice(voice, fixedDepth) {
     if (v !== values[par]) setValue(par, v, true);
   }
 }
-$('rand').addEventListener('click', async () => { await startAudio(); randomise(); });
-$('rand-all').addEventListener('click', async () => { await startAudio(); randomise([0, 1, 2, 3, 4, 5]); randomiseDelay(); });
+$('rand').addEventListener('click', async () => { await startAudio(); randomise(); setDirty(true); });
+$('rand-all').addEventListener('click', async () => { await startAudio(); randomise([0, 1, 2, 3, 4, 5]); randomiseDelay(); setDirty(true); });
 function randomiseDelay() {
   delayPos = randomDelayPos(); send({ type: 'delay', pos: delayPos }); syncFx();
 }
@@ -1133,8 +1171,8 @@ document.addEventListener('keydown', (e) => {
   if (e.target.closest('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.code === 'Space') { e.preventDefault(); hit(track); }
   else if (/^[1-7]$/.test(e.key)) hit(Number(e.key) - 1);
-  else if (e.key === 'r') randomise();
-  else if (e.key === 'R') randomise([0, 1, 2, 3, 4, 5]);
+  else if (e.key === 'r') { randomise(); setDirty(true); }
+  else if (e.key === 'R') { randomise([0, 1, 2, 3, 4, 5]); setDirty(true); }
 });
 
 // ---- sequencer: per step on, accent and bar condition (0 = every bar, 2 or 4) ----
@@ -1226,21 +1264,32 @@ function parseSnd(bytes) {
   const userSamples = [1, 2, 3, 4, 5, 6].filter((n) => kit[PAR['TRANS' + n + '_WAVE']] >= 14).length;
   return { name, kit, userSamples };
 }
-const kitList = [{ name: 'Init kit', kit: factoryInit, userSamples: 0 }];
-for (const k of BUNDLED_KITS) kitList.push(parseSnd(Uint8Array.from(atob(k.data), (c) => c.charCodeAt(0))));
+// a short note under the preset menu that clears itself
+let noteT;
+function kitNote(t) { $('kit-msg').textContent = t; clearTimeout(noteT); if (t) noteT = setTimeout(() => { $('kit-msg').textContent = ''; }, 5000); }
+// the bundled kits aren't presets: they are hidden and only feed the generator (everything)
+const sourceKits = BUNDLED_KITS.map((k) => parseSnd(Uint8Array.from(atob(k.data), (c) => c.charCodeAt(0))));
+// presets: the init kit, the built-in presets (favourites baked into the build), then the ones saved here
+const fromStored = (p, extra) => ({ name: p.name, kit: Uint8Array.from(p.kit), xm: p.xm, fx: p.fx, fx3: p.fx3, dpos: p.dpos, song: p.song,
+  fav: !!p.fav, userSamples: 0, ...extra });
+const kitList = [{ name: 'Init kit', kit: factoryInit, userSamples: 0, builtin: true },
+  ...BUILTIN_PRESETS.map((p) => fromStored(p, { builtin: true }))];
 const kitSel = $('kit');
 // saved presets: the kit values, crossfeed, FX and mixer sends, plus the song (pattern, perform dials,
 // tempo, velocity, accent, master, mute and solo), kept in this browser
-const SAVE_KEY = 'elexir-presets';
+// (a new key: presets saved before presets and kits were split are left behind)
+const SAVE_KEY = 'elexir-presets-v2';
+try { localStorage.removeItem('elexir-presets'); } catch (e) {}
+const presetData = (k) => ({ name: k.name, kit: Array.from(k.kit), xm: k.xm, fx: k.fx, fx3: k.fx3, dpos: k.dpos, song: k.song, fav: !!k.fav });
 function storedPresets() { try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || []; } catch (e) { return []; } }
 function storePresets() {
-  const list = kitList.filter((k) => k.saved).map((k) => ({ name: k.name, kit: Array.from(k.kit), xm: k.xm, fx: k.fx, fx3: k.fx3, dpos: k.dpos, song: k.song }));
+  const list = kitList.filter((k) => k.saved).map(presetData);
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(list)); } catch (e) {}
 }
-for (const p of storedPresets()) kitList.push({ name: p.name, kit: Uint8Array.from(p.kit), xm: p.xm, fx: p.fx, fx3: p.fx3, dpos: p.dpos, song: p.song, saved: true, userSamples: 0 });
+for (const p of storedPresets()) kitList.push(fromStored(p, { saved: true }));
 function fillKits() {
   kitSel.innerHTML = '';
-  const groups = [['kits', (k) => !k.saved], ['saved', (k) => k.saved]];
+  const groups = [['built in', (k) => k.builtin], ['mine', (k) => k.saved]];
   for (const [label, test] of groups) {
     const g = document.createElement('optgroup'); g.label = label;
     kitList.forEach((k, i) => { if (test(k)) g.appendChild(new Option(k.name, i)); });
@@ -1254,6 +1303,14 @@ const ONSETS = ['k', 'z', 'x', 'v', 'q', 'th', 'zh', 'kr', 'gr', 'vr', 'xh', 'y'
 const VOWELS = ['a', 'o', 'u', 'i', 'y', 'ae', 'oo', 'ix', 'ue', 'aa'];
 const CODAS = ['', '', 'x', 'k', 'th', 'n', 'rr', 'q', 'z', 'l', 'sh'];
 const pickOne = (a) => a[Math.floor(Math.random() * a.length)];
+// a preset's name: two alien words
+function presetName() {
+  for (let tries = 0; tries < 200; tries++) {
+    const name = alienName().replace(/'/g, '') + ' ' + alienName().replace(/'/g, '');
+    if (name.length <= 16 && !kitList.some((k) => k.name === name)) return name;
+  }
+  return alienName();
+}
 function alienName() {
   for (let tries = 0; tries < 200; tries++) {
     const n = Math.random() < 0.6 ? 2 : 3;
@@ -1274,7 +1331,6 @@ function useKit(k) {
   const deflt = (t, on = 25) => routed.map((r) => (r && (kitFx === t || (t === LXR.FX_DELAY && kitFx !== LXR.FX_DISTORTION && kitFx !== LXR.FX_RING)) ? on : 0));
   initValues.set(k.kit); asDelay(initValues); values.set(initValues);
   if (k.xm) { xm.amt.splice(0, 36, ...k.xm.amt); xm.target.splice(0, 6, ...k.xm.target); xm.target.forEach((t, d) => { xSelects[d].value = t; }); xcells.forEach((d) => d()); sendX(); }
-  $('kit-del').hidden = !k.saved;
   mix.fx.splice(0, 6, ...(k.fx || deflt(LXR.FX_DELAY)));
   // distortion is on or off per voice (saves from when it was a send count as on from 50%)
   mix.dist.splice(0, 6, ...(k.fx3 ? k.fx3.dist.map((v) => (v >= 50 ? 1 : 0)) : deflt(LXR.FX_DISTORTION, 1)));
@@ -1288,16 +1344,21 @@ function useKit(k) {
   undoValues = null; $('undo').disabled = true;
   send({ type: 'kit', values: Array.from(values) });
   buildKnobs(); drawScope();
-  $('kit-msg').textContent = k.userSamples
-    ? `${k.userSamples} transient${k.userSamples > 1 ? 's use' : ' uses'} a user sample from the SD card, which plays silent here.` : '';
+  kitNote(k.userSamples
+    ? `${k.userSamples} transient${k.userSamples > 1 ? 's use' : ' uses'} a user sample from the SD card, which plays silent here.` : '');
 }
 kitSel.addEventListener('change', () => {
-  if (Number(kitSel.value) < 0) return;
-  dropPending();
-  const k = kitList[Number(kitSel.value)];
+  loadPreset(kitList[Number(kitSel.value)]);
+});
+function loadPreset(k) {
+  kitSel.value = kitList.indexOf(k);
   useKit(k);
   if (k.song) useSong(k.song);
-});
+  setDirty(false);
+}
+// a star by save once the sound or song has been changed by a randomise since the last save or load
+let dirty = false;
+function setDirty(d) { dirty = d; $('dirty').hidden = !d; }
 function songSnapshot() {
   const copy = (a) => a.map((r) => r.slice());
   return { energy: Number($('energy').value), beat: Number($('beat').value), fills: Number($('fills').value),
@@ -1323,16 +1384,17 @@ function useSong(g) {
   if (g.view === 'steps') setTab('steps');
 }
 $('kit-save').addEventListener('click', () => {
-  if (pendingKit) { $('keep-kit').click(); return; } // a generated kit keeps its name
-  const k = { name: alienName(), kit: Uint8Array.from(values), xm: { amt: xm.amt.slice(), target: xm.target.slice() }, fx: mix.fx.slice(), fx3: fx3Snapshot(), dpos: delayPos, song: songSnapshot(), saved: true, userSamples: 0 };
+  const k = { name: presetName(), kit: Uint8Array.from(values), xm: { amt: xm.amt.slice(), target: xm.target.slice() }, fx: mix.fx.slice(),
+    fx3: fx3Snapshot(), dpos: delayPos, song: songSnapshot(), saved: true, userSamples: 0 };
   kitList.push(k); storePresets(); fillKits();
   kitSel.value = kitList.length - 1;
   initValues.set(values); buildKnobs(); // the saved sound is now the reference for changed knobs
-  $('kit-del').hidden = false;
-  $('kit-msg').textContent = `saved as ${k.name}`;
+  setDirty(false); drawManager();
+  kitNote(`saved as ${k.name}`);
 });
-// new kit: each voice comes from a random built-in kit, the FX and the rest from another,
-// then every voice gets a 10% drum-safe randomise; saved under an alien name ending in "kit"
+// everything: each voice comes from a random bundled kit, the FX and the rest from another, then every
+// voice gets a 10% drum-safe randomise; the delay time, crossfeed and the pattern's beat, energy and fills
+// are rolled too. Save keeps it.
 function voiceOwned(v) {
   const s = new Set();
   for (const g of VOICE_PAGES[v].groups) for (const [, name] of g.params) s.add(PAR[name]);
@@ -1341,55 +1403,89 @@ function voiceOwned(v) {
 }
 $('new-kit').addEventListener('click', async () => {
   await startAudio();
-  const src = kitList.filter((k) => !k.saved && !/^init/i.test(k.name));
+  const src = sourceKits;
   const pick = (a) => a[Math.floor(rnd() * a.length)];
   const kit = Uint8Array.from(src.length ? pick(src).kit : values);
   if (src.length) for (let v = 0; v < 6; v++) { const k = pick(src); for (const par of voiceOwned(v)) kit[par] = k.kit[par]; }
-  let name;
-  do { name = alienName().replace(/'/g, ''); } while (name.length > 5 || kitList.some((k) => k.name === name + 'kit'));
-  const k = { name: name + 'kit', kit, xm: { amt: new Array(36).fill(0), target: xm.target.slice() }, saved: false, userSamples: 0 };
-  useKit(k);
+  useKit({ name: '', kit, xm: { amt: new Array(36).fill(0), target: xm.target.slice() }, userSamples: 0 });
   for (let v = 0; v < 6; v++) randomiseVoice(v, 0.1);
   delayPos = randomDelayPos(); send({ type: 'delay', pos: delayPos }); syncFx();
-  k.kit.set(values); initValues.set(values);
+  initValues.set(values);
   for (const h in homes) delete homes[h];
   send({ type: 'kit', values: Array.from(values) });
   buildKnobs(); drawScope();
-  // a preview until saved: the kit menu shows it as unsaved
-  pendingKit = k;
-  kitSel.querySelector('option[data-pending]')?.remove();
-  const o = new Option(`${k.name} (unsaved)`, -1); o.dataset.pending = '1';
-  kitSel.prepend(o); kitSel.value = -1;
-  $('keep-kit').hidden = false; $('keep-kit').textContent = `save ${k.name}`;
-  $('kit-msg').textContent = '';
+  randomiseX();
+  $('beat').value = Math.floor(rnd() * GROOVES.length); $('energy').value = 45 + Math.floor(rnd() * 46); $('fills').value = Math.floor(rnd() * 101);
+  for (const id of ['beat', 'energy', 'fills']) $(id).dispatchEvent(new Event('sync'));
+  if (view === 'steps') setTab('perform'); else generate();
+  setDirty(true);
+  kitNote('');
 });
-let pendingKit = null;
-function dropPending() {
-  pendingKit = null; $('keep-kit').hidden = true;
-  kitSel.querySelector('option[data-pending]')?.remove();
+// ---- preset manager: load, favourite, delete; export favourites to bake them into a release ----
+const pm = $('pm');
+function drawManager() {
+  const list = $('pm-list'); list.innerHTML = '';
+  const cur = kitList[Number(kitSel.value)];
+  const group = (label) => { const li = document.createElement('li'); li.className = 'group'; li.textContent = label; list.appendChild(li); };
+  const row = (k) => {
+    const li = document.createElement('li'); if (k === cur) li.className = 'current';
+    const sub = k.song ? `${k.song.tempo} bpm` : 'sound only';
+    li.innerHTML = `<span></span><button class="pm-name" type="button"></button><span class="pm-sub">${sub}</span><span></span>`;
+    li.querySelector('.pm-name').textContent = k.name;
+    li.querySelector('.pm-name').addEventListener('click', async () => { await startAudio(); loadPreset(k); drawManager(); });
+    if (k.saved) {
+      const f = document.createElement('button'); f.className = 'fav'; f.type = 'button'; f.textContent = '★';
+      f.setAttribute('aria-pressed', !!k.fav); f.setAttribute('aria-label', `Favourite ${k.name}`);
+      f.addEventListener('click', () => { k.fav = !k.fav; storePresets(); f.setAttribute('aria-pressed', k.fav); });
+      li.firstChild.replaceWith(f);
+      const d = document.createElement('button'); d.className = 'btn ghost pm-del'; d.type = 'button'; d.textContent = 'delete';
+      d.addEventListener('click', () => {
+        if (!confirm(`Delete ${k.name}?`)) return;
+        const wasCur = k === kitList[Number(kitSel.value)];
+        kitList.splice(kitList.indexOf(k), 1); storePresets(); fillKits();
+        kitSel.value = wasCur ? 0 : kitList.indexOf(cur);
+        drawManager();
+      });
+      li.lastChild.replaceWith(d);
+    }
+    list.appendChild(li);
+  };
+  const mine = kitList.filter((k) => k.saved);
+  group('mine');
+  if (mine.length) mine.forEach(row);
+  else { const li = document.createElement('li'); li.className = 'group'; li.textContent = 'none yet: save makes one'; list.appendChild(li); }
+  group('built in');
+  kitList.filter((k) => k.builtin).forEach(row);
 }
-$('keep-kit').addEventListener('click', () => {
-  const k = pendingKit;
-  if (!k) return;
-  dropPending();
-  // keeps the sound as it is now, edits since generating it included
-  Object.assign(k, { kit: Uint8Array.from(values), xm: { amt: xm.amt.slice(), target: xm.target.slice() }, fx: mix.fx.slice(), fx3: fx3Snapshot(), dpos: delayPos, song: songSnapshot(), saved: true });
-  kitList.push(k); storePresets(); fillKits();
-  kitSel.value = kitList.length - 1;
-  initValues.set(values); buildKnobs();
-  $('kit-del').hidden = false;
-  $('kit-msg').textContent = `saved ${k.name}`;
+$('pm-open').addEventListener('click', () => { drawManager(); $('pm-msg').textContent = ''; pm.showModal(); });
+$('pm-close').addEventListener('click', () => pm.close());
+pm.addEventListener('click', (e) => { if (e.target === pm) pm.close(); }); // a click on the backdrop
+$('pm-export').addEventListener('click', () => {
+  const favs = kitList.filter((k) => k.saved && k.fav).map(presetData);
+  if (!favs.length) { $('pm-msg').textContent = 'star some presets first'; return; }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify({ elexir: 1, presets: favs }, null, 1)], { type: 'application/json' }));
+  a.download = 'elexir-favourites.json';
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  $('pm-msg').textContent = `exported ${favs.length}`;
 });
-$('kit-del').addEventListener('click', () => {
-  const i = Number(kitSel.value), k = kitList[i];
-  if (!k || !k.saved) return;
-  kitList.splice(i, 1); storePresets(); fillKits();
-  kitSel.value = 0; $('kit-del').hidden = true;
-  $('kit-msg').textContent = `deleted ${k.name}`;
+$('pm-import').addEventListener('change', async (e) => {
+  let n = 0;
+  for (const f of e.target.files) {
+    try {
+      const data = JSON.parse(await f.text());
+      for (const p of data.presets || []) {
+        if (!p.kit || kitList.some((k) => k.saved && k.name === p.name)) continue;
+        kitList.push(fromStored(p, { saved: true })); n++;
+      }
+    } catch (err) { $('pm-msg').textContent = `${f.name}: not a presets file`; }
+  }
+  e.target.value = '';
+  if (n) { const v = kitSel.value; storePresets(); fillKits(); kitSel.value = v; drawManager(); $('pm-msg').textContent = `imported ${n}`; }
 });
 // .SND: 8-character name, then one byte per sound parameter (crossfeed isn't part of the format)
 $('kit-export').addEventListener('click', () => {
-  const k = pendingKit || kitList[Number(kitSel.value)];
+  const k = kitList[Number(kitSel.value)];
   const name = (k ? k.name : 'Elexir').replace(/[^\x20-\x7e]/g, '').slice(0, 8).padEnd(8, ' ');
   const bytes = new Uint8Array(8 + PAR.END_OF_SOUND_PARAMETERS);
   for (let i = 0; i < 8; i++) bytes[i] = name.charCodeAt(i);
@@ -1401,15 +1497,15 @@ $('kit-export').addEventListener('click', () => {
 });
 $('kit-file').addEventListener('change', async (e) => {
   const files = [...e.target.files];
-  let last = -1;
+  let last = null;
   for (const f of files) {
     try {
-      const k = parseSnd(new Uint8Array(await f.arrayBuffer()));
-      kitList.push(k); last = kitList.length - 1;
-    } catch (err) { $('kit-msg').textContent = `${f.name}: ${err.message}`; }
+      last = parseSnd(new Uint8Array(await f.arrayBuffer()));
+    } catch (err) { kitNote(`${f.name}: ${err.message}`); }
   }
   e.target.value = '';
-  if (last >= 0) { fillKits(); kitSel.value = last; useKit(kitList[last]); }
+  // an opened kit replaces the sound (pattern and the rest stay); save makes it a preset
+  if (last) { useKit(last); setDirty(true); kitNote(`opened ${last.name}`); }
 });
 // ---- perform: electro patterns from three sliders ----
 // Each groove gives every step of every track an energy level 1..9 at which it comes in
@@ -1775,7 +1871,7 @@ function randomiseX() {
   }
   xcells.forEach((d) => d()); sendX();
 }
-$('xrand').addEventListener('click', async () => { await startAudio(); randomiseX(); });
+$('xrand').addEventListener('click', async () => { await startAudio(); randomiseX(); setDirty(true); });
 $('xrand2').addEventListener('click', () => $('xrand').click());
 
 function setTab(t) {

@@ -12,12 +12,16 @@ Erica Synths.
 - **Six voices** from the firmware: three drum/tom voices, snare/clap, cymbal and a closed/open
   hi-hat, with their oscillators, FM, transients, filters, envelopes, LFOs and velocity
   modulation, and every sound parameter on knobs.
-- **Kits**: the firmware's init kit, the 16 free Hrtl LXR-02 DLC kits (by Hrtl, distributed
-  free by Erica Synths; credited here), and any LXR kit file (`.SND`) you open.
+- **Everything** builds a new sound from voices of the bundled kits (the 16 free Hrtl LXR-02 DLC
+  kits, by Hrtl, distributed free by Erica Synths, credited here, plus 12 generated kits), with new
+  crossfeed, delay and pattern. Any LXR kit file (`.SND`) can be opened too.
 - **Perform**: energy, beat and fills dials build electro patterns while it plays; a step editor
   with accents and bar conditions sits behind it.
 - **Randomise** a voice or the whole kit within drum-safe ranges (or wild).
-- **Save** a sound under a random alien name (kept in the browser), or export it as an LXR `.SND`.
+- **Presets** keep everything (sound, pattern, tempo, mixer, FX, master) under a two-word alien
+  name in the browser. The preset manager stars favourites and exports them; favourites dropped
+  into `src/presets/*.json` are built into the page as built-in presets. A sound can also be
+  exported as an LXR `.SND`.
 - **FX bus** from the firmware: distortion (tube, fold, rat), ring mod, compressor and delay
   (normal or ping-pong). Each voice can be routed through it, and kits load their own settings.
 - **Mixer** with level, pan, mute and solo, and echo and ring mod sends and a distortion on/off switch per voice (one shared distortion), using the firmware's FX code; a master compressor with a drum 1 sidechain duck.
@@ -48,7 +52,8 @@ and the hardware sequencer. Only the stereo outputs are modelled.
 | `src/lxr.js` | the engine (ES module, no dependencies) |
 | `src/lxr-tables.js`, `src/lxr-ui-data.js` | wavetables, init kit, parameter and menu data from the firmware |
 | `src/index.src.html` | the page; `src/build.mjs` bundles it with the engine and kits |
-| `src/kits/` | the Hrtl DLC kits (`.SND`) |
+| `src/kits/` | the generator's source kits (`.SND`): Hrtl DLC kits and generated E01–E12 |
+| `src/presets/` | built-in presets: favourites exported from the preset manager (`.json`) |
 | `src/verify.mjs` | the sample-for-sample comparison |
 | `ref/` | the C harness and build script for the reference |
 
