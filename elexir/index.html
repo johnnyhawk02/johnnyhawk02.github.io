@@ -4791,8 +4791,8 @@ function useKit(k) {
   initValues.set(k.kit); asDelay(initValues); values.set(initValues);
   if (k.xm) { xm.amt.splice(0, 36, ...k.xm.amt); xm.target.splice(0, 6, ...k.xm.target); xm.target.forEach((t, d) => { xSelects[d].value = t; }); xcells.forEach((d) => d()); sendX(); }
   mix.fx.splice(0, 6, ...(k.fx || deflt(LXR.FX_DELAY)));
-  // distortion is on or off per voice (saves from when it was a send count as on from 50%)
-  mix.dist.splice(0, 6, ...(k.fx3 ? k.fx3.dist.map((v) => (v >= 50 ? 1 : 0)) : deflt(LXR.FX_DISTORTION, 1)));
+  // distortion is on (1) or off (0) per voice
+  mix.dist.splice(0, 6, ...(k.fx3 ? k.fx3.dist.map((v) => (v ? 1 : 0)) : deflt(LXR.FX_DISTORTION, 1)));
   mix.ring.splice(0, 6, ...(k.fx3 ? k.fx3.ring : deflt(LXR.FX_RING)));
   // a kit's own delay time, unless it has none worth keeping (another effect, or a time
   // under 1/32 of a bar, a comb more than an echo): then a dotted eighth
