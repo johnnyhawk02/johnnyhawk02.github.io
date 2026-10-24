@@ -165,7 +165,19 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .tab-perform { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); grid-template-rows: 1fr auto; gap: 14px; align-items: stretch; }
 .pattern-card { grid-column: 1; grid-row: 1; grid-template-rows: auto 1fr; align-content: stretch; }
 .rand-card { grid-column: 1; grid-row: 2; }
-.mix-card { grid-column: 2; grid-row: 1 / span 2; }
+.right-col { grid-column: 2; grid-row: 1 / span 2; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 14px; min-height: 0; min-width: 0; }
+.master-card { padding: 12px 16px; gap: 6px; }
+.master-row { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 2fr); gap: 16px; }
+.mgroup { display: grid; gap: 4px; min-width: 0; }
+.mgroup + .mgroup { border-left: 1px solid var(--line); padding-left: 16px; }
+.mlab { display: flex; align-items: center; gap: 10px; font-size: .78rem; color: var(--muted); text-transform: lowercase; min-height: 24px; }
+.mlab output { font-family: var(--mono); font-size: .74rem; color: var(--led); }
+.btn.tiny { font-size: .76rem; padding: 2px 10px; }
+#comp-knobs { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+#duck-knobs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+.master-card .knob .dial { width: 36px; height: 36px; }
+.master-card .knob label { font-size: .7rem; line-height: 1.3; }
+.master-card .knob output { font-size: .66rem; line-height: 1.3; }
 .tab-perform .perform { grid-template-columns: minmax(0, 1fr); gap: 4px; padding-block: 4px; align-self: center; }
 .bslider { display: grid; grid-template-columns: 4.2em minmax(0, 1fr) 8.6em; align-items: center; gap: 14px; padding-block: 10px; }
 .bslider label { font-family: var(--display); font-weight: 600; font-size: 1rem; }
@@ -324,11 +336,20 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-perform .perform { align-content: space-evenly; align-self: stretch; padding-block: 0; }
 }
 @media (min-width: 761px) and (max-width: 1250px) { .tab-sound { grid-template-columns: 220px minmax(0, 1fr); } .tab-sound .lcd-line span { display: none; } }
+@media (min-width: 761px) and (max-height: 640px) {
+  .right-col { gap: 10px; }
+  .master-card, .mix-card { padding: 8px 14px 10px; gap: 4px; }
+  .tab-perform .strip { gap: 4px; }
+  .tab-perform .sdial .dial { width: 30px; height: 30px; }
+  .tab-perform .strip .sm { font-size: 0; } /* the pan label; the slider stays */
+}
 @media (max-width: 1300px) { h1 small { display: none; } .field input[type=range] { width: 70px; } .topbar { gap: 8px 14px; } }
 @media (max-width: 760px) {
   .rack { grid-template-columns: minmax(0, 1fr); padding: 16px; }
   .tab-perform { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
-  .pattern-card, .rand-card, .mix-card { grid-column: 1; grid-row: auto; }
+  .pattern-card, .rand-card, .right-col { grid-column: 1; grid-row: auto; }
+  .master-row { grid-template-columns: minmax(0, 1fr); }
+  .mgroup + .mgroup { border-left: 0; padding-left: 0; }
   .tab-perform .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 16px; }
   .tab-perform .strip:nth-child(4) { border-left: 0; }
   .tab-perform .strip .fader { height: 140px; }
@@ -418,9 +439,18 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
         </span>
       </div>
     </div>
+    <div class="right-col">
+    <div class="card master-card" role="group" aria-label="Master">
+      <h2>master</h2>
+      <div class="master-row">
+        <div class="mgroup"><span class="mlab"><button class="btn tiny" id="comp-on" type="button" aria-pressed="true">compressor</button><output id="gr-out"></output></span><div class="knobs" id="comp-knobs"></div></div>
+        <div class="mgroup"><span class="mlab">drum 1 sidechain<output id="duck-out"></output></span><div class="knobs" id="duck-knobs"></div></div>
+      </div>
+    </div>
     <div class="card mix-card">
       <h2>mixer</h2>
       <div class="strips" id="strips"></div>
+    </div>
     </div>
   </section>
 
@@ -504,7 +534,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <summary>HOW TO PLAY IT</summary>
     <div class="body">
       <p class="src">Elexir by Johnny Hawk is an unofficial browser drum machine, not made or endorsed by Erica Synths. Its sound engine is a JavaScript port of the six drum voices and the FX bus of the Erica Synths LXR-02 firmware (<a href="https://github.com/erica-synths/lxr-desktop-app" target="_blank" rel="noopener">erica-synths/lxr-desktop-app</a>, GPL-3.0, commit a43cd4f), ported line by line; its output matches the original C code compiled for the Cortex-M7 sample for sample. The FX bus (distortion, ring mod, compressor, delay) is the firmware's too; the mixer, reverb, crossfeed and pattern generator are new. The 16 kits after the init kit are Hrtl's free LXR-02 DLC kits, used with credit, and any LXR kit file (.SND) can be opened. Source and licence (GPL-3.0): <a href="https://github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir" target="_blank" rel="noopener">github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elexir</a>.</p>
-      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit; reverb send, mute and solo sit after the engine. Save keeps the current sound (kit and crossfeed) in this browser under a made-up name, listed under saved in the kit menu; export downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). The FX bus is the LXR-02's effect slot: each mixer strip's fx dial sends that voice into it (all the way up, the voice only reaches the output through the bus, as on the hardware; in between, the rest goes straight out). Kits bring their own FX settings. The rev dial is the strip's reverb send. Gated reverb opens on every hit sent to it, holds for the gate time and then cuts off. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of five electro grooves, and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. Press R for the same; Randomise all (Shift-R) does every voice at once. New kit builds a fresh kit from voices of the built-in kits, varies each by 10% and names it something ending in kit; it isn't kept until you press its save button. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
+      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit; reverb send, mute and solo sit after the engine. Save keeps the current sound (kit and crossfeed) in this browser under a made-up name, listed under saved in the kit menu; export downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). The FX bus is the LXR-02's effect slot: each mixer strip's fx dial sends that voice into it (all the way up, the voice only reaches the output through the bus, as on the hardware; in between, the rest goes straight out). Kits bring their own FX settings. The rev dial is the strip's reverb send. The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus and reverb) by up to the duck amount whenever drum 1 hits, and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the red figures show how far each is pulling down. Gated reverb opens on every hit sent to it, holds for the gate time and then cuts off. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of five electro grooves, and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. Press R for the same; Randomise all (Shift-R) does every voice at once. New kit builds a fresh kit from voices of the built-in kits, varies each by 10% and names it something ending in kit; it isn't kept until you press its save button. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
     </div>
   </details>
 
@@ -4065,6 +4095,10 @@ class Player {
     this.chanAt = new Float32Array(6).fill(1); this.ret = 0.7;
     this.verb = new Reverb(LXR.REAL_FS); this.sendBuf = new Float32Array(64);
     this.fxGain = new Float32Array(6); this.fxAmt = new Float32Array(6).fill(1);
+    // master: drum 1 ducks the other voices (before the FX bus and reverb), then a compressor
+    // on the whole mix, the same design as the LXR-02's FX compressor
+    this.master = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150 };
+    this.duckEnv = 0; this.duckAt = 1; this.compEnv = 0; this.gr = 0; this.duckMin = 1;
     this.events = [];
     this._render(this.A); this._render(this.B);
   }
@@ -4073,7 +4107,7 @@ class Player {
     else if (m.type === 'kit') this.e.loadKit(m.values);
     else if (m.type === 'trig') { this.e.trigger(m.voice, m.vel, 60); this.gainTo[Math.min(m.voice, 5)] = 1; this._keyGate(m.voice); }
     else if (m.type === 'xmod') this.e.setCrossMod(m.amt, m.target);
-    else if (m.type === 'mix') { this.sendAmt.set(m.send); this.fxAmt.set(m.fx); this.chan.set(m.chan); this.ret = m.ret; this.verb.set(m.verb); }
+    else if (m.type === 'mix') { if (m.master) Object.assign(this.master, m.master); this.sendAmt.set(m.send); this.fxAmt.set(m.fx); this.chan.set(m.chan); this.ret = m.ret; this.verb.set(m.verb); }
     else if (m.type === 'seq') {
       this.pattern = m.pattern; this.bpm = m.bpm; this.vel = m.vel; this.e.bpm = m.bpm;
       this.accGain = Math.pow(10, -m.accentDb / 20);
@@ -4094,7 +4128,8 @@ class Player {
           this._keyGate(t);
           hits.push(t);
         }
-        this.events.push({ type: 'step', step: this.step, bar: this.bar, hits });
+        this.events.push({ type: 'step', step: this.step, bar: this.bar, hits, gr: this.gr, duck: this.duckMin });
+        this.gr = 0; this.duckMin = 1;
         this.step = (this.step + 1) % 16;
         if (this.step === 0) this.bar++;
         this.toNext += LXR.REAL_FS * 60 / this.bpm / 4;
@@ -4106,9 +4141,18 @@ class Player {
     const [L, R] = dst;
     L.fill(0); R.fill(0);
     const snd = this.sendBuf; snd.fill(0);
+    // sidechain: follow drum 1's level (instant attack, set release) and turn the rest down
+    const M = this.master, k = out[0];
+    let pk = 0;
+    for (let i = 0; i < 64; i++) pk = Math.max(pk, Math.abs(k[i]));
+    pk = pk / 32768 * this.gainTo[0] * this.chan[0];
+    this.duckEnv = Math.max(pk, this.duckEnv * Math.exp(-64000 / (M.duckRelease * LXR.REAL_FS)));
+    const duck0 = this.duckAt, duck1 = 1 - M.duck * Math.min(1, this.duckEnv / 0.3);
+    this.duckAt = duck1; this.duckMin = Math.min(this.duckMin, duck1);
     for (let n = 0; n < 6; n++) {
-      // accent gain and mute/solo, both ramped over the block
-      const g0 = this.gain[n] * this.chanAt[n], g1 = this.gainTo[n] * this.chan[n], dg = (g1 - g0) / 64;
+      // accent gain and mute/solo, both ramped over the block, and the duck on every voice but drum 1
+      const d0 = n ? duck0 : 1, d1 = n ? duck1 : 1;
+      const g0 = this.gain[n] * this.chanAt[n] * d0, g1 = this.gainTo[n] * this.chan[n] * d1, dg = (g1 - g0) / 64;
       // a voice routed to the FX bus splits between the bus (fx send) and the outputs;
       // at a full send it only reaches the outputs through the bus, as in the firmware
       const fa = e.audioRouting[n] === LXR.MIXER_ROUTING_FX_BUS ? this.fxAmt[n] : 0, direct = 1 - fa;
@@ -4122,6 +4166,21 @@ class Player {
     const fx = e.renderFx(this.fxGain);
     for (let i = 0; i < 64; i++) { L[i] += fx[2 * i] / 32768; R[i] += fx[2 * i + 1] / 32768; }
     this.verb.process(snd, L, R, this.ret);
+    if (M.comp) {
+      // peak detector in dB, attack/release smoothing, gain = over * (1/ratio - 1) + makeup
+      const ca = Math.exp(-1000 / (M.attack * LXR.REAL_FS)), cr = Math.exp(-1000 / (M.release * LXR.REAL_FS));
+      const slope = 1 / M.ratio - 1, mk = Math.pow(10, M.makeup / 20);
+      let env = this.compEnv, gr = this.gr;
+      for (let i = 0; i < 64; i++) {
+        const peak = Math.max(Math.abs(L[i]), Math.abs(R[i])) + 1e-9;
+        const over = Math.max(0, 20 * Math.log10(peak) - M.thresh);
+        env = over + (over > env ? ca : cr) * (env - over);
+        const g = Math.pow(10, env * slope / 20) * mk;
+        L[i] *= g; R[i] *= g;
+        gr = Math.max(gr, -env * slope);
+      }
+      this.compEnv = env; this.gr = gr;
+    }
   }
   process(L, R) {
     for (let n = 0; n < L.length; n++) {
@@ -4815,6 +4874,8 @@ function drawMini() {
   }
 }
 // ---- mixer ----
+const MASTER0 = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150 };
+const master = { ...MASTER0 };
 const CH = ['DRUM 1', 'DRUM 2', 'DRUM 3', 'SNARE', 'CYMBAL', 'HIHAT'];
 const mix = { send: [0, 20, 20, 35, 15, 10], fx: new Array(6).fill(0), mute: new Array(6).fill(false), solo: new Array(6).fill(false) };
 const stripsEl = $('strips');
@@ -4932,7 +4993,7 @@ function sendMix() {
   const anySolo = mix.solo.some(Boolean);
   const gated = $('rv-gated').checked;
   const gw = $('rv-gatetime-wrap'); if (gw) gw.hidden = !gated;
-  send({ type: 'mix', send: mix.send.map((v) => v / 100), fx: mix.fx.map((v) => v / 100), ret: Number($('rv-ret').value) / 100 * 1.4,
+  send({ type: 'mix', master: { ...master }, send: mix.send.map((v) => v / 100), fx: mix.fx.map((v) => v / 100), ret: Number($('rv-ret').value) / 100 * 1.4,
     chan: mix.mute.map((m, n) => (m || (anySolo && !mix.solo[n]) ? 0 : 1)),
     verb: { size: Number($('rv-size').value), tone: Number($('rv-tone').value), predelay: Number($('rv-pre').value), gated, gateMs: Number($('rv-gate').value) } });
 }
@@ -4947,6 +5008,21 @@ for (const [label, id, show] of RV) {
   $('rv-knobs').appendChild(k);
 }
 $('rv-gated').addEventListener('change', sendMix);
+
+// ---- master: compressor and drum 1 sidechain ----
+const RATIOS = [1.5, 2, 3, 4, 6, 8, 20];
+const mKnob = (label, key, lo, hi, step, show, box) => box.appendChild(dialKnob(label, {
+  max: Math.round((hi - lo) / step), show: (v) => show(lo + v * step), get: () => Math.round((master[key] - lo) / step),
+  set: (v) => { master[key] = lo + v * step; sendMix(); }, dflt: () => Math.round((MASTER0[key] - lo) / step) }));
+mKnob('threshold', 'thresh', -40, 0, 1, (v) => v + ' dB', $('comp-knobs'));
+$('comp-knobs').appendChild(dialKnob('ratio', { max: RATIOS.length - 1, show: (v) => RATIOS[v] + ':1', get: () => RATIOS.indexOf(master.ratio),
+  set: (v) => { master.ratio = RATIOS[v]; sendMix(); }, dflt: () => RATIOS.indexOf(MASTER0.ratio) }));
+mKnob('attack', 'attack', 1, 50, 1, (v) => v + ' ms', $('comp-knobs'));
+mKnob('release', 'release', 20, 500, 10, (v) => v + ' ms', $('comp-knobs'));
+mKnob('makeup', 'makeup', 0, 12, 1, (v) => '+' + v + ' dB', $('comp-knobs'));
+mKnob('duck', 'duck', 0, 1, 0.01, (v) => Math.round(v * 100) + '%', $('duck-knobs'));
+mKnob('release', 'duckRelease', 30, 600, 10, (v) => v + ' ms', $('duck-knobs'));
+$('comp-on').addEventListener('click', () => { master.comp = !master.comp; $('comp-on').setAttribute('aria-pressed', master.comp); sendMix(); });
 sendMix();
 
 // ---- big sliders for the perform controls, over the hidden inputs that hold the values ----
@@ -5089,6 +5165,8 @@ function onEvent(ev) {
   setTimeout(() => {
     if (!playing) return;
     markStep(ev.step); markBar(ev.bar);
+    $('gr-out').textContent = master.comp && ev.gr > 0.1 ? '−' + ev.gr.toFixed(1) + ' dB' : '';
+    $('duck-out').textContent = ev.duck < 0.99 ? '−' + (-20 * Math.log10(Math.max(ev.duck, 0.001))).toFixed(1) + ' dB' : '';
     for (const t of ev.hits) { flash(voicesEl.children[t]); if (t === track) flash(pad); }
   }, delay);
 }
