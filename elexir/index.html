@@ -202,14 +202,16 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .right-col { grid-column: 2; grid-row: 1 / span 2; display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 14px; min-height: 0; min-width: 0; }
 .master-card { padding: 10px 16px; gap: 6px; }
 .master-card, .fx-card { grid-template-columns: 56px minmax(0, 1fr); align-items: center; column-gap: 8px; }
-.master-row { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 2fr); gap: 16px; }
-.mgroup { display: grid; gap: 4px; min-width: 0; }
+/* master and FX knobs share one column width, so they line up at the same spacing; spare room is left at the right */
+.master-card, .fx-card { --kw: 62px; }
+.master-row { display: flex; gap: 16px; }
+.mgroup { display: grid; gap: 4px; min-width: 0; flex: none; }
 .mgroup + .mgroup { border-left: 1px solid var(--line); padding-left: 16px; }
 .mlab { display: flex; align-items: center; gap: 10px; font-size: .78rem; color: var(--muted); text-transform: lowercase; min-height: 24px; }
 .mlab output { font-family: var(--mono); font-size: .74rem; color: var(--led); }
 .btn.tiny { font-size: .76rem; padding: 2px 10px; }
-#comp-knobs { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
-#duck-knobs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+#comp-knobs { grid-template-columns: repeat(5, var(--kw)); gap: 0; }
+#duck-knobs { grid-template-columns: repeat(2, var(--kw)); gap: 0; }
 .master-card .knob .dial, .fx-card .knob .dial { width: 36px; height: 36px; }
 .master-card .knob label, .fx-card .knob label { font-size: .7rem; line-height: 1.3; }
 .master-card .knob output, .fx-card .knob output { font-size: .66rem; line-height: 1.3; }
@@ -240,9 +242,10 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .tab-perform .strip .fader { height: 230px; }
 .tab-perform .ms button { width: 28px; height: 24px; font-size: .74rem; }
 .fx-card { padding: 10px 16px; gap: 4px; }
-.fx-groups { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 3.2fr) minmax(0, 3.8fr); gap: 12px; }
-.fxg { display: grid; gap: 4px; align-content: start; min-width: 0; }
-.fxg + .fxg { border-left: 1px solid var(--line); padding-left: 12px; }
+.fx-groups { display: flex; gap: 16px; }
+.fxg { display: grid; gap: 4px; align-content: start; min-width: 0; flex: none; }
+.fxg:last-child { flex: 0 1 auto; } /* ring mod: its wave buttons wrap before anything overflows */
+.fxg + .fxg { border-left: 1px solid var(--line); padding-left: 16px; }
 .fxh { font-size: .74rem; color: var(--muted); text-transform: lowercase; }
 .fxh b { color: var(--ink); font-weight: 600; margin-right: 2px; }
 .radios { display: flex; flex-wrap: wrap; gap: 2px; }
@@ -251,7 +254,8 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .radios span { display: block; font-size: .68rem; line-height: 1; padding: 4px 6px; border-radius: 4px; background: var(--tint-2); color: var(--ink); text-transform: lowercase; }
 .radios input:checked + span { background: var(--ink); color: var(--panel); }
 .radios input:focus-visible + span { outline: 2px solid var(--ink); outline-offset: 1px; }
-.fxg .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; }
+.fxg .knobs { grid-template-columns: none; grid-auto-columns: var(--kw); grid-auto-flow: column; gap: 0; justify-content: start; }
+.fxg .knob output { white-space: nowrap; }
 .chan { display: flex; gap: 6px; justify-content: center; align-items: stretch; }
 .chan .sends { flex-direction: column; justify-content: center; gap: 8px; }
 .tab-perform .chan .sdial .dial { width: 26px; height: 26px; }
@@ -394,7 +398,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .mix-card > h2 { display: none; }
   .tab-perform .sdial .dial { width: 30px; height: 30px; }
   .tab-perform .strip .sm { font-size: 0; } /* the pan label; the slider stays */
-  .radios span { padding: 4px 5px; }
+  .radios span { padding: 4px 4px; font-size: .64rem; }
   /* six pattern sliders in a short window */
   .bslider { padding-block: 0; }
   .tab-perform .perform { gap: 0; }
@@ -402,18 +406,19 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .bs-thumb { width: 20px; height: 20px; margin: -10px 0 0 -10px; }
   .pattern-card > h2 { margin-bottom: 0; }
   .fx-card .knob .dial { width: 30px; height: 30px; }
-  .fx-groups { gap: 10px; } .fxg + .fxg { padding-left: 10px; }
+  .master-card, .fx-card { --kw: 52px; }
+  .fx-groups, .master-row { gap: 12px; } .fxg + .fxg, .mgroup + .mgroup { padding-left: 12px; }
 }
 @media (max-width: 1300px) { h1 small, .kitbar .lbl { display: none; } .field input[type=range] { width: 60px; } .topbar { gap: 8px 14px; } }
 @media (max-width: 760px) {
   .rack { grid-template-columns: minmax(0, 1fr); padding: 16px; }
   .tab-perform { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
   .pattern-card, .rand-card, .right-col { grid-column: 1; grid-row: auto; }
-  .master-row { grid-template-columns: minmax(0, 1fr); }
+  .master-row, .fx-groups { flex-direction: column; }
+  .master-card, .fx-card { --kw: 60px; }
   .master-card, .fx-card { grid-template-columns: minmax(0, 1fr); }
   .fx-row { grid-template-columns: minmax(0, 1fr); }
   .mgroup + .mgroup { border-left: 0; padding-left: 0; }
-  .fx-groups { grid-template-columns: minmax(0, 1fr); }
   .fxg + .fxg { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 8px; }
   .tab-perform .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 16px; }
   .tab-perform .strip:nth-child(4) { border-left: 0; }
