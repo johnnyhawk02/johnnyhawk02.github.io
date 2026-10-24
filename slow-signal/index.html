@@ -104,6 +104,10 @@ select.sel {
 .transport { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
 .transport input[type=range] { flex: 1; min-width: 60px; }
 .time { font-size: 12px; color: var(--ink-dim); white-space: nowrap; }
+.transport .btn.mark { padding: 5px 8px; font-size: 12px; }
+.transport .btn.mark.set { border-color: var(--rec); color: var(--rec); }
+#scrub.has-region::-webkit-slider-runnable-track { background: linear-gradient(to right, var(--line) var(--rin), var(--rec) var(--rin), var(--rec) var(--rout), var(--line) var(--rout)); }
+#scrub.has-region::-moz-range-track { background: linear-gradient(to right, var(--line) var(--rin), var(--rec) var(--rin), var(--rec) var(--rout), var(--line) var(--rout)); }
 
 input[type=range] {
   -webkit-appearance: none; appearance: none; background: transparent; height: 18px; cursor: pointer;
@@ -203,6 +207,12 @@ table.matrix { border-collapse: collapse; width: 100%; min-width: 660px; }
 .rsetup { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .rsetup label { display: grid; gap: 4px; }
 .rnote { grid-column: 1 / -1; margin: 0; font-size: 12px; color: var(--ink-dim); }
+.rsetup .wide { grid-column: 1 / -1; }
+.rsetup input[type=text] { background: var(--rail); border: 1px solid var(--line); border-radius: 4px; color: var(--ink); font: 13px var(--f-mono, monospace); padding: 6px 8px; width: 100%; box-sizing: border-box; }
+.rsetup input.bad { border-color: var(--rec); }
+.rrange { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
+.rtip { grid-column: 1 / -1; margin: 0; font-size: 12px; color: var(--ink-dim); }
+.rtip:empty { display: none; }
 @media (min-width: 1180px) and (min-height: 600px) {
   html, body { height: 100%; }
   body { display: flex; flex-direction: column; overflow: hidden; padding-block: 8px; }
@@ -331,7 +341,9 @@ body.perform.idle .perf-ui { opacity: 0; }
     <select class="sel" id="res" aria-label="Output size">
       <option value="1280x720">720p 16:9</option>
       <option value="1920x1080" selected>1080p 16:9</option>
+      <option value="2560x1440">1440p 16:9</option>
       <option value="1080x1080">1080 square</option>
+      <option value="1080x1350">1080 4:5</option>
       <option value="1080x1920">1080 vertical</option>
       <option value="3840x2160">4K 16:9</option>
     </select>
@@ -393,6 +405,8 @@ body.perform.idle .perf-ui { opacity: 0; }
         <button class="btn icon" id="restart" type="button" aria-label="Back to start">⏮</button>
         <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Position">
         <span class="time mono" id="time">0:00.0 / 6:00</span>
+        <button class="btn mark" id="setIn" type="button" title="Start the render here (key I). Shift-click to clear.">In</button>
+        <button class="btn mark" id="setOut" type="button" title="End the render here (key O). Shift-click to clear.">Out</button>
       </div>
     </div>
     <section class="matrix-wrap">
@@ -417,6 +431,22 @@ body.perform.idle .perf-ui { opacity: 0; }
   <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="rtitle">
     <h3 id="rtitle">RENDER MP4</h3>
     <div class="rsetup" id="rsetup">
+      <label for="target" class="wide"><span class="lbl">Made for</span>
+        <select class="sel" id="target">
+          <option value="custom">Custom (size from the top bar)</option>
+          <option value="yt1080">YouTube 1080p</option>
+          <option value="yt1440">YouTube 1440p (sharper after upload)</option>
+          <option value="yt4k">YouTube 4K (sharpest after upload)</option>
+          <option value="igreel">Instagram Reel 9:16</option>
+          <option value="igfeed">Instagram feed 4:5</option>
+          <option value="igsquare">Instagram square</option>
+        </select></label>
+      <p class="rtip" id="rtip"></p>
+      <div class="rrange wide">
+        <label for="rin"><span class="lbl">In</span><input type="text" id="rin" spellcheck="false" autocomplete="off"></label>
+        <label for="rout"><span class="lbl">Out</span><input type="text" id="rout" spellcheck="false" autocomplete="off"></label>
+        <button class="btn" id="rwhole" type="button">Whole track</button>
+      </div>
       <label for="fps"><span class="lbl">Frame rate</span>
         <select class="sel" id="fps">
           <option value="25">25 fps</option>
@@ -1056,6 +1086,7 @@ $("reset").addEventListener("click", () => { patch = defaultPatch(); syncAll(); 
 // ---------- audio loading & transport ----------
 let audioEl = null, audioBuf = null, features = null, trackName = "";
 let freeT = 0, playing = true, lastNow = performance.now();
+let inPt = 0, outPt = null;   // render in/out points in seconds; outPt null = end of track
 const engine = new Engine();
 const DEFAULT_DUR = 360;
 const duration = () => audioEl && isFinite(audioEl.duration) ? audioEl.duration : (audioBuf ? audioBuf.duration : DEFAULT_DUR);
@@ -1078,6 +1109,7 @@ async function loadFile(file) {
     tr.append(el("b", {}, trackName), ` · ${fmtTime(buf.duration).replace(/\.\d$/, "")}`);
     tr.title = file.name;
     $("render").disabled = false;
+    inPt = 0; outPt = null; showRegion();
     setPlaying(false);
     audioEl.currentTime = 0;
   } catch (err) {
@@ -1096,13 +1128,38 @@ function setPlaying(on) {
   if (audioEl) { if (on) audioEl.play().catch(() => { playing = false; $("play").textContent = "▶"; }); else audioEl.pause(); }
 }
 $("play").addEventListener("click", () => setPlaying(!playing));
-$("restart").addEventListener("click", () => { if (audioEl) audioEl.currentTime = 0; freeT = 0; engine.reset(); });
+$("restart").addEventListener("click", () => { if (audioEl) audioEl.currentTime = inPt; freeT = inPt; engine.reset(); });
+
+// ---------- in / out points ----------
+const nowT = () => audioEl ? audioEl.currentTime : freeT;
+const outEnd = () => outPt ?? duration();
+function showRegion() {
+  const d = duration(), sc = $("scrub"), on = inPt > 0 || outPt != null;
+  sc.classList.toggle("has-region", on);
+  sc.style.setProperty("--rin", (inPt / d * 100).toFixed(2) + "%");
+  sc.style.setProperty("--rout", (outEnd() / d * 100).toFixed(2) + "%");
+  $("setIn").classList.toggle("set", inPt > 0); $("setOut").classList.toggle("set", outPt != null);
+  $("setIn").textContent = inPt > 0 ? "In " + fmtTime(inPt) : "In";
+  $("setOut").textContent = outPt != null ? "Out " + fmtTime(outPt) : "Out";
+}
+function setIn(t) { inPt = Math.max(0, Math.min(t, duration() - 0.5)); if (outPt != null && outPt - inPt < 0.5) outPt = null; showRegion(); }
+function setOut(t) { outPt = t >= duration() - 0.05 ? null : Math.max(t, 0.5); if (outPt != null && outPt - inPt < 0.5) inPt = 0; showRegion(); }
+$("setIn").addEventListener("click", e => e.shiftKey ? (inPt = 0, showRegion()) : setIn(nowT()));
+$("setOut").addEventListener("click", e => e.shiftKey ? (outPt = null, showRegion()) : setOut(nowT()));
+function parseTime(str) {
+  const m = String(str).trim().match(/^(?:(\d+):)?(\d+(?:\.\d*)?)$/);
+  if (!m) return NaN;
+  return (m[1] ? +m[1] * 60 : 0) + +m[2];
+}
 $("scrub").addEventListener("input", e => {
   const t = (+e.target.value / 1000) * duration();
   if (audioEl) audioEl.currentTime = t; else freeT = t;
 });
 document.addEventListener("keydown", e => {
-  if (e.code === "Space" && !/INPUT|SELECT|BUTTON|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); setPlaying(!playing); }
+  if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName) || e.metaKey || e.ctrlKey || e.altKey || !$("overlay").hidden) return;
+  if (e.code === "Space" && document.activeElement.tagName !== "BUTTON") { e.preventDefault(); setPlaying(!playing); }
+  if (e.code === "KeyI") e.shiftKey ? (inPt = 0, showRegion()) : setIn(nowT());
+  if (e.code === "KeyO") e.shiftKey ? (outPt = null, showRegion()) : setOut(nowT());
 });
 
 // ---------- preview loop ----------
@@ -1239,8 +1296,9 @@ async function pickVideoConfig(w, h, fps, bitrate) {
   return null;
 }
 async function pickAudioConfig(sr, ch) {
-  const cands = [["aac", { codec: "mp4a.40.2", sampleRate: sr, numberOfChannels: ch, bitrate: 256000 }],
-                 ["opus", { codec: "opus", sampleRate: 48000, numberOfChannels: ch, bitrate: 192000 }]];
+  // YouTube asks for AAC at 384 kbps stereo; not every AAC encoder goes that high
+  const cands = [384000, 320000, 256000].map(b => ["aac", { codec: "mp4a.40.2", sampleRate: sr, numberOfChannels: ch, bitrate: b }])
+    .concat([["opus", { codec: "opus", sampleRate: 48000, numberOfChannels: ch, bitrate: 256000 }]]);
   for (const [mux, cfg] of cands) {
     if (mux === "opus" && sr !== 48000) continue;
     try { const s = await AudioEncoder.isConfigSupported(cfg); if (s.supported) return { mux, cfg }; } catch (e) {}
@@ -1250,11 +1308,63 @@ async function pickAudioConfig(sr, ch) {
 
 $("render").addEventListener("click", openRenderSetup);
 $("rstart").addEventListener("click", startRender);
+// upload targets: size, frame rate (null keeps the current one) and quality
+const TARGETS = {
+  yt1080:   { res: "1920x1080", fps: null, q: "1.8", tip: "YouTube asks for 8 Mbps at 1080p (12 at 60 fps). This sends about twice that, so its re-encode starts from a clean copy." },
+  yt1440:   { res: "2560x1440", fps: null, q: "1", tip: "YouTube gives 1440p and 4K uploads its better codecs (VP9/AV1) and much more bitrate, even for people watching at 1080p. Busy feedback patterns survive far better." },
+  yt4k:     { res: "3840x2160", fps: null, q: "1", tip: "Best result on YouTube, but the slowest render and a big file (about 35 Mbps at 30 fps). Rendering 4K with blur takes a while." },
+  igreel:   { res: "1080x1920", fps: "30", q: "1", tip: "Instagram re-encodes everything, so 30 fps H.264 at 8–15 Mbps is the sweet spot. The Reel buttons cover about 250 px top and bottom. In the app, turn on Settings › Data usage and media quality › Upload at highest quality." },
+  igfeed:   { res: "1080x1350", fps: "30", q: "1", tip: "4:5 takes the most room in the feed. As a Reel it gets a blurred border, so use 9:16 for Reels. Turn on Upload at highest quality in the app." },
+  igsquare: { res: "1080x1080", fps: "30", q: "1", tip: "Square shows whole in the grid and the feed. Turn on Upload at highest quality in the app." },
+};
+try { const t = localStorage.getItem("slowsignal.target"); if (t && (t === "custom" || TARGETS[t])) $("target").value = t; } catch (e) {}
+function applyTarget() {
+  const t = TARGETS[$("target").value];
+  try { localStorage.setItem("slowsignal.target", $("target").value); } catch (e) {}
+  $("rtip").textContent = t ? t.tip : "";
+  if (t) {
+    if ($("res").value !== t.res) { $("res").value = t.res; $("res").dispatchEvent(new Event("change")); }
+    if (t.fps) $("fps").value = t.fps;
+    $("quality").value = t.q;
+  }
+  renderNote();
+}
+$("target").addEventListener("change", applyTarget);
+["fps", "quality"].forEach(id => $(id).addEventListener("change", () => {
+  const t = TARGETS[$("target").value];
+  if (t && ((t.fps && $("fps").value !== t.fps) || $("quality").value !== t.q)) { $("target").value = "custom"; $("rtip").textContent = ""; }
+  renderNote();
+}));
+$("res").addEventListener("change", () => { const t = TARGETS[$("target").value]; if (t && t.res !== $("res").value) $("target").value = "custom"; });
+const clock = t => fmtTime(t).replace(/\.0$/, "");
+function renderNote() {
+  if (!audioBuf) return;
+  const [W, H] = $("res").value.split("x").map(Number);
+  const fps = +$("fps").value, q = +$("quality").value;
+  const mbps = W * H * fps * 0.14 * q / 1e6, len = outEnd() - inPt;
+  const whole = inPt === 0 && outPt == null;
+  const mb = Math.round(len * (mbps + 0.38) / 8);
+  $("rnote").textContent = `Renders ${whole ? "the whole track" : clock(inPt) + " to " + clock(outEnd())} (${clock(len)}) at ${W}×${H}, ${fps} fps, about ${mbps.toFixed(0)} Mbps (${mb >= 1000 ? (mb / 1000).toFixed(1) + " GB" : mb + " MB"})${blurFrames() > 1 ? `, with ×${blurFrames()} motion blur (about ${blurFrames()}× slower)` : ""}.`;
+  $("rin").value = fmtTime(inPt); $("rout").value = fmtTime(outEnd());
+  $("rin").classList.remove("bad"); $("rout").classList.remove("bad"); $("rstart").disabled = false;
+}
+function readRange() {
+  const a = parseTime($("rin").value), b = parseTime($("rout").value), d = duration();
+  const okA = isFinite(a) && a >= 0 && a < d, okB = isFinite(b) && b > 0;
+  const ok = okA && okB && Math.min(b, d) - a >= 0.5;
+  $("rin").classList.toggle("bad", !okA || (okB && !ok)); $("rout").classList.toggle("bad", !okB || (okA && !ok));
+  $("rstart").disabled = !ok;
+  if (ok) { inPt = a; outPt = b >= d - 0.05 ? null : b; showRegion(); renderNote(); }
+}
+["rin", "rout"].forEach(id => {
+  $(id).addEventListener("change", readRange);
+  $(id).addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); readRange(); } });
+});
+$("rwhole").addEventListener("click", () => { inPt = 0; outPt = null; showRegion(); renderNote(); });
 function openRenderSetup() {
   if (!audioBuf || rendering) return;
-  const [W, H] = $("res").value.split("x").map(Number);
   $("rtitle").textContent = "RENDER MP4";
-  $("rnote").textContent = `Renders the whole track (${fmtTime(audioBuf.duration).replace(/\.\d$/, "")}) at ${W}×${H} with the current patch${blurFrames() > 1 ? `, with ×${blurFrames()} motion blur (about ${blurFrames()}× slower to render)` : ""}. Change the size in the top bar.`;
+  applyTarget();
   $("rsetup").hidden = false; $("rstart").hidden = false;
   $("thumb").hidden = true; $("rbar").hidden = true; $("rstatus").hidden = true; $("rsave").hidden = true;
   $("rcancel").textContent = "Cancel";
@@ -1306,28 +1416,45 @@ async function startRender() {
   let r;
   try { r = new Renderer(rc); r.resize(W, H); } catch (e) { failure = e; }
   const eng = new Engine(); eng.features = features;
-  const dur = audioBuf.duration, total = Math.ceil(dur * fps);
+  const tIn = Math.min(inPt, audioBuf.duration - 0.5), tOut = Math.min(outEnd(), audioBuf.duration);
+  const dur = tOut - tIn, total = Math.ceil(dur * fps);
+  const partial = tIn > 0 || tOut < audioBuf.duration - 0.05;
   const chans = []; for (let c = 0; c < ch; c++) chans.push(audioBuf.getChannelData(c));
-  let aPos = 0;
+  const aStart = Math.round(tIn * sr), aStop = Math.min(audioBuf.length, Math.round(tOut * sr));
+  const FADE = Math.round(sr * 0.01);   // 10 ms de-click at a cut
+  let aPos = aStart;
   const t0 = performance.now();
   const keyEvery = fps * 2;
   const nb = blurFrames();
-  status(`Encoding ${W}×${H} at ${fps} fps · ${vsel.mux === "avc" ? "H.264" : vsel.mux.toUpperCase()} + ${asel.mux === "aac" ? "AAC" : "Opus"} audio`);
+  // pre-roll: run the few seconds before the in point so the feedback trails are already built up
+  const preN = r ? Math.round(Math.min(tIn, 4) * fps) : 0;
+  if (preN) status("Warming up the feedback before the in point…");
+  for (let j = preN; j > 0 && !failure && !cancelRender; j--) {
+    const us = [];
+    for (let k = 0; k < nb; k++) { eng.advanceTo(tIn + (k / nb - j) / fps); us.push(eng.uniforms()); }
+    r.drawFrames(us, 1 / fps);
+    if (j % 15 === 0) await yieldNow();
+  }
+  status(`Encoding ${W}×${H} at ${fps} fps · ${vsel.mux === "avc" ? "H.264" : vsel.mux.toUpperCase()} + ${asel.mux === "aac" ? "AAC " + Math.round(asel.cfg.bitrate / 1000) + " kbps" : "Opus"} audio`);
 
   for (let i = 0; i < total && !failure && !cancelRender; i++) {
     const t = i / fps;
     const us = [];
-    for (let k = 0; k < nb; k++) { eng.advanceTo((i + k / nb) / fps); us.push(eng.uniforms()); }
+    for (let k = 0; k < nb; k++) { eng.advanceTo(tIn + (i + k / nb) / fps); us.push(eng.uniforms()); }
     r.drawFrames(us, 1 / fps);
     const vf = new VideoFrame(rc, { timestamp: Math.round(i * 1e6 / fps), duration: Math.round(1e6 / fps) });
     venc.encode(vf, { keyFrame: i % keyEvery === 0 });
     vf.close();
     // feed audio up to the end of this frame so the two tracks stay interleaved
-    const aEnd = Math.min(audioBuf.length, Math.round((i + 1) / fps * sr));
+    const aEnd = Math.min(aStop, aStart + Math.round((i + 1) / fps * sr));
     if (aEnd > aPos) {
       const n = aEnd - aPos, data = new Float32Array(n * ch);
       for (let c = 0; c < ch; c++) data.set(chans[c].subarray(aPos, aEnd), c * n);
-      const ad = new AudioData({ format: "f32-planar", sampleRate: sr, numberOfFrames: n, numberOfChannels: ch, timestamp: Math.round(aPos / sr * 1e6), data });
+      if (partial) for (let k = 0; k < n; k++) {
+        const g = aPos + k, gain = Math.min(1, tIn > 0 ? (g - aStart) / FADE : 1, tOut < audioBuf.duration - 0.05 ? (aStop - g) / FADE : 1);
+        if (gain < 1) for (let c = 0; c < ch; c++) data[c * n + k] *= gain;
+      }
+      const ad = new AudioData({ format: "f32-planar", sampleRate: sr, numberOfFrames: n, numberOfChannels: ch, timestamp: Math.round((aPos - aStart) / sr * 1e6), data });
       aenc.encode(ad); ad.close(); aPos = aEnd;
     }
     while (venc.encodeQueueSize > 6 && !failure) await new Promise(res => venc.addEventListener("dequeue", res, { once: true }));
@@ -1357,7 +1484,8 @@ async function startRender() {
   if (failure) { status(`Encoding stopped: ${failure.message || failure}. Try a smaller size or lower quality.`, true); return; }
   const blob = new Blob([muxer.target.buffer], { type: "video/mp4" });
   const secs = ((performance.now() - t0) / 1000).toFixed(0);
-  const name = `${(trackName || "slow-signal").replace(/[^\w\- ]+/g, "").trim() || "slow-signal"} - ${W}x${H}.mp4`;
+  const stamp = x => fmtTime(x).replace(/\.\d$/, "").replace(":", "m") + "s";
+  const name = `${(trackName || "slow-signal").replace(/[^\w\- ]+/g, "").trim() || "slow-signal"}${partial ? ` ${stamp(tIn)}-${stamp(tOut)}` : ""} - ${W}x${H}.mp4`;
   lastFile = { blob, name };
   $("bar").style.width = "100%";
   status(`Done in ${secs} s · ${(blob.size / 1048576).toFixed(0)} MB${asel.mux === "opus" ? " · audio is Opus (this browser has no AAC encoder), plays in Chrome and VLC" : ""}`);
