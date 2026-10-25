@@ -82,6 +82,7 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .kitbar select { width: 10.5em; font-weight: 500; text-overflow: ellipsis; } /* fixed, so longer names don't shift the bar */
 .kitbar .file { position: relative; overflow: hidden; }
 .kitbar .btn { padding-inline: 10px; }
+#pc4-open { text-transform: none; }
 .stepper { display: inline-flex; gap: 2px; }
 .stepper .btn { padding-inline: 9px; font-size: 1rem; line-height: 1.2; }
 .kitbar .file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
@@ -121,7 +122,8 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .pm-hint { margin: 0; font-size: .8rem; color: var(--muted); }
 .pm-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; min-height: 0; }
 .pm-list li { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto auto; align-items: center; gap: 6px; padding: 4px 0; border-top: 1px solid var(--line); }
-.pm-list li.group { display: block; border: 0; padding: 10px 0 2px; font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.pm-list li.group { display: block; border: 0; padding: 12px 0 4px; font-weight: 600; font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.pm-list li.empty { display: block; padding: 6px 0 10px; font-size: .84rem; color: var(--muted); }
 .pm-list li.current .pm-name { font-weight: 700; }
 .pm-list .fav { border: 0; background: none; font-size: 1.1rem; line-height: 1; cursor: pointer; color: var(--muted); padding: 2px; }
 .pm-list .fav[aria-pressed="true"] { color: var(--led); }
@@ -242,18 +244,17 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .tab-perform { grid-template-columns: minmax(370px, 1.3fr) minmax(0, 2.6fr); grid-template-rows: minmax(0, 1fr); gap: 14px; align-items: stretch; }
 .pattern-card { grid-column: 1; grid-row: 1; grid-template-rows: auto 1fr auto; align-content: stretch; }
 .right-col { grid-column: 2; grid-row: 1; display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 14px; min-height: 0; min-width: 0; }
-.master-card { padding: 10px 16px; gap: 6px; }
-.master-card, .fx-card { grid-template-columns: 56px minmax(0, 1fr); align-items: center; column-gap: 8px; }
+.master-card, .fx-card, .rand-card { padding: 12px 16px 14px; gap: 8px; }
 /* master and FX knobs share one column width, so they line up at the same spacing; spare room is left at the right */
 .master-card, .fx-card { --kw: 62px; }
-.master-row { display: flex; gap: 16px; }
-.mgroup { display: grid; gap: 4px; min-width: 0; flex: none; }
+.master-row { display: flex; gap: 16px; min-width: 0; }
+.mgroup { display: grid; gap: 4px; min-width: 0; flex: 0 1 auto; }
 .mgroup + .mgroup { border-left: 1px solid var(--line); padding-left: 16px; }
 .mlab { display: flex; align-items: center; gap: 10px; font-size: .78rem; color: var(--muted); text-transform: lowercase; min-height: 24px; }
 .mlab output { font-family: var(--mono); font-size: .74rem; color: var(--led); }
 .btn.tiny { font-size: .76rem; padding: 2px 10px; }
-#comp-knobs { grid-template-columns: repeat(5, var(--kw)); gap: 0; }
-#duck-knobs { grid-template-columns: repeat(2, var(--kw)); gap: 0; }
+#comp-knobs { grid-template-columns: repeat(5, minmax(46px, var(--kw))); gap: 0; }
+#duck-knobs { grid-template-columns: repeat(2, minmax(46px, var(--kw))); gap: 0; }
 .master-card .knob .dial, .fx-card .knob .dial { width: 36px; height: 36px; }
 .master-card .knob label, .fx-card .knob label { font-size: .7rem; line-height: 1.3; }
 .master-card .knob output, .fx-card .knob output { font-size: .66rem; line-height: 1.3; }
@@ -280,7 +281,6 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .tab-perform .sm { font-size: .68rem; }
 .tab-perform .strip .fader { height: 230px; }
 .tab-perform .ms button { width: 28px; height: 24px; font-size: .74rem; }
-.fx-card { padding: 10px 16px; gap: 4px; }
 .fx-groups { display: flex; gap: 16px; }
 .fxg { display: grid; gap: 4px; align-content: start; min-width: 0; flex: none; }
 .fxg:last-child { flex: 0 1 auto; } /* ring mod: its wave buttons wrap before anything overflows */
@@ -375,7 +375,7 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .hint { margin: 0; font-size: .78rem; color: var(--muted); }
 
 /* ---- about tab ---- */
-.about { display: grid; gap: 14px; min-width: 0; }
+.about { display: grid; gap: 0; min-width: 0; }
 .pc-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .pc-head h2 { margin: 0; }
 .switch { display: inline-flex; border: 0; padding: 2px; border-radius: 999px; background: var(--tint-2); cursor: pointer; font-family: var(--display); font-weight: 600; }
@@ -393,19 +393,19 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 /* the Faderfox PC4 mockup: 24 knobs (four rows of six) on the left, the perform controls to drop onto them on the right */
 .pc4 { width: min(880px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto; }
 .pc4-body { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; align-items: start; }
-.pc4-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px 8px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; }
+.pc4-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px 8px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; }
 .pc4-knob { display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 0; padding: 3px 2px 2px; border: 1px dashed transparent; border-radius: 8px; font-size: .9rem; cursor: pointer; }
 .pc4-knob.over, .pc4-knob:focus-visible { border-color: var(--ink); outline: none; }
 .pc4-knob.hit .pc4-dial { box-shadow: 0 0 0 3px var(--led); }
-.pc4-cc { font-family: var(--mono); font-size: .8rem; color: var(--muted); }
+.pc4-cc { font-family: var(--mono); font-size: .66rem; color: var(--muted); }
 .pc4-dial { position: relative; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel); }
 .pc4-dial::before { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: var(--line); opacity: .45; }
 .pc4-ptr { position: absolute; inset: 0; transform: rotate(-135deg); }
 .pc4-ptr::after { content: ''; position: absolute; left: 50%; top: 2px; width: 2px; height: 8px; margin-left: -1px; border-radius: 1px; background: var(--ink); }
-.pc4-label { min-height: 1.2em; text-align: center; line-height: 1.2; font-size: 1rem; overflow-wrap: anywhere; }
-.pc4-knob.empty .pc4-label { color: var(--muted); }
+.pc4-label { min-height: 1.2em; text-align: center; line-height: 1.2; font-family: var(--display); font-weight: 600; font-size: .84rem; overflow-wrap: anywhere; }
+.pc4-knob.empty .pc4-label { color: var(--muted); font-weight: 400; }
 .pc4-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; align-content: start; }
-.pc4-tile { position: relative; height: 46px; display: flex; align-items: center; justify-content: center; padding: 4px 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font-size: .78rem; text-align: center; cursor: grab; user-select: none; }
+.pc4-tile { position: relative; height: 40px; display: flex; align-items: center; justify-content: center; padding: 4px 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font-family: var(--display); font-weight: 500; font-size: .84rem; text-align: center; cursor: grab; user-select: none; }
 .pc4-tile.used { opacity: .5; }
 .pc4-tile.sel { outline: 2px solid var(--ink); }
 .pc4-badge { position: absolute; top: 2px; right: 6px; font-family: var(--mono); font-size: .6rem; color: var(--muted); }
@@ -424,7 +424,7 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .tab-perform .gtable .sdial .dial { width: 28px; height: 28px; }
 /* mixer header: the sound randomisers sit beside the title */
 .top-row { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: inherit; min-width: 0; }
-.rand-card { padding: 10px 14px; gap: 6px; align-content: start; }
+.rand-card { align-content: start; }
 .rand-card > h2 { margin: 0; }
 .rand-card .rand { display: grid; gap: 6px; }
 .rand-card .rbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
@@ -439,24 +439,25 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
   max-height: calc(100dvh - 48px); box-shadow: 0 20px 60px rgb(0 0 0 / .35); }
 .about-dlg[open] { display: grid; grid-template-rows: auto minmax(0, 1fr); }
 .about-dlg::backdrop { background: rgb(0 0 0 / .35); }
-.about-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid var(--line);
+.about-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 22px; border-bottom: 1px solid var(--line);
   font-family: var(--display); font-size: 1.2rem; }
-.about-dlg .about { overflow: auto; padding: 16px 18px 18px; }
+.about-dlg .about { overflow: auto; padding: 4px 22px 4px; }
 .about > * { min-width: 0; }
-details { background: var(--panel); border-radius: 10px; }
-summary { cursor: pointer; padding: 12px 18px; font-family: var(--display); font-weight: 600; font-size: .95rem; text-transform: lowercase; }
-.body { padding: 0 18px 18px; display: grid; gap: 10px; max-width: 80ch; }
+details { background: var(--panel); }
+details + details { border-top: 1px solid var(--line); }
+summary { cursor: pointer; padding: 12px 0; font-family: var(--display); font-weight: 600; font-size: .95rem; text-transform: lowercase; }
+.body { padding: 0 0 18px; display: grid; gap: 10px; max-width: 80ch; }
 .body p { margin: 0; overflow-wrap: anywhere; }
 .body code { font-family: var(--mono); font-size: .82em; }
 .src a { color: inherit; }
-.note { font-size: .86rem; color: var(--muted); }
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; padding: 0 18px 18px; }
+.note { font-size: .9rem; line-height: 1.6; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; padding: 0 0 18px; }
 .stat { background: var(--tint); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; }
 .stat b { font-family: var(--display); font-size: 1.3rem; font-variant-numeric: tabular-nums; }
 .stat span { font-size: .8rem; color: var(--muted); }
-.code-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 18px 10px; flex-wrap: wrap; }
+.code-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 0 10px; flex-wrap: wrap; }
 pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background: var(--code-bg); font-family: var(--mono);
-  font-size: .76rem; line-height: 1.55; border-radius: 0 0 10px 10px; max-height: 560px; }
+  font-size: .76rem; line-height: 1.55; border-radius: 8px; max-height: 560px; margin-bottom: 18px; }
 
 /* ---- smaller screens ---- */
 @media (max-width: 1180px) {
@@ -473,7 +474,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   /* sound: compact cards, the scope takes the spare height on the left */
   .pcards { gap: 8px; --kw: 46px; }
   .pcard { padding: 8px 10px 8px; gap: 4px; }
-  .pcard > h2 { font-size: .68rem; }
+  .pcard > h2, .xcard > h2 { font-size: .68rem; }
+  .xcard { padding: 8px 10px; }
   .pcard .knobs { gap: 4px; }
   .pcard .knob { gap: 0; }
   .pcard .knob .dial { width: 38px; height: 38px; }
@@ -492,9 +494,13 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-perform .strip .sm { align-self: stretch; }
   .tab-perform .chan { flex: 1 1 auto; min-height: 88px; max-height: 150px; }
   @media (min-height: 720px) { .tab-perform .chan { max-height: 190px; } }
+  @media (min-height: 860px) { .tab-perform .chan { max-height: 250px; } .pknobs .knob .dial { width: 54px; height: 54px; } }
   .tab-perform .strip .fader { height: auto; }
   .pattern-card { grid-template-rows: auto minmax(0, 1fr) auto; }
-  .tab-perform .perform { align-content: space-evenly; align-self: stretch; padding-block: 0; }
+  .tab-perform .perform { display: flex; flex-direction: column; gap: clamp(10px, 2vh, 20px); align-self: stretch; padding-block: 0; }
+  .tab-perform #pk-pattern { margin-top: auto; }
+  .tab-perform .pgh { margin-top: auto; }
+  .tab-perform #pk-macro { margin-bottom: auto; }
 }
 @media (min-width: 761px) and (max-width: 1250px) { .tab-sound { grid-template-columns: minmax(0, 1fr) 270px; } .tab-sound .lcd-line span { display: none; } }
 @media (min-width: 761px) and (max-height: 640px) {
@@ -532,6 +538,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .master-card, .fx-card { --kw: 52px; }
   .fx-groups, .master-row { gap: 12px; } .fxg + .fxg, .mgroup + .mgroup { padding-left: 12px; }
 }
+@media (min-width: 761px) and (max-width: 1300px) { .fxg:last-child .radios { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; } }
 @media (max-width: 1300px) { h1 small, .kitbar .lbl { display: none; } .field input[type=range] { width: 60px; } .topbar { gap: 8px 14px; } }
 @media (max-width: 760px) {
   .rack { grid-template-columns: minmax(0, 1fr); padding: 16px; }
@@ -549,6 +556,13 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-perform .strip .fader { height: 140px; }
   .pcard .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
   .tabs { padding-left: 0; gap: 2px; }
+  .topbar > * { min-width: 0; }
+  .kitbar { flex-wrap: nowrap; width: 100%; gap: 4px; }
+  .kitbar .field { flex: 1 1 auto; min-width: 0; }
+  .kitbar select { width: 100%; min-width: 0; }
+  .kitbar .btn { padding-inline: 8px; }
+  .transport { width: 100%; }
+  .transport .bars { margin-left: auto; }
   .tab { flex: 1 1 0; min-width: 0; padding: 8px 4px; font-size: .8rem; }
   .top { grid-template-columns: minmax(0, 1fr) 76px; }
   .lcd canvas { height: 100px; }
@@ -556,7 +570,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .perform { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-block: 8px; gap: 18px 8px; }
   .grid { grid-template-columns: 4em repeat(16, minmax(0, 1fr)); gap: 2px; }
-  .cell { aspect-ratio: .8; border-radius: 2px; }
+  .grid .ghead, .grid .sdial { display: none; } /* no room for the groove dials on a phone; they are on the perform tab too */
+  .cell { aspect-ratio: .6; border-radius: 2px; font-size: .52rem; letter-spacing: -.04em; }
   .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .strip .fader { height: 110px; }
   .buses { grid-template-columns: minmax(0, 1fr); }
@@ -714,7 +729,18 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <summary>HOW TO PLAY IT</summary>
     <div class="body">
       <p class="src">Elixir by Johnny Hawk is an unofficial browser drum machine, not made or endorsed by Erica Synths. Its sound engine is a JavaScript port of the six drum voices and the FX bus of the Erica Synths LXR-02 firmware (<a href="https://github.com/erica-synths/lxr-desktop-app" target="_blank" rel="noopener">erica-synths/lxr-desktop-app</a>, GPL-3.0, commit a43cd4f), ported line by line; its output matches the original C code compiled for the Cortex-M7 sample for sample. The FX bus (distortion, ring mod, compressor, delay) is the firmware's too; the mixer, the three FX sends, crossfeed and the pattern generator are new. The generator's source kits include Hrtl's free LXR-02 DLC kits, used with credit, and any LXR kit file (.SND) can be opened. Source and licence (GPL-3.0): <a href="https://github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elixir" target="_blank" rel="noopener">github.com/johnnyhawk02/johnnyhawk02.github.io/tree/main/elixir</a>.</p>
-      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified. The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit. Drag a fader for fine control (it moves less than the mouse; hold Shift for finer still) or scroll on it; the strip's name shows the level while it moves. Save keeps everything as a preset in this browser under a two-word alien name: the sound (kit, crossfeed, FX and sends) and the song (pattern, perform dials, tempo, velocity, accent, master), and loading it brings all of that back. A red star by save means a randomise has changed things since the last save or load. ‹ and › step through the presets; while playing, a new preset comes in at the start of the next bar. Presets opens the preset manager: load, delete, and star favourites; export favourites downloads them as a file, and favourites sent in that way are built into the next release. Open .snd there loads an LXR kit file as the current sound, and export .snd downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have). There are three effects, all the LXR-02's own FX-slot code run as sends: each mixer strip has three send dials left of its fader: echo, dist and ring. Every voice keeps its dry sound and each effect's output is fully wet. The echo's time is synced to the tempo: from 1/128 of a bar fully left to one bar fully right, gliding through the musical lengths (the readout names the nearest, with ≈ when it is between); randomise puts it within 10 ms of a musical length either way (at 120 bpm; the window scales with the tempo). Ticks round the time dial mark the musical lengths (long for straight notes, short for dotted and triplet); a drag catches on them, and the scroll wheel and arrow keys step from one to the next (Shift + arrow for fine steps). The FX section above the mixer sets all three: echo mode (normal or ping-pong), time, tone, feedback and width (100% is the firmware's own; 0% is mono; the firmware's ping-pong only bounces sound that reaches it off-centre, and most drums sit in the middle, so above 100% width pushes the echo's input to one side, and at 200% a centred drum bounces fully; on a normal echo, above 100% widens the echoes' stereo); distortion type (tube, fold or rat), drive, color, tone and volume; ring mod carrier wave and frequency. A kit that used distortion or ring mod in its FX slot loads those settings into that effect with a little of each routed voice sent to it. The sync, the sends, the extra buses and the larger delay buffer are additions to the firmware. The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits, and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the red figures show how far each is pulling down. The red circle by play opens the recorder: pick free (records until you press stop, up to ten minutes) or a loop of 1 to 16 bars, which starts on the next bar (starting playback from bar 1 if it is stopped) and is cut to exactly that many bars at the tempo, with the echo carried in from before so it loops cleanly. Choose 44.1 or 48 kHz, 16-bit (dithered) or 24-bit, and normalise (peak at −0.3 dB). Each take is listed with a player and a save .wav button; takes are kept until you reload the page. The sound knobs on the pattern card are performance macros over all six voices at once: fm depth (the drums' FM amount and the cymbal and hat FM), decay (every amp decay), pitch (every voice's coarse tune, up to two octaves either way) and filter (every filter's cutoff). Each sits in the middle as the kit is; turning it pushes every voice's own value towards the top or the bottom, so the kit's differences stay. They change what the engine plays, not the kit: the sound tab still shows the kit's own values, and double-click sets a macro back to the middle. They are saved with presets. Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The switch on the pattern card turns the pattern off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge). The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials. Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit. Randomise (sound tab) varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. In the mixer, r by each name gives that voice a random sound from the bundled kits, varied by 10%, and a varies the voice's current sound by 10%; undo takes either back. The randomise card on the perform tab (beside the master section): kit does the same for all six drum sounds and leaves the mixer, FX, crossfeed and pattern alone. Press R for the same; Randomise all (Shift-R) does every voice at once. Everything builds a fresh sound from voices of the bundled kits (Hrtl's LXR-02 kits and twelve generated ones, which aren't listed as presets), varies each by 10%, and rolls new crossfeed, delay time, echo feedback (usually low, now and then high), beat, energy and fills, keeping the mixer levels; save keeps it. Swing (on the pattern card, and on the steps tab) delays every second 16th: 50% is straight, 66% a triplet feel, 75% the most. Each track has two dials (under the pattern sliders, and at the end of its row on the steps tab): swing sets how much of the swing that track takes (so the hats can swing while the kick stays straight), and push moves the whole track early (left) or late (right) by up to a quarter of a 16th, centre being on the grid. The groove applies to the perform patterns too and is saved with presets. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
+      <p class="note">Crossfeed patches voices into each other: a cell sends the row's sound into the column's voice. Each column picks what it modulates: fm bends the pitch of that voice's main oscillator with the incoming audio (metallic, clangy, a voice into itself gives feedback FM), filter lets the incoming level open (positive) or close (negative) that voice's filter, ring multiplies the two sounds. Open and closed hat are one voice, so the matrix is 6 × 6. Crossfeed is an addition to the firmware's engine; with every cell at 0 the engine runs exactly as verified.</p>
+      <p class="note">The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit. Drag a fader for fine control (it moves less than the mouse; hold Shift for finer still) or scroll on it; the strip's name shows the level while it moves.</p>
+      <p class="note">Save keeps everything as a preset in this browser under a two-word alien name: the sound (kit, crossfeed, FX and sends) and the song (pattern, perform dials, tempo, velocity, accent, master), and loading it brings all of that back. A red star by save means a randomise has changed things since the last save or load. ‹ and › step through the presets; while playing, a new preset comes in at the start of the next bar. Presets opens the preset manager: load, delete, and star favourites; export favourites downloads them as a file, and favourites sent in that way are built into the next release. Open .snd there loads an LXR kit file as the current sound, and export .snd downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have).</p>
+      <p class="note">There are three effects, all the LXR-02's own FX-slot code run as sends: each mixer strip has three send dials left of its fader: echo, dist and ring. Every voice keeps its dry sound and each effect's output is fully wet. The echo's time is synced to the tempo: from 1/128 of a bar fully left to one bar fully right, gliding through the musical lengths (the readout names the nearest, with ≈ when it is between); randomise puts it within 10 ms of a musical length either way (at 120 bpm; the window scales with the tempo). Ticks round the time dial mark the musical lengths (long for straight notes, short for dotted and triplet); a drag catches on them, and the scroll wheel and arrow keys step from one to the next (Shift + arrow for fine steps). The FX section above the mixer sets all three: echo mode (normal or ping-pong), time, tone, feedback and width (100% is the firmware's own; 0% is mono; the firmware's ping-pong only bounces sound that reaches it off-centre, and most drums sit in the middle, so above 100% width pushes the echo's input to one side, and at 200% a centred drum bounces fully; on a normal echo, above 100% widens the echoes' stereo); distortion type (tube, fold or rat), drive, color, tone and volume; ring mod carrier wave and frequency. A kit that used distortion or ring mod in its FX slot loads those settings into that effect with a little of each routed voice sent to it. The sync, the sends, the extra buses and the larger delay buffer are additions to the firmware.</p>
+      <p class="note">The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits, and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the red figures show how far each is pulling down.</p>
+      <p class="note">The red circle by play opens the recorder: pick free (records until you press stop, up to ten minutes) or a loop of 1 to 16 bars, which starts on the next bar (starting playback from bar 1 if it is stopped) and is cut to exactly that many bars at the tempo, with the echo carried in from before so it loops cleanly. Choose 44.1 or 48 kHz, 16-bit (dithered) or 24-bit, and normalise (peak at −0.3 dB). Each take is listed with a player and a save .wav button; takes are kept until you reload the page.</p>
+      <p class="note">The sound knobs on the pattern card are performance macros over all six voices at once: fm depth (the drums' FM amount and the cymbal and hat FM), decay (every amp decay), pitch (every voice's coarse tune, up to two octaves either way) and filter (every filter's cutoff). Each sits in the middle as the kit is; turning it pushes every voice's own value towards the top or the bottom, so the kit's differences stay. They change what the engine plays, not the kit: the sound tab still shows the kit's own values, and double-click sets a macro back to the middle. They are saved with presets.</p>
+      <p class="note">Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The switch on the pattern card turns the pattern off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge).</p>
+      <p class="note">The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials.</p>
+      <p class="note">Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit.</p>
+      <p class="note">Randomise (sound tab) varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. In the mixer, r by each name gives that voice a random sound from the bundled kits, varied by 10%, and a varies the voice's current sound by 10%; undo takes either back. The randomise card on the perform tab (beside the master section): kit does the same for all six drum sounds and leaves the mixer, FX, crossfeed and pattern alone. Press R for the same; Randomise all (Shift-R) does every voice at once. Everything builds a fresh sound from voices of the bundled kits (Hrtl's LXR-02 kits and twelve generated ones, which aren't listed as presets), varies each by 10%, and rolls new crossfeed, delay time, echo feedback (usually low, now and then high), beat, energy and fills, keeping the mixer levels; save keeps it.</p>
+      <p class="note">Swing (on the pattern card, and on the steps tab) delays every second 16th: 50% is straight, 66% a triplet feel, 75% the most. Each track has two dials (under the pattern sliders, and at the end of its row on the steps tab): swing sets how much of the swing that track takes (so the hats can swing while the kick stays straight), and push moves the whole track early (left) or late (right) by up to a quarter of a 16th, centre being on the grid. The groove applies to the perform patterns too and is saved with presets. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
     </div>
   </details>
 
@@ -1848,7 +1874,7 @@ function drawManager() {
   const mine = kitList.filter((k) => k.saved);
   group('mine');
   if (mine.length) mine.forEach(row);
-  else { const li = document.createElement('li'); li.className = 'group'; li.textContent = 'none yet: save makes one'; list.appendChild(li); }
+  else { const li = document.createElement('li'); li.className = 'empty'; li.textContent = 'None yet: save makes one.'; list.appendChild(li); }
   group('built in');
   kitList.filter((k) => k.builtin).forEach(row);
 }
