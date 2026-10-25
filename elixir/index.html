@@ -797,6 +797,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-perform .perform { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
   .tab-perform #pk-pattern, .tab-perform #pk-feel, .tab-perform .perform > :first-child { grid-row: auto; }
 }
+.up-cur { font-family: var(--mono); font-size: .72rem; color: var(--muted); min-width: 7em; }
+.up-tools .btn:disabled { opacity: .4; cursor: default; }
 </style>
 
 <div class="wrap">
@@ -936,9 +938,15 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
           <button class="btn" type="button" data-mode="acc" aria-pressed="false">ACCENT</button>
           <button class="btn" type="button" data-mode="bar" aria-pressed="false">BAR 2 / 4</button>
         </span>
+        <span class="seg up-tools" role="group" aria-label="User patterns">
+          <button class="btn" id="up-save" type="button">SAVE AS USER</button>
+          <button class="btn" id="up-over" type="button">SAVE OVER</button>
+          <button class="btn" id="up-del" type="button">DELETE</button>
+        </span>
+        <output class="up-cur" id="up-cur" aria-live="polite"></output>
         <label class="field" for="swing" title="50% is straight, 66% a triplet feel; each track takes its share and can be pushed early or pulled late">swing <input id="swing" type="range" min="50" max="75" value="50"><output id="swing-out">50%</output></label>
       </div>
-      <p class="hint">Editing steps takes the pattern off the perform dials; back on the perform tab, the dials rebuild it.</p>
+      <p class="hint">Editing steps takes the pattern off the perform dials; back on the perform tab, the dials rebuild it. Save as user keeps it: the perform tab's user style plays your patterns, beat picks one, energy thins it out and fills adds fills.</p>
       <div class="grid" id="grid" role="group" aria-label="Step sequencer, 7 tracks by 16 steps"></div>
     </div>
   </section>
@@ -959,7 +967,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
       <p class="note">The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits (tick fx to duck the echo, distortion and ring mod returns as well, so their tails pump with drum 1), and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the needle meters show how far each is pulling down, in dB.</p>
       <p class="note">The red circle by play opens the recorder: pick free (records until you press stop, up to ten minutes) or a loop of 1 to 16 bars, which starts on the next bar (starting playback from bar 1 if it is stopped) and is cut to exactly that many bars at the tempo, with the echo carried in from before so it loops cleanly. Tick count-in for a bar of beeps first (a high beep then three lower boops, with the music turned down; from bar 1 if stopped), and the take starts on the bar after it. Pressing record closes the recorder; the red circle by play blinks while it waits or counts and pulses while it records. Choose 44.1 or 48 kHz, 16-bit (dithered) or 24-bit, and normalise (peak at −0.3 dB). Each take is listed with a player and a save .wav button; takes are kept until you reload the page.</p>
       <p class="note">The sound knobs on the pattern card are performance macros over all six voices at once: fm depth (the drums' FM amount and the cymbal and hat FM), decay (every amp decay), pitch (every voice's coarse tune, up to two octaves either way) and filter (every filter's cutoff). Each sits in the middle as the kit is; turning it pushes every voice's own value towards the top or the bottom, so the kit's differences stay. They change what the engine plays, not the kit: the sound tab still shows the kit's own values, and double-click sets a macro back to the middle. They are saved with presets.</p>
-      <p class="note">Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen grooves in the pattern's style, and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The arrows by the pattern card's title switch the style: electro (the original five grooves plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), techno (four on the floor, off-beat open hats, snare builds), broken beat (syncopated kicks under a snare on 2 and 4, fills in threes) and IDM (lopsided kicks, hats in threes, a second bar that answers the first, stutter fills). Presets save the style. The switch on the pattern card turns the pattern off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge).</p>
+      <p class="note">Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen grooves in the pattern's style, and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The arrows by the pattern card's title switch the style: electro (the original five grooves plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), techno (four on the floor, off-beat open hats, snare builds), broken beat (syncopated kicks under a snare on 2 and 4, fills in threes), IDM (lopsided kicks, hats in threes, a second bar that answers the first, stutter fills) and user (patterns you save from the steps tab with Save as user; beat picks one, energy thins it out, fills adds electro fills; Save over and Delete change the one beat has picked). Presets save the style, and a preset in user style carries its pattern with it. The switch on the pattern card turns the pattern off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge).</p>
       <p class="note">The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials.</p>
       <p class="note">Drag a slider up or down, click along it, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit.</p>
       <p class="note">Randomise (sound tab) varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. In the mixer, r by each name gives that voice a random sound from the bundled kits, varied by 10%, and a varies the voice's current sound by 10%; undo takes either back. The randomise card on the perform tab: kit gives each of the six drum voices a sound straight from a random bundled kit, and alter makes small variations of the current drum sounds (5%, so each stays recognisable); both leave the mixer, FX, crossfeed and pattern alone. Press R to randomise the selected voice; Shift-R randomises every voice at once, up to the depth. Everything builds a fresh sound from voices of the bundled kits (Hrtl's LXR-02 kits and twelve generated ones, which aren't listed as presets), varies each by 10%, and rolls new crossfeed, delay time, echo feedback (usually low, now and then high), beat, energy and fills, keeping the mixer levels; save keeps it.</p>
@@ -5518,7 +5526,7 @@ function setDirty(d) {
 }
 function songSnapshot() {
   const copy = (a) => a.map((r) => r.slice());
-  return { style: STYLES[styleIdx].name, energy: Number($('energy').value), beat: Number($('beat').value), fills: Number($('fills').value),
+  return { style: STYLES[styleIdx].name, user: STYLES[styleIdx].user && userPats.length ? structuredClone(userPats[userSlot()]) : undefined, energy: Number($('energy').value), beat: Number($('beat').value), fills: Number($('fills').value),
     tempo: Number($('tempo').value), vel: Number($('level').value), accent: Number($('accent').value), view, patternOn, groove: structuredClone(groove), macro: { ...macro },
     pattern: { on: copy(pattern.on), acc: copy(pattern.acc), bar: copy(pattern.bar) },
     master: { ...master }, mute: mix.mute.slice(), solo: mix.solo.slice() };
@@ -5526,6 +5534,7 @@ function songSnapshot() {
 function useSong(g) {
   setStyle(styleIndex(g.style));
   for (const id of ['energy', 'beat', 'fills', 'tempo']) { $(id).value = g[id]; $(id).dispatchEvent(new Event('sync')); }
+  if (STYLES[styleIdx].user && g.user) { const i = ensureUserPat(g.user); if (i >= 0) useUserSlot(i); }
   $('level').value = g.vel; $('accent').value = Math.min(6, g.accent);
   for (const id of ['level', 'accent']) $(id).dispatchEvent(new Event('sync'));
   showLevels(); $('tempo').dispatchEvent(new Event('input'));
@@ -5577,7 +5586,7 @@ $('new-kit').addEventListener('click', async () => {
   send({ type: 'kit', values: effValues() });
   buildKnobs(); drawScope();
   randomiseX();
-  $('beat').value = Math.floor(rnd() * STYLES[styleIdx].grooves.length); $('energy').value = 45 + Math.floor(rnd() * 46); $('fills').value = Math.floor(rnd() * 101);
+  $('beat').value = Math.floor(rnd() * 16); $('energy').value = 45 + Math.floor(rnd() * 46); $('fills').value = Math.floor(rnd() * 101);
   for (const id of ['beat', 'energy', 'fills']) $(id).dispatchEvent(new Event('sync'));
   if (view === 'steps') setTab('perform'); else generate();
   setDirty(true);
@@ -5992,10 +6001,65 @@ const STYLES = [
   } },
 ];
 let styleIdx = 0; // saved with presets by name; presets from before the styles were electro
+// user: patterns saved from the steps tab (up to 16, in localStorage). Beat spreads them over its range;
+// energy brings hits in by their place (kick and snare on the beat or accented first, then hats, then the rest,
+// the whole pattern from 50%), and fills plays the electro fill over it. Each keeps its accents and bar conditions.
+let userPats = [];
+try { userPats = JSON.parse(localStorage.getItem('elexir-user-patterns') || '[]'); } catch (e) {}
+const storeUserPats = () => { try { localStorage.setItem('elexir-user-patterns', JSON.stringify(userPats)); } catch (e) {} };
+const userSlot = () => Math.min(userPats.length - 1, Math.floor(Number($('beat').value) * userPats.length / 16));
+const slotBeat = (i) => Math.ceil(i * 16 / userPats.length);
+function userGroove(u) {
+  const g = { name: u.name, cond: u.bar, acc: u.acc };
+  ROW.forEach((r, t) => {
+    g[r] = u.on[t].map((on, s) => !on ? '.' : String(t === 0 || t === 3 ? (s % 4 === 0 || u.acc[t][s] ? 1 : 3) : t === 5 ? (s % 2 ? 4 : 2) : t === 1 || t === 2 ? 5 : 4));
+  });
+  return g;
+}
+const EMPTY_GROOVE = { name: 'none saved', ...Object.fromEntries(['k', 'lo', 'hi', 's', 'cy', 'ch', 'oh'].map((r) => [r, '................'])) };
+STYLES.push({ name: 'user', user: true,
+  get grooves() { const gs = userPats.map(userGroove); return new Proxy(gs, { get: (a, k) => (/^\d+$/.test(k) ? (a.length ? a[userSlot()] : EMPTY_GROOVE) : a[k]) }); },
+  fill: STYLES[0].fill });
+const userStyle = () => STYLES.findIndex((st) => st.user);
+const copyGrid = () => ({ on: pattern.on.map((r) => r.slice()), acc: pattern.acc.map((r) => r.slice()), bar: pattern.bar.map((r) => r.slice()) });
+const sameGrid = (a, b) => ['on', 'acc', 'bar'].every((k) => JSON.stringify(a[k]) === JSON.stringify(b[k]));
+// make a pattern (from a preset) one of the user patterns, unless it already is; returns its slot
+function ensureUserPat(u) {
+  let i = userPats.findIndex((x) => sameGrid(x, u));
+  if (i < 0 && userPats.length < 16) {
+    const names = new Set(userPats.map((x) => x.name));
+    userPats.push({ name: names.has(u.name) || !u.name ? nextUserName() : u.name, on: u.on, acc: u.acc, bar: u.bar }); storeUserPats(); i = userPats.length - 1;
+  }
+  return i;
+}
+function nextUserName() { let n = 1; while (userPats.some((x) => x.name === `user ${n}`)) n++; return `user ${n}`; }
+function useUserSlot(i) { setStyle(userStyle()); $('beat').value = slotBeat(i); $('beat').dispatchEvent(new Event('sync')); }
+function drawUserTools() {
+  const on = STYLES[styleIdx].user && userPats.length > 0;
+  $('up-cur').textContent = on ? `${userPats[userSlot()].name} · ${userSlot() + 1}/${userPats.length}` : userPats.length ? `${userPats.length} saved` : '';
+  $('up-over').disabled = $('up-del').disabled = !on;
+  $('up-save').disabled = userPats.length >= 16;
+}
+$('up-save').addEventListener('click', () => {
+  if (userPats.length >= 16) return;
+  userPats.push({ name: nextUserName(), ...copyGrid() }); storeUserPats();
+  useUserSlot(userPats.length - 1); drawUserTools();
+});
+$('up-over').addEventListener('click', () => {
+  if (!STYLES[styleIdx].user || !userPats.length) return;
+  Object.assign(userPats[userSlot()], copyGrid()); storeUserPats(); drawUserTools();
+});
+$('up-del').addEventListener('click', () => {
+  if (!STYLES[styleIdx].user || !userPats.length) return;
+  const i = userSlot(); userPats.splice(i, 1); storeUserPats();
+  if (userPats.length) useUserSlot(Math.min(i, userPats.length - 1));
+  drawUserTools();
+});
 const styleIndex = (name) => Math.max(0, STYLES.findIndex((st) => st.name === name));
 function setStyle(i) {
   styleIdx = (i + STYLES.length) % STYLES.length;
   $('style-name').textContent = STYLES[styleIdx].name;
+  if (typeof drawUserTools === 'function') drawUserTools();
 }
 const ROW = ['k', 'lo', 'hi', 's', 'cy', 'ch', 'oh'];
 const ENERGY_NAMES = [[1, 'empty'], [15, 'minimal'], [35, 'low'], [60, 'groove'], [85, 'driving'], [101, 'peak']];
@@ -6016,18 +6080,18 @@ function generate() {
       const fil = !!fillOn[t][s];
       let on = 0, cond = 0;
       if (inFill) { if (reg && fil) on = 1; else if (reg) { on = 1; cond = -fill.every; } else if (fil) { on = 1; cond = fill.every; } }
-      else if (reg) on = 1;
+      else if (reg) { on = 1; cond = g.cond ? g.cond[t][s] : 0; }
       else if (win && fil) { on = 1; cond = fill.every; }
       // the second bar's extra hits, outside the fill
       else if (!win && alt[s] && alt[s] !== '.' && Number(alt[s]) <= T) { on = 1; cond = 2; }
       // crash on the first bar after each fill, once there is enough energy
       if (fill && t === 4 && s === 0 && !on && T >= 3) { on = 1; cond = 100 + fill.every; }
       pattern.on[t][s] = on; pattern.bar[t][s] = cond;
-      pattern.acc[t][s] = on && ((c === '1' && energy >= 55) || (t === 6 && energy >= 85) || (fil && cond > 0 && (s % 4 === 0 || s === 15))) ? 1 : 0;
+      pattern.acc[t][s] = on && ((g.acc ? reg && !!g.acc[t][s] : c === '1' && energy >= 55) || (t === 6 && energy >= 85) || (fil && cond > 0 && (s % 4 === 0 || s === 15))) ? 1 : 0;
     }
   }
   $('energy-out').innerHTML = `<b>${ENERGY_NAMES.find(([v]) => energy < v)[1]}</b> · ${energy}%`;
-  $('beat-out').innerHTML = `<b>${g.name.toLowerCase()}</b> · ${Number($('beat').value) + 1}/${st.grooves.length}`;
+  $('beat-out').innerHTML = `<b>${g.name.toLowerCase()}</b> · ${st.user ? (st.grooves.length ? userSlot() + 1 : 0) : Number($('beat').value) + 1}/${st.grooves.length}`;
   $('fills-out').innerHTML = fill ? `<b>every ${fill.every}</b> · ${fill.len} steps` : `<b>off</b>`;
   drawMini();
   sendSeq();
@@ -6562,6 +6626,8 @@ function setView(v) {
   else generate();
 }
 for (const id of ['energy', 'beat', 'fills']) $(id).addEventListener('input', generate);
+$('beat').addEventListener('input', () => drawUserTools()); $('beat').addEventListener('sync', () => drawUserTools());
+drawUserTools();
 $('style-prev').addEventListener('click', () => { setStyle(styleIdx - 1); generate(); });
 $('style-next').addEventListener('click', () => { setStyle(styleIdx + 1); generate(); });
 try { const t = localStorage.getItem('elexir-tab'); if (t && document.querySelector(`[data-tab="${t}"]`)) setTab(t); } catch (e) {}
