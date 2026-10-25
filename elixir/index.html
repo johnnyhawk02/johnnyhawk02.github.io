@@ -22,16 +22,17 @@
   --lcd-dim: #8f8331;
   --cell: #dbc84c;
   --code-bg: #f1e6a0;
+  --vu-face: #f6efcf; --vu-ink: #2a2a28; --vu-dim: #8a8160;
   --display: "Outfit", system-ui, sans-serif;
   --body: "Outfit", system-ui, -apple-system, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0f2419; --panel: #302c16; --ink: #f1e7b0; --muted: #b2a766; --led: #e5675f; --blue: #6f9fd6;
-  --lcd: #27240f; --lcd-ink: #f1e7b0; --lcd-dim: #7d7440; --cell: #3b3719; --code-bg: #24210e; color-scheme: dark } }
+  --lcd: #27240f; --lcd-ink: #f1e7b0; --lcd-dim: #7d7440; --cell: #3b3719; --code-bg: #24210e; --vu-face: #cfc48e; --vu-ink: #26241a; --vu-dim: #6e6644; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #0f2419; --panel: #302c16; --ink: #f1e7b0; --muted: #b2a766; --led: #e5675f; --blue: #6f9fd6;
-  --lcd: #27240f; --lcd-ink: #f1e7b0; --lcd-dim: #7d7440; --cell: #3b3719; --code-bg: #24210e; color-scheme: dark }
+  --lcd: #27240f; --lcd-ink: #f1e7b0; --lcd-dim: #7d7440; --cell: #3b3719; --code-bg: #24210e; --vu-face: #cfc48e; --vu-ink: #26241a; --vu-dim: #6e6644; color-scheme: dark }
 
 /* ---- base ---- */
 * { box-sizing: border-box; }
@@ -269,10 +270,21 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .mgroup { display: grid; gap: 4px; min-width: 0; flex: 0 1 auto; }
 .mgroup + .mgroup { border-left: 1px solid var(--line); padding-left: 16px; }
 .mlab { display: flex; align-items: center; gap: 10px; font-size: .78rem; color: var(--muted); text-transform: lowercase; min-height: 24px; }
-.mlab output { font-family: var(--mono); font-size: .74rem; color: var(--led); }
 .btn.tiny { font-size: .76rem; padding: 2px 10px; }
-#comp-knobs { grid-template-columns: repeat(5, minmax(46px, var(--kw))); gap: 0; }
-#duck-knobs { grid-template-columns: repeat(2, minmax(46px, var(--kw))); gap: 0; }
+#comp-knobs { grid-template-columns: repeat(5, minmax(46px, var(--kw))) auto; gap: 0; }
+#duck-knobs { grid-template-columns: repeat(2, minmax(46px, var(--kw))) auto; gap: 0; }
+/* needle meters for gain reduction and ducking: a fixed-size cream face, so nothing around them moves */
+.vu { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding-left: 6px; min-height: 0; }
+.vu span { font-family: var(--display); font-weight: 500; font-size: .7rem; line-height: 1.3; color: var(--muted); }
+.vu svg { display: block; width: 58px; height: 38px; flex: none; }
+.vu .face { fill: var(--vu-face); stroke: color-mix(in srgb, var(--ink) 22%, transparent); }
+.vu .scale { fill: none; stroke: var(--vu-ink); stroke-width: .7; }
+.vu .hot { fill: none; stroke: var(--led); stroke-width: 1.6; }
+.vu .tk { stroke: var(--vu-ink); stroke-width: .7; }
+.vu text { font-family: var(--mono); font-size: 5.2px; fill: var(--vu-ink); text-anchor: middle; }
+.vu text.unit { fill: var(--vu-dim); font-size: 4.6px; }
+.vu .needle { stroke: var(--vu-ink); stroke-width: .9; stroke-linecap: round; }
+.vu .hub { fill: color-mix(in srgb, var(--vu-ink) 85%, var(--vu-face)); }
 
 .master-card .knob label, .fx-card .knob label { font-size: .7rem; line-height: 1.3; }
 .master-card .knob output, .fx-card .knob output { font-size: .66rem; line-height: 1.3; }
@@ -784,8 +796,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <div class="card master-card" role="group" aria-label="Master">
       <h2>master</h2>
       <div class="master-row">
-        <div class="mgroup"><span class="mlab"><button class="btn tiny" id="comp-on" type="button" aria-pressed="true">compressor</button><output id="gr-out"></output></span><div class="knobs" id="comp-knobs"></div></div>
-        <div class="mgroup"><span class="mlab">drum 1 sidechain<output id="duck-out"></output></span><div class="knobs" id="duck-knobs"></div></div>
+        <div class="mgroup"><span class="mlab"><button class="btn tiny" id="comp-on" type="button" aria-pressed="true">compressor</button></span><div class="knobs" id="comp-knobs"></div></div>
+        <div class="mgroup"><span class="mlab">drum 1 sidechain</span><div class="knobs" id="duck-knobs"></div></div>
       </div>
     </div>
       <div class="card groove-card" role="group" aria-label="Groove per track">
@@ -873,7 +885,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
       <p class="note">The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit. Drag a fader for fine control (it moves less than the mouse; hold Shift for finer still) or scroll on it; the strip's name shows the level while it moves.</p>
       <p class="note">Save keeps everything as a preset in this browser under a two-word alien name: the sound (kit, crossfeed, FX and sends) and the song (pattern, perform dials, tempo, velocity, accent, master), and loading it brings all of that back. A red star by save means a randomise has changed things since the last save or load. ‹ and › step through the presets; while playing, a new preset comes in at the start of the next bar. Presets opens the preset manager: load, delete, and star favourites; export favourites downloads them as a file, and favourites sent in that way are built into the next release. Open .snd there loads an LXR kit file as the current sound, and export .snd downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have).</p>
       <p class="note">There are three effects, all the LXR-02's own FX-slot code run as sends: each mixer strip has three send dials left of its fader: echo, dist and ring. Every voice keeps its dry sound and each effect's output is fully wet. The echo's time is synced to the tempo: from 1/128 of a bar fully left to one bar fully right, gliding through the musical lengths (the readout names the nearest, with ≈ when it is between); randomise puts it within 10 ms of a musical length either way (at 120 bpm; the window scales with the tempo). Ticks round the time dial mark the musical lengths (long for straight notes, short for dotted and triplet); a drag catches on them, and the scroll wheel and arrow keys step from one to the next (Shift + arrow for fine steps). The FX section above the mixer sets all three: echo mode (normal or ping-pong), time, tone, feedback and width (100% is the firmware's own; 0% is mono; the firmware's ping-pong only bounces sound that reaches it off-centre, and most drums sit in the middle, so above 100% width pushes the echo's input to one side, and at 200% a centred drum bounces fully; on a normal echo, above 100% widens the echoes' stereo); distortion type (tube, fold or rat), drive, color, tone and volume; ring mod carrier wave and frequency. A kit that used distortion or ring mod in its FX slot loads those settings into that effect with a little of each routed voice sent to it. The sync, the sends, the extra buses and the larger delay buffer are additions to the firmware.</p>
-      <p class="note">The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits, and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the red figures show how far each is pulling down.</p>
+      <p class="note">The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits, and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the needle meters show how far each is pulling down, in dB.</p>
       <p class="note">The red circle by play opens the recorder: pick free (records until you press stop, up to ten minutes) or a loop of 1 to 16 bars, which starts on the next bar (starting playback from bar 1 if it is stopped) and is cut to exactly that many bars at the tempo, with the echo carried in from before so it loops cleanly. Choose 44.1 or 48 kHz, 16-bit (dithered) or 24-bit, and normalise (peak at −0.3 dB). Each take is listed with a player and a save .wav button; takes are kept until you reload the page.</p>
       <p class="note">The sound knobs on the pattern card are performance macros over all six voices at once: fm depth (the drums' FM amount and the cymbal and hat FM), decay (every amp decay), pitch (every voice's coarse tune, up to two octaves either way) and filter (every filter's cutoff). Each sits in the middle as the kit is; turning it pushes every voice's own value towards the top or the bottom, so the kit's differences stay. They change what the engine plays, not the kit: the sound tab still shows the kit's own values, and double-click sets a macro back to the middle. They are saved with presets.</p>
       <p class="note">Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The switch on the pattern card turns the pattern off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge).</p>
@@ -5242,7 +5254,7 @@ $('play').addEventListener('click', async () => {
   await startAudio();
   playing = !playing;
   $('play').setAttribute('aria-pressed', playing); $('play').textContent = playing ? 'STOP' : 'PLAY';
-  if (!playing) { markStep(-1); markBar(-1); }
+  if (!playing) { markStep(-1); markBar(-1); grVu.set(0); duckVu.set(0); }
   sendSeq();
 });
 $('tempo').addEventListener('change', sendSeq);
@@ -5980,6 +5992,38 @@ const RATIOS = [1.5, 2, 3, 4, 6, 8, 20];
 const mKnob = (label, key, lo, hi, step, show, box) => box.appendChild(dialKnob(label, {
   max: Math.round((hi - lo) / step), show: (v) => show(lo + v * step), get: () => Math.round((master[key] - lo) / step),
   set: (v) => { master[key] = lo + v * step; sendMix(); }, dflt: () => Math.round((MASTER0[key] - lo) / step) }));
+// an analogue-style needle meter: rests at 0 on the right and swings left by the dB pulled down (to 20),
+// on a log-ish scale, with a damped spring for the needle so it moves like a real one
+const meterVu = (name, aria) => {
+  const el = document.createElement('div'); el.className = 'vu';
+  const CX = 30, CY = 47, pos = (db) => Math.log1p(Math.max(0, Math.min(20, db))) / Math.log1p(20), ang = (db) => 40 - 80 * pos(db);
+  const pt = (db, r) => { const a = ang(db) * Math.PI / 180; return [(CX + r * Math.sin(a)).toFixed(2), (CY - r * Math.cos(a)).toFixed(2)]; };
+  const arc = (a, b, r) => { const [x0, y0] = pt(a, r), [x1, y1] = pt(b, r); return `M${x0} ${y0}A${r} ${r} 0 0 0 ${x1} ${y1}`; };
+  let tk = '';
+  for (const d of [0, 1, 2, 3, 4, 6, 8, 10, 15, 20]) { const big = [0, 4, 10, 20].includes(d), [x0, y0] = pt(d, 33), [x1, y1] = pt(d, big ? 29.5 : 31); tk += `<line class="tk" x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}"/>`; }
+  for (const d of [0, 4, 10, 20]) { const [x, y] = pt(d, 37.5); tk += `<text x="${x}" y="${(+y + 1.8).toFixed(2)}">${d}</text>`; }
+  const clip = 'vuc' + (++meterVu.n);
+  el.innerHTML = `<span>${name}</span><svg viewBox="0 0 60 40" role="img" aria-label="${aria}">
+    <defs><clipPath id="${clip}"><rect x="1" y="1" width="58" height="38" rx="3.5"/></clipPath></defs>
+    <rect class="face" x=".5" y=".5" width="59" height="39" rx="4"/>
+    <g clip-path="url(#${clip})"><path class="scale" d="${arc(0, 20, 33)}"/><path class="hot" d="${arc(10, 20, 33.8)}"/>${tk}
+    <text class="unit" x="30" y="29">dB</text><line class="needle" x1="${CX}" y1="${CY}" x2="${CX}" y2="${CY - 35}" transform="rotate(40 ${CX} ${CY})"/>
+    <circle class="hub" cx="${CX}" cy="${CY}" r="10"/></g></svg>`;
+  const needle = el.querySelector('.needle');
+  let x = 0, v = 0, target = 0, last = 0, raf = 0;
+  // quick to swing out, slower to fall back, with a touch of overshoot
+  const UP = 2 * Math.PI * 3.4, DOWN = 2 * Math.PI * 1.6, Z = 0.72;
+  const tick = (t) => {
+    const dt = Math.min(0.05, last ? (t - last) / 1000 : 0.016), W = target > x ? UP : DOWN; last = t;
+    v += (W * W * (target - x) - 2 * Z * W * v) * dt; x += v * dt;
+    if (Math.abs(target - x) < 0.002 && Math.abs(v) < 0.01) { x = target; v = 0; raf = 0; last = 0; }
+    else raf = requestAnimationFrame(tick);
+    needle.setAttribute('transform', `rotate(${(40 - 80 * x).toFixed(2)} ${CX} ${CY})`);
+  };
+  return { el, set(db) { target = pos(db); if (!raf) raf = requestAnimationFrame(tick); } };
+};
+meterVu.n = 0;
+const grVu = meterVu('reduction', 'compressor gain reduction meter'), duckVu = meterVu('ducking', 'sidechain ducking meter');
 function buildMaster() {
 $('comp-knobs').innerHTML = ''; $('duck-knobs').innerHTML = '';
 $('comp-on').setAttribute('aria-pressed', master.comp);
@@ -5991,6 +6035,7 @@ mKnob('release', 'release', 20, 500, 10, (v) => v + ' ms', $('comp-knobs'));
 mKnob('makeup', 'makeup', 0, 12, 1, (v) => '+' + v + ' dB', $('comp-knobs'));
 mKnob('duck', 'duck', 0, 1, 0.01, (v) => Math.round(v * 100) + '%', $('duck-knobs'));
 mKnob('release', 'duckRelease', 30, 600, 10, (v) => v + ' ms', $('duck-knobs'));
+$('comp-knobs').appendChild(grVu.el); $('duck-knobs').appendChild(duckVu.el);
 }
 buildMaster();
 $('comp-on').addEventListener('click', () => { master.comp = !master.comp; $('comp-on').setAttribute('aria-pressed', master.comp); sendMix(); });
@@ -6229,8 +6274,8 @@ function onEvent(ev) {
   setTimeout(() => {
     if (!playing) return;
     markStep(ev.step); markBar(ev.bar);
-    $('gr-out').textContent = master.comp && ev.gr > 0.1 ? '−' + ev.gr.toFixed(1) + ' dB' : '';
-    $('duck-out').textContent = ev.duck < 0.99 ? '−' + (-20 * Math.log10(Math.max(ev.duck, 0.001))).toFixed(1) + ' dB' : '';
+    grVu.set(master.comp ? ev.gr : 0);
+    duckVu.set(-20 * Math.log10(Math.max(ev.duck, 0.001)));
     for (const t of ev.hits) { flash(voicesEl.children[t]); if (t === track) flash(pad); }
   }, delay);
 }
