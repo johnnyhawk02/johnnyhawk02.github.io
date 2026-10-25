@@ -1,0 +1,1248 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Hop Hop Runner</title>
+<meta name="description" content="A jump-only 3D runner for kids: hop over everything, swerve round trains, grab coins.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Hop Hop">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#8fd8ff">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%238fd8ff'/><circle cx='16' cy='16' r='8' fill='%23ffd23f'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@700;900&display=swap">
+<style>
+  /* Layout: one full-screen canvas; HUD pinned top corners; overlays centred over the track. Single bright "sunny playground" look, chosen on purpose for both host themes. */
+  :root {
+    --sky: #8fd8ff;
+    --ink: #2b2350;
+    --sun: #ffd23f;
+    --coral: #ff5d73;
+    --cream: #fffaf0;
+    --shadow: rgba(43, 35, 80, 0.28);
+    --display: "Lilita One", "Arial Rounded MT Bold", "Trebuchet MS", system-ui, sans-serif;
+    --body: "Nunito", "Avenir Next", "Trebuchet MS", system-ui, sans-serif;
+    color-scheme: light;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--sky);
+    color: var(--ink);
+    font-family: var(--body);
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #game { position: fixed; inset: 0; }
+  #game canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+  .hud {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 14px);
+    left: max(16px, env(safe-area-inset-left, 0px));
+    right: max(16px, env(safe-area-inset-right, 0px));
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    pointer-events: none;
+  }
+  .pill {
+    font-family: var(--display);
+    font-size: clamp(22px, 4vw, 34px);
+    letter-spacing: 0.02em;
+    background: var(--cream);
+    color: var(--ink);
+    padding: 6px 18px 4px;
+    border-radius: 999px;
+    box-shadow: 0 4px 0 var(--shadow);
+    font-variant-numeric: tabular-nums;
+  }
+  .hud-left { display: flex; gap: 10px; flex-wrap: wrap; }
+  .coin-icon {
+    display: inline-block;
+    width: 0.8em; height: 0.8em;
+    margin-right: 6px;
+    vertical-align: -0.08em;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff4b0, var(--sun) 45%, #e0a800);
+    border: 3px solid #c78a00;
+    box-sizing: border-box;
+  }
+  .pill.pop { animation: pop 0.25s ease-out; }
+  @keyframes pop { 0% { transform: scale(1.25); } 100% { transform: scale(1); } }
+  #flash {
+    position: fixed; inset: 0; pointer-events: none; opacity: 0;
+    background: radial-gradient(circle at center, #ffffff 0%, #e6c8ff 45%, #9b5de5 100%);
+  }
+  #toast {
+    position: fixed; left: 0; right: 0; top: 28%;
+    text-align: center; pointer-events: none;
+    font-family: var(--display); font-size: clamp(44px, 9vw, 90px);
+    color: var(--sun); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill;
+    text-shadow: 0 5px 0 var(--ink);
+    opacity: 0; transform: scale(0.8);
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  #toast.show { opacity: 1; transform: scale(1); }
+  .pill small { font-family: var(--body); font-weight: 900; font-size: 0.5em; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.6; margin-left: 4px; }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 24px;
+    background: radial-gradient(ellipse at center, rgba(255, 250, 240, 0.35), rgba(43, 35, 80, 0.18));
+    touch-action: none;
+  }
+  .card {
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+    text-align: center;
+    max-width: 34rem;
+  }
+  .card h1 {
+    margin: 0;
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: clamp(56px, 12vw, 120px);
+    line-height: 0.9;
+    color: var(--sun);
+    -webkit-text-stroke: 3px var(--ink);
+    paint-order: stroke fill;
+    text-shadow: 0 6px 0 var(--ink);
+    text-wrap: balance;
+    transform: rotate(-3deg);
+  }
+  .card h2 {
+    margin: 0;
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: clamp(44px, 9vw, 84px);
+    color: var(--coral);
+    -webkit-text-stroke: 3px var(--ink);
+    paint-order: stroke fill;
+    text-shadow: 0 5px 0 var(--ink);
+  }
+  .go {
+    font-family: var(--display);
+    font-size: clamp(28px, 5vw, 44px);
+    background: var(--coral);
+    color: var(--cream);
+    border: 4px solid var(--ink);
+    border-radius: 999px;
+    padding: 10px 42px 6px;
+    box-shadow: 0 6px 0 var(--ink);
+    animation: bob 1.1s ease-in-out infinite;
+  }
+  .hint {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin: 4px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .hint li {
+    background: var(--cream);
+    border-radius: 14px;
+    padding: 8px 14px;
+    font-weight: 900;
+    font-size: clamp(15px, 2.4vw, 20px);
+    box-shadow: 0 3px 0 var(--shadow);
+  }
+  .score-line { font-weight: 900; font-size: clamp(18px, 3vw, 26px); margin: 0; }
+  @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  @media (prefers-reduced-motion: reduce) { .go { animation: none; } }
+</style>
+
+<div id="game"></div>
+
+<div class="hud">
+  <div class="hud-left">
+    <div class="pill" id="score">0<small>m</small></div>
+    <div class="pill" id="coins"><span class="coin-icon"></span>0</div>
+  </div>
+  <div class="pill" id="best">0<small>best</small></div>
+</div>
+
+<div id="flash"></div>
+<div id="toast"></div>
+
+<div class="overlay" id="startScreen">
+  <div class="card">
+    <h1>Hop Hop Runner</h1>
+    <ul class="hint">
+      <li>Swipe ← → to change lanes</li>
+      <li>Tap or swipe ↑ to jump</li>
+      <li>Grab coins, find the portal, and don't let the policeman catch you!</li>
+    </ul>
+    <div class="go">Tap to run!</div>
+  </div>
+</div>
+
+<div class="overlay" id="crashScreen" hidden>
+  <div class="card">
+    <h2 id="crashTitle">Bonk!</h2>
+    <p class="score-line" id="crashScore">You ran 0 metres</p>
+    <div class="go">Run again!</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script>
+(() => {
+  // ---------- tuning ----------
+  const LANES = [-2.4, 0, 2.4];
+  const START_SPEED = 10;      // world units per second
+  const MAX_SPEED = 17;        // kept gentle for little players
+  const SPEED_RAMP = 0.08;     // speed gained per second of running
+  const GRAVITY = 26;
+  const JUMP_V = 10;           // peak ≈ 1.9 units, every obstacle is ≤ 1.0 tall
+  const SPAWN_Z = -110;
+  const DESPAWN_Z = 12;
+
+  // ---------- renderer / scene ----------
+  const mount = document.getElementById('game');
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  mount.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const SKY = 0x8fd8ff;
+  scene.background = new THREE.Color(SKY);
+  scene.fog = new THREE.Fog(SKY, 50, 140);
+
+  const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 240);
+  camera.position.set(0, 4.2, 7.5);
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8bd17c, 0.75));
+  const sunLight = new THREE.DirectionalLight(0xfff1d0, 0.65);
+  sunLight.position.set(-5, 10, 6);
+  scene.add(sunLight);
+
+  const lambert = (color) => new THREE.MeshLambertMaterial({ color });
+
+  function canvasTexture(w, h, draw) {
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    draw(c.getContext('2d'), w, h);
+    const t = new THREE.CanvasTexture(c);
+    t.anisotropy = 4;
+    return t;
+  }
+
+  // ---------- static ground ----------
+  const grass = new THREE.Mesh(new THREE.PlaneGeometry(200, 260), lambert(0x7fd36b));
+  grass.rotation.x = -Math.PI / 2;
+  grass.position.set(0, -0.02, -100);
+  scene.add(grass);
+
+  const track = new THREE.Mesh(new THREE.PlaneGeometry(8.4, 260), lambert(0xe8c48f));
+  track.rotation.x = -Math.PI / 2;
+  track.position.set(0, 0, -100);
+  scene.add(track);
+
+  const railMat = lambert(0xb7b9d6);
+  for (const lx of LANES) {
+    for (const side of [-0.55, 0.55]) {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 260), railMat);
+      rail.position.set(lx + side, 0.12, -100);
+      scene.add(rail);
+    }
+  }
+
+  // ---------- moving things (recycled) ----------
+  const tieMat = lambert(0xa0704a);
+  const tieGeo = new THREE.BoxGeometry(8, 0.08, 0.5);
+  const ties = [];
+  const TIE_GAP = 2.5;
+  for (let i = 0; i < 50; i++) {
+    const tie = new THREE.Mesh(tieGeo, tieMat);
+    tie.position.set(0, 0.04, DESPAWN_Z - i * TIE_GAP);
+    scene.add(tie);
+    ties.push(tie);
+  }
+
+  const houseColors = [0xff8fa3, 0xffd23f, 0x9b8cff, 0x5ec8e5, 0xffa45c, 0xf7f7ff];
+  const roofMat = lambert(0xe2475e);
+  const trunkMat = lambert(0x8a5a36);
+  const leafMats = [lambert(0x3fae5a), lambert(0x58c46e)];
+  const scenery = [];
+  function makeTree() {
+    const g = new THREE.Group();
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 1.4, 8), trunkMat);
+    trunk.position.y = 0.7;
+    const top = new THREE.Mesh(new THREE.SphereGeometry(1.2, 10, 8), leafMats[Math.random() < 0.5 ? 0 : 1]);
+    top.position.y = 2.2;
+    g.add(trunk, top);
+    return g;
+  }
+  function makeHouse() {
+    const g = new THREE.Group();
+    const w = 3 + Math.random() * 2, h = 2.5 + Math.random() * 3;
+    const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, 3), lambert(houseColors[Math.floor(Math.random() * houseColors.length)]));
+    body.position.y = h / 2;
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(w * 0.8, 1.6, 4), roofMat);
+    roof.position.y = h + 0.8;
+    roof.rotation.y = Math.PI / 4;
+    g.add(body, roof);
+    return g;
+  }
+  const sceneryMat = (c) => lambert(c);
+  const petalColors = [0xff5d73, 0xffd23f, 0xffffff, 0x9b8cff, 0xff8fd8];
+  function makeBush() {
+    const g = new THREE.Group();
+    const m = leafMats[1];
+    for (const [x, y, r] of [[0, 0.45, 0.55], [0.5, 0.35, 0.4], [-0.45, 0.32, 0.38]]) {
+      const b = new THREE.Mesh(new THREE.SphereGeometry(r, 8, 6), m);
+      b.position.set(x, y, 0);
+      g.add(b);
+    }
+    g.userData.near = true;
+    return g;
+  }
+  function makeFlowers() {
+    const g = new THREE.Group();
+    const stem = sceneryMat(0x2f9e44);
+    for (let i = 0; i < 7; i++) {
+      const x = (Math.random() - 0.5) * 2.2, z = (Math.random() - 0.5) * 2.2;
+      const st = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.4, 4), stem);
+      st.position.set(x, 0.2, z);
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 6, 5), sceneryMat(petalColors[Math.floor(Math.random() * petalColors.length)]));
+      head.position.set(x, 0.42, z);
+      g.add(st, head);
+    }
+    g.userData.near = true;
+    return g;
+  }
+  function makeLamp() {
+    const g = new THREE.Group();
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 3, 6), sceneryMat(0x2b2350));
+    pole.position.y = 1.5;
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.25, 10, 8), new THREE.MeshBasicMaterial({ color: 0xfff3b0 }));
+    bulb.position.y = 3.1;
+    g.add(pole, bulb);
+    g.userData.near = true;
+    return g;
+  }
+  const spinners = [];
+  function makeWindmill() {
+    const g = new THREE.Group();
+    const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 1.1, 5, 8), sceneryMat(0xf7f7ff));
+    tower.position.y = 2.5;
+    const cap = new THREE.Mesh(new THREE.ConeGeometry(0.85, 1.1, 8), roofMat);
+    cap.position.y = 5.5;
+    const hub = new THREE.Group();
+    hub.position.set(0, 4.6, 0.9);
+    const bladeMat = sceneryMat(0xffd23f);
+    for (let i = 0; i < 4; i++) {
+      const blade = new THREE.Mesh(new THREE.BoxGeometry(0.4, 2.4, 0.06), bladeMat);
+      blade.position.y = 1.2;
+      const arm = new THREE.Group();
+      arm.rotation.z = i * Math.PI / 2;
+      arm.add(blade);
+      hub.add(arm);
+    }
+    g.add(tower, cap, hub);
+    spinners.push(hub);
+    return g;
+  }
+  const balloonColors = [0xff5d73, 0xffd23f, 0x5ec8e5, 0x9b5de5];
+  function makeBalloon() {
+    const g = new THREE.Group();
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(1.1, 14, 12), sceneryMat(balloonColors[Math.floor(Math.random() * balloonColors.length)]));
+    ball.scale.y = 1.2;
+    ball.position.y = 7.5 + Math.random() * 3;
+    const basket = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.5), trunkMat);
+    basket.position.y = ball.position.y - 1.8;
+    g.add(ball, basket);
+    g.userData.far = true;
+    return g;
+  }
+  const kinds = [makeTree, makeTree, makeHouse, makeTree, makeBush, makeFlowers, makeLamp, makeHouse, makeFlowers, makeBush, makeTree, makeWindmill, makeTree, makeFlowers, makeHouse, makeBalloon];
+  function placeScenery(obj, z) {
+    const side = obj.userData.side;
+    const u = obj.userData;
+    const dist = u.near ? 5 + Math.random() * 1.8 : u.far ? 10 + Math.random() * 14 : 7.5 + Math.random() * 6;
+    obj.position.set(side * dist, 0, z);
+  }
+  const SCENERY_GAP = 2.2;
+  for (let i = 0; i < 56; i++) {
+    const obj = kinds[i % kinds.length]();
+    obj.userData.side = i % 2 === 0 ? -1 : 1;
+    if (obj.userData.near === undefined && obj.userData.far === undefined) obj.userData.mid = true;
+    placeScenery(obj, DESPAWN_Z - i * SCENERY_GAP);
+    scene.add(obj);
+    scenery.push(obj);
+  }
+
+  // little white fences along both sides of the track
+  const fenceMat = sceneryMat(0xffffff);
+  const fences = [];
+  const FENCE_GAP = 2;
+  for (let i = 0; i < 60; i++) {
+    for (const side of [-1, 1]) {
+      const f = new THREE.Group();
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.7, 0.12), fenceMat);
+      post.position.y = 0.35;
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.1, FENCE_GAP), fenceMat);
+      bar.position.set(0, 0.5, -FENCE_GAP / 2);
+      f.add(post, bar);
+      f.position.set(side * 4.45, 0, DESPAWN_Z - i * FENCE_GAP);
+      scene.add(f);
+      fences.push(f);
+    }
+  }
+
+  // far away: rolling hills, the sun, drifting clouds (these ignore the fog)
+  const hillMats = [lambert(0x5cc46e), lambert(0x4bb36a), lambert(0x6fd07a)];
+  for (let i = 0; i < 14; i++) {
+    const side = i % 2 === 0 ? -1 : 1;
+    const r = 14 + Math.random() * 12;
+    const hill = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), hillMats[i % 3]);
+    hill.scale.y = 0.45;
+    hill.position.set(side * (30 + Math.random() * 40), -0.5, -60 - Math.random() * 60);
+    scene.add(hill);
+  }
+  const sun = new THREE.Mesh(new THREE.CircleGeometry(7, 32), new THREE.MeshBasicMaterial({ color: 0xfff176, fog: false }));
+  sun.position.set(-45, 38, -150);
+  scene.add(sun);
+  const sunGlow = new THREE.Mesh(new THREE.CircleGeometry(10, 32), new THREE.MeshBasicMaterial({ color: 0xfff8c4, transparent: true, opacity: 0.45, fog: false }));
+  sunGlow.position.set(-45, 38, -150.5);
+  scene.add(sunGlow);
+  const cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false });
+  const clouds = [];
+  for (let i = 0; i < 12; i++) {
+    const c = new THREE.Group();
+    for (let j = 0; j < 4; j++) {
+      const puff = new THREE.Mesh(new THREE.SphereGeometry(2 + Math.random() * 1.5, 10, 8), cloudMat);
+      puff.position.set(j * 2.6 - 4, Math.random() * 1.2, Math.random());
+      puff.scale.y = 0.7;
+      c.add(puff);
+    }
+    c.position.set((Math.random() - 0.5) * 140, 22 + Math.random() * 14, -40 - Math.random() * 110);
+    scene.add(c);
+    clouds.push(c);
+  }
+
+  // ---------- obstacles (all low enough to jump) ----------
+  const stripeTex = canvasTexture(128, 32, (ctx, w, h) => {
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#ff4d5e';
+    for (let x = -h; x < w + h; x += 32) {
+      ctx.beginPath(); ctx.moveTo(x, h); ctx.lineTo(x + 16, h); ctx.lineTo(x + 16 + h, 0); ctx.lineTo(x + h, 0); ctx.fill();
+    }
+  });
+  const crateTex = canvasTexture(64, 64, (ctx, w, h) => {
+    ctx.fillStyle = '#d9954f'; ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = '#8f5a2b'; ctx.lineWidth = 6;
+    ctx.strokeRect(3, 3, w - 6, h - 6);
+    ctx.beginPath(); ctx.moveTo(6, 6); ctx.lineTo(w - 6, h - 6); ctx.moveTo(w - 6, 6); ctx.lineTo(6, h - 6); ctx.stroke();
+  });
+  const postMat = lambert(0x6c63ff);
+  const boardMat = new THREE.MeshLambertMaterial({ map: stripeTex });
+  const crateMat = new THREE.MeshLambertMaterial({ map: crateTex });
+  const hayMat = lambert(0xf2c94c);
+  const hayBandMat = lambert(0xc99a2e);
+
+  function makeBarrier() {
+    const g = new THREE.Group();
+    for (const sx of [-0.85, 0.85]) {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.95, 0.16), postMat);
+      post.position.set(sx, 0.475, 0);
+      g.add(post);
+    }
+    const board = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.38, 0.14), boardMat);
+    board.position.y = 0.72;
+    g.add(board);
+    g.userData = { halfW: 0.95, halfD: 0.2, height: 0.92 };
+    return g;
+  }
+  function makeCrate() {
+    const g = new THREE.Group();
+    const box = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.95, 1.1), crateMat);
+    box.position.y = 0.475;
+    g.add(box);
+    g.userData = { halfW: 0.55, halfD: 0.55, height: 0.95 };
+    return g;
+  }
+  function makeHay() {
+    const g = new THREE.Group();
+    const bale = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 1.7, 14), hayMat);
+    bale.rotation.z = Math.PI / 2;
+    bale.position.y = 0.45;
+    g.add(bale);
+    for (const sx of [-0.45, 0.45]) {
+      const band = new THREE.Mesh(new THREE.CylinderGeometry(0.47, 0.47, 0.1, 14), hayBandMat);
+      band.rotation.z = Math.PI / 2;
+      band.position.set(sx, 0.45, 0);
+      g.add(band);
+    }
+    g.userData = { halfW: 0.85, halfD: 0.45, height: 0.9 };
+    return g;
+  }
+  const makers = [makeBarrier, makeCrate, makeHay];
+
+  // tall ones: too high to jump, she has to change lanes
+  const carColors = [0x3d5afe, 0x9b5de5, 0x00bbf9];
+  const windowMat = lambert(0xdff6ff);
+  const wheelMat = lambert(0x2b2350);
+  function makeTrainCar() {
+    const g = new THREE.Group();
+    const len = 6;
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.9, 2.6, len), lambert(carColors[Math.floor(Math.random() * carColors.length)]));
+    body.position.y = 1.6;
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.2, len + 0.1), lambert(0xffd23f));
+    roof.position.y = 3.0;
+    const stripe = new THREE.Mesh(new THREE.BoxGeometry(1.94, 0.3, len + 0.02), lambert(0xffffff));
+    stripe.position.y = 1.0;
+    g.add(body, roof, stripe);
+    // big friendly front window so she can see it coming
+    const front = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.9, 0.05), windowMat);
+    front.position.set(0, 2.1, len / 2 + 0.01);
+    g.add(front);
+    for (const sx of [-0.98, 0.98]) {
+      for (let z = -len / 2 + 1; z < len / 2; z += 1.4) {
+        const w = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.7, 0.9), windowMat);
+        w.position.set(sx, 2.1, z);
+        g.add(w);
+      }
+      for (const z of [-len / 2 + 1, len / 2 - 1]) {
+        const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.2, 14), wheelMat);
+        wheel.rotation.z = Math.PI / 2;
+        wheel.position.set(sx * 0.85, 0.32, z);
+        g.add(wheel);
+      }
+    }
+    g.userData = { halfW: 0.95, halfD: len / 2, height: 99, tall: true };
+    return g;
+  }
+  let obstacles = [];
+
+  // ---------- things to run over: bridges, launch ramps, bounce pads ----------
+  // A platform's group sits at its near end (the end she reaches first) and stretches away into -z.
+  const plankTex = canvasTexture(64, 64, (ctx, w, h) => {
+    ctx.fillStyle = '#4fb3e8'; ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#3a95c9';
+    for (let y = 0; y < h; y += 16) ctx.fillRect(0, y, w, 3);
+  });
+  plankTex.wrapS = plankTex.wrapT = THREE.RepeatWrapping;
+  plankTex.repeat.set(1, 5);
+  const deckMat = new THREE.MeshLambertMaterial({ map: plankTex });
+  const rampMat = lambert(0xffb347);
+  const launchMat = lambert(0xff5d73);
+  const railMatBridge = lambert(0xffffff);
+  const pillarMat = lambert(0x6c63ff);
+  let platforms = [];
+
+  function slab(len, thick, mat, y0, y1, z0, z1) {
+    // a plank running from (y0, z0) to (y1, z1); its top surface follows that line
+    const dz = z1 - z0, dy = y1 - y0;
+    const m = new THREE.Mesh(new THREE.BoxGeometry(1.9, thick, Math.hypot(dz, dy)), mat);
+    m.rotation.x = Math.atan2(dy, -dz);
+    m.position.set(0, (y0 + y1) / 2 - thick / 2, (z0 + z1) / 2);
+    return m;
+  }
+
+  function makeBridge({ ramp, height, deck, down, rails }) {
+    const g = new THREE.Group();
+    g.add(slab(0, 0.18, rampMat, 0, height, 0, -ramp));
+    g.add(slab(0, 0.22, deckMat, height, height, -ramp, -ramp - deck));
+    if (down) g.add(slab(0, 0.18, rampMat, height, 0, -ramp - deck, -2 * ramp - deck));
+    for (let z = -ramp - 1; z > -ramp - deck; z -= 3.5) {
+      for (const sx of [-0.8, 0.8]) {
+        const p = new THREE.Mesh(new THREE.BoxGeometry(0.22, height, 0.22), pillarMat);
+        p.position.set(sx, height / 2 - 0.1, z);
+        g.add(p);
+      }
+    }
+    for (const side of rails) {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, deck), railMatBridge);
+      rail.position.set(side * 0.92, height + 0.55, -ramp - deck / 2);
+      g.add(rail);
+      for (let z = -ramp; z >= -ramp - deck; z -= 2) {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.55, 0.1), railMatBridge);
+        post.position.set(side * 0.92, height + 0.28, z);
+        g.add(post);
+      }
+    }
+    g.userData = { ramp, height, deck, down, launch: false, length: ramp * (down ? 2 : 1) + deck };
+    return g;
+  }
+
+  function makeLaunchRamp() {
+    const g = new THREE.Group();
+    const ramp = 3.2, height = 1.1;
+    g.add(slab(0, 0.18, launchMat, 0, height, 0, -ramp));
+    const back = new THREE.Mesh(new THREE.BoxGeometry(1.9, height, 0.2), launchMat);
+    back.position.set(0, height / 2, -ramp);
+    g.add(back);
+    for (const sx of [-0.6, 0, 0.6]) {
+      const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.02, ramp * 0.9), railMatBridge);
+      stripe.rotation.x = Math.atan2(height, ramp);
+      stripe.position.set(sx, height / 2 + 0.01, -ramp / 2);
+      g.add(stripe);
+    }
+    g.userData = { ramp, height, deck: 0, down: false, launch: true, length: ramp };
+    return g;
+  }
+
+  // height of a platform's surface, d units past its near end
+  function surfaceAt(p, d) {
+    const u = p.userData;
+    if (d < 0 || d > u.length) return 0;
+    if (d < u.ramp) return u.height * d / u.ramp;
+    if (d <= u.ramp + u.deck) return u.height;
+    return u.height * (1 - (d - u.ramp - u.deck) / u.ramp);
+  }
+
+  function makePad() {
+    const g = new THREE.Group();
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.85, 0.16, 20), pillarMat);
+    base.position.y = 0.08;
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 0.08, 20), lambert(0x7dff9a));
+    top.position.y = 0.2;
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.05, 6, 20), lambert(0xffffff));
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.25;
+    g.add(base, top, ring);
+    g.userData = { pad: true, halfW: 0.75, halfD: 0.75, height: 0.25, base: 0, top };
+    return g;
+  }
+
+  // ---------- the runner ----------
+  const player = new THREE.Group();
+  const skin = lambert(0xf3c39b);
+  const shirt = lambert(0xff5d73);
+  const shorts = lambert(0x3d5afe);
+  const hairMat = lambert(0x5a3825);
+  const shoeMat = lambert(0xffffff);
+
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.7, 0.38), shirt);
+  torso.position.y = 1.15;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.33, 16, 12), skin);
+  head.position.y = 1.78;
+  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.35, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.55), hairMat);
+  hair.position.y = 1.82;
+  const pony = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8), hairMat);
+  pony.position.set(0, 1.85, 0.36);
+  const hips = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.22, 0.36), shorts);
+  hips.position.y = 0.76;
+  player.add(torso, head, hair, pony, hips);
+
+  function limb(mat, len, w, x, y, parent = player) {
+    const pivot = new THREE.Group();
+    pivot.position.set(x, y, 0);
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, len, w), mat);
+    m.position.y = -len / 2;
+    pivot.add(m);
+    parent.add(pivot);
+    return pivot;
+  }
+  const legL = limb(shorts, 0.62, 0.22, -0.16, 0.7);
+  const legR = limb(shorts, 0.62, 0.22, 0.16, 0.7);
+  for (const leg of [legL, legR]) {
+    const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.14, 0.34), shoeMat);
+    shoe.position.set(0, -0.62, -0.04);
+    leg.add(shoe);
+  }
+  const armL = limb(skin, 0.55, 0.16, -0.42, 1.45);
+  const armR = limb(skin, 0.55, 0.16, 0.42, 1.45);
+  scene.add(player);
+
+  // ---------- the policeman ----------
+  const cop = new THREE.Group();
+  const uniform = lambert(0x1f3a93);
+  const copTorso = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.8, 0.42), uniform);
+  copTorso.position.y = 1.2;
+  const badge = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, 0.04), lambert(0xffd23f));
+  badge.position.set(0.18, 1.38, -0.22);
+  const copHead = new THREE.Mesh(new THREE.SphereGeometry(0.33, 16, 12), skin);
+  copHead.position.y = 1.86;
+  const hatTop = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.34, 0.3, 14), uniform);
+  hatTop.position.y = 2.22;
+  const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.05, 14), lambert(0x111a44));
+  brim.position.set(0, 2.08, -0.06);
+  const hatBadge = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.04), lambert(0xffd23f));
+  hatBadge.position.set(0, 2.24, -0.33);
+  const mustache = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.06, 0.05), hairMat);
+  mustache.position.set(0, 1.78, -0.32);
+  const belt = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.12, 0.44), lambert(0x111111));
+  belt.position.y = 0.82;
+  cop.add(copTorso, badge, copHead, hatTop, brim, hatBadge, mustache, belt);
+  const copLegL = limb(uniform, 0.7, 0.24, -0.17, 0.78, cop);
+  const copLegR = limb(uniform, 0.7, 0.24, 0.17, 0.78, cop);
+  for (const leg of [copLegL, copLegR]) {
+    const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.14, 0.38), lambert(0x111111));
+    shoe.position.set(0, -0.7, -0.05);
+    leg.add(shoe);
+  }
+  const copArmL = limb(uniform, 0.6, 0.18, -0.46, 1.55, cop);
+  const copArmR = limb(uniform, 0.6, 0.18, 0.46, 1.55, cop);
+  cop.position.set(0, 0, 16);
+  scene.add(cop);
+
+  // ---------- coins ----------
+  const coinGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.09, 18);
+  coinGeo.rotateX(Math.PI / 2);
+  const coinMat = new THREE.MeshLambertMaterial({ color: 0xffd23f, emissive: 0x7a5200 });
+  let coins = [];
+  function addCoin(li, z, y) {
+    const c = new THREE.Mesh(coinGeo, coinMat);
+    c.position.set(LANES[li], y, z);
+    scene.add(c);
+    coins.push(c);
+  }
+  function coinLine(li, z, n, y, gap = 2) {
+    for (let k = 0; k < n; k++) addCoin(li, z - k * gap, y);
+  }
+  function coinArc(li, z, y0 = 0) {
+    // a hop-shaped arc of coins over something she jumps
+    for (let k = -3; k <= 3; k++) addCoin(li, z - k * 1.5, y0 + 0.8 + 1.0 * (1 - (k / 3) * (k / 3)));
+  }
+
+  // ---------- portal ----------
+  const swirlTex = canvasTexture(128, 128, (ctx, w, h) => {
+    const g = ctx.createRadialGradient(w / 2, h / 2, 4, w / 2, h / 2, w / 2);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(0.35, '#d7a8ff'); g.addColorStop(1, '#6a2fd1');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 5;
+    for (let a = 0; a < 4; a++) {
+      ctx.beginPath();
+      for (let t = 0; t < 1; t += 0.02) {
+        const r = t * w / 2, th = a * Math.PI / 2 + t * 5;
+        ctx.lineTo(w / 2 + Math.cos(th) * r, h / 2 + Math.sin(th) * r);
+      }
+      ctx.stroke();
+    }
+  });
+  function makePortal() {
+    const g = new THREE.Group();
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.15, 0.18, 10, 32), new THREE.MeshBasicMaterial({ color: 0xc77dff }));
+    ring.position.y = 1.35;
+    const swirl = new THREE.Mesh(new THREE.CircleGeometry(1.0, 32), new THREE.MeshBasicMaterial({ map: swirlTex, transparent: true, opacity: 0.9, side: THREE.DoubleSide }));
+    swirl.position.y = 1.35;
+    const glow = new THREE.Mesh(new THREE.CircleGeometry(1.7, 32), new THREE.MeshBasicMaterial({ color: 0xe6c8ff, transparent: true, opacity: 0.35, side: THREE.DoubleSide }));
+    glow.position.set(0, 1.35, -0.05);
+    g.add(glow, ring, swirl);
+    g.userData = { portal: true, halfW: 0.9, halfD: 0.5, height: 0, base: 0, swirl };
+    return g;
+  }
+
+  // ---------- lands the portal can take her to ----------
+  const themes = [
+    { name: 'Sunny Town', sky: 0x8fd8ff, grass: 0x7fd36b, track: 0xe8c48f, hills: [0x5cc46e, 0x4bb36a, 0x6fd07a] },
+    { name: 'Candy Land', sky: 0xffc8ef, grass: 0x9df0c8, track: 0xfff0b3, hills: [0x7fe3b8, 0xff9ed8, 0x8ff0c4] },
+    { name: 'Sunset Valley', sky: 0xffb38a, grass: 0xa8c86a, track: 0xf0c9a0, hills: [0x8fb85a, 0xd98a5a, 0x9cc46a] },
+    { name: 'Starry Night', sky: 0x4b4fae, grass: 0x3f9e6e, track: 0xc9ae8a, hills: [0x2f7d5a, 0x368d62, 0x4aa877] },
+  ];
+  let themeIndex = 0;
+  function applyTheme(i) {
+    themeIndex = i;
+    const t = themes[i];
+    scene.background.setHex(t.sky);
+    scene.fog.color.setHex(t.sky);
+    grass.material.color.setHex(t.grass);
+    track.material.color.setHex(t.track);
+    hillMats.forEach((m, k) => m.color.setHex(t.hills[k]));
+  }
+
+  const blob = new THREE.Mesh(new THREE.CircleGeometry(0.45, 20), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22 }));
+  blob.rotation.x = -Math.PI / 2;
+  blob.position.y = 0.05;
+  scene.add(blob);
+
+  // ---------- state ----------
+  const scoreEl = document.getElementById('score');
+  const bestEl = document.getElementById('best');
+  const startScreen = document.getElementById('startScreen');
+  const crashScreen = document.getElementById('crashScreen');
+  const crashScore = document.getElementById('crashScore');
+  const crashTitle = document.getElementById('crashTitle');
+  const coinsEl = document.getElementById('coins');
+  const flashEl = document.getElementById('flash');
+  const toastEl = document.getElementById('toast');
+
+  let best = 0;
+  try { best = Number(localStorage.getItem('hopRunnerBest')) || 0; } catch (e) {}
+
+  const s = {
+    mode: 'ready',      // ready | running | crashed
+    lane: 1,
+    x: 0,
+    y: 0,
+    vy: 0,
+    speed: START_SPEED,
+    distance: 0,
+    untilNext: 45,
+    runPhase: 0,
+    jumpBuffer: 0,
+    crashT: 0,
+    prevLane: 1,
+    lastTall: false,
+    ground: 0,          // height of whatever is under her feet
+    groundPlat: null,
+    coins: 0,
+    nextPortal: 150,
+    copZ: 16,           // how far behind her the policeman is
+    copX: 0,
+    copY: 0,
+    copVy: 0,
+    copClose: 0,        // seconds he stays right behind her
+    bumpCool: 0,
+    stumbleT: 0,
+    caught: false,
+  };
+
+  function renderHud() {
+    scoreEl.firstChild.nodeValue = Math.floor(s.distance);
+    bestEl.firstChild.nodeValue = Math.floor(best);
+    coinsEl.lastChild.nodeValue = s.coins;
+  }
+  function popCoins() {
+    coinsEl.classList.remove('pop');
+    void coinsEl.offsetWidth;
+    coinsEl.classList.add('pop');
+  }
+  let toastTimer = 0;
+  function toast(text) {
+    toastEl.textContent = text;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1600);
+  }
+  function flash() {
+    flashEl.style.transition = 'none';
+    flashEl.style.opacity = '1';
+    void flashEl.offsetWidth;
+    flashEl.style.transition = 'opacity 0.9s ease-out';
+    flashEl.style.opacity = '0';
+  }
+  function clearWorld() {
+    for (const o of obstacles) scene.remove(o);
+    obstacles = [];
+    for (const p of platforms) scene.remove(p);
+    platforms = [];
+    for (const c of coins) scene.remove(c);
+    coins = [];
+  }
+  function teleport() {
+    flash();
+    clearWorld();
+    applyTheme((themeIndex + 1) % themes.length);
+    toast(themes[themeIndex].name + '!');
+    s.distance += 50;
+    s.y = s.ground = 0; s.vy = 0; s.groundPlat = null;
+    s.copZ = 30; s.copClose = 0; // the policeman is left far behind
+    coinLine(s.lane, -8, 20, 0.8, 1.8); // a welcome trail of coins
+    s.untilNext = 45;
+    s.nextPortal = s.distance + 220 + Math.random() * 120;
+  }
+
+  function reset() {
+    clearWorld();
+    applyTheme(0);
+    Object.assign(s, { coins: 0, nextPortal: 150, copZ: 3.2, copX: 0, copY: 0, copVy: 0, copClose: 3.5, bumpCool: 0, stumbleT: 0, caught: false, lane: 1, prevLane: 1, lastTall: false, x: 0, y: 0, vy: 0, speed: START_SPEED, distance: 0, untilNext: 35, jumpBuffer: 0, crashT: 0, ground: 0, groundPlat: null });
+    player.rotation.set(0, 0, 0);
+    renderHud();
+  }
+
+  function start() {
+    reset();
+    s.mode = 'running';
+    startScreen.hidden = true;
+    crashScreen.hidden = true;
+  }
+
+  function crash(caught = false) {
+    s.mode = 'crashed';
+    s.caught = caught;
+    s.crashT = 0;
+    s.vy = 6;
+    if (s.distance > best) {
+      best = s.distance;
+      try { localStorage.setItem('hopRunnerBest', String(Math.floor(best))); } catch (e) {}
+    }
+    renderHud();
+    crashTitle.textContent = caught ? 'Caught!' : 'Bonk!';
+    crashScore.textContent = (caught ? 'The policeman caught you! ' : '') + 'You ran ' + Math.floor(s.distance) + ' metres and got ' + s.coins + ' coins!';
+  }
+
+  // first stumble: she trips and the policeman nearly catches her; a second one while he's close: caught!
+  function stumble() {
+    if (s.bumpCool > 0 || s.mode !== 'running') return;
+    s.bumpCool = 0.8;
+    if (s.copClose > 0) { crash(true); return; }
+    s.copClose = 6;
+    s.stumbleT = 0.5;
+    s.speed = Math.max(START_SPEED * 0.8, s.speed * 0.7);
+  }
+
+  // ---------- input ----------
+  function moveLane(dir) {
+    if (s.mode !== 'running') return;
+    s.prevLane = s.lane;
+    s.lane = Math.max(0, Math.min(2, s.lane + dir));
+  }
+  function jump() {
+    if (s.mode !== 'running') return;
+    s.jumpBuffer = 0.18; // a tap just before landing still counts
+  }
+  function primaryAction() {
+    if (s.mode === 'ready') { start(); return true; }
+    if (s.mode === 'crashed') {
+      if (s.crashT > 0.7) start();
+      return true;
+    }
+    return false;
+  }
+
+  let touch = null;
+  const SWIPE_PX = 28;
+  window.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    if (primaryAction()) { touch = null; return; }
+    touch = { id: e.pointerId, x: e.clientX, y: e.clientY, used: false };
+  }, { passive: false });
+  window.addEventListener('pointermove', (e) => {
+    if (!touch || touch.id !== e.pointerId || touch.used) return;
+    const dx = e.clientX - touch.x, dy = e.clientY - touch.y;
+    if (Math.abs(dx) > SWIPE_PX && Math.abs(dx) > Math.abs(dy)) {
+      moveLane(dx > 0 ? 1 : -1);
+      touch.used = true;
+    } else if (dy < -SWIPE_PX && Math.abs(dy) > Math.abs(dx)) {
+      jump();
+      touch.used = true;
+    }
+  });
+  window.addEventListener('pointerup', (e) => {
+    if (!touch || touch.id !== e.pointerId) return;
+    if (!touch.used) jump(); // a plain tap jumps; swipe down does nothing, there is no ducking
+    touch = null;
+  });
+  window.addEventListener('pointercancel', () => { touch = null; });
+  // stop iPad Safari from scrolling, zooming or bouncing
+  document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+  document.addEventListener('gesturestart', (e) => e.preventDefault());
+  document.addEventListener('dblclick', (e) => e.preventDefault());
+
+  window.addEventListener('keydown', (e) => {
+    const k = e.key;
+    if (k === ' ' || k === 'ArrowUp' || k === 'w' || k === 'Enter') {
+      e.preventDefault();
+      if (!primaryAction()) jump();
+    } else if (k === 'ArrowLeft' || k === 'a') { e.preventDefault(); moveLane(-1); }
+    else if (k === 'ArrowRight' || k === 'd') { e.preventDefault(); moveLane(1); }
+  });
+
+  // ---------- spawning ----------
+  function laneBusy(li, margin = 10) {
+    // a lane is busy while a platform in it still reaches back past the spawn line
+    return platforms.some(p => p.userData.lane === li && p.position.z - p.userData.length < SPAWN_Z + margin);
+  }
+  // trains need a long run-up after a bridge so she has time to see them and move
+  const tallFree = () => [0, 1, 2].filter(li => !laneBusy(li, 35));
+  function addObstacle(o, li, z, base = 0) {
+    o.position.set(LANES[li], base, z);
+    o.userData.base = base;
+    scene.add(o);
+    obstacles.push(o);
+  }
+  function addPlatform(p, li) {
+    p.position.set(LANES[li], 0, SPAWN_Z);
+    p.userData.lane = li;
+    scene.add(p);
+    platforms.push(p);
+  }
+  function bridgeOpts(rails) {
+    return { ramp: 4.5, height: 1.8, deck: 10 + Math.random() * 14, down: Math.random() < 0.6, rails };
+  }
+  function spawnStuff(free) {
+    const r = Math.random();
+    if (r < 0.25 && free.length === 3) {
+      // a big bridge across all three lanes
+      const opts = bridgeOpts([]);
+      for (const li of [0, 1, 2]) {
+        opts.rails = li === 0 ? [-1] : li === 2 ? [1] : [];
+        addPlatform(makeBridge(opts), li);
+      }
+      coinLine(Math.floor(Math.random() * 3), SPAWN_Z - opts.ramp - 1, Math.floor(opts.deck / 2.2), opts.height + 0.8, 2.2);
+    } else if (r < 0.6) {
+      const li = free[Math.floor(Math.random() * free.length)];
+      const b = makeBridge(bridgeOpts([-1, 1]));
+      addPlatform(b, li);
+      // sometimes a hay bale up on the deck to hop over
+      const u = b.userData;
+      if (u.deck > 14 && Math.random() < 0.5) {
+        const hz = SPAWN_Z - u.ramp - u.deck * 0.6;
+        addObstacle(makeHay(), li, hz, u.height);
+        coinArc(li, hz, u.height);
+      } else {
+        coinLine(li, SPAWN_Z - u.ramp - 1, Math.floor(u.deck / 2.2), u.height + 0.8, 2.2);
+      }
+    } else if (r < 0.8) {
+      const li = free[Math.floor(Math.random() * free.length)];
+      addPlatform(makeLaunchRamp(), li);
+      for (let k = 0; k < 7; k++) addCoin(li, SPAWN_Z - 4 - k * 1.8, 2.0 + Math.sin(k / 6 * Math.PI) * 1.6);
+    } else {
+      for (const li of free) {
+        if (Math.random() < 0.6 || li === free[0]) {
+          addObstacle(makePad(), li, SPAWN_Z);
+          coinLine(li, SPAWN_Z - 3, 6, 3.6, 1.8); // up high, only reachable with a bounce
+        }
+      }
+    }
+  }
+  function spawnRow() {
+    const free = [0, 1, 2].filter(li => !laneBusy(li));
+    if (s.distance > s.nextPortal && tallFree().length === 3) {
+      // the portal gets a row all to itself, in a random lane
+      addObstacle(makePortal(), Math.floor(Math.random() * 3), SPAWN_Z);
+      s.nextPortal = Infinity;
+      s.untilNext = 40;
+      return;
+    }
+    if (free.length && s.distance > 30 && Math.random() < 0.35) {
+      spawnStuff(free);
+    } else if (s.distance > 20 && !s.lastTall && Math.random() < 0.4 && tallFree().length) {
+      // one or two train carriages; at least one lane always stays open
+      const lanes = tallFree().sort(() => Math.random() - 0.5).slice(0, Math.random() < 0.6 ? 1 : 2);
+      for (const li of lanes) addObstacle(makeTrainCar(), li, SPAWN_Z - 3);
+      const open = [0, 1, 2].filter(li => !lanes.includes(li));
+      coinLine(open[Math.floor(Math.random() * open.length)], SPAWN_Z, 5, 0.8);
+      s.lastTall = true;
+      s.untilNext = s.speed * 2.0 + Math.random() * s.speed * 0.6 + 6;
+      return;
+    } else if (free.length) {
+      const r = Math.random();
+      let count = r < 0.5 ? 1 : r < 0.85 ? 2 : 3;
+      if (s.distance < 150) count = Math.min(count, 2);
+      const lanes = free.sort(() => Math.random() - 0.5).slice(0, count);
+      for (const li of lanes) addObstacle(makers[Math.floor(Math.random() * makers.length)](), li, SPAWN_Z);
+      if (Math.random() < 0.75) {
+        const li = free[Math.floor(Math.random() * free.length)];
+        if (lanes.includes(li)) coinArc(li, SPAWN_Z);
+        else coinLine(li, SPAWN_Z + 3, 5, 0.8);
+      }
+    }
+    s.lastTall = false;
+    // always leave room to land and jump again
+    s.untilNext = s.speed * 1.5 + Math.random() * s.speed * 0.9;
+  }
+
+  // ---------- loop ----------
+  function resize() {
+    const w = window.innerWidth, h = window.innerHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    // keep all three lanes in view on a tall portrait screen
+    camera.fov = w / h < 0.8 ? 72 : 60;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function update(dt) {
+    const running = s.mode === 'running';
+    const crashed = s.mode === 'crashed';
+
+    if (running) {
+      s.speed = Math.min(MAX_SPEED, s.speed + SPEED_RAMP * dt);
+      s.distance += s.speed * dt * 0.5;
+    } else if (crashed) {
+      s.speed = Math.max(0, s.speed - 40 * dt);
+      s.crashT += dt;
+      if (s.crashT > 0.7 && crashScreen.hidden) crashScreen.hidden = false;
+    } else {
+      s.speed = 4; // gentle jog behind the start screen
+    }
+    const move = s.speed * dt;
+
+    // lanes: smooth slide
+    s.x += (LANES[s.lane] - s.x) * Math.min(1, dt * 14);
+
+    // what is she standing over? (checked after the world moves, below)
+    const wasGrounded = s.y <= s.ground + 0.02 && s.vy <= 0;
+    const prevGround = s.ground, prevPlat = s.groundPlat;
+
+    // world scroll
+    for (const t of ties) {
+      t.position.z += move;
+      if (t.position.z > DESPAWN_Z) t.position.z -= ties.length * TIE_GAP;
+    }
+    for (const o of scenery) {
+      o.position.z += move;
+      if (o.position.z > DESPAWN_Z) placeScenery(o, o.position.z - scenery.length * SCENERY_GAP);
+    }
+    for (const f of fences) {
+      f.position.z += move;
+      if (f.position.z > DESPAWN_Z) f.position.z -= (fences.length / 2) * FENCE_GAP;
+    }
+    for (const c of clouds) {
+      c.position.z += move * 0.04;
+      c.position.x += dt * 0.6;
+      if (c.position.z > -30) c.position.z -= 120;
+      if (c.position.x > 80) c.position.x = -80;
+    }
+    for (const h of spinners) h.rotation.z += dt * 1.5;
+    for (let i = obstacles.length - 1; i >= 0; i--) {
+      const o = obstacles[i];
+      o.position.z += move;
+      if (o.position.z > DESPAWN_Z) { scene.remove(o); obstacles.splice(i, 1); continue; }
+      if (running) {
+        const d = o.userData;
+        const hitX = Math.abs(o.position.x - s.x) < d.halfW + 0.22;
+        const hitZ = Math.abs(o.position.z) < d.halfD + 0.18;
+        const feet = s.y - d.base;
+        if (d.portal) {
+          if (hitX && Math.abs(o.position.z) < 0.6) { teleport(); break; }
+        } else if (d.pad) {
+          if (hitX && hitZ && feet < 0.4 && feet > -0.3 && s.vy <= 0) { s.vy = 15; d.top.position.y = 0.32; }
+        } else if (d.tall && hitX && hitZ && Math.abs(o.position.z) < d.halfD - 0.4) {
+          s.lane = s.prevLane; // swiped into the side of a train: bump back instead of crashing
+          stumble();
+        } else if (hitX && hitZ && feet < d.height - 0.12 && feet > -0.5) {
+          // tripped over something jumpable: knock it flying and stumble
+          scene.remove(o); obstacles.splice(i, 1);
+          stumble();
+          continue;
+        }
+      }
+      if (o.userData.portal) { o.userData.swirl.rotation.z -= dt * 4; }
+      if (o.userData.pad) o.userData.top.position.y += (0.2 - o.userData.top.position.y) * Math.min(1, dt * 8);
+    }
+    for (let i = coins.length - 1; i >= 0; i--) {
+      const c = coins[i];
+      c.position.z += move;
+      c.rotation.y += dt * 4;
+      if (c.position.z > DESPAWN_Z) { scene.remove(c); coins.splice(i, 1); continue; }
+      if (running && Math.abs(c.position.x - s.x) < 0.9 && Math.abs(c.position.z) < 0.8 && Math.abs(c.position.y - (s.y + 0.9)) < 1.2) {
+        scene.remove(c); coins.splice(i, 1);
+        s.coins++;
+        popCoins();
+      }
+    }
+    let copGround = 0;
+    s.ground = 0; s.groundPlat = null;
+    for (let i = platforms.length - 1; i >= 0; i--) {
+      const p = platforms[i];
+      p.position.z += move;
+      if (p.position.z - p.userData.length > DESPAWN_Z) { scene.remove(p); platforms.splice(i, 1); continue; }
+      if (Math.abs(p.position.x - s.x) < 1.0) {
+        const h = surfaceAt(p, p.position.z);
+        if (h > s.ground) { s.ground = h; s.groundPlat = p; }
+      }
+      if (Math.abs(p.position.x - s.copX) < 1.0) copGround = Math.max(copGround, surfaceAt(p, p.position.z - s.copZ));
+    }
+
+    // jumping, falling, and riding up ramps
+    if (wasGrounded && s.ground < prevGround - 0.05 && prevPlat && prevPlat.userData.launch && running) {
+      s.vy = 8.5; // whoosh off the launch ramp
+    }
+    if (s.jumpBuffer > 0) {
+      s.jumpBuffer -= dt;
+      if (s.y <= s.ground + 0.02 && s.vy <= 0 && running) { s.vy = JUMP_V; s.jumpBuffer = 0; }
+    }
+    if (wasGrounded && s.vy <= 0 && s.ground < s.y && s.y - s.ground < 0.35 && !(prevPlat && prevPlat.userData.launch)) {
+      s.y = s.ground; // walk down a ramp instead of floating off it
+    }
+    if (s.y > s.ground || s.vy > 0) {
+      s.vy -= GRAVITY * dt;
+      s.y += s.vy * dt;
+    }
+    if (s.y <= s.ground) {
+      // ramps push her up; stepping sideways onto a bridge lifts her quickly but gently
+      s.y = s.ground - s.y > 0.3 ? s.y + (s.ground - s.y) * Math.min(1, dt * 18) : s.ground;
+      if (s.vy < 0) s.vy = 0;
+    }
+
+    if (running) {
+      s.untilNext -= move;
+      if (s.untilNext <= 0) spawnRow();
+    }
+
+    // runner pose
+    s.runPhase += dt * (6 + s.speed * 0.6);
+    const air = s.y > s.ground + 0.05;
+    const swing = air ? 0.9 : Math.sin(s.runPhase) * 0.9;
+    legL.rotation.x = air ? -0.9 : swing;
+    legR.rotation.x = air ? 0.5 : -swing;
+    armL.rotation.x = air ? 2.4 : -swing;
+    armR.rotation.x = air ? 2.4 : swing;
+    player.position.set(s.x, s.y + (air ? 0 : Math.abs(Math.sin(s.runPhase)) * 0.08), 0);
+    player.rotation.y = (LANES[s.lane] - s.x) * -0.15;
+    if (crashed) {
+      player.rotation.x = Math.min(1.4, s.crashT * 4);
+    } else if (s.stumbleT > 0) {
+      s.stumbleT -= dt;
+      player.rotation.x = Math.sin((0.5 - s.stumbleT) / 0.5 * Math.PI) * -0.6; // a wobbly trip forward
+      player.rotation.z = Math.sin(s.stumbleT * 30) * 0.15;
+    } else {
+      player.rotation.x = 0;
+      player.rotation.z = 0;
+    }
+    blob.position.set(s.x, s.ground + 0.06, 0);
+    const blobScale = 1 - Math.min(0.5, (s.y - s.ground) * 0.25);
+    blob.scale.set(blobScale, blobScale, 1);
+
+    // the policeman: right behind at the start and after a stumble, otherwise he falls back out of sight
+    s.bumpCool -= dt;
+    if (running) s.copClose = Math.max(0, s.copClose - dt);
+    const copTarget = crashed ? 1.4 : s.mode === 'ready' ? 16 : s.copClose > 0 ? (s.stumbleT > 0 ? 1.0 : 1.9) : 16;
+    s.copZ += (copTarget - s.copZ) * Math.min(1, dt * (s.copClose > 0 || crashed ? 2.5 : 0.6));
+    // he runs just off her shoulder so he never hides her from view
+    const copSide = s.x > 0.5 ? -1.5 : 1.5;
+    s.copX += (s.x + copSide - s.copX) * Math.min(1, dt * 5);
+    const copNear = obstacles.some(o => !o.userData.tall && !o.userData.portal && Math.abs(o.position.x - s.copX) < 1.2 && o.position.z - s.copZ > -2.5 && o.position.z - s.copZ < 0);
+    if (copNear && s.copY <= copGround + 0.02) s.copVy = JUMP_V;
+    s.copVy -= GRAVITY * dt;
+    s.copY = Math.max(copGround, s.copY + s.copVy * dt);
+    if (s.copY <= copGround) s.copVy = 0;
+    const copAir = s.copY > copGround + 0.05;
+    const copStill = crashed && s.speed < 0.5;
+    const cs = copStill ? 0 : Math.sin(s.runPhase * 0.95) * 0.9;
+    copLegL.rotation.x = copAir ? -0.9 : cs;
+    copLegR.rotation.x = copAir ? 0.5 : -cs;
+    copArmL.rotation.x = copStill ? 2.6 : -cs; // waving when he's caught up
+    copArmR.rotation.x = copStill ? 0.3 * Math.sin(s.crashT * 8) : cs;
+    cop.position.set(s.copX, s.copY, s.copZ);
+    cop.visible = s.copZ < 12;
+
+    // camera follows lane a little
+    camera.position.x += (s.x * 0.55 - camera.position.x) * Math.min(1, dt * 6);
+    camera.position.y += (4.2 + s.y * 0.7 - camera.position.y) * Math.min(1, dt * 5);
+    camera.lookAt(s.x * 0.4, 1.2 + s.y * 0.6, -6);
+
+    if (running) renderHud();
+  }
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    update(dt);
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+  document.addEventListener('visibilitychange', () => { last = performance.now(); });
+  renderHud();
+  requestAnimationFrame(frame);
+
+  // test hook
+  window.__hop = s;
+  window.__hopWorld = () => ({ obstacles, platforms, LANES });
+})();
+</script>
