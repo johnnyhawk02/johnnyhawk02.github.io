@@ -272,6 +272,8 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .mgroup + .mgroup { border-left: 1px solid var(--line); padding-left: 16px; }
 .mlab { display: flex; align-items: center; gap: 10px; font-size: .78rem; color: var(--muted); text-transform: lowercase; min-height: 24px; }
 .btn.tiny { font-size: .76rem; padding: 2px 10px; }
+.mchk { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; cursor: pointer; }
+.mchk input { width: 12px; height: 12px; }
 #comp-knobs { grid-template-columns: repeat(5, minmax(46px, var(--kw))) auto; gap: 0; }
 #duck-knobs { grid-template-columns: repeat(2, minmax(46px, var(--kw))) auto; gap: 0; }
 /* level meters: a recessed column of small LEDs beside each mixer fader (green, then yellow from -12 dB,
@@ -831,7 +833,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
       <h2>master</h2>
       <div class="master-row">
         <div class="mgroup"><span class="mlab"><button class="btn tiny" id="comp-on" type="button" aria-pressed="true">compressor</button></span><div class="knobs" id="comp-knobs"></div></div>
-        <div class="mgroup"><span class="mlab">drum 1 sidechain</span><div class="knobs" id="duck-knobs"></div></div>
+        <div class="mgroup"><span class="mlab">drum 1 sidechain<label class="mchk" for="duck-fx" title="Duck the echo, distortion and ring mod returns too"><input id="duck-fx" type="checkbox"> fx</label></span><div class="knobs" id="duck-knobs"></div></div>
       </div>
     </div>
       <div class="card groove-card" role="group" aria-label="Groove per track">
@@ -919,7 +921,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
       <p class="note">The mixer's level and pan are the voices' own VOLUME and PAN parameters, so they are saved with the kit. Drag a fader for fine control (it moves less than the mouse; hold Shift for finer still) or scroll on it; the strip's name shows the level while it moves.</p>
       <p class="note">Save keeps everything as a preset in this browser under a two-word alien name: the sound (kit, crossfeed, FX and sends) and the song (pattern, perform dials, tempo, velocity, accent, master), and loading it brings all of that back. A red star by save means a randomise has changed things since the last save or load. ‹ and › step through the presets; while playing, a new preset comes in at the start of the next bar. Presets opens the preset manager: load, delete, and star favourites; export favourites downloads them as a file, and favourites sent in that way are built into the next release. Open .snd there loads an LXR kit file as the current sound, and export .snd downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have).</p>
       <p class="note">There are three effects, all the LXR-02's own FX-slot code run as sends: each mixer strip has three send dials left of its fader: echo, dist and ring. Every voice keeps its dry sound and each effect's output is fully wet. The echo's time is synced to the tempo: from 1/128 of a bar fully left to one bar fully right, gliding through the musical lengths (the readout names the nearest, with ≈ when it is between); randomise puts it within 10 ms of a musical length either way (at 120 bpm; the window scales with the tempo). Ticks round the time dial mark the musical lengths (long for straight notes, short for dotted and triplet); a drag catches on them, and the scroll wheel and arrow keys step from one to the next (Shift + arrow for fine steps). The FX section above the mixer sets all three: echo mode (normal or ping-pong), time, tone, feedback and width (100% is the firmware's own; 0% is mono; the firmware's ping-pong only bounces sound that reaches it off-centre, and most drums sit in the middle, so above 100% width pushes the echo's input to one side, and at 200% a centred drum bounces fully; on a normal echo, above 100% widens the echoes' stereo); distortion type (tube, fold or rat), drive, color, tone and volume; ring mod carrier wave and frequency. A kit that used distortion or ring mod in its FX slot loads those settings into that effect with a little of each routed voice sent to it. The sync, the sends, the extra buses and the larger delay buffer are additions to the firmware.</p>
-      <p class="note">The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits, and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the needle meters show how far each is pulling down, in dB.</p>
+      <p class="note">The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits (tick fx to duck the echo, distortion and ring mod returns as well, so their tails pump with drum 1), and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the needle meters show how far each is pulling down, in dB.</p>
       <p class="note">The red circle by play opens the recorder: pick free (records until you press stop, up to ten minutes) or a loop of 1 to 16 bars, which starts on the next bar (starting playback from bar 1 if it is stopped) and is cut to exactly that many bars at the tempo, with the echo carried in from before so it loops cleanly. Choose 44.1 or 48 kHz, 16-bit (dithered) or 24-bit, and normalise (peak at −0.3 dB). Each take is listed with a player and a save .wav button; takes are kept until you reload the page.</p>
       <p class="note">The sound knobs on the pattern card are performance macros over all six voices at once: fm depth (the drums' FM amount and the cymbal and hat FM), decay (every amp decay), pitch (every voice's coarse tune, up to two octaves either way) and filter (every filter's cutoff). Each sits in the middle as the kit is; turning it pushes every voice's own value towards the top or the bottom, so the kit's differences stay. They change what the engine plays, not the kit: the sound tab still shows the kit's own values, and double-click sets a macro back to the middle. They are saved with presets.</p>
       <p class="note">Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The switch on the pattern card turns the pattern off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge).</p>
@@ -4510,7 +4512,7 @@ class Player {
     this.fxGain = new Float32Array(6); this.fxAmt = new Float32Array(6).fill(1);
     // master: drum 1 ducks the other voices (before the FX bus), then a compressor
     // on the whole mix, the same design as the LXR-02's FX compressor
-    this.master = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150 };
+    this.master = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150, duckFx: false };
     // delay: tempo-synced time, 0 = 1/128 .. 1 = one bar, and run as a send effect (all wet,
     // the voices keep their dry path); not in the firmware
     this.delayPos = 1 + Math.log2(3 / 16) / 7;
@@ -4653,6 +4655,8 @@ class Player {
     }
     // the firmware's FX bus (distortion, ring mod, compressor or delay), sample-exact
     const fx = e.renderFx(this.fxGain, this.echoWidth);
+    // with duck fx on, the three FX returns are ducked too (all of them, drum 1's sends included), ramped over the block
+    const fd0 = M.duckFx ? duck0 : 1, fdd = M.duckFx ? (duck1 - duck0) / 64 : 0;
     // distortion and ring mod buses: each voice panned in at its send, saturated to int16.
     // The firmware's ring mod carrier is quiet (about a third of a plain multiply), so its bus gets makeup gain.
     for (const [bus, sends, mk] of [[this.dist, this.sendD, 1], [this.ring, this.sendR, RING_MAKEUP]]) {
@@ -4668,9 +4672,9 @@ class Player {
       for (let i = 0; i < 128; i++) bus.input[i] = Math.max(-32768, Math.min(32767, Math.round(bi[i])));
       const bo = this.busOut; bo.fill(0);
       bus.process(bo, 64, this.fxRng);
-      if (any || bo.some((v) => v)) for (let i = 0; i < 64; i++) { L[i] += bo[2 * i] * mk / 32768; R[i] += bo[2 * i + 1] * mk / 32768; }
+      if (any || bo.some((v) => v)) for (let i = 0; i < 64; i++) { const g = mk / 32768 * (fd0 + fdd * i); L[i] += bo[2 * i] * g; R[i] += bo[2 * i + 1] * g; }
     }
-    for (let i = 0; i < 64; i++) { L[i] += fx[2 * i] / 32768; R[i] += fx[2 * i + 1] / 32768; }
+    for (let i = 0; i < 64; i++) { const g = (fd0 + fdd * i) / 32768; L[i] += fx[2 * i] * g; R[i] += fx[2 * i + 1] * g; }
     if (M.comp) {
       // peak detector in dB, attack/release smoothing, gain = over * (1/ratio - 1) + makeup
       const ca = Math.exp(-1000 / (M.attack * LXR.REAL_FS)), cr = Math.exp(-1000 / (M.release * LXR.REAL_FS));
@@ -5447,7 +5451,7 @@ function useSong(g) {
   $('level').value = g.vel; $('accent').value = Math.min(6, g.accent);
   for (const id of ['level', 'accent']) $(id).dispatchEvent(new Event('sync'));
   showLevels(); $('tempo').dispatchEvent(new Event('input'));
-  Object.assign(master, g.master); buildMaster();
+  Object.assign(master, MASTER0, g.master); buildMaster();
   mix.mute.fill(false); mix.solo.fill(false); // there are no mute or solo buttons any more, so presets never silence a voice
   sendMix();
   // the dial readouts come from generate; then the saved pattern, which may have been edited by hand
@@ -5829,7 +5833,7 @@ function drawMini() {
   }
 }
 // ---- mixer ----
-const MASTER0 = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150 };
+const MASTER0 = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150, duckFx: false };
 const master = { ...MASTER0 };
 const CH = ['DRUM 1', 'DRUM 2', 'DRUM 3', 'SNARE', 'CYMBAL', 'HIHAT'];
 // sends per voice: fx = echo (the engine's FX bus), dist = distortion, ring = ring mod, 0..100
@@ -6114,7 +6118,7 @@ meterVu.n = 0;
 const grVu = meterVu('reduction', 'compressor gain reduction meter'), duckVu = meterVu('ducking', 'sidechain ducking meter');
 function buildMaster() {
 $('comp-knobs').innerHTML = ''; $('duck-knobs').innerHTML = '';
-$('comp-on').setAttribute('aria-pressed', master.comp);
+$('comp-on').setAttribute('aria-pressed', master.comp); $('duck-fx').checked = master.duckFx;
 mKnob('threshold', 'thresh', -40, 0, 1, (v) => v + ' dB', $('comp-knobs'));
 $('comp-knobs').appendChild(dialKnob('ratio', { max: RATIOS.length - 1, show: (v) => RATIOS[v] + ':1', get: () => RATIOS.indexOf(master.ratio),
   set: (v) => { master.ratio = RATIOS[v]; sendMix(); }, dflt: () => RATIOS.indexOf(MASTER0.ratio) }));
@@ -6127,6 +6131,7 @@ $('comp-knobs').appendChild(grVu.el); $('duck-knobs').appendChild(duckVu.el);
 }
 buildMaster();
 $('comp-on').addEventListener('click', () => { master.comp = !master.comp; $('comp-on').setAttribute('aria-pressed', master.comp); sendMix(); });
+$('duck-fx').addEventListener('change', () => { master.duckFx = $('duck-fx').checked; sendMix(); });
 sendMix();
 
 // ---- big sliders for the perform controls, over the hidden inputs that hold the values ----
