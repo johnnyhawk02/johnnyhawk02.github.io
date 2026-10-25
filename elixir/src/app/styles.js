@@ -54,7 +54,7 @@ let styleIdx = 0; // saved with presets by name; presets from before the styles 
 let userPats = [];
 try { userPats = JSON.parse(localStorage.getItem('elexir-user-patterns') || '[]'); } catch (e) {}
 const storeUserPats = () => { try { localStorage.setItem('elexir-user-patterns', JSON.stringify(userPats)); } catch (e) {} };
-const userSlot = () => Math.min(userPats.length - 1, Math.floor(Number($('beat').value) * userPats.length / 16));
+const userSlot = () => Math.min(userPats.length - 1, Math.floor(perf.beat * userPats.length / 16));
 const slotBeat = (i) => Math.ceil(i * 16 / userPats.length);
 function userGroove(u) {
   const g = { name: u.name, cond: u.bar, acc: u.acc };
@@ -85,7 +85,7 @@ function nextUserName() {
   for (let i = 0; i < 50; i++) { const n = alienName().replace(/'/g, ''); if (!userPats.some((x) => x.name === n)) return n; }
   return alienName();
 }
-function useUserSlot(i) { setStyle(userStyle()); $('beat').value = slotBeat(i); $('beat').dispatchEvent(new Event('sync')); }
+function useUserSlot(i) { setStyle(userStyle()); perf.beat = slotBeat(i); drawPerf(); drawUserTools(); }
 function drawUserTools() {
   const on = STYLES[styleIdx].user && userPats.length > 0;
   $('up-cur').textContent = on ? `${userPats[userSlot()].name} · ${userSlot() + 1}/${userPats.length}` : userPats.length ? `${userPats.length} saved` : '';
@@ -119,18 +119,20 @@ function fillShape(fills) {
   if (!fills) return null;
   return { every: fills < 34 ? 8 : fills < 67 ? 4 : 2, len: 2 * Math.round(1 + fills / 100 * 3), busy: fills >= 50 };
 }
+// the groove level the energy dial reaches (0 = empty, 1 the kick/snare skeleton .. 9 the full kit), and the fill
+// shape, once there is a groove
+const grooveLevel = () => (perf.energy ? 1 + perf.energy / 100 * 8 : 0);
+const fillNow = () => (grooveLevel() >= 2 ? fillShape(perf.fills) : null);
 function generate() {
-  const st = STYLES[styleIdx], energy = Number($('energy').value), g = st.grooves[Number($('beat').value)], fills = Number($('fills').value);
-  const T = energy ? 1 + energy / 100 * 8 : 0, fill = T >= 2 ? fillShape(fills) : null; // fills once there is a groove
+  const st = STYLES[styleIdx], energy = perf.energy, g = st.grooves[perf.beat];
+  const T = grooveLevel(), fill = fillNow();
   const { on: fillOn, yields } = fill ? st.fill(fill) : { on: blankFill(), yields: [] };
   const u = st.user && userPats.length ? userPats[userSlot()] : null;
   if (u && u.pages) {
     pattern.pages = u.pages.map((pg) => { const P = blankPage(); genPage(userGroove({ name: u.name, ...pg }), P, energy, T, fill, fillOn, yields); return P; });
     copyInto(pattern, pattern.pages[0]);
   } else { delete pattern.pages; genPage(g, pattern, energy, T, fill, fillOn, yields); }
-  $('energy-out').innerHTML = `<b>${ENERGY_NAMES.find(([v]) => energy < v)[1]}</b> · ${energy}%`;
-  $('beat-out').innerHTML = `<b>${g.name.toLowerCase()}</b> · ${st.user ? (st.grooves.length ? userSlot() + 1 : 0) : Number($('beat').value) + 1}/${st.grooves.length}`;
-  $('fills-out').innerHTML = fill ? `<b>every ${fill.every}</b> · ${fill.len} steps` : `<b>off</b>`;
+  drawPerf();
   sendSeq();
 }
 function genPage(g, pattern, energy, T, fill, fillOn, yields) {

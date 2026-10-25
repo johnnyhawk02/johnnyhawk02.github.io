@@ -86,12 +86,10 @@ TRACKS.forEach((t, r) => {
 });
 function drawGroove() {
   $('swing').value = groove.swing; $('swing-out').textContent = groove.swing + '%';
-  $('swing-p').value = groove.swing; showSwingP(); $('swing-p').dispatchEvent(new Event('sync'));
   grooveDials.forEach((d) => d());
+  drawPerf();
 }
-const showSwingP = () => { $('swing-p-out').innerHTML = groove.swing === 50 ? '<b>straight</b> · 50%' : `<b>${groove.swing >= 66 && groove.swing <= 67 ? 'triplet' : groove.swing < 60 ? 'light' : groove.swing < 66 ? 'medium' : 'heavy'}</b> · ${groove.swing}%`; };
-// the same groove on the perform page: swing as a big slider, and per track its swing share and push
-$('swing-p').addEventListener('input', () => { groove.swing = Number($('swing-p').value); drawGroove(); sendSeq(); });
+// the same groove on the perform page: per track its swing share and push (swing itself is a perform dial)
 {
   const gt = $('gtable');
   { const h = document.createElement('span'); h.className = 'pgh ghead'; h.textContent = 'groove'; gt.appendChild(h); }
@@ -114,16 +112,8 @@ function sendSeq() {
   const P = source === 'steps' ? { ...copyPage(pages[0]), pages: pageCount > 1 ? pages.slice(0, pageCount).map(copyPage) : undefined }
     : { ...copyPage(pattern), pages: pattern.pages ? pattern.pages.map(copyPage) : undefined };
   send({ type: 'seq', pattern: P,
-    bpm: Math.max(40, Math.min(300, Number($('tempo').value) || 120)), vel: Number($('level').value), patternOn, groove: grooveMsg(),
-    accentDb: Number($('accent').value), playing });
+    bpm: perf.tempo, vel: perf.vel, patternOn, groove: grooveMsg(), accentDb: perf.accent, playing });
 }
-const showLevels = () => {
-  $('level-out').innerHTML = `<b>${$('level').value}</b> / 127`;
-  $('accent-out').innerHTML = `<b>+${$('accent').value}</b> dB`;
-};
-for (const id of ['level', 'accent']) for (const ev of ['input', 'change']) $(id).addEventListener(ev, showLevels);
-showLevels();
-$('accent').addEventListener('change', sendSeq);
 $('play').addEventListener('click', async () => {
   await startAudio();
   playing = !playing;
@@ -131,8 +121,6 @@ $('play').addEventListener('click', async () => {
   if (!playing) { markStep(-1); markBar(-1); grVu.set(0); duckVu.set(0); }
   sendSeq();
 });
-$('tempo').addEventListener('change', sendSeq);
-$('level').addEventListener('change', sendSeq);
 $('grab').addEventListener('click', () => {
   // a single-page perform pattern lands on the page being edited; a paged one (a user pattern) replaces the pages
   if (pattern.pages) { pattern.pages.forEach((P, i) => copyInto(pages[i], P)); pageCount = pattern.pages.length; editPage = Math.min(editPage, pageCount - 1); grid = pages[editPage]; }

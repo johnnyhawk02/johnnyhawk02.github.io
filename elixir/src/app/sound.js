@@ -48,6 +48,10 @@ function eff(par, v) {
   return Math.round(k > 0 ? v + (max - v) * k : v * (1 + k));
 }
 const effValues = () => Array.from(values, (v, par) => eff(par, v));
+function setMacro(m, v) {
+  macro[m] = v;
+  for (const n of MACROS[m]) if (PAR[n] !== undefined) send({ type: 'param', par: PAR[n], value: eff(PAR[n], values[PAR[n]]) });
+}
 function sendMacros() { for (const par in macroOf) send({ type: 'param', par: Number(par), value: eff(Number(par), values[par]) }); }
 function setValue(par, v, quiet) {
   values[par] = v;
@@ -119,6 +123,33 @@ const arc = (r, a, b) => {
   const x0 = 32 + r * Math.cos(a), y0 = 32 + r * Math.sin(a), x1 = 32 + r * Math.cos(b), y1 = 32 + r * Math.sin(b);
   return `M${x0.toFixed(2)} ${y0.toFixed(2)}A${r} ${r} 0 ${b - a > Math.PI ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
 };
+// ---- shared input for the sliders, dials, faders and crossfeed cells ----
+// a vertical drag changes a value from where it was: rate units per pixel (Shift: a quarter of that).
+// opts.start(e, d) runs on the press and may move d.acc; opts.end() runs when it lets go
+function dragY(el, get, put, rate, opts = {}) {
+  let d = null;
+  el.addEventListener('pointerdown', (e) => {
+    if (e.button) return;
+    el.setPointerCapture(e.pointerId);
+    d = { last: e.clientY, acc: get(), rate: typeof rate === 'function' ? rate() : rate };
+    if (opts.start) opts.start(e, d);
+  });
+  el.addEventListener('pointermove', (e) => {
+    if (!d) return;
+    d.acc += (d.last - e.clientY) * d.rate * (e.shiftKey ? 0.25 : 1); d.last = e.clientY;
+    put(d.acc);
+  });
+  const stop = () => { if (!d) return; d = null; if (opts.end) opts.end(); };
+  el.addEventListener('pointerup', stop); el.addEventListener('pointercancel', stop);
+}
+// the wheel and the arrow and page keys step a value
+function stepKeys(el, get, put, { small = 1, big = 10, wheel = 2 } = {}) {
+  el.addEventListener('wheel', (e) => { e.preventDefault(); put(get() + (e.deltaY < 0 ? wheel : -wheel)); }, { passive: false });
+  el.addEventListener('keydown', (e) => {
+    const d = { ArrowUp: small, ArrowRight: small, ArrowDown: -small, ArrowLeft: -small, PageUp: big, PageDown: -big }[e.key];
+    if (d) { put(get() + d); e.preventDefault(); }
+  });
+}
 // a vertical slider: o = { max, get, put, show, center, detents, snap }. Click the track to jump there,
 // drag the cap (Shift: fine)
 function slider(aria, o) {
@@ -136,22 +167,13 @@ function slider(aria, o) {
     el.style.setProperty('--p', f); el.style.setProperty('--a', Math.min(c, f)); el.style.setProperty('--w', Math.abs(f - c));
     el.setAttribute('aria-valuenow', v); el.setAttribute('aria-valuetext', o.show(v));
   };
-  let drag = null;
-  el.addEventListener('pointerdown', (e) => {
-    if (e.button) return;
+  const put = (v) => o.put(snap(Math.max(0, Math.min(o.max, v))));
+  // the whole rail is the range; a press off the cap jumps there
+  dragY(el, o.get, put, () => o.max / (rail.getBoundingClientRect().height || 1), { start: (e, d) => {
+    el.focus({ preventScroll: true }); e.preventDefault();
     const r = rail.getBoundingClientRect(), py = r.bottom - r.height * Math.min(o.get(), o.max) / o.max;
-    el.setPointerCapture(e.pointerId); el.focus({ preventScroll: true }); e.preventDefault();
-    // a press off the cap jumps there
-    drag = { last: e.clientY, h: r.height || 1, acc: o.get() };
-    if (Math.abs(e.clientY - py) > 6) { drag.acc = Math.max(0, Math.min(o.max, (r.bottom - e.clientY) / r.height * o.max)); o.put(snap(drag.acc)); }
-  });
-  el.addEventListener('pointermove', (e) => {
-    if (!drag) return;
-    drag.acc += (drag.last - e.clientY) * o.max / drag.h * (e.shiftKey ? 0.25 : 1); drag.last = e.clientY;
-    o.put(snap(Math.max(0, Math.min(o.max, drag.acc))));
-  });
-  el.addEventListener('pointerup', () => { drag = null; });
-  el.addEventListener('pointercancel', () => { drag = null; });
+    if (Math.abs(e.clientY - py) > 6) { d.acc = Math.max(0, Math.min(o.max, (r.bottom - e.clientY) / r.height * o.max)); put(d.acc); }
+  } });
   return { el, draw };
 }
 // a knob over any value: o = { max, get, set, show, dflt, changed }

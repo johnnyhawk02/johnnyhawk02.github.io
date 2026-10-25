@@ -31,15 +31,9 @@ XN.forEach((src, sIdx) => {
       c.setAttribute('aria-valuenow', a);
     };
     const set = (v) => { v = Math.max(-100, Math.min(100, Math.round(v))); if (v === xm.amt[k]) return; xm.amt[k] = v; draw(); sendX(); };
-    let drag = null;
-    c.addEventListener('pointerdown', (e) => { c.setPointerCapture(e.pointerId); drag = { y: e.clientY, v: xm.amt[k] }; });
-    c.addEventListener('pointermove', (e) => { if (drag) set(drag.v + (drag.y - e.clientY) * 1.2); });
-    c.addEventListener('pointerup', () => { drag = null; }); c.addEventListener('pointercancel', () => { drag = null; });
-    c.addEventListener('wheel', (e) => { e.preventDefault(); set(xm.amt[k] + (e.deltaY < 0 ? 5 : -5)); }, { passive: false });
-    c.addEventListener('keydown', (e) => {
-      const st = { ArrowUp: 5, ArrowRight: 5, ArrowDown: -5, ArrowLeft: -5, PageUp: 25, PageDown: -25 }[e.key];
-      if (st) { e.preventDefault(); set(xm.amt[k] + st); } else if (e.key === 'Delete' || e.key === 'Backspace' || e.key === '0') set(0);
-    });
+    dragY(c, () => xm.amt[k], set, 1.2);
+    stepKeys(c, () => xm.amt[k], set, { small: 5, big: 25, wheel: 5 });
+    c.addEventListener('keydown', (e) => { if (e.key === 'Delete' || e.key === 'Backspace' || e.key === '0') set(0); });
     c.addEventListener('dblclick', () => set(0));
     draw(); xcells.push(draw); xgrid.appendChild(c);
   });

@@ -39,7 +39,7 @@ const pad = $('pad');
 function flash(el) { el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('hit'), 90); }
 async function hit(t) {
   await startAudio();
-  send({ type: 'trig', voice: t, vel: Number($('level').value) });
+  send({ type: 'trig', voice: t, vel: perf.vel });
   flash(voicesEl.children[t]);
   if (t === track) flash(pad);
 }

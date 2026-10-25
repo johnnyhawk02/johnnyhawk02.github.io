@@ -17,11 +17,7 @@ function miniSlider(label, aria, get, set, dflt, max = 100, show = (v) => v + '%
   const dial = s.el;
   el.append(dial); el.insertAdjacentHTML('beforeend', `<span>${label}</span>`);
   const draw = () => { s.draw(); dial.title = `${label} ${show(get())}`; };
-  dial.addEventListener('wheel', (e) => { e.preventDefault(); put(get() + (e.deltaY < 0 ? 2 : -2)); }, { passive: false });
-  dial.addEventListener('keydown', (e) => {
-    const d = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 10, PageDown: -10 }[e.key];
-    if (d) { put(get() + d); e.preventDefault(); }
-  });
+  stepKeys(dial, get, put);
   dial.addEventListener('dblclick', () => put(dflt));
   draw();
   return { el, draw };
@@ -39,16 +35,8 @@ function miniDial(label, aria, get, set, dflt, max = 100, show = (v) => v + '%',
     dial.setAttribute('aria-valuenow', v); dial.setAttribute('aria-valuetext', show(v)); dial.title = `${label} ${show(v)}`;
   };
   const put = (v) => { v = Math.max(0, Math.min(max, Math.round(v))); if (v !== get()) { set(v); draw(); } };
-  let drag = null;
-  dial.addEventListener('pointerdown', (e) => { dial.setPointerCapture(e.pointerId); drag = { y: e.clientY, v: get() }; dial.focus(); });
-  dial.addEventListener('pointermove', (e) => { if (drag) put(drag.v + (drag.y - e.clientY) * 0.6); });
-  dial.addEventListener('pointerup', () => { drag = null; });
-  dial.addEventListener('pointercancel', () => { drag = null; });
-  dial.addEventListener('wheel', (e) => { e.preventDefault(); put(get() + (e.deltaY < 0 ? 2 : -2)); }, { passive: false });
-  dial.addEventListener('keydown', (e) => {
-    const d = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 10, PageDown: -10 }[e.key];
-    if (d) { put(get() + d); e.preventDefault(); }
-  });
+  dragY(dial, get, put, 0.6, { start: () => dial.focus() });
+  stepKeys(dial, get, put);
   dial.addEventListener('dblclick', () => put(dflt));
   draw();
   return { el, draw };
@@ -117,18 +105,8 @@ CH.forEach((name, n) => {
     if (v === Number(fader.value)) return;
     fader.value = v; setValue(vol, v, true); fader.title = `${name} level ${v}`; showLevel(true);
   };
-  let fdrag = null;
-  fader.addEventListener('pointerdown', (e) => {
-    e.preventDefault(); fader.setPointerCapture(e.pointerId); fader.focus();
-    fdrag = { y: e.clientY, v: Number(fader.value), last: e.clientY, acc: Number(fader.value) }; showLevel(true);
-  });
-  fader.addEventListener('pointermove', (e) => {
-    if (!fdrag) return;
-    fdrag.acc += (fdrag.last - e.clientY) * (e.shiftKey ? 0.1 : 0.4); fdrag.last = e.clientY;
-    setLevel(fdrag.acc);
-  });
-  const endDrag = () => { if (!fdrag) return; fdrag = null; showLevel(false); buildKnobs(); };
-  fader.addEventListener('pointerup', endDrag); fader.addEventListener('pointercancel', endDrag);
+  dragY(fader, () => Number(fader.value), setLevel, 0.4, {
+    start: (e) => { e.preventDefault(); fader.focus(); showLevel(true); }, end: () => { showLevel(false); buildKnobs(); } });
   fader.addEventListener('wheel', (e) => { e.preventDefault(); setLevel(Number(fader.value) + (e.deltaY < 0 ? 1 : -1)); clearTimeout(fader._t); fader._t = setTimeout(() => showLevel(false), 700); }, { passive: false });
   fader.addEventListener('input', () => { setValue(vol, Number(fader.value), true); showLevel(true); clearTimeout(fader._t); fader._t = setTimeout(() => showLevel(false), 700); });
   fader.addEventListener('sync', () => { fader.title = `${name} level ${fader.value}`; });

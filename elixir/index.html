@@ -79,8 +79,7 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 /* ---- header ---- */
 .topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
 .kitbar, .transport, .seq-ctrl, .rand, .xfeed-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.kitbar { gap: 8px 6px; }
-.kitbar { flex: 1 1 auto; }
+.kitbar { gap: 8px 6px; flex: 1 1 auto; }
 .kitbar select { width: 10.5em; font-weight: 500; text-overflow: ellipsis; } /* fixed, so longer names don't shift the bar */
 .kitbar .file { position: relative; overflow: hidden; }
 .kitbar .btn { padding-inline: 10px; }
@@ -138,9 +137,8 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .pm .file { position: relative; overflow: hidden; }
 .pm .file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .pm-sep { flex: 1; }
-.pm-foot .msg { flex-basis: 100%; }
 .pm-foot .msg:empty { display: none; }
-.pm-foot .msg { font-size: .8rem; color: var(--muted); }
+.pm-foot .msg { flex-basis: 100%; font-size: .8rem; color: var(--muted); }
 /* TEMP: delete-all-user-presets — remove when factory presets are done */
 .btn.ghost.pm-del-all { color: #d8322b; }
 .btn.ghost.pm-del-all:disabled { opacity: .4; cursor: default; }
@@ -168,12 +166,10 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .tab-sound .snd-bar .pad { height: 32px; padding: 0 14px; border-radius: 8px; }
 .tab-sound .snd-bar .pad kbd { font-size: .7rem; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.snd-side { align-content: start; }
 .xcard { padding: 10px 12px 12px; gap: 8px; }
 .tab-sound .xfeed { gap: 8px; }
-.tab-sound .xfeed-head { gap: 6px 8px; }
 .tab-sound .xfeed-head { flex-wrap: nowrap; gap: 4px; }
-.snd-side { gap: 10px !important; }
+.snd-side { align-content: start; gap: 10px !important; }
 .tab-sound .xfeed-head .field { gap: 4px; font-size: .78rem; }
 .tab-sound .xfeed-head .field input[type=range] { width: 40px; }
 .tab-sound .xfeed-head .field output { min-width: 0; }
@@ -183,9 +179,7 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .tab-sound .xgrid .col select { font-size: .64rem; padding: 2px 0; }
 .tab-sound .xgrid .lab, .tab-sound .xgrid .col { font-size: .72rem; }
 .tab-sound .xcell { aspect-ratio: 1.8; }
-.tab-sound .lcd { padding: 8px 12px; }
-.tab-sound .lcd canvas { aspect-ratio: auto; height: 56px; }
-.tab-sound .lcd { min-height: 0; }
+.tab-sound .lcd { padding: 8px 12px; min-height: 0; }
 .pcards { display: flex; flex-wrap: wrap; gap: 10px; }
 .pcard { padding: 10px 12px 12px; gap: 8px; }
 .pcard .knobs { gap: 8px 4px; }
@@ -204,7 +198,6 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .vbtn[aria-pressed="true"] i { background: color-mix(in srgb, var(--panel) 45%, transparent); }
 .vbtn.hit i { background: var(--led); transition: none; }
 .vbtn kbd { display: none; }
-.top { display: grid; grid-template-columns: minmax(0, 1fr) 110px; gap: 12px; }
 .lcd { background: var(--lcd); color: var(--lcd-ink); border-radius: 8px; padding: 10px 14px; font-family: var(--mono);
   display: grid; grid-template-rows: auto 1fr; gap: 6px; min-width: 0; }
 .lcd-line { display: flex; justify-content: space-between; gap: 12px; font-size: .85rem; white-space: nowrap; overflow: hidden; }
@@ -221,7 +214,6 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .pad.hit kbd { color: inherit; }
 .rand .btn { padding: 6px 12px; }
 .rand .field input[type=range] { width: 70px; }
-.pages { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--line); }
 .knobs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px 6px; align-items: start; }
 .knob { display: grid; justify-items: center; gap: 2px; user-select: none; touch-action: none; min-width: 0; }
 
@@ -232,7 +224,6 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .dial .tick { stroke: var(--muted); stroke-width: 1.4; opacity: .7; }
 .dial .tick.major { stroke: var(--ink); stroke-width: 2; opacity: .85; }
 .dial .val { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
-.dial .cap { fill: none; stroke: none; }
 .dial .ptr { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
 /* vertical sliders (in place of the old dials): a thin track, an ink fill up from zero (or from the centre),
    a small cap like the mixer faders', and detent ticks beside it */
@@ -262,10 +253,8 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 /* perform: pattern and randomise cards on the left, the mixer card on the right */
 .card { background: var(--tint); border-radius: 10px; padding: 14px 16px 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
 .card > h2, .pc-head h2 { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
-.tab-perform { grid-template-columns: minmax(370px, 1.3fr) minmax(0, 2.6fr); grid-template-rows: minmax(0, 1fr); gap: 14px; align-items: stretch; }
 .master-card, .fx-card, .rand-card { padding: 12px 16px 14px; gap: 8px; }
 /* master and FX knobs share one column width, so they line up at the same spacing; spare room is left at the right */
-.master-card, .fx-card { --kw: 62px; }
 .master-row { display: flex; gap: 16px; min-width: 0; }
 .mgroup { display: grid; gap: 4px; min-width: 0; flex: 0 1 auto; }
 .mgroup + .mgroup { border-left: 1px solid var(--line); padding-left: 16px; }
@@ -303,7 +292,7 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 
 .master-card .knob label, .fx-card .knob label { font-size: .7rem; line-height: 1.3; }
 .master-card .knob output, .fx-card .knob output { font-size: .66rem; line-height: 1.3; }
-.tab-perform .perform { grid-template-columns: minmax(0, 1fr); gap: 6px; padding-block: 4px; align-self: center; }
+.tab-perform .perform { padding-block: 4px; }
 .pknobs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; justify-items: center; }
 .pknobs .knob { gap: 1px; min-width: 0; width: 100%; }
 
@@ -314,16 +303,9 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .perform-rand { gap: 8px 6px; }
 .perform-rand .btn { padding: 6px 9px; }
 .rand-opts { display: flex; align-items: center; gap: 14px; white-space: nowrap; }
-.tab-perform .strips { gap: 0; }
-.tab-perform .strip { background: none; padding: 2px 12px; gap: 10px; border-left: 1px solid var(--line); border-radius: 0; }
-.tab-perform .strip:first-child { border-left: 0; }
-.tab-perform .strip .name { font-size: .84rem; }
 .tab-perform .sends { gap: 10px; }
 .tab-perform .sdial .dial { width: 32px; height: 32px; }
 .tab-perform .sdial span { font-size: .7rem; margin-top: 2px; }
-.tab-perform .ms { gap: 6px; }
-.tab-perform .strip .fader { height: 230px; }
-.tab-perform .ms button { width: 28px; height: 24px; font-size: .74rem; }
 .fx-groups { display: flex; gap: 16px; }
 .fxg { display: grid; gap: 4px; align-content: start; min-width: 0; flex: none; }
 .fxg:last-child { flex: 0 1 auto; } /* ring mod: its wave buttons wrap before anything overflows */
@@ -350,7 +332,6 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .tab-sound .hint { font-size: .8rem; }
 .seq { display: grid; gap: 14px; width: 100%; }
 .perform { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding-block: 28px; }
-.dials { display: contents; }
 .grid { display: grid; grid-template-columns: 4.6em repeat(16, minmax(0, 1fr)) 34px 34px; gap: 4px; align-items: center; }
 .grid .ghead { font-size: .66rem; color: var(--muted); text-align: center; text-transform: lowercase; }
 .grid .sdial span { display: none; }
@@ -378,21 +359,12 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
   background: var(--tint); color: var(--ink); font-family: var(--mono); font-size: .72rem; padding: 0; }
 .xcell.diag { box-shadow: inset 0 0 0 1px var(--line); }
 
-/* ---- mixer tab ---- */
-.mixer { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; max-width: 760px; width: 100%; justify-self: center; align-items: start; }
+/* ---- mixer strips ---- */
 .strips { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
-.strip { background: var(--tint); border-radius: 8px; padding: 10px 8px; display: grid; gap: 8px; min-width: 0; }
-.strip { justify-items: center; }
+.strip { background: var(--tint); border-radius: 8px; padding: 10px 8px; display: grid; gap: 8px; min-width: 0; justify-items: center; }
 .strip .name { font-family: var(--display); font-weight: 600; font-size: .8rem; white-space: nowrap; text-transform: lowercase; }
 .strip .fader { writing-mode: vertical-lr; direction: rtl; width: 28px; height: 200px; }
 .strip > output { font-family: var(--mono); font-size: .74rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-.ms { display: flex; gap: 4px; }
-.ms button { font-family: var(--display); font-weight: 600; font-size: .74rem; height: 24px; border-radius: 5px; border: 0;
-  background: var(--tint); color: var(--ink); cursor: pointer; padding: 0; }
-.ms button { width: 26px; }
-.ms button[aria-pressed="true"].m { background: var(--ink); color: var(--panel); }
-.ms button[aria-pressed="true"].s { background: var(--led); color: #fff; }
-.buses { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
 .hint { margin: 0; font-size: .78rem; color: var(--muted); }
 
 /* ---- about tab ---- */
@@ -480,7 +452,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 /* ---- smaller screens ---- */
 @media (max-width: 1180px) {
   .tab-sound .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .mixer { grid-template-columns: minmax(0, 1fr); }
 }
 /* every tab fits the window; the mixer's faders take whatever height is left, and a tab
    that still doesn't fit scrolls inside its panel rather than the page */
@@ -488,7 +459,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   body { height: 100dvh; box-sizing: border-box; padding-bottom: 14px; overflow: hidden; }
   .wrap { height: 100%; grid-template-rows: auto auto minmax(0, 1fr); }
   .wrap > .panel { min-height: 0; overflow: auto; padding: 16px; }
-  .tab-perform { overflow: hidden; grid-template-rows: minmax(0, 1fr); }
   /* sound: compact cards, the scope takes the spare height on the left */
   .pcards { gap: 8px; --kw: 46px; }
   .pcard { padding: 8px 10px 8px; gap: 4px; }
@@ -503,15 +473,14 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .pcard .sel select { padding: 3px 6px; font-size: .8rem; }
   .vbtn { padding: 4px 10px; font-size: .82rem; }
   /* steps: the grid's rows share the height, up to a comfortable size */
-  .tab-steps .seq { height: 100%; grid-template-rows: auto auto minmax(0, 1fr); }
-  .tab-steps .grid { grid-template-rows: auto; grid-auto-rows: minmax(18px, 1fr); max-height: 490px; min-height: 0; }
+  .tab-steps .seq { height: 100%; }
+  .tab-steps .grid { grid-template-rows: auto; grid-auto-rows: minmax(18px, 1fr); min-height: 0; }
   .tab-steps .cell { aspect-ratio: auto; height: 100%; }
   .mix-card { grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
   .tab-perform .strips { min-height: 0; }
   .tab-perform .strip { display: flex; flex-direction: column; align-items: center; min-height: 0; }
   @media (min-height: 800px) { .pcard .sl { --sh: 60px; } }
   @media (min-height: 860px) { .pknobs .sl { --sh: 64px; } }
-  .tab-perform .strip .fader { height: auto; }
   .pattern-card { grid-template-rows: auto minmax(0, 1fr) auto; }
   .tab-perform .perform { display: flex; flex-direction: column; gap: clamp(10px, 2vh, 20px); align-self: stretch; padding-block: 0; }
   .tab-perform #pk-pattern { margin-top: auto; }
@@ -520,9 +489,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 }
 @media (min-width: 761px) and (max-width: 1250px) { .tab-sound { grid-template-columns: minmax(0, 1fr) 270px; } .tab-sound .lcd-line span { display: none; } }
 @media (min-width: 761px) and (max-height: 640px) {
-  .right-col { gap: 10px; }
   .master-card, .mix-card, .fx-card { padding: 8px 14px 10px; gap: 4px; }
-  .tab-perform .strip { gap: 4px; }
   .rand-card { padding: 8px 12px; gap: 4px; }
   .rand-card .rbtns .btn { padding: 2px 8px; font-size: .78rem; }
   .fx-card .radios span { padding: 3px 3px; }
@@ -555,16 +522,12 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 @media (max-width: 1300px) { h1 small, .kitbar .lbl { display: none; } .field input[type=range] { width: 60px; } .topbar { gap: 8px 14px; } }
 @media (max-width: 760px) {
   .rack { grid-template-columns: minmax(0, 1fr); padding: 16px; }
-  .tab-perform { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  .tab-perform { grid-template-rows: none; }
   .pattern-card, .right-col { grid-column: 1; grid-row: auto; }
   .master-row, .fx-groups { flex-direction: column; }
-  .master-card, .fx-card { --kw: 60px; }
-  .master-card, .fx-card { grid-template-columns: minmax(0, 1fr); }
+  .master-card, .fx-card { --kw: 60px; grid-template-columns: minmax(0, 1fr); }
   .mgroup + .mgroup { border-left: 0; padding-left: 0; }
   .fxg + .fxg { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 8px; }
-  .tab-perform .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 16px; }
-  .tab-perform .strip:nth-child(4) { border-left: 0; }
-  .tab-perform .strip .fader { height: 140px; }
   .pcard .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
   .tabs { padding-left: 0; gap: 2px; }
   .topbar > * { min-width: 0; }
@@ -575,7 +538,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .transport { width: 100%; }
   .transport .bars { margin-left: auto; }
   .tab { flex: 1 1 0; min-width: 0; padding: 8px 4px; font-size: .8rem; }
-  .top { grid-template-columns: minmax(0, 1fr) 76px; }
   .lcd canvas { height: 100px; }
   .pad kbd { display: none; }
   .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -585,7 +547,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .cell { aspect-ratio: .6; border-radius: 2px; font-size: .52rem; letter-spacing: -.04em; }
   .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .strip .fader { height: 110px; }
-  .buses { grid-template-columns: minmax(0, 1fr); }
   .transport .field input[type=range] { width: 70px; }
 }
 @media (max-width: 520px) {
@@ -603,7 +564,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .tab-perform .card { padding: 10px 14px 12px; gap: 6px; grid-template-rows: auto minmax(0, 1fr); align-content: stretch; min-height: 0; }
 .tab-perform .card > h2, .tab-perform .pc-head { margin: 0; min-height: 20px; }
 .tab-perform .pc-head { display: flex; align-items: center; justify-content: space-between; }
-.tab-perform .pattern-card.midi { grid-template-rows: auto auto minmax(0, 1fr); }
 .tab-perform:has(.pattern-card.midi) .groove-card { display: none; }
 /* a fader column: name on top, the fader, its value underneath */
 .tab-perform .knob, .pcard .knob { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; min-height: 0; }
@@ -612,7 +572,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .tab-perform .knob output, .tab-perform .pknobs .knob output { font-size: .66rem; line-height: 1.25; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .tab-perform .knobs, .tab-perform .pknobs { align-items: stretch; justify-items: stretch; gap: 0; }
 /* pattern and sound share one row of faders, with a rule between them */
-.tab-perform .perform { display: grid; grid-template-columns: 4fr 3fr 4fr; grid-template-rows: auto minmax(0, 1fr); gap: 2px 0; padding: 0; align-self: stretch; }
+.tab-perform .perform { display: grid; gap: 2px 0; padding: 0; align-self: stretch; }
 .tab-perform #pk-pattern { grid-column: 1; grid-row: 2; }
 .tab-perform #pk-feel { grid-column: 2; grid-row: 2; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .tab-perform .pgh { grid-column: 3; grid-row: 1; margin: 0; padding: 0 0 0 12px; border: 0; border-left: 1px solid var(--line); }
@@ -621,7 +581,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .tab-perform #pk-pattern, .tab-perform #pk-macro, .tab-perform .pgh { margin: 0; }
 /* effects: each effect's type buttons above its faders */
 .tab-perform .fx-groups { display: flex; gap: 14px; min-height: 0; }
-.tab-perform .fxg { display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 4px; }
+.tab-perform .fxg { display: grid; gap: 4px; }
 .tab-perform .fxg + .fxg { padding-left: 14px; }
 .tab-perform .fxg .knobs { grid-auto-columns: var(--kw); }
 .tab-perform .fxg:last-child .radios { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; }
@@ -638,7 +598,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .groove-card .sdial { display: flex; justify-content: center; min-height: 0; }
 .groove-card .sdial .sl { height: 44px; }
 /* randomise: five buttons in a row, depth and wild under them */
-.tab-perform .rand-card .rbtns { grid-template-columns: repeat(5, auto); justify-content: start; }
 .tab-perform .rand-card .rand-opts { gap: 14px; }
 /* mixer: per strip the name, pan and the three sends as small knobs in one column, the fader, then r and a */
 .tab-perform .mix-card { grid-template-rows: auto minmax(0, 1fr); }
@@ -705,7 +664,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-perform .strip:nth-child(4) { border-left: 0; }
   .tab-perform .strip .fader { height: 110px; }
   .tab-perform .knob .sl, .pcard .knob .sl { height: 72px; }
-  .tab-perform .perform { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; gap: 10px; }
+  .tab-perform .perform { gap: 10px; }
   .tab-perform #pk-pattern, .tab-perform #pk-feel, .tab-perform .pgh, .tab-perform #pk-macro, .tab-perform .perform > :first-child { grid-column: 1; grid-row: auto; }
   .tab-perform #pk-feel { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .tab-perform .pgh { border-left: 0; border-top: 1px solid var(--line); padding: 8px 0 0; }
@@ -768,10 +727,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .trig-row .tg { display: inline-flex; align-items: center; gap: 6px; }
 .trig-row .tg i { font-style: normal; font-size: .74rem; color: var(--muted); white-space: nowrap; }
 .trig-row .tg .btn { min-width: 2.6em; font-family: var(--mono); }
-@media (min-width: 761px) and (min-height: 480px) {
-  .tab-steps .seq { grid-template-rows: auto auto auto minmax(0, 1fr); }
-  .tab-steps .grid { max-height: 380px; }
-}
 /* what plays: perform / steps / off, on the pattern card and the steps tab */
 .src-pick button { border: 0; padding: 2px 9px; border-radius: 999px; background: none; font: inherit; font-size: .72rem; color: var(--muted); cursor: pointer; }
 .src-pick button[aria-checked="true"] { background: var(--ink); color: var(--panel); }
@@ -827,14 +782,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <div class="perform" id="perform">
       <div class="pknobs" id="pk-pattern"></div>
       <div class="pknobs" id="pk-feel"></div>
-      <div hidden>
-        <input id="energy" type="range" min="0" max="100" value="60" aria-hidden="true" tabindex="-1"><output id="energy-out"></output>
-        <input id="beat" type="range" min="0" max="15" step="1" value="0" aria-hidden="true" tabindex="-1"><output id="beat-out"></output>
-        <input id="fills" type="range" min="0" max="100" value="40" aria-hidden="true" tabindex="-1"><output id="fills-out"></output>
-        <input id="level" type="range" min="1" max="127" value="100" aria-hidden="true" tabindex="-1"><output id="level-out"></output>
-        <input id="accent" type="range" min="0" max="6" value="6" aria-hidden="true" tabindex="-1"><output id="accent-out"></output>
-        <input id="swing-p" type="range" min="50" max="75" value="50" aria-hidden="true" tabindex="-1"><output id="swing-p-out"></output>
-      </div>
     </div>
     </div>
     <div class="card sound-card" role="group" aria-label="Sound macros">
@@ -4891,6 +4838,37 @@ async function startAudio() {
   while (pending.length) send(pending.shift());
 }
 
+// ---- perform state: the perform dials (pattern card, PC4, presets) read and write here ----
+// Swing is the groove's; tempo is shown in the header's field too
+const perf = { energy: 60, beat: 0, fills: 40, tempo: 118, vel: 100, accent: 6 };
+// [min, max, default] of each, as the knobs and the PC4 map them
+const PERF_RANGE = { energy: [0, 100, 60], beat: [0, 15, 0], fills: [0, 100, 40], tempo: [70, 170, 118], vel: [1, 127, 100], accent: [0, 6, 6], swing: [50, 75, 50] };
+const perfGet = (k) => (k === 'swing' ? groove.swing : perf[k]);
+const perfDraws = []; // the perform knobs' redraws
+const drawPerf = () => perfDraws.forEach((d) => d());
+// a change to one of them, and what follows from it
+function setPerf(k, v) {
+  if (k === 'swing') { groove.swing = v; drawGroove(); sendSeq(); return; } // drawGroove redraws the knobs
+  perf[k] = v;
+  if (k === 'tempo') { $('tempo').value = v; sendSeq(); }
+  else if (k === 'vel' || k === 'accent') sendSeq();
+  else { generate(); if (k === 'beat') drawUserTools(); }
+  drawPerf();
+}
+// the readout: a word, then the detail (driving · 82%)
+function perfText(k) {
+  const v = perfGet(k);
+  if (k === 'energy') return `${ENERGY_NAMES.find(([x]) => v < x)[1]} · ${v}%`;
+  if (k === 'beat') {
+    const st = STYLES[styleIdx];
+    return `${st.grooves[v].name.toLowerCase()} · ${st.user ? (st.grooves.length ? userSlot() + 1 : 0) : v + 1}/${st.grooves.length}`;
+  }
+  if (k === 'fills') { const f = fillNow(); return f ? `every ${f.every} · ${f.len} steps` : 'off'; }
+  if (k === 'tempo') return `${v} bpm`;
+  if (k === 'vel') return `${v} / 127`;
+  if (k === 'accent') return `+${v} dB`;
+  return v === 50 ? 'straight · 50%' : `${v >= 66 && v <= 67 ? 'triplet' : v < 60 ? 'light' : v < 66 ? 'medium' : 'heavy'} · ${v}%`;
+}
 // ---- UI state ----
 let track = 0;
 const $ = (id) => document.getElementById(id);
@@ -4941,6 +4919,10 @@ function eff(par, v) {
   return Math.round(k > 0 ? v + (max - v) * k : v * (1 + k));
 }
 const effValues = () => Array.from(values, (v, par) => eff(par, v));
+function setMacro(m, v) {
+  macro[m] = v;
+  for (const n of MACROS[m]) if (PAR[n] !== undefined) send({ type: 'param', par: PAR[n], value: eff(PAR[n], values[PAR[n]]) });
+}
 function sendMacros() { for (const par in macroOf) send({ type: 'param', par: Number(par), value: eff(Number(par), values[par]) }); }
 function setValue(par, v, quiet) {
   values[par] = v;
@@ -5012,6 +4994,33 @@ const arc = (r, a, b) => {
   const x0 = 32 + r * Math.cos(a), y0 = 32 + r * Math.sin(a), x1 = 32 + r * Math.cos(b), y1 = 32 + r * Math.sin(b);
   return `M${x0.toFixed(2)} ${y0.toFixed(2)}A${r} ${r} 0 ${b - a > Math.PI ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
 };
+// ---- shared input for the sliders, dials, faders and crossfeed cells ----
+// a vertical drag changes a value from where it was: rate units per pixel (Shift: a quarter of that).
+// opts.start(e, d) runs on the press and may move d.acc; opts.end() runs when it lets go
+function dragY(el, get, put, rate, opts = {}) {
+  let d = null;
+  el.addEventListener('pointerdown', (e) => {
+    if (e.button) return;
+    el.setPointerCapture(e.pointerId);
+    d = { last: e.clientY, acc: get(), rate: typeof rate === 'function' ? rate() : rate };
+    if (opts.start) opts.start(e, d);
+  });
+  el.addEventListener('pointermove', (e) => {
+    if (!d) return;
+    d.acc += (d.last - e.clientY) * d.rate * (e.shiftKey ? 0.25 : 1); d.last = e.clientY;
+    put(d.acc);
+  });
+  const stop = () => { if (!d) return; d = null; if (opts.end) opts.end(); };
+  el.addEventListener('pointerup', stop); el.addEventListener('pointercancel', stop);
+}
+// the wheel and the arrow and page keys step a value
+function stepKeys(el, get, put, { small = 1, big = 10, wheel = 2 } = {}) {
+  el.addEventListener('wheel', (e) => { e.preventDefault(); put(get() + (e.deltaY < 0 ? wheel : -wheel)); }, { passive: false });
+  el.addEventListener('keydown', (e) => {
+    const d = { ArrowUp: small, ArrowRight: small, ArrowDown: -small, ArrowLeft: -small, PageUp: big, PageDown: -big }[e.key];
+    if (d) { put(get() + d); e.preventDefault(); }
+  });
+}
 // a vertical slider: o = { max, get, put, show, center, detents, snap }. Click the track to jump there,
 // drag the cap (Shift: fine)
 function slider(aria, o) {
@@ -5029,22 +5038,13 @@ function slider(aria, o) {
     el.style.setProperty('--p', f); el.style.setProperty('--a', Math.min(c, f)); el.style.setProperty('--w', Math.abs(f - c));
     el.setAttribute('aria-valuenow', v); el.setAttribute('aria-valuetext', o.show(v));
   };
-  let drag = null;
-  el.addEventListener('pointerdown', (e) => {
-    if (e.button) return;
+  const put = (v) => o.put(snap(Math.max(0, Math.min(o.max, v))));
+  // the whole rail is the range; a press off the cap jumps there
+  dragY(el, o.get, put, () => o.max / (rail.getBoundingClientRect().height || 1), { start: (e, d) => {
+    el.focus({ preventScroll: true }); e.preventDefault();
     const r = rail.getBoundingClientRect(), py = r.bottom - r.height * Math.min(o.get(), o.max) / o.max;
-    el.setPointerCapture(e.pointerId); el.focus({ preventScroll: true }); e.preventDefault();
-    // a press off the cap jumps there
-    drag = { last: e.clientY, h: r.height || 1, acc: o.get() };
-    if (Math.abs(e.clientY - py) > 6) { drag.acc = Math.max(0, Math.min(o.max, (r.bottom - e.clientY) / r.height * o.max)); o.put(snap(drag.acc)); }
-  });
-  el.addEventListener('pointermove', (e) => {
-    if (!drag) return;
-    drag.acc += (drag.last - e.clientY) * o.max / drag.h * (e.shiftKey ? 0.25 : 1); drag.last = e.clientY;
-    o.put(snap(Math.max(0, Math.min(o.max, drag.acc))));
-  });
-  el.addEventListener('pointerup', () => { drag = null; });
-  el.addEventListener('pointercancel', () => { drag = null; });
+    if (Math.abs(e.clientY - py) > 6) { d.acc = Math.max(0, Math.min(o.max, (r.bottom - e.clientY) / r.height * o.max)); put(d.acc); }
+  } });
   return { el, draw };
 }
 // a knob over any value: o = { max, get, set, show, dflt, changed }
@@ -5248,7 +5248,7 @@ const pad = $('pad');
 function flash(el) { el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('hit'), 90); }
 async function hit(t) {
   await startAudio();
-  send({ type: 'trig', voice: t, vel: Number($('level').value) });
+  send({ type: 'trig', voice: t, vel: perf.vel });
   flash(voicesEl.children[t]);
   if (t === track) flash(pad);
 }
@@ -5350,12 +5350,10 @@ TRACKS.forEach((t, r) => {
 });
 function drawGroove() {
   $('swing').value = groove.swing; $('swing-out').textContent = groove.swing + '%';
-  $('swing-p').value = groove.swing; showSwingP(); $('swing-p').dispatchEvent(new Event('sync'));
   grooveDials.forEach((d) => d());
+  drawPerf();
 }
-const showSwingP = () => { $('swing-p-out').innerHTML = groove.swing === 50 ? '<b>straight</b> · 50%' : `<b>${groove.swing >= 66 && groove.swing <= 67 ? 'triplet' : groove.swing < 60 ? 'light' : groove.swing < 66 ? 'medium' : 'heavy'}</b> · ${groove.swing}%`; };
-// the same groove on the perform page: swing as a big slider, and per track its swing share and push
-$('swing-p').addEventListener('input', () => { groove.swing = Number($('swing-p').value); drawGroove(); sendSeq(); });
+// the same groove on the perform page: per track its swing share and push (swing itself is a perform dial)
 {
   const gt = $('gtable');
   { const h = document.createElement('span'); h.className = 'pgh ghead'; h.textContent = 'groove'; gt.appendChild(h); }
@@ -5378,16 +5376,8 @@ function sendSeq() {
   const P = source === 'steps' ? { ...copyPage(pages[0]), pages: pageCount > 1 ? pages.slice(0, pageCount).map(copyPage) : undefined }
     : { ...copyPage(pattern), pages: pattern.pages ? pattern.pages.map(copyPage) : undefined };
   send({ type: 'seq', pattern: P,
-    bpm: Math.max(40, Math.min(300, Number($('tempo').value) || 120)), vel: Number($('level').value), patternOn, groove: grooveMsg(),
-    accentDb: Number($('accent').value), playing });
+    bpm: perf.tempo, vel: perf.vel, patternOn, groove: grooveMsg(), accentDb: perf.accent, playing });
 }
-const showLevels = () => {
-  $('level-out').innerHTML = `<b>${$('level').value}</b> / 127`;
-  $('accent-out').innerHTML = `<b>+${$('accent').value}</b> dB`;
-};
-for (const id of ['level', 'accent']) for (const ev of ['input', 'change']) $(id).addEventListener(ev, showLevels);
-showLevels();
-$('accent').addEventListener('change', sendSeq);
 $('play').addEventListener('click', async () => {
   await startAudio();
   playing = !playing;
@@ -5395,8 +5385,6 @@ $('play').addEventListener('click', async () => {
   if (!playing) { markStep(-1); markBar(-1); grVu.set(0); duckVu.set(0); }
   sendSeq();
 });
-$('tempo').addEventListener('change', sendSeq);
-$('level').addEventListener('change', sendSeq);
 $('grab').addEventListener('click', () => {
   // a single-page perform pattern lands on the page being edited; a paged one (a user pattern) replaces the pages
   if (pattern.pages) { pattern.pages.forEach((P, i) => copyInto(pages[i], P)); pageCount = pattern.pages.length; editPage = Math.min(editPage, pageCount - 1); grid = pages[editPage]; }
@@ -5576,18 +5564,16 @@ function setDirty(d) {
 }
 function songSnapshot() {
   const copy = (a) => a.map((r) => r.slice());
-  return { style: STYLES[styleIdx].name, user: STYLES[styleIdx].user && userPats.length ? structuredClone(userPats[userSlot()]) : undefined, energy: Number($('energy').value), beat: Number($('beat').value), fills: Number($('fills').value),
-    tempo: Number($('tempo').value), vel: Number($('level').value), accent: Number($('accent').value), view, source, groove: structuredClone(groove), macro: { ...macro },
+  return { style: STYLES[styleIdx].name, user: STYLES[styleIdx].user && userPats.length ? structuredClone(userPats[userSlot()]) : undefined, energy: perf.energy, beat: perf.beat, fills: perf.fills,
+    tempo: perf.tempo, vel: perf.vel, accent: perf.accent, view, source, groove: structuredClone(groove), macro: { ...macro },
     pattern: { on: copy(pattern.on), acc: copy(pattern.acc), bar: copy(pattern.bar) }, stepPages: pages.slice(0, pageCount).map(copyPage),
     master: { ...master } };
 }
 function useSong(g) {
   setStyle(styleIndex(g.style));
-  for (const id of ['energy', 'beat', 'fills', 'tempo']) { $(id).value = g[id]; $(id).dispatchEvent(new Event('sync')); }
+  for (const k of ['energy', 'beat', 'fills', 'tempo', 'vel', 'accent']) perf[k] = g[k];
+  $('tempo').value = perf.tempo;
   if (STYLES[styleIdx].user && g.user) { const i = ensureUserPat(g.user); if (i >= 0) useUserSlot(i); }
-  $('level').value = g.vel; $('accent').value = g.accent;
-  for (const id of ['level', 'accent']) $(id).dispatchEvent(new Event('sync'));
-  showLevels(); $('tempo').dispatchEvent(new Event('input'));
   Object.assign(master, g.master); buildMaster();
   sendMix();
   // the dial readouts come from generate; then the saved pattern, which may have been edited by hand
@@ -5637,8 +5623,8 @@ $('new-kit').addEventListener('click', async () => {
   send({ type: 'kit', values: effValues() });
   buildKnobs(); drawScope();
   randomiseX();
-  $('beat').value = Math.floor(rnd() * 16); $('energy').value = 45 + Math.floor(rnd() * 46); $('fills').value = Math.floor(rnd() * 101);
-  for (const id of ['beat', 'energy', 'fills']) $(id).dispatchEvent(new Event('sync'));
+  perf.beat = Math.floor(rnd() * 16); perf.energy = 45 + Math.floor(rnd() * 46); perf.fills = Math.floor(rnd() * 101);
+  drawUserTools();
   if (view === 'steps') setTab('perform'); else generate();
   setDirty(true);
   kitNote('');
@@ -6059,7 +6045,7 @@ let styleIdx = 0; // saved with presets by name; presets from before the styles 
 let userPats = [];
 try { userPats = JSON.parse(localStorage.getItem('elexir-user-patterns') || '[]'); } catch (e) {}
 const storeUserPats = () => { try { localStorage.setItem('elexir-user-patterns', JSON.stringify(userPats)); } catch (e) {} };
-const userSlot = () => Math.min(userPats.length - 1, Math.floor(Number($('beat').value) * userPats.length / 16));
+const userSlot = () => Math.min(userPats.length - 1, Math.floor(perf.beat * userPats.length / 16));
 const slotBeat = (i) => Math.ceil(i * 16 / userPats.length);
 function userGroove(u) {
   const g = { name: u.name, cond: u.bar, acc: u.acc };
@@ -6090,7 +6076,7 @@ function nextUserName() {
   for (let i = 0; i < 50; i++) { const n = alienName().replace(/'/g, ''); if (!userPats.some((x) => x.name === n)) return n; }
   return alienName();
 }
-function useUserSlot(i) { setStyle(userStyle()); $('beat').value = slotBeat(i); $('beat').dispatchEvent(new Event('sync')); }
+function useUserSlot(i) { setStyle(userStyle()); perf.beat = slotBeat(i); drawPerf(); drawUserTools(); }
 function drawUserTools() {
   const on = STYLES[styleIdx].user && userPats.length > 0;
   $('up-cur').textContent = on ? `${userPats[userSlot()].name} · ${userSlot() + 1}/${userPats.length}` : userPats.length ? `${userPats.length} saved` : '';
@@ -6124,18 +6110,20 @@ function fillShape(fills) {
   if (!fills) return null;
   return { every: fills < 34 ? 8 : fills < 67 ? 4 : 2, len: 2 * Math.round(1 + fills / 100 * 3), busy: fills >= 50 };
 }
+// the groove level the energy dial reaches (0 = empty, 1 the kick/snare skeleton .. 9 the full kit), and the fill
+// shape, once there is a groove
+const grooveLevel = () => (perf.energy ? 1 + perf.energy / 100 * 8 : 0);
+const fillNow = () => (grooveLevel() >= 2 ? fillShape(perf.fills) : null);
 function generate() {
-  const st = STYLES[styleIdx], energy = Number($('energy').value), g = st.grooves[Number($('beat').value)], fills = Number($('fills').value);
-  const T = energy ? 1 + energy / 100 * 8 : 0, fill = T >= 2 ? fillShape(fills) : null; // fills once there is a groove
+  const st = STYLES[styleIdx], energy = perf.energy, g = st.grooves[perf.beat];
+  const T = grooveLevel(), fill = fillNow();
   const { on: fillOn, yields } = fill ? st.fill(fill) : { on: blankFill(), yields: [] };
   const u = st.user && userPats.length ? userPats[userSlot()] : null;
   if (u && u.pages) {
     pattern.pages = u.pages.map((pg) => { const P = blankPage(); genPage(userGroove({ name: u.name, ...pg }), P, energy, T, fill, fillOn, yields); return P; });
     copyInto(pattern, pattern.pages[0]);
   } else { delete pattern.pages; genPage(g, pattern, energy, T, fill, fillOn, yields); }
-  $('energy-out').innerHTML = `<b>${ENERGY_NAMES.find(([v]) => energy < v)[1]}</b> · ${energy}%`;
-  $('beat-out').innerHTML = `<b>${g.name.toLowerCase()}</b> · ${st.user ? (st.grooves.length ? userSlot() + 1 : 0) : Number($('beat').value) + 1}/${st.grooves.length}`;
-  $('fills-out').innerHTML = fill ? `<b>every ${fill.every}</b> · ${fill.len} steps` : `<b>off</b>`;
+  drawPerf();
   sendSeq();
 }
 function genPage(g, pattern, energy, T, fill, fillOn, yields) {
@@ -6178,11 +6166,7 @@ function miniSlider(label, aria, get, set, dflt, max = 100, show = (v) => v + '%
   const dial = s.el;
   el.append(dial); el.insertAdjacentHTML('beforeend', `<span>${label}</span>`);
   const draw = () => { s.draw(); dial.title = `${label} ${show(get())}`; };
-  dial.addEventListener('wheel', (e) => { e.preventDefault(); put(get() + (e.deltaY < 0 ? 2 : -2)); }, { passive: false });
-  dial.addEventListener('keydown', (e) => {
-    const d = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 10, PageDown: -10 }[e.key];
-    if (d) { put(get() + d); e.preventDefault(); }
-  });
+  stepKeys(dial, get, put);
   dial.addEventListener('dblclick', () => put(dflt));
   draw();
   return { el, draw };
@@ -6200,16 +6184,8 @@ function miniDial(label, aria, get, set, dflt, max = 100, show = (v) => v + '%',
     dial.setAttribute('aria-valuenow', v); dial.setAttribute('aria-valuetext', show(v)); dial.title = `${label} ${show(v)}`;
   };
   const put = (v) => { v = Math.max(0, Math.min(max, Math.round(v))); if (v !== get()) { set(v); draw(); } };
-  let drag = null;
-  dial.addEventListener('pointerdown', (e) => { dial.setPointerCapture(e.pointerId); drag = { y: e.clientY, v: get() }; dial.focus(); });
-  dial.addEventListener('pointermove', (e) => { if (drag) put(drag.v + (drag.y - e.clientY) * 0.6); });
-  dial.addEventListener('pointerup', () => { drag = null; });
-  dial.addEventListener('pointercancel', () => { drag = null; });
-  dial.addEventListener('wheel', (e) => { e.preventDefault(); put(get() + (e.deltaY < 0 ? 2 : -2)); }, { passive: false });
-  dial.addEventListener('keydown', (e) => {
-    const d = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 10, PageDown: -10 }[e.key];
-    if (d) { put(get() + d); e.preventDefault(); }
-  });
+  dragY(dial, get, put, 0.6, { start: () => dial.focus() });
+  stepKeys(dial, get, put);
   dial.addEventListener('dblclick', () => put(dflt));
   draw();
   return { el, draw };
@@ -6278,18 +6254,8 @@ CH.forEach((name, n) => {
     if (v === Number(fader.value)) return;
     fader.value = v; setValue(vol, v, true); fader.title = `${name} level ${v}`; showLevel(true);
   };
-  let fdrag = null;
-  fader.addEventListener('pointerdown', (e) => {
-    e.preventDefault(); fader.setPointerCapture(e.pointerId); fader.focus();
-    fdrag = { y: e.clientY, v: Number(fader.value), last: e.clientY, acc: Number(fader.value) }; showLevel(true);
-  });
-  fader.addEventListener('pointermove', (e) => {
-    if (!fdrag) return;
-    fdrag.acc += (fdrag.last - e.clientY) * (e.shiftKey ? 0.1 : 0.4); fdrag.last = e.clientY;
-    setLevel(fdrag.acc);
-  });
-  const endDrag = () => { if (!fdrag) return; fdrag = null; showLevel(false); buildKnobs(); };
-  fader.addEventListener('pointerup', endDrag); fader.addEventListener('pointercancel', endDrag);
+  dragY(fader, () => Number(fader.value), setLevel, 0.4, {
+    start: (e) => { e.preventDefault(); fader.focus(); showLevel(true); }, end: () => { showLevel(false); buildKnobs(); } });
   fader.addEventListener('wheel', (e) => { e.preventDefault(); setLevel(Number(fader.value) + (e.deltaY < 0 ? 1 : -1)); clearTimeout(fader._t); fader._t = setTimeout(() => showLevel(false), 700); }, { passive: false });
   fader.addEventListener('input', () => { setValue(vol, Number(fader.value), true); showLevel(true); clearTimeout(fader._t); fader._t = setTimeout(() => showLevel(false), 700); });
   fader.addEventListener('sync', () => { fader.title = `${name} level ${fader.value}`; });
@@ -6342,7 +6308,7 @@ function kitDelayPos() {
   const p1 = values[PAR.FX_P1] / 127, rng = values[PAR.FX_P2] / 127, pp = values[PAR.FX_DELAY_TYPE] === 1, fs = LXR.REAL_FS;
   const lerp = (a, b, x) => a * (1 - x) + b * x;
   const min = lerp(0.0006 * fs, 0.02 * fs, rng), max = lerp(0.02 * fs, pp ? 0x7fff * 0.48 : 0x7fff, rng);
-  const secs = lerp(min, max, p1 * rng) / fs, bar = 240 / Number($('tempo').value || 120);
+  const secs = lerp(min, max, p1 * rng) / fs, bar = 240 / perf.tempo;
   return Math.max(0, Math.min(1, posOf(secs / bar)));
 }
 // randomise picks 1/2, 1/4, dotted 1/8, 1/8 or 1/16, or now and then (1 roll in 20) 1/128, and puts it up to
@@ -6460,32 +6426,25 @@ $('comp-on').addEventListener('click', () => { master.comp = !master.comp; $('co
 $('duck-fx').addEventListener('change', () => { master.duckFx = $('duck-fx').checked; sendMix(); });
 sendMix();
 
-// ---- big sliders for the perform controls, over the hidden inputs that hold the values ----
-const tempoOut = document.createElement('output');
-const showTempo = () => { tempoOut.innerHTML = `<b>${$('tempo').value}</b> bpm`; };
-$('tempo').addEventListener('change', showTempo); $('tempo').addEventListener('input', showTempo); showTempo();
-// the pattern card's knobs drive the hidden inputs, which the rest of the page listens to
-function inputKnob(input, label, out, opts = {}) {
-  const min = opts.min ?? Number(input.min), max = (opts.max ?? Number(input.max)) - min;
-  // the readout keeps the word (driving, planet, every 4); the LCD-style detail line shows it all
-  const k = dialKnob(label, { max, show: () => (opts.short ? out.textContent.split('·')[0] : out.textContent).trim(), get: () => Number(input.value) - min,
-    set: (v) => { input.value = v + min; input.dispatchEvent(new Event('input')); if (opts.event) input.dispatchEvent(new Event(opts.event)); },
-    dflt: () => opts.dflt - min, detents: opts.detents });
-  k.dataset.k = input.id;
-  for (const ev of ['sync', 'input', 'change']) input.addEventListener(ev, () => k.draw());
-  new MutationObserver(() => k.draw()).observe(out, { childList: true, characterData: true, subtree: true });
-  return k;
+// ---- the perform dials on the pattern card ----
+// the readout keeps the word (driving, planet, every 4) where the knob is narrow
+function perfKnob(k, label, opts = {}) {
+  const [min, max, dflt] = PERF_RANGE[k];
+  const kn = dialKnob(label, { max: max - min, show: () => (opts.short ? perfText(k).split('·')[0] : perfText(k)).trim(), get: () => perfGet(k) - min,
+    set: (v) => setPerf(k, v + min), dflt: () => dflt - min, detents: opts.detents });
+  kn.dataset.k = k; perfDraws.push(kn.draw);
+  return kn;
 }
-$('pk-pattern').append(inputKnob($('energy'), 'energy', $('energy-out'), { short: true, dflt: 60 }), inputKnob($('beat'), 'beat', $('beat-out'), { short: true, dflt: 0 }),
-  inputKnob($('fills'), 'fills', $('fills-out'), { short: true, dflt: 40 }), inputKnob($('tempo'), 'tempo', tempoOut, { min: 70, max: 170, event: 'change', dflt: 118 }));
-$('pk-feel').append(inputKnob($('level'), 'velocity', $('level-out'), { event: 'change', dflt: 100 }),
-  inputKnob($('accent'), 'accent', $('accent-out'), { event: 'change', dflt: 6 }),
-  inputKnob($('swing-p'), 'swing', $('swing-p-out'), { short: true, dflt: 50, detents: [[16, true]] }));
+$('pk-pattern').append(perfKnob('energy', 'energy', { short: true }), perfKnob('beat', 'beat', { short: true }),
+  perfKnob('fills', 'fills', { short: true }), perfKnob('tempo', 'tempo'));
+$('pk-feel').append(perfKnob('vel', 'velocity'), perfKnob('accent', 'accent'), perfKnob('swing', 'swing', { short: true, detents: [[16, true]] }));
+// the header's tempo field
+$('tempo').addEventListener('change', () => setPerf('tempo', Math.max(40, Math.min(300, Math.round(Number($('tempo').value)) || perf.tempo))));
 const macroKnobs = [['fm', 'fm depth'], ['decay', 'decay'], ['pitch', 'pitch'], ['filter', 'filter']].map(([m, label]) => {
   const pitch = m === 'pitch', max = pitch ? 48 : 200, mid = MACRO0[m];
   return dialKnob(label, { max, center: mid, detents: pitch ? [[0, false], [12, false], [24, true], [36, false], [48, false]] : [[mid, true]], jump: false,
     show: (v) => (pitch ? (v === 24 ? '0 st' : (v > 24 ? '+' : '−') + Math.abs(v - 24) + ' st') : (v === 100 ? '0%' : (v > 100 ? '+' : '−') + Math.abs(v - 100) + '%')),
-    get: () => macro[m], set: (v) => { macro[m] = v; for (const n of MACROS[m]) if (PAR[n] !== undefined) send({ type: 'param', par: PAR[n], value: eff(PAR[n], values[PAR[n]]) }); },
+    get: () => macro[m], set: (v) => setMacro(m, v),
     dflt: () => mid, changed: () => macro[m] !== mid });
 });
 $('pk-macro').append(...macroKnobs);
@@ -6494,13 +6453,13 @@ drawGroove();
 
 // ---- Faderfox PC4: 24 knobs (CC 1-24, four rows of six), each can drive one perform control ----
 const PC4_CTRL = [
-  { id: 'energy', label: 'energy', input: $('energy') },
-  { id: 'beat', label: 'beat', input: $('beat') },
-  { id: 'fills', label: 'fills', input: $('fills') },
-  { id: 'tempo', label: 'tempo', input: $('tempo'), event: 'change', min: 70, max: 170 },
-  { id: 'velocity', label: 'velocity', input: $('level'), event: 'change' },
-  { id: 'accent', label: 'accent', input: $('accent'), event: 'change' },
-  { id: 'swing', label: 'swing', input: $('swing-p') },
+  { id: 'energy', label: 'energy', perf: 'energy' },
+  { id: 'beat', label: 'beat', perf: 'beat' },
+  { id: 'fills', label: 'fills', perf: 'fills' },
+  { id: 'tempo', label: 'tempo', perf: 'tempo' },
+  { id: 'velocity', label: 'velocity', perf: 'vel' },
+  { id: 'accent', label: 'accent', perf: 'accent' },
+  { id: 'swing', label: 'swing', perf: 'swing' },
   { id: 'fm', label: 'fm depth', macro: 'fm', min: 0, max: 200 },
   { id: 'decay', label: 'decay', macro: 'decay', min: 0, max: 200 },
   { id: 'pitch', label: 'pitch', macro: 'pitch', min: 0, max: 48 },
@@ -6508,17 +6467,11 @@ const PC4_CTRL = [
 ];
 const PC4_DEFAULT = [...PC4_CTRL.map((c) => c.id), ...Array(24 - PC4_CTRL.length).fill(null)]; // knob n = CC n
 const pc4Ctrl = (id) => PC4_CTRL.find((c) => c.id === id);
-const pc4Range = (c) => [c.min ?? Number(c.input.min), c.max ?? Number(c.input.max)];
-const pc4Read = (c) => (c.macro ? macro[c.macro] : Number(c.input.value));
-// the same writes the on-screen knobs make: a macro goes to the engine, a perform input fires the events its knob fires
+const pc4Range = (c) => (c.macro ? [c.min, c.max] : PERF_RANGE[c.perf].slice(0, 2));
+const pc4Read = (c) => (c.macro ? macro[c.macro] : perfGet(c.perf));
+// the same writes the on-screen knobs make
 function pc4Write(c, v) {
-  if (c.macro) {
-    macro[c.macro] = v;
-    for (const n of MACROS[c.macro]) if (PAR[n] !== undefined) send({ type: 'param', par: PAR[n], value: eff(PAR[n], values[PAR[n]]) });
-    drawMacros(); return;
-  }
-  c.input.value = v; c.input.dispatchEvent(new Event('input'));
-  if (c.event) c.input.dispatchEvent(new Event(c.event));
+  if (c.macro) { setMacro(c.macro, v); drawMacros(); } else setPerf(c.perf, v);
 }
 let pc4Map = [...PC4_DEFAULT];
 try { const s = JSON.parse(localStorage.getItem('elexir-pc4')); if (Array.isArray(s) && s.length === 24) pc4Map = s; } catch (e) { /* no storage: the default map */ }
@@ -6625,15 +6578,9 @@ XN.forEach((src, sIdx) => {
       c.setAttribute('aria-valuenow', a);
     };
     const set = (v) => { v = Math.max(-100, Math.min(100, Math.round(v))); if (v === xm.amt[k]) return; xm.amt[k] = v; draw(); sendX(); };
-    let drag = null;
-    c.addEventListener('pointerdown', (e) => { c.setPointerCapture(e.pointerId); drag = { y: e.clientY, v: xm.amt[k] }; });
-    c.addEventListener('pointermove', (e) => { if (drag) set(drag.v + (drag.y - e.clientY) * 1.2); });
-    c.addEventListener('pointerup', () => { drag = null; }); c.addEventListener('pointercancel', () => { drag = null; });
-    c.addEventListener('wheel', (e) => { e.preventDefault(); set(xm.amt[k] + (e.deltaY < 0 ? 5 : -5)); }, { passive: false });
-    c.addEventListener('keydown', (e) => {
-      const st = { ArrowUp: 5, ArrowRight: 5, ArrowDown: -5, ArrowLeft: -5, PageUp: 25, PageDown: -25 }[e.key];
-      if (st) { e.preventDefault(); set(xm.amt[k] + st); } else if (e.key === 'Delete' || e.key === 'Backspace' || e.key === '0') set(0);
-    });
+    dragY(c, () => xm.amt[k], set, 1.2);
+    stepKeys(c, () => xm.amt[k], set, { small: 5, big: 25, wheel: 5 });
+    c.addEventListener('keydown', (e) => { if (e.key === 'Delete' || e.key === 'Backspace' || e.key === '0') set(0); });
     c.addEventListener('dblclick', () => set(0));
     draw(); xcells.push(draw); xgrid.appendChild(c);
   });
@@ -6676,8 +6623,6 @@ function setView(v) {
   if (v === 'steps') { cells.forEach((row, r) => row.forEach((_, s) => drawCell(r, s))); sendSeq(); }
   else generate();
 }
-for (const id of ['energy', 'beat', 'fills']) $(id).addEventListener('input', generate);
-$('beat').addEventListener('input', () => drawUserTools()); $('beat').addEventListener('sync', () => drawUserTools());
 drawUserTools();
 $('style-prev').addEventListener('click', () => { setStyle(styleIdx - 1); generate(); });
 $('style-next').addEventListener('click', () => { setStyle(styleIdx + 1); generate(); });

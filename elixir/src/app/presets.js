@@ -133,18 +133,16 @@ function setDirty(d) {
 }
 function songSnapshot() {
   const copy = (a) => a.map((r) => r.slice());
-  return { style: STYLES[styleIdx].name, user: STYLES[styleIdx].user && userPats.length ? structuredClone(userPats[userSlot()]) : undefined, energy: Number($('energy').value), beat: Number($('beat').value), fills: Number($('fills').value),
-    tempo: Number($('tempo').value), vel: Number($('level').value), accent: Number($('accent').value), view, source, groove: structuredClone(groove), macro: { ...macro },
+  return { style: STYLES[styleIdx].name, user: STYLES[styleIdx].user && userPats.length ? structuredClone(userPats[userSlot()]) : undefined, energy: perf.energy, beat: perf.beat, fills: perf.fills,
+    tempo: perf.tempo, vel: perf.vel, accent: perf.accent, view, source, groove: structuredClone(groove), macro: { ...macro },
     pattern: { on: copy(pattern.on), acc: copy(pattern.acc), bar: copy(pattern.bar) }, stepPages: pages.slice(0, pageCount).map(copyPage),
     master: { ...master } };
 }
 function useSong(g) {
   setStyle(styleIndex(g.style));
-  for (const id of ['energy', 'beat', 'fills', 'tempo']) { $(id).value = g[id]; $(id).dispatchEvent(new Event('sync')); }
+  for (const k of ['energy', 'beat', 'fills', 'tempo', 'vel', 'accent']) perf[k] = g[k];
+  $('tempo').value = perf.tempo;
   if (STYLES[styleIdx].user && g.user) { const i = ensureUserPat(g.user); if (i >= 0) useUserSlot(i); }
-  $('level').value = g.vel; $('accent').value = g.accent;
-  for (const id of ['level', 'accent']) $(id).dispatchEvent(new Event('sync'));
-  showLevels(); $('tempo').dispatchEvent(new Event('input'));
   Object.assign(master, g.master); buildMaster();
   sendMix();
   // the dial readouts come from generate; then the saved pattern, which may have been edited by hand
@@ -194,8 +192,8 @@ $('new-kit').addEventListener('click', async () => {
   send({ type: 'kit', values: effValues() });
   buildKnobs(); drawScope();
   randomiseX();
-  $('beat').value = Math.floor(rnd() * 16); $('energy').value = 45 + Math.floor(rnd() * 46); $('fills').value = Math.floor(rnd() * 101);
-  for (const id of ['beat', 'energy', 'fills']) $(id).dispatchEvent(new Event('sync'));
+  perf.beat = Math.floor(rnd() * 16); perf.energy = 45 + Math.floor(rnd() * 46); perf.fills = Math.floor(rnd() * 101);
+  drawUserTools();
   if (view === 'steps') setTab('perform'); else generate();
   setDirty(true);
   kitNote('');

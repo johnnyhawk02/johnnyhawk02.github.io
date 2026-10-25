@@ -19,7 +19,7 @@ function kitDelayPos() {
   const p1 = values[PAR.FX_P1] / 127, rng = values[PAR.FX_P2] / 127, pp = values[PAR.FX_DELAY_TYPE] === 1, fs = LXR.REAL_FS;
   const lerp = (a, b, x) => a * (1 - x) + b * x;
   const min = lerp(0.0006 * fs, 0.02 * fs, rng), max = lerp(0.02 * fs, pp ? 0x7fff * 0.48 : 0x7fff, rng);
-  const secs = lerp(min, max, p1 * rng) / fs, bar = 240 / Number($('tempo').value || 120);
+  const secs = lerp(min, max, p1 * rng) / fs, bar = 240 / perf.tempo;
   return Math.max(0, Math.min(1, posOf(secs / bar)));
 }
 // randomise picks 1/2, 1/4, dotted 1/8, 1/8 or 1/16, or now and then (1 roll in 20) 1/128, and puts it up to

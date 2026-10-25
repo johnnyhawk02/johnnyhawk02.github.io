@@ -14,8 +14,6 @@ function setView(v) {
   if (v === 'steps') { cells.forEach((row, r) => row.forEach((_, s) => drawCell(r, s))); sendSeq(); }
   else generate();
 }
-for (const id of ['energy', 'beat', 'fills']) $(id).addEventListener('input', generate);
-$('beat').addEventListener('input', () => drawUserTools()); $('beat').addEventListener('sync', () => drawUserTools());
 drawUserTools();
 $('style-prev').addEventListener('click', () => { setStyle(styleIdx - 1); generate(); });
 $('style-next').addEventListener('click', () => { setStyle(styleIdx + 1); generate(); });

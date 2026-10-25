@@ -70,7 +70,7 @@ const nb = await loadAll(page, 'builtin', 'builtin');
 // generator: every style and a few beats
 for (let st = 0; st < 5; st++) for (const beat of [0, 7, 15]) {
   out[`gen ${st} ${beat}`] = await page.evaluate(([st, beat]) => {
-    setStyle(st); $('beat').value = beat; $('beat').dispatchEvent(new Event('input')); return (0, eval)('(' + window.__probe + ')')();
+    setStyle(st); setPerf('beat', beat); return (0, eval)('(' + window.__probe + ')')();
   }, [st, beat]);
 }
 await page.close();

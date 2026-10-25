@@ -1,12 +1,12 @@
 // ---- Faderfox PC4: 24 knobs (CC 1-24, four rows of six), each can drive one perform control ----
 const PC4_CTRL = [
-  { id: 'energy', label: 'energy', input: $('energy') },
-  { id: 'beat', label: 'beat', input: $('beat') },
-  { id: 'fills', label: 'fills', input: $('fills') },
-  { id: 'tempo', label: 'tempo', input: $('tempo'), event: 'change', min: 70, max: 170 },
-  { id: 'velocity', label: 'velocity', input: $('level'), event: 'change' },
-  { id: 'accent', label: 'accent', input: $('accent'), event: 'change' },
-  { id: 'swing', label: 'swing', input: $('swing-p') },
+  { id: 'energy', label: 'energy', perf: 'energy' },
+  { id: 'beat', label: 'beat', perf: 'beat' },
+  { id: 'fills', label: 'fills', perf: 'fills' },
+  { id: 'tempo', label: 'tempo', perf: 'tempo' },
+  { id: 'velocity', label: 'velocity', perf: 'vel' },
+  { id: 'accent', label: 'accent', perf: 'accent' },
+  { id: 'swing', label: 'swing', perf: 'swing' },
   { id: 'fm', label: 'fm depth', macro: 'fm', min: 0, max: 200 },
   { id: 'decay', label: 'decay', macro: 'decay', min: 0, max: 200 },
   { id: 'pitch', label: 'pitch', macro: 'pitch', min: 0, max: 48 },
@@ -14,17 +14,11 @@ const PC4_CTRL = [
 ];
 const PC4_DEFAULT = [...PC4_CTRL.map((c) => c.id), ...Array(24 - PC4_CTRL.length).fill(null)]; // knob n = CC n
 const pc4Ctrl = (id) => PC4_CTRL.find((c) => c.id === id);
-const pc4Range = (c) => [c.min ?? Number(c.input.min), c.max ?? Number(c.input.max)];
-const pc4Read = (c) => (c.macro ? macro[c.macro] : Number(c.input.value));
-// the same writes the on-screen knobs make: a macro goes to the engine, a perform input fires the events its knob fires
+const pc4Range = (c) => (c.macro ? [c.min, c.max] : PERF_RANGE[c.perf].slice(0, 2));
+const pc4Read = (c) => (c.macro ? macro[c.macro] : perfGet(c.perf));
+// the same writes the on-screen knobs make
 function pc4Write(c, v) {
-  if (c.macro) {
-    macro[c.macro] = v;
-    for (const n of MACROS[c.macro]) if (PAR[n] !== undefined) send({ type: 'param', par: PAR[n], value: eff(PAR[n], values[PAR[n]]) });
-    drawMacros(); return;
-  }
-  c.input.value = v; c.input.dispatchEvent(new Event('input'));
-  if (c.event) c.input.dispatchEvent(new Event(c.event));
+  if (c.macro) { setMacro(c.macro, v); drawMacros(); } else setPerf(c.perf, v);
 }
 let pc4Map = [...PC4_DEFAULT];
 try { const s = JSON.parse(localStorage.getItem('elexir-pc4')); if (Array.isArray(s) && s.length === 24) pc4Map = s; } catch (e) { /* no storage: the default map */ }
