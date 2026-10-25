@@ -35,8 +35,8 @@ const meterVu = (name, aria) => {
 };
 meterVu.n = 0;
 const grVu = meterVu('reduction', 'compressor gain reduction meter'), duckVu = meterVu('ducking', 'sidechain ducking meter');
-// each card's on button reads on or off; an off card's faders, meter and fx box are dimmed (the box can't be ticked)
-const showOn = (id, on) => { $(id + '-on').setAttribute('aria-pressed', on); $(id + '-on').textContent = on ? 'on' : 'off'; const card = $(id + '-on').closest('.card'); card.classList.toggle('off', !on); card.querySelectorAll('.mchk input').forEach((i) => { i.disabled = !on; }); };
+// each card's power button lights when on; an off card's faders, meter and fx box are dimmed (the box can't be ticked)
+const showOn = (id, on) => { $(id + '-on').setAttribute('aria-pressed', on); const card = $(id + '-on').closest('.card'); card.classList.toggle('off', !on); card.querySelectorAll('.mchk input').forEach((i) => { i.disabled = !on; }); };
 function buildMaster() {
 $('comp-knobs').innerHTML = ''; $('duck-knobs').innerHTML = '';
 showOn('comp', master.comp); showOn('duck', master.duckOn); $('duck-fx').checked = master.duckFx;

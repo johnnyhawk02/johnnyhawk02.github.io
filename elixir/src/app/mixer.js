@@ -88,17 +88,19 @@ function lvmFeed(l) {
 CH.forEach((name, n) => {
   const vol = PAR.VOL1 + n, pan = PAR.PAN1 + n;
   const el = document.createElement('div'); el.className = 'strip'; el.setAttribute('role', 'group'); el.setAttribute('aria-label', name);
+  // like an Ableton strip: the sends on top, then the level readout, pan and mute in a column beside the fader
   el.innerHTML = `    <span class="name">${name}</span><span class="sends"></span>
-    <div class="fbox"><div class="fader" tabindex="0" role="slider" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="127" aria-label="${name} level"><i class="tri"></i><span class="lvm" aria-hidden="true"><b></b><s></s></span></div></div>
-    <button class="mute" type="button" aria-pressed="false" title="Mute ${name}">mute</button>
+    <div class="lower"><div class="ctl"><output class="lvl" aria-hidden="true"></output><span class="pan"></span>
+    <button class="mute" type="button" aria-pressed="false" title="Mute ${name}">mute</button></div>
+    <div class="fbox"><div class="fader" tabindex="0" role="slider" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="127" aria-label="${name} level"><i class="tri"></i><span class="lvm" aria-hidden="true"><b></b><s></s></span></div></div></div>
 `;
-  const fader = el.querySelector('.fader'), nameEl = el.querySelector('.name');
+  const fader = el.querySelector('.fader'), lvlEl = el.querySelector('.lvl');
   // the level meter is the fader: a triangle beside it points at the level, at the height the old fader's cap
   // sat (its centre 5 px in from either end). value works like an input's, so kit loads and knob edits move it
   let level = values[vol];
   Object.defineProperty(fader, 'value', {
     get: () => String(level),
-    set: (v) => { level = Number(v); fader.style.setProperty('--p', level / 127); fader.setAttribute('aria-valuenow', level); },
+    set: (v) => { level = Number(v); fader.style.setProperty('--p', level / 127); fader.setAttribute('aria-valuenow', level); lvlEl.textContent = level; },
   });
   fader.value = level;
   // pan is a small dial; mixInputs gets an input-like stand-in so kit loads and knob edits redraw it
@@ -107,18 +109,16 @@ CH.forEach((name, n) => {
   const panEl = { value: values[pan], addEventListener() {}, dispatchEvent: () => panD.draw() };
   mixInputs[vol] = fader; mixInputs[pan] = panEl;
   // fine control: dragging the meter or the triangle moves the level relative to where it was, 0.4 per pixel
-  // (Shift: 0.1), so a short fader still has a long throw; the name shows the level while it moves; wheel and
-  // arrow keys step by 1, page keys by 10
-  const showLevel = (on) => { nameEl.textContent = on ? `${fader.value}` : name; nameEl.classList.toggle('lvl', on); };
+  // (Shift: 0.1), so a short fader still has a long throw; wheel and arrow keys step by 1, page keys by 10
   const setLevel = (v) => {
     v = Math.max(0, Math.min(127, Math.round(v)));
     if (v === level) return;
-    fader.value = v; setValue(vol, v, true); fader.title = `${name} level ${v}`; showLevel(true);
+    fader.value = v; setValue(vol, v, true); fader.title = `${name} level ${v}`;
   };
   dragY(fader, () => level, setLevel, 0.4, {
-    start: (e) => { e.preventDefault(); fader.focus(); showLevel(true); }, end: () => { showLevel(false); buildKnobs(); } });
+    start: (e) => { e.preventDefault(); fader.focus(); }, end: () => buildKnobs() });
   stepKeys(fader, () => level, (v) => {
-    setLevel(v); clearTimeout(fader._t); fader._t = setTimeout(() => { showLevel(false); buildKnobs(); }, 700);
+    setLevel(v); clearTimeout(fader._t); fader._t = setTimeout(buildKnobs, 700);
   }, { wheel: 1 });
   fader.addEventListener('sync', () => { fader.title = `${name} level ${fader.value}`; });
   fader.addEventListener('dblclick', () => { setValue(vol, initValues[vol], true); buildKnobs(); });
@@ -132,7 +132,7 @@ CH.forEach((name, n) => {
   }, 0);
   const dd = miniDial('dist', `${name} distortion send`, () => mix.dist[n], (v) => { mix.dist[n] = v; sendMix(); }, 0);
   const rd = miniDial('ring', `${name} ring mod send`, () => mix.ring[n], (v) => { mix.ring[n] = v; sendMix(); }, 0);
-  sends.append(panD.el, fxd.el, dd.el, rd.el);
+  sends.append(fxd.el, dd.el, rd.el); el.querySelector('.pan').append(panD.el);
   // mute: the player stops triggering this voice and fades out what's ringing; not saved
   const muteB = el.querySelector('.mute');
   muteB.addEventListener('click', () => {
