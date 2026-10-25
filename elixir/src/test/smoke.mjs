@@ -68,7 +68,7 @@ await page.evaluate((p) => { window.__probe = p; }, probe.toString());
 out['initial'] = await page.evaluate(() => (0, eval)('(' + window.__probe + ')')());
 const nb = await loadAll(page, 'builtin', 'builtin');
 // generator: every style and a few beats
-for (let st = 0; st < 6; st++) for (const beat of [0, 7, 15]) {
+for (let st = 0; st < 6; st++) for (const beat of [0, 7, 15, 23, 31]) {
   out[`gen ${st} ${beat}`] = await page.evaluate(([st, beat]) => {
     setStyle(st); setPerf('beat', beat); return (0, eval)('(' + window.__probe + ')')();
   }, [st, beat]);

@@ -66,8 +66,8 @@ let styleIdx = 0; // saved with presets by name; presets from before the styles 
 let userPats = [];
 try { userPats = JSON.parse(localStorage.getItem('elexir-user-patterns') || '[]'); } catch (e) {}
 const storeUserPats = () => { try { localStorage.setItem('elexir-user-patterns', JSON.stringify(userPats)); } catch (e) {} };
-const userSlot = () => Math.min(userPats.length - 1, Math.floor(perf.beat * userPats.length / 16));
-const slotBeat = (i) => Math.ceil(i * 16 / userPats.length);
+const userSlot = () => Math.min(userPats.length - 1, Math.floor(perf.beat * userPats.length / 32));
+const slotBeat = (i) => Math.ceil(i * 32 / userPats.length);
 function userGroove(u) {
   const g = { name: u.name, cond: u.bar, acc: u.acc };
   ROW.forEach((r, t) => {

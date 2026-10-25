@@ -133,7 +133,7 @@ CH.forEach((name, n) => {
   const dd = miniDial('dist', `${name} distortion send`, () => mix.dist[n], (v) => { mix.dist[n] = v; sendMix(); }, 0);
   const rd = miniDial('ring', `${name} ring mod send`, () => mix.ring[n], (v) => { mix.ring[n] = v; sendMix(); }, 0);
   sends.append(fxd.el, dd.el, rd.el); el.querySelector('.pan').append(panD.el);
-  // mute: the player stops triggering this voice and fades out what's ringing; not saved
+  // mute: the sequencer stops playing this voice (pads and MIDI still do); not saved
   const muteB = el.querySelector('.mute');
   muteB.addEventListener('click', () => {
     muted[n] = !muted[n]; muteB.setAttribute('aria-pressed', muted[n]); el.classList.toggle('muted', muted[n]);

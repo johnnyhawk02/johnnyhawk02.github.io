@@ -197,7 +197,7 @@ $('new-kit').addEventListener('click', async () => {
   send({ type: 'kit', values: effValues() });
   buildKnobs(); drawScope();
   randomiseX();
-  perf.beat = Math.floor(rnd() * 16); perf.energy = 45 + Math.floor(rnd() * 46); perf.fills = Math.floor(rnd() * 101);
+  perf.beat = Math.floor(rnd() * 32); perf.energy = 45 + Math.floor(rnd() * 46); perf.fills = Math.floor(rnd() * 101);
   drawUserTools();
   if (view === 'steps') setTab('perform'); else generate();
   setDirty(true);
