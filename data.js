@@ -48,6 +48,15 @@ export const work = [
     cta: "Play it in your browser",
   },
   {
+    kind: "Plugin",
+    title: "Elixir Mobile",
+    year: 2026,
+    blurb: "Elixir on your phone: the same LXR-02 drum engine behind big vertical faders for tempo, beat, energy, rush and sidechain, with a compressor, Elixir's presets and one-tap recording to WAV.",
+    image: "img/elixir-mobile.jpg",
+    link: "https://johnnyhawk02.github.io/elixir-mobile/",
+    cta: "Play it on your phone",
+  },
+  {
     kind: "Website",
     title: "Active Sefton",
     year: 2026,
@@ -73,6 +82,15 @@ export const work = [
     image: "img/wordsteps.jpg",
     link: "https://johnnyhawk02.github.io/wordsteps/parents/",
     cta: "Find out more",
+  },
+  {
+    kind: "App",
+    title: "AAC Symbol Studio",
+    year: 2026,
+    blurb: "Turns a word list into a set of matching flat AAC pictograms with your own OpenAI key: colour-coded borders by word class, style sliders and presets, AI word-list suggestions, and a zip of every symbol.",
+    image: "img/aac-symbol-studio.jpg",
+    link: "https://johnnyhawk02.github.io/aac-symbol-studio/",
+    cta: "Make symbols in your browser",
   },
   {
     kind: "App",
