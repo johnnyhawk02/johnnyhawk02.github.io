@@ -112,6 +112,21 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .pm-list.rec-takes li.group { grid-column: 1 / -1; }
 .rec-takes audio { grid-column: 1 / -1; width: 100%; height: 32px; }
 .rec-takes a.btn { text-decoration: none; padding: 3px 9px; font-size: var(--fs-s); }
+/* snare rush settings: a button above the rush dial opens them */
+.knob[data-k="rush"] { position: relative; }
+.btn.rs-open { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 2px; font-size: var(--fs-xs); line-height: 1.25; padding: 1px 7px;
+  border-radius: 4px; background: var(--tint-2); color: var(--ink); }
+.btn.rs-open:hover { background: var(--ink); color: var(--panel); }
+.rushset { width: min(440px, calc(100vw - 32px)); }
+.rushset[open] { grid-template-rows: auto minmax(0, 1fr) auto; }
+.rs-opts { display: grid; grid-template-columns: auto minmax(0, 1fr) 4.6em; gap: 6px 12px; align-items: center; overflow-y: auto; }
+.rs-opts h3 { grid-column: 1 / -1; margin: 6px 0 0; font-family: var(--display); font-weight: 600; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.rs-opts h3:first-child { margin-top: 0; }
+.rs-opts .rlab { font-size: var(--fs-s); color: var(--ink); }
+.rs-opts input[type=range] { width: 100%; }
+.rs-opts output { font-family: var(--mono); font-size: var(--fs-s); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rs-opts .radios { grid-column: span 2; }
+.rs-opts .radios span { font-size: var(--fs-s); padding: 5px 9px; }
 .pm-head { display: flex; align-items: center; justify-content: space-between; }
 .pm-head h2 { margin: 0; font-family: var(--display); font-size: var(--fs-m); }
 .pm-hint { margin: 0; font-size: var(--fs-s); color: var(--muted); }
@@ -562,6 +577,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .tab-perform .knobs, .tab-perform .pknobs { align-items: stretch; justify-items: stretch; gap: 0; }
 /* pattern and sound share one row of faders, with a rule between them */
 .tab-perform .perform { display: grid; gap: 2px 0; padding: 0; align-self: stretch; }
+/* on a narrow card the mode switch sits right above rush: room for its settings button */
+@media (max-width: 700px) { .tab-perform .pattern-card .perform { padding-top: 12px; } }
 .tab-perform #pk-pattern { grid-column: 1; grid-row: 2; grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .tab-perform #pk-feel { grid-column: 2; grid-row: 2; grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .tab-perform .pgh { grid-column: 3; grid-row: 1; margin: 0; padding: 0 0 0 12px; border: 0; border-left: 1px solid var(--line); }

@@ -43,6 +43,9 @@ class Player {
     // in two bands up to 80, then above 80 a free roll off the grid: a phase that runs at 2 to 16 hits a step and fires a hit at each whole
     // number, so it speeds up smoothly as the fader moves (rushHead: an accent waiting for the next free hit; rushLog: the
     // roll's rate in log2 hits a step, gliding toward the fader's so a move never steps)
+    // rs: its break points and glides, from the rush settings popup (these are the defaults; top: log2 of the free roll's
+    // hits a step at 100, 4 = 256ths; hpTop in Hz, the glides' time constants in ms)
+    this.rs = { start: 75, p32: 80, top: 4, hats: 80, only: 98, kicks: 90, first: 95, hp: 90, hpTop: 1500, rollMs: 40, hpMs: 40 };
     this.rush = 0; this.rushPh = null; this.rushLog = 1; this.rushHead = null; this.rushGap = 0; this.clock = 0; this.snareAt = -1e9;
     // and above 90 a high-pass on the whole mix, before the master compressor: 30 Hz at 90 up to 1.5 kHz at 100
     // (hpLog: its cutoff in log Hz, gliding; hpMix: how much of it is heard, faded in and out so it never clicks;
@@ -72,6 +75,7 @@ class Player {
     else if (m.type === 'kit') this.e.loadKit(m.values);
     else if (m.type === 'trig') { this.e.trigger(m.voice, m.vel, 60); this.gainTo[Math.min(m.voice, 5)] = 1; }
     else if (m.type === 'rush') this.rush = m.v;
+    else if (m.type === 'rushSet') Object.assign(this.rs, m.set);
     else if (m.type === 'mute') m.muted.forEach((v, n) => { this.muted[n] = v ? 1 : 0; });
     else if (m.type === 'xmod') this.e.setCrossMod(m.amt, m.target);
     else if (m.type === 'delay') this.delayPos = m.pos;
@@ -131,7 +135,7 @@ class Player {
     }
     this.sched[s] = hits;
   }
-  // schedule() with the snare rush up: the snare takes the other drums' hits under (rush/98)^2.5, so it comes in slowly
+  // schedule() with the snare rush up (the numbers here are rs's defaults, which move with the rush settings): the snare takes the other drums' hits under (rush/98)^2.5, so it comes in slowly
   // (all of them from 98; the hats, tracks 5 and 6, go faster, under (rush/80)^2.5, all of them from 80), one snare per step, accented if any hit it took was; the kick's off-beat hits go the same way,
   // but its hits on the beat (steps 0, 4, 8, 12) play on below 90; from 90 only the bar's first (step 0) plays, and from 95
   // none do, leaving just the roll.
@@ -139,24 +143,25 @@ class Player {
   // The roll's hits are tagged (roll 2 for a hit on a step the pattern plays, 1 for the rest): above 80 they don't play and
   // the free roll in _render takes over, the first free hit after a roll-2 hit taking its accent and full level
   scheduleRush(s, bar, pg, P, at0, len, hits) {
-    const { on, acc, bar: cond } = P, G = this.groove, R = this.rush, p = Math.pow(Math.min(1, R / 98), 2.5), pHat = Math.pow(Math.min(1, R / 80), 2.5);
-    let snare = R > 75, sAcc = false, orig = false;
+    const { on, acc, bar: cond } = P, G = this.groove, R = this.rush, S = this.rs;
+    const p = Math.pow(Math.min(1, R / S.only), 2.5), pHat = Math.pow(Math.min(1, R / S.hats), 2.5);
+    let snare = R > S.start, sAcc = false, orig = false;
     for (let t = 0; t < 7; t++) {
       if (!on[t][s] || !barOk(cond[t][s], bar)) continue;
       orig = true;
       const down = !t && !(s & 3);
-      if (down && (R >= 95 || (R >= 90 && s))) continue; // the roll covers the step
+      if (down && (R >= S.first || (R >= S.kicks && s))) continue; // the roll covers the step
       if (t === 3 || (!down && rushHash(t, pg, s) < (t >= 5 ? pHat : p))) { snare = true; sAcc = sAcc || !!acc[t][s]; continue; } // a muted drum is still taken
       if (this.muted[Math.min(t, 5)]) continue;
       this.queue.push({ at: Math.max(0, at0 + G.off[t][s] * len), t, acc: !!acc[t][s] });
       hits.push(t);
     }
     if (snare && !this.muted[3]) {
-      const n = R > 77.5 ? 2 : 1, at = at0 + G.off[3][s] * len;
-      const sw = R > 75 ? 0.6 + 0.4 * (R - 75) / 25 : 1;
+      const n = R > (S.start + S.p32) / 2 ? 2 : 1, at = at0 + G.off[3][s] * len;
+      const sw = R > S.start ? 0.6 + 0.4 * (R - S.start) / (100 - S.start) : 1;
       for (let i = 0; i < n; i++) {
         const first = !i && orig;
-        this.queue.push({ at: Math.max(0, at + i * len / n), t: 3, acc: first && sAcc, sw: first ? 1 : sw, roll: R > 75 ? (first ? 2 : 1) : 0 });
+        this.queue.push({ at: Math.max(0, at + i * len / n), t: 3, acc: first && sAcc, sw: first ? 1 : sw, roll: R > S.start ? (first ? 2 : 1) : 0 });
       }
       hits.push(3);
     }
@@ -204,16 +209,17 @@ class Player {
       }
       this.toNext -= 64;
     } else if (this.queue.length) this.queue = [];
-    // the free roll above 80: 2 hits a step (32nds) at 80 up to 16 (256ths) at 100, tempo-relative, each where the phase
+    // the free roll above the 1/32 point (80): 2 hits a step (32nds) there up to 16 (256ths, the top speed) at 100, tempo-relative, each where the phase
     // crosses a whole number; the rate glides toward the fader's in log2 with a 40 ms time constant, and never puts hits
     // closer than 256 samples (4 blocks), so at fast tempos the top speed is held back rather than smeared by the blocks
-    if (this.playing && this.patternOn && this.rush > 80) {
-      const len = LXR.REAL_FS * 60 / this.bpm / 4, target = Math.min(1 + (this.rush - 80) * 3 / 20, Math.log2(len / 256));
+    const S = this.rs;
+    if (this.playing && this.patternOn && this.rush > S.p32) {
+      const len = LXR.REAL_FS * 60 / this.bpm / 4, target = Math.min(1 + (this.rush - S.p32) * (S.top - 1) / (100 - S.p32), Math.log2(len / 256));
       // it starts in step with the 32nd roll it takes over from (the next step starts toNext + 64 samples from this block)
       if (this.rushPh === null) { this.rushLog = target; this.rushPh = (2 * (1 - (this.toNext + 64) / len)) % 1; }
-      else this.rushLog += (target - this.rushLog) * (1 - Math.exp(-64 / (0.04 * LXR.REAL_FS)));
+      else this.rushLog += (target - this.rushLog) * (1 - Math.exp(-64 / (S.rollMs / 1000 * LXR.REAL_FS)));
       const rate = Math.min(Math.pow(2, this.rushLog), len / 256), d = rate * 64 / len;
-      const sw = 0.6 + 0.4 * (this.rush - 75) / 25;
+      const sw = 0.6 + 0.4 * (this.rush - S.start) / (100 - S.start);
       for (let k = Math.floor(this.rushPh) + 1; k <= this.rushPh + d; k++) {
         const h = this.rushHead; this.rushHead = null;
         this.queue.push({ at: (k - this.rushPh) / d * 64, t: 3, acc: !!h && h.acc, sw: h ? 1 : sw, free: true });
@@ -226,7 +232,7 @@ class Player {
       for (const q of this.queue) {
         // a voice muted after its step was booked is skipped too; above 80 the grid roll gives way to the free one, and
         // no snare plays within half a free-roll gap of the last
-        if (q.at < 64 && this.rush > 80 && (q.roll || q.free) && (q.roll || this.clock - this.snareAt < this.rushGap)) { if (q.roll === 2) this.rushHead = q; }
+        if (q.at < 64 && this.rush > S.p32 && (q.roll || q.free) && (q.roll || this.clock - this.snareAt < this.rushGap)) { if (q.roll === 2) this.rushHead = q; }
         else if (q.at < 64) { if (q.t === 3) this.snareAt = this.clock; if (!this.muted[Math.min(q.t, 5)]) { const sw = q.sw || 1; this.e.trigger(q.t, q.acc ? 127 : Math.max(1, Math.round(this.vel * sw)), 60); this.gainTo[Math.min(q.t, 5)] = q.acc ? 1 : this.accGain * sw; } }
         else { q.at -= 64; keep.push(q); }
       }
@@ -290,7 +296,7 @@ class Player {
       if (any || bo.some((v) => v)) for (let i = 0; i < 64; i++) { const g = mk / 32768 * (fd0 + fdd * i); L[i] += bo[2 * i] * g; R[i] += bo[2 * i + 1] * g; }
     }
     for (let i = 0; i < 64; i++) { const g = (fd0 + fdd * i) / 32768; L[i] += fx[2 * i] * g; R[i] += fx[2 * i + 1] * g; }
-    if (this.rush > 90 || this.hpOn) this.highPass(L, R);
+    if (this.rush > S.hp || this.hpOn) this.highPass(L, R);
     if (M.comp) {
       // peak detector in dB, attack/release smoothing, gain = over * (1/ratio - 1) + makeup
       const ca = Math.exp(-1000 / (M.attack * LXR.REAL_FS)), cr = Math.exp(-1000 / (M.release * LXR.REAL_FS));
@@ -325,15 +331,16 @@ class Player {
       this.cntGain = g;
     }
   }
-  // the rush high-pass: a 12 dB/oct state-variable filter (TPT, Q 0.9) on both channels. Its cutoff glides toward
-  // 30 Hz * 50^((rush - 90) / 10) in log Hz with a 40 ms time constant, ramped across each block; it fades in over
-  // about 10 ms when rush goes over 90, and once rush is back at 90 or under and the cutoff has settled at 30 Hz it
+  // the rush high-pass: a 12 dB/oct state-variable filter (TPT, Q 0.9) on both channels. Its cutoff glides in log Hz
+  // from 30 Hz at the filter start (90) to the top cutoff (1.5 kHz) at 100, with a 40 ms time constant (the defaults; set in
+  // the rush settings), ramped across each block; it fades in over about 10 ms when rush goes over the start, and once
+  // rush is back at the start or under and the cutoff has settled at 30 Hz it
   // fades out, then turns off and clears its state
   highPass(L, R) {
-    const FS = LXR.REAL_FS, lo = Math.log(30), up = this.rush > 90;
-    const target = up ? lo + Math.log(50) * Math.min(1, (this.rush - 90) / 10) : lo;
+    const FS = LXR.REAL_FS, rs = this.rs, lo = Math.log(30), up = this.rush > rs.hp;
+    const target = up ? lo + Math.log(rs.hpTop / 30) * Math.min(1, (this.rush - rs.hp) / (100 - rs.hp)) : lo;
     if (!this.hpOn) { this.hpOn = true; this.hpLog = lo; this.hpMix = 0; this.hpS.fill(0); this.hpG = Math.tan(Math.PI * 30 / FS); }
-    this.hpLog += (target - this.hpLog) * (1 - Math.exp(-64 / (0.04 * FS)));
+    this.hpLog += (target - this.hpLog) * (1 - Math.exp(-64 / (rs.hpMs / 1000 * FS)));
     if (!up && this.hpLog - lo < 0.01) this.hpLog = lo;
     const g0 = this.hpG, g1 = Math.tan(Math.PI * Math.exp(this.hpLog) / FS), k = 1 / 0.9, S = this.hpS;
     const m0 = this.hpMix, m1 = up || this.hpLog > lo ? Math.min(1, m0 + 0.15) : Math.max(0, m0 - 0.15);

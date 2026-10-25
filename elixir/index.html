@@ -119,6 +119,21 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .pm-list.rec-takes li.group { grid-column: 1 / -1; }
 .rec-takes audio { grid-column: 1 / -1; width: 100%; height: 32px; }
 .rec-takes a.btn { text-decoration: none; padding: 3px 9px; font-size: var(--fs-s); }
+/* snare rush settings: a button above the rush dial opens them */
+.knob[data-k="rush"] { position: relative; }
+.btn.rs-open { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 2px; font-size: var(--fs-xs); line-height: 1.25; padding: 1px 7px;
+  border-radius: 4px; background: var(--tint-2); color: var(--ink); }
+.btn.rs-open:hover { background: var(--ink); color: var(--panel); }
+.rushset { width: min(440px, calc(100vw - 32px)); }
+.rushset[open] { grid-template-rows: auto minmax(0, 1fr) auto; }
+.rs-opts { display: grid; grid-template-columns: auto minmax(0, 1fr) 4.6em; gap: 6px 12px; align-items: center; overflow-y: auto; }
+.rs-opts h3 { grid-column: 1 / -1; margin: 6px 0 0; font-family: var(--display); font-weight: 600; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.rs-opts h3:first-child { margin-top: 0; }
+.rs-opts .rlab { font-size: var(--fs-s); color: var(--ink); }
+.rs-opts input[type=range] { width: 100%; }
+.rs-opts output { font-family: var(--mono); font-size: var(--fs-s); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rs-opts .radios { grid-column: span 2; }
+.rs-opts .radios span { font-size: var(--fs-s); padding: 5px 9px; }
 .pm-head { display: flex; align-items: center; justify-content: space-between; }
 .pm-head h2 { margin: 0; font-family: var(--display); font-size: var(--fs-m); }
 .pm-hint { margin: 0; font-size: var(--fs-s); color: var(--muted); }
@@ -569,6 +584,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .tab-perform .knobs, .tab-perform .pknobs { align-items: stretch; justify-items: stretch; gap: 0; }
 /* pattern and sound share one row of faders, with a rule between them */
 .tab-perform .perform { display: grid; gap: 2px 0; padding: 0; align-self: stretch; }
+/* on a narrow card the mode switch sits right above rush: room for its settings button */
+@media (max-width: 700px) { .tab-perform .pattern-card .perform { padding-top: 12px; } }
 .tab-perform #pk-pattern { grid-column: 1; grid-row: 2; grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .tab-perform #pk-feel { grid-column: 2; grid-row: 2; grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .tab-perform .pgh { grid-column: 3; grid-row: 1; margin: 0; padding: 0 0 0 12px; border: 0; border-left: 1px solid var(--line); }
@@ -937,7 +954,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
       <p class="note">The master section sits after everything, in two cards, each with a power button: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits (tick fx to duck the echo, distortion and ring mod returns as well, so their tails pump with drum 1), and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the needle meters show how far each is pulling down, in dB.</p>
       <p class="note">The red circle by play opens the recorder: pick free (records until you press stop, up to ten minutes) or a loop of 1 to 16 bars, which starts on the next bar (starting playback from bar 1 if it is stopped) and is cut to exactly that many bars at the tempo, with the echo carried in from before so it loops cleanly. Tick count-in for a bar of beeps first (a high beep then three lower boops, with the music turned down; from bar 1 if stopped), and the take starts on the bar after it. Pressing record closes the recorder; the red circle by play blinks while it waits or counts and pulses while it records. Choose 44.1 or 48 kHz, 16-bit (dithered) or 24-bit, and normalise (peak at −0.3 dB). Each take is listed with a player and a save .wav button; takes are kept until you reload the page.</p>
       <p class="note">The sound knobs on the pattern card are performance macros over all six voices at once: fm depth (the drums' FM amount and the cymbal and hat FM), decay (every amp decay), pitch (every voice's coarse tune, up to two octaves either way) and filter (every filter's cutoff). Each sits in the middle as the kit is; turning it pushes every voice's own value towards the top or the bottom, so the kit's differences stay. They change what the engine plays, not the kit: the sound tab still shows the kit's own values, and double-click sets a macro back to the middle. They are saved with presets.</p>
-      <p class="note">Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of thirty-two grooves in the pattern's style, and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. Rush hands the other drums' hits to the snare as it goes up, slowly at first and more as it rises (the hats go faster and are gone by 80%; from 98% only the snare plays); the kick's downbeats keep going up to 90%, then only the first kick of each bar plays, and from 95% none. Above 75% it also rolls the snare on every step alongside the drums still playing, doubling to 32nds at 77.5%; above 80% the roll comes off the grid and speeds up smoothly as the dial moves, gliding from 32nds at 80% to 256ths at 100% (at fast tempos it tops out at about 170 hits a second), the roll swelling louder as it rises. Above 90% a high-pass filter comes in on the whole mix, its cutoff rising from 30 Hz at 90% to 1.5 kHz at 100% so the low end drains away into the build; it isn't saved with presets. The arrows by the pattern card's title switch the style: electro (the original five grooves plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), techno (four on the floor, off-beat open hats, snare builds), broken beat (syncopated kicks under a snare on 2 and 4, fills in threes), IDM (lopsided kicks, hats in threes, a second bar that answers the first, stutter fills), breakcore (chopped amen breaks, ghost snares, stuttering snare rolls, a second bar that re-cuts the first) and user (patterns you save from the steps tab with Save as user; beat picks one, energy thins it out, fills adds electro fills; Save over and Delete change the one beat has picked). Presets save the style, and a preset in user style carries its pattern with it. Off on the pattern card's switch turns the patterns off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge).</p>
+      <p class="note">Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of thirty-two grooves in the pattern's style, and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. Rush hands the other drums' hits to the snare as it goes up, slowly at first and more as it rises (the hats go faster and are gone by 80%; from 98% only the snare plays); the kick's downbeats keep going up to 90%, then only the first kick of each bar plays, and from 95% none. Above 75% it also rolls the snare on every step alongside the drums still playing, doubling to 32nds at 77.5%; above 80% the roll comes off the grid and speeds up smoothly as the dial moves, gliding from 32nds at 80% to 256ths at 100% (at fast tempos it tops out at about 170 hits a second), the roll swelling louder as it rises. Above 90% a high-pass filter comes in on the whole mix, its cutoff rising from 30 Hz at 90% to 1.5 kHz at 100% so the low end drains away into the build; it isn't saved with presets. The small set button above rush opens its settings, with these numbers as the defaults: where the roll starts, the 1/32 point where the free roll begins (the 32nd band starts halfway between the two), its top speed at 100% (1/64, 1/128 or 1/256), when the hats are gone, when only the snare is left, how long all four beat kicks and then only the first keep going, where the filter starts and its top cutoff, and how quickly the roll's speed and the filter glide after the dial (0 to 500 ms). The curves keep their shape and stretch to the new points; reset puts them back. They're kept in this browser, not in presets. The arrows by the pattern card's title switch the style: electro (the original five grooves plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), techno (four on the floor, off-beat open hats, snare builds), broken beat (syncopated kicks under a snare on 2 and 4, fills in threes), IDM (lopsided kicks, hats in threes, a second bar that answers the first, stutter fills), breakcore (chopped amen breaks, ghost snares, stuttering snare rolls, a second bar that re-cuts the first) and user (patterns you save from the steps tab with Save as user; beat picks one, energy thins it out, fills adds electro fills; Save over and Delete change the one beat has picked). Presets save the style, and a preset in user style carries its pattern with it. Off on the pattern card's switch turns the patterns off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge).</p>
       <p class="note">The steps tab has its own grid of up to eight pages (bars) of 16 steps, played in turn: the page buttons pick the page to edit (one past the length adds pages, copied from the last), length sets how many play, and expand to 2, 4 or 8 bakes the trig conditions into that many pages, each step landing on the bars its condition plays, with the conditions cleared. User patterns and presets keep all the pages. The grid is separate from the perform tab's generated pattern. The perform / steps / off switch (on the pattern card and on the steps tab) picks which one plays, or neither: off hands the voices to MIDI in. Grab from perform copies the perform tab's pattern into the grid (only when pressed). Presets save both patterns and the switch.</p>
       <p class="note">Drag a slider up or down, click along it, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit.</p>
       <p class="note">Randomise (sound tab) varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. In the mixer, r by each name gives that voice a random sound from the bundled kits, varied by 10%, and a varies the voice's current sound by 10%; undo takes either back. The randomise card on the perform tab: kit gives each of the six drum voices a sound straight from a random bundled kit, and alter makes small variations of the current drum sounds (5%, so each stays recognisable); both leave the mixer, FX, crossfeed and pattern alone. Press R to randomise the selected voice; Shift-R randomises every voice at once, up to the depth. Everything builds a fresh sound from voices of the bundled kits (Hrtl's LXR-02 kits and twelve generated ones, which aren't listed as presets), varies each by 10%, and rolls new crossfeed, delay time, echo feedback (usually low, now and then high), beat, energy and fills, keeping the mixer levels; save keeps it.</p>
@@ -988,6 +1005,12 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   <p class="pm-hint" id="rec-hint"></p>
   <div class="rec-go"><button class="btn rec-go-btn" id="rec-go" type="button"><i></i><span>record</span></button><span class="rec-status" id="rec-status" aria-live="polite"></span></div>
   <ul class="pm-list rec-takes" id="rec-takes"></ul>
+</dialog>
+
+<dialog class="pm rushset" id="rush-set" aria-labelledby="rush-set-title">
+  <div class="pm-head"><h2 id="rush-set-title">rush settings</h2><button class="btn ghost" id="rush-set-close" type="button" aria-label="Close">close</button></div>
+  <div class="rs-opts" id="rs-opts"></div>
+  <div class="pm-foot"><button class="btn" id="rs-reset" type="button">reset</button><span class="pm-hint">Kept in this browser, not in presets.</span></div>
 </dialog>
 
 <dialog class="pm" id="pm" aria-labelledby="pm-title">
@@ -4541,6 +4564,9 @@ class Player {
     // in two bands up to 80, then above 80 a free roll off the grid: a phase that runs at 2 to 16 hits a step and fires a hit at each whole
     // number, so it speeds up smoothly as the fader moves (rushHead: an accent waiting for the next free hit; rushLog: the
     // roll's rate in log2 hits a step, gliding toward the fader's so a move never steps)
+    // rs: its break points and glides, from the rush settings popup (these are the defaults; top: log2 of the free roll's
+    // hits a step at 100, 4 = 256ths; hpTop in Hz, the glides' time constants in ms)
+    this.rs = { start: 75, p32: 80, top: 4, hats: 80, only: 98, kicks: 90, first: 95, hp: 90, hpTop: 1500, rollMs: 40, hpMs: 40 };
     this.rush = 0; this.rushPh = null; this.rushLog = 1; this.rushHead = null; this.rushGap = 0; this.clock = 0; this.snareAt = -1e9;
     // and above 90 a high-pass on the whole mix, before the master compressor: 30 Hz at 90 up to 1.5 kHz at 100
     // (hpLog: its cutoff in log Hz, gliding; hpMix: how much of it is heard, faded in and out so it never clicks;
@@ -4570,6 +4596,7 @@ class Player {
     else if (m.type === 'kit') this.e.loadKit(m.values);
     else if (m.type === 'trig') { this.e.trigger(m.voice, m.vel, 60); this.gainTo[Math.min(m.voice, 5)] = 1; }
     else if (m.type === 'rush') this.rush = m.v;
+    else if (m.type === 'rushSet') Object.assign(this.rs, m.set);
     else if (m.type === 'mute') m.muted.forEach((v, n) => { this.muted[n] = v ? 1 : 0; });
     else if (m.type === 'xmod') this.e.setCrossMod(m.amt, m.target);
     else if (m.type === 'delay') this.delayPos = m.pos;
@@ -4629,7 +4656,7 @@ class Player {
     }
     this.sched[s] = hits;
   }
-  // schedule() with the snare rush up: the snare takes the other drums' hits under (rush/98)^2.5, so it comes in slowly
+  // schedule() with the snare rush up (the numbers here are rs's defaults, which move with the rush settings): the snare takes the other drums' hits under (rush/98)^2.5, so it comes in slowly
   // (all of them from 98; the hats, tracks 5 and 6, go faster, under (rush/80)^2.5, all of them from 80), one snare per step, accented if any hit it took was; the kick's off-beat hits go the same way,
   // but its hits on the beat (steps 0, 4, 8, 12) play on below 90; from 90 only the bar's first (step 0) plays, and from 95
   // none do, leaving just the roll.
@@ -4637,24 +4664,25 @@ class Player {
   // The roll's hits are tagged (roll 2 for a hit on a step the pattern plays, 1 for the rest): above 80 they don't play and
   // the free roll in _render takes over, the first free hit after a roll-2 hit taking its accent and full level
   scheduleRush(s, bar, pg, P, at0, len, hits) {
-    const { on, acc, bar: cond } = P, G = this.groove, R = this.rush, p = Math.pow(Math.min(1, R / 98), 2.5), pHat = Math.pow(Math.min(1, R / 80), 2.5);
-    let snare = R > 75, sAcc = false, orig = false;
+    const { on, acc, bar: cond } = P, G = this.groove, R = this.rush, S = this.rs;
+    const p = Math.pow(Math.min(1, R / S.only), 2.5), pHat = Math.pow(Math.min(1, R / S.hats), 2.5);
+    let snare = R > S.start, sAcc = false, orig = false;
     for (let t = 0; t < 7; t++) {
       if (!on[t][s] || !barOk(cond[t][s], bar)) continue;
       orig = true;
       const down = !t && !(s & 3);
-      if (down && (R >= 95 || (R >= 90 && s))) continue; // the roll covers the step
+      if (down && (R >= S.first || (R >= S.kicks && s))) continue; // the roll covers the step
       if (t === 3 || (!down && rushHash(t, pg, s) < (t >= 5 ? pHat : p))) { snare = true; sAcc = sAcc || !!acc[t][s]; continue; } // a muted drum is still taken
       if (this.muted[Math.min(t, 5)]) continue;
       this.queue.push({ at: Math.max(0, at0 + G.off[t][s] * len), t, acc: !!acc[t][s] });
       hits.push(t);
     }
     if (snare && !this.muted[3]) {
-      const n = R > 77.5 ? 2 : 1, at = at0 + G.off[3][s] * len;
-      const sw = R > 75 ? 0.6 + 0.4 * (R - 75) / 25 : 1;
+      const n = R > (S.start + S.p32) / 2 ? 2 : 1, at = at0 + G.off[3][s] * len;
+      const sw = R > S.start ? 0.6 + 0.4 * (R - S.start) / (100 - S.start) : 1;
       for (let i = 0; i < n; i++) {
         const first = !i && orig;
-        this.queue.push({ at: Math.max(0, at + i * len / n), t: 3, acc: first && sAcc, sw: first ? 1 : sw, roll: R > 75 ? (first ? 2 : 1) : 0 });
+        this.queue.push({ at: Math.max(0, at + i * len / n), t: 3, acc: first && sAcc, sw: first ? 1 : sw, roll: R > S.start ? (first ? 2 : 1) : 0 });
       }
       hits.push(3);
     }
@@ -4702,16 +4730,17 @@ class Player {
       }
       this.toNext -= 64;
     } else if (this.queue.length) this.queue = [];
-    // the free roll above 80: 2 hits a step (32nds) at 80 up to 16 (256ths) at 100, tempo-relative, each where the phase
+    // the free roll above the 1/32 point (80): 2 hits a step (32nds) there up to 16 (256ths, the top speed) at 100, tempo-relative, each where the phase
     // crosses a whole number; the rate glides toward the fader's in log2 with a 40 ms time constant, and never puts hits
     // closer than 256 samples (4 blocks), so at fast tempos the top speed is held back rather than smeared by the blocks
-    if (this.playing && this.patternOn && this.rush > 80) {
-      const len = LXR.REAL_FS * 60 / this.bpm / 4, target = Math.min(1 + (this.rush - 80) * 3 / 20, Math.log2(len / 256));
+    const S = this.rs;
+    if (this.playing && this.patternOn && this.rush > S.p32) {
+      const len = LXR.REAL_FS * 60 / this.bpm / 4, target = Math.min(1 + (this.rush - S.p32) * (S.top - 1) / (100 - S.p32), Math.log2(len / 256));
       // it starts in step with the 32nd roll it takes over from (the next step starts toNext + 64 samples from this block)
       if (this.rushPh === null) { this.rushLog = target; this.rushPh = (2 * (1 - (this.toNext + 64) / len)) % 1; }
-      else this.rushLog += (target - this.rushLog) * (1 - Math.exp(-64 / (0.04 * LXR.REAL_FS)));
+      else this.rushLog += (target - this.rushLog) * (1 - Math.exp(-64 / (S.rollMs / 1000 * LXR.REAL_FS)));
       const rate = Math.min(Math.pow(2, this.rushLog), len / 256), d = rate * 64 / len;
-      const sw = 0.6 + 0.4 * (this.rush - 75) / 25;
+      const sw = 0.6 + 0.4 * (this.rush - S.start) / (100 - S.start);
       for (let k = Math.floor(this.rushPh) + 1; k <= this.rushPh + d; k++) {
         const h = this.rushHead; this.rushHead = null;
         this.queue.push({ at: (k - this.rushPh) / d * 64, t: 3, acc: !!h && h.acc, sw: h ? 1 : sw, free: true });
@@ -4724,7 +4753,7 @@ class Player {
       for (const q of this.queue) {
         // a voice muted after its step was booked is skipped too; above 80 the grid roll gives way to the free one, and
         // no snare plays within half a free-roll gap of the last
-        if (q.at < 64 && this.rush > 80 && (q.roll || q.free) && (q.roll || this.clock - this.snareAt < this.rushGap)) { if (q.roll === 2) this.rushHead = q; }
+        if (q.at < 64 && this.rush > S.p32 && (q.roll || q.free) && (q.roll || this.clock - this.snareAt < this.rushGap)) { if (q.roll === 2) this.rushHead = q; }
         else if (q.at < 64) { if (q.t === 3) this.snareAt = this.clock; if (!this.muted[Math.min(q.t, 5)]) { const sw = q.sw || 1; this.e.trigger(q.t, q.acc ? 127 : Math.max(1, Math.round(this.vel * sw)), 60); this.gainTo[Math.min(q.t, 5)] = q.acc ? 1 : this.accGain * sw; } }
         else { q.at -= 64; keep.push(q); }
       }
@@ -4788,7 +4817,7 @@ class Player {
       if (any || bo.some((v) => v)) for (let i = 0; i < 64; i++) { const g = mk / 32768 * (fd0 + fdd * i); L[i] += bo[2 * i] * g; R[i] += bo[2 * i + 1] * g; }
     }
     for (let i = 0; i < 64; i++) { const g = (fd0 + fdd * i) / 32768; L[i] += fx[2 * i] * g; R[i] += fx[2 * i + 1] * g; }
-    if (this.rush > 90 || this.hpOn) this.highPass(L, R);
+    if (this.rush > S.hp || this.hpOn) this.highPass(L, R);
     if (M.comp) {
       // peak detector in dB, attack/release smoothing, gain = over * (1/ratio - 1) + makeup
       const ca = Math.exp(-1000 / (M.attack * LXR.REAL_FS)), cr = Math.exp(-1000 / (M.release * LXR.REAL_FS));
@@ -4823,15 +4852,16 @@ class Player {
       this.cntGain = g;
     }
   }
-  // the rush high-pass: a 12 dB/oct state-variable filter (TPT, Q 0.9) on both channels. Its cutoff glides toward
-  // 30 Hz * 50^((rush - 90) / 10) in log Hz with a 40 ms time constant, ramped across each block; it fades in over
-  // about 10 ms when rush goes over 90, and once rush is back at 90 or under and the cutoff has settled at 30 Hz it
+  // the rush high-pass: a 12 dB/oct state-variable filter (TPT, Q 0.9) on both channels. Its cutoff glides in log Hz
+  // from 30 Hz at the filter start (90) to the top cutoff (1.5 kHz) at 100, with a 40 ms time constant (the defaults; set in
+  // the rush settings), ramped across each block; it fades in over about 10 ms when rush goes over the start, and once
+  // rush is back at the start or under and the cutoff has settled at 30 Hz it
   // fades out, then turns off and clears its state
   highPass(L, R) {
-    const FS = LXR.REAL_FS, lo = Math.log(30), up = this.rush > 90;
-    const target = up ? lo + Math.log(50) * Math.min(1, (this.rush - 90) / 10) : lo;
+    const FS = LXR.REAL_FS, rs = this.rs, lo = Math.log(30), up = this.rush > rs.hp;
+    const target = up ? lo + Math.log(rs.hpTop / 30) * Math.min(1, (this.rush - rs.hp) / (100 - rs.hp)) : lo;
     if (!this.hpOn) { this.hpOn = true; this.hpLog = lo; this.hpMix = 0; this.hpS.fill(0); this.hpG = Math.tan(Math.PI * 30 / FS); }
-    this.hpLog += (target - this.hpLog) * (1 - Math.exp(-64 / (0.04 * FS)));
+    this.hpLog += (target - this.hpLog) * (1 - Math.exp(-64 / (rs.hpMs / 1000 * FS)));
     if (!up && this.hpLog - lo < 0.01) this.hpLog = lo;
     const g0 = this.hpG, g1 = Math.tan(Math.PI * Math.exp(this.hpLog) / FS), k = 1 / 0.9, S = this.hpS;
     const m0 = this.hpMix, m1 = up || this.hpLog > lo ? Math.min(1, m0 + 0.15) : Math.max(0, m0 - 0.15);
@@ -6733,6 +6763,67 @@ $('pk-macro').append(...macroKnobs);
 function drawMacros() { macroKnobs.forEach((k) => k.draw()); }
 drawGroove();
 
+// ---- snare rush settings: the rush's break points and glides, in a popup opened from the button above the dial ----
+// Kept in this browser (not in presets); the defaults are the player's own (Player.rs)
+const RUSH_DFLT = { start: 75, p32: 80, top: 4, hats: 80, only: 98, kicks: 90, first: 95, hp: 90, hpTop: 1500, rollMs: 40, hpMs: 40 };
+const rushSet = { ...RUSH_DFLT };
+try { Object.assign(rushSet, JSON.parse(localStorage.getItem('elexir-rush') || '{}')); } catch (e) { /* defaults */ }
+const saveRushSet = () => { try { localStorage.setItem('elexir-rush', JSON.stringify(rushSet)); } catch (e) { /* not kept */ } };
+// straight to the player, not held for the bar like a preset
+function sendRushSet() {
+  const m = { type: 'rushSet', set: { ...rushSet } };
+  if (node) node.port.postMessage(m); else if (fallback) fallback.msg(m); else pending.push(m);
+}
+// [key, label, min, max, step, readout]; the clamps keep the break points in order
+const pct = (v) => `${v}%`, ms = (v) => `${v} ms`;
+const RUSH_ROWS = [
+  ['roll'],
+  ['start', 'roll starts (16ths)', 0, 98, 1, pct],
+  ['p32', '1/32 point, free roll from', 1, 99, 1, pct],
+  ['top', 'top speed at 100%'],
+  ['rollMs', 'roll glide', 0, 500, 5, ms],
+  ['drums'],
+  ['hats', 'hats gone by', 1, 100, 1, pct],
+  ['only', 'only snare from', 1, 100, 1, pct],
+  ['kicks', 'all four beat kicks until', 0, 100, 1, pct],
+  ['first', 'first kick only until', 0, 100, 1, pct],
+  ['filter'],
+  ['hp', 'filter starts', 0, 99, 1, pct],
+  ['hpTop', 'filter top cutoff', 300, 5000, 50, (v) => (v < 1000 ? `${v} Hz` : `${+(v / 1000).toFixed(2)} kHz`)],
+  ['hpMs', 'filter glide', 0, 500, 5, ms],
+];
+const rushClamp = { start: (v) => Math.min(v, rushSet.p32 - 1), p32: (v) => Math.max(v, rushSet.start + 1),
+  kicks: (v) => Math.min(v, rushSet.first), first: (v) => Math.max(v, rushSet.kicks) };
+const rushDraws = [];
+for (const [k, label, min, max, step, show] of RUSH_ROWS) {
+  const box = $('rs-opts');
+  if (!label) { box.insertAdjacentHTML('beforeend', `<h3>${k}</h3>`); continue; }
+  const lab = document.createElement('label'); lab.className = 'rlab'; lab.textContent = label; lab.htmlFor = 'rs-' + k;
+  box.append(lab);
+  if (k === 'top') {
+    const r = document.createElement('div'); r.className = 'radios'; r.id = 'rs-' + k; box.append(r);
+    const draw = () => radios(r, 'rs-top', ['1/64', '1/128', '1/256'], () => rushSet.top - 2, (i) => { rushSet.top = i + 2; saveRushSet(); sendRushSet(); });
+    draw(); rushDraws.push(draw); continue;
+  }
+  const inp = document.createElement('input'), out = document.createElement('output');
+  Object.assign(inp, { type: 'range', id: 'rs-' + k, min, max, step });
+  box.append(inp, out);
+  const draw = () => { inp.value = rushSet[k]; out.textContent = show(rushSet[k]); };
+  inp.addEventListener('input', () => {
+    const v = rushClamp[k] ? rushClamp[k](Number(inp.value)) : Number(inp.value);
+    rushSet[k] = v; draw(); saveRushSet(); sendRushSet();
+  });
+  draw(); rushDraws.push(draw);
+}
+sendRushSet();
+const rushDlg = $('rush-set'), rushBtn = document.createElement('button');
+Object.assign(rushBtn, { type: 'button', className: 'btn ghost rs-open', textContent: 'set', title: 'Snare rush settings: break points and glides' });
+rushBtn.setAttribute('aria-haspopup', 'dialog');
+$('pk-pattern').querySelector('[data-k="rush"]').append(rushBtn);
+rushBtn.addEventListener('click', () => { rushDraws.forEach((d) => d()); rushDlg.showModal(); });
+$('rush-set-close').addEventListener('click', () => rushDlg.close());
+rushDlg.addEventListener('click', (e) => { if (e.target === rushDlg) rushDlg.close(); });
+$('rs-reset').addEventListener('click', () => { Object.assign(rushSet, RUSH_DFLT); rushDraws.forEach((d) => d()); saveRushSet(); sendRushSet(); });
 // ---- Faderfox PC4: 24 knobs (CC 1-24, four rows of six), each can drive one perform control ----
 const PC4_CTRL = [
   { id: 'energy', label: 'energy', perf: 'energy' },
