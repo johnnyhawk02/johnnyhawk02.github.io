@@ -12,6 +12,7 @@ const PC4_CTRL = [
   { id: 'decay', label: 'decay', macro: 'decay', min: 0, max: 200 },
   { id: 'pitch', label: 'pitch', macro: 'pitch', min: 0, max: 48 },
   { id: 'filter', label: 'filter', macro: 'filter', min: 0, max: 200 },
+  { id: 'rush', label: 'snare rush', perf: 'rush' },
 ];
 const PC4_DEFAULT = [...PC4_CTRL.map((c) => c.id), ...Array(24 - PC4_CTRL.length).fill(null)]; // knob n = CC n
 const pc4Ctrl = (id) => PC4_CTRL.find((c) => c.id === id);

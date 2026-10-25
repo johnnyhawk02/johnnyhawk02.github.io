@@ -8,7 +8,7 @@ function perfKnob(k, label, opts = {}) {
   return kn;
 }
 $('pk-pattern').append(perfKnob('energy', 'energy', { short: true }), perfKnob('beat', 'beat', { short: true }),
-  perfKnob('fills', 'fills', { short: true }), perfKnob('tempo', 'tempo'));
+  perfKnob('fills', 'fills', { short: true }), perfKnob('rush', 'rush'), perfKnob('tempo', 'tempo'));
 $('pk-feel').append(perfKnob('vel', 'velocity'), perfKnob('accent', 'accent'), perfKnob('groove', 'groove'), perfKnob('depth', 'depth'));
 // the header's tempo field
 $('tempo').addEventListener('change', () => setPerf('tempo', clampTempo(Math.round(Number($('tempo').value)) || perf.tempo)));

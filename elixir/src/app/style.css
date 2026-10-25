@@ -562,7 +562,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .tab-perform .knobs, .tab-perform .pknobs { align-items: stretch; justify-items: stretch; gap: 0; }
 /* pattern and sound share one row of faders, with a rule between them */
 .tab-perform .perform { display: grid; gap: 2px 0; padding: 0; align-self: stretch; }
-.tab-perform #pk-pattern { grid-column: 1; grid-row: 2; }
+.tab-perform #pk-pattern { grid-column: 1; grid-row: 2; grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .tab-perform #pk-feel { grid-column: 2; grid-row: 2; grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .tab-perform .pgh { grid-column: 3; grid-row: 1; margin: 0; padding: 0 0 0 12px; border: 0; border-left: 1px solid var(--line); }
 .tab-perform #pk-macro { grid-column: 3; grid-row: 2; border-left: 1px solid var(--line); padding-left: 8px; }
@@ -714,7 +714,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 }
 /* pattern and sound sit side by side in their own cards; the pattern card's title is its style, between two arrows */
 .tab-perform > .bay-a { grid-column: 1; grid-row: auto; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px; min-width: 0; min-height: 0; }
-.tab-perform .perform { grid-template-columns: 4fr 3fr; grid-template-rows: minmax(0, 1fr); }
+.tab-perform .perform { grid-template-columns: 5fr 4fr; grid-template-rows: minmax(0, 1fr); }
 .tab-perform #pk-pattern, .tab-perform #pk-feel, .tab-perform .perform > :first-child { grid-row: 1; }
 .tab-perform .sound-card #pk-macro { grid-column: 1; grid-row: 2; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 0; padding: 0; margin: 0; min-height: 0; }
 .tab-perform .pattern-card .pc-head, .tab-perform .sound-card > h2 { min-height: 24px; }

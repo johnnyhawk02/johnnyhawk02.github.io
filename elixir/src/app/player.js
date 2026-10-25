@@ -11,6 +11,13 @@ function barOk(b, bar) {
 // the tempo-synced delay: 1/128 of a bar at 0, a whole bar at 1, evenly in octaves between
 const delaySamples = (pos, bpm) => 240 / bpm * Math.pow(2, -7 * (1 - pos)) * LXR.REAL_FS;
 const RING_MAKEUP = 3;
+// snare rush: a fixed hash of (track, page, step) in 0..1; a hit whose hash is under the rush amount goes to the snare,
+// so the hits it takes stay put and more join as it goes up
+function rushHash(t, pg, s) {
+  let h = Math.imul(t * 131 + pg * 17 + s + 1, 0x9e3779b1);
+  h ^= h >>> 15; h = Math.imul(h, 0x85ebca77); h ^= h >>> 13;
+  return (h >>> 0) / 4294967296;
+}
 class Player {
   constructor(outRate) {
     this.e = new LXR.LxrEngine();
@@ -32,6 +39,8 @@ class Player {
     this.fxGain = new Float32Array(6); this.fxAmt = new Float32Array(6).fill(1);
     // mixer mute: the sequencer skips a muted voice's steps; pads, MIDI and anything still ringing play on
     this.muted = new Uint8Array(6);
+    // snare rush 0..100: up to 75 the other tracks' hits go to the snare, above it a snare roll that doubles in four bands
+    this.rush = 0;
     // master: drum 1 ducks the other voices (before the FX bus), then a compressor
     // on the whole mix, the same design as the LXR-02's FX compressor
     this.master = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150, duckFx: false, duckOn: true };
@@ -55,6 +64,7 @@ class Player {
     if (m.type === 'param') this.e.setParam(m.par, m.value);
     else if (m.type === 'kit') this.e.loadKit(m.values);
     else if (m.type === 'trig') { this.e.trigger(m.voice, m.vel, 60); this.gainTo[Math.min(m.voice, 5)] = 1; }
+    else if (m.type === 'rush') this.rush = m.v;
     else if (m.type === 'mute') m.muted.forEach((v, n) => { this.muted[n] = v ? 1 : 0; });
     else if (m.type === 'xmod') this.e.setCrossMod(m.amt, m.target);
     else if (m.type === 'delay') this.delayPos = m.pos;
@@ -102,13 +112,34 @@ class Player {
   }
   // the hits of step s, each due `at` samples from now: the grid time of the step moved by the groove
   schedule(s, bar, at0) {
-    const P = this.pattern.pages ? this.pattern.pages[bar % this.pattern.pages.length] : this.pattern; // pages: one bar each, in turn
+    const pg = this.pattern.pages ? bar % this.pattern.pages.length : 0;
+    const P = this.pattern.pages ? this.pattern.pages[pg] : this.pattern; // pages: one bar each, in turn
     const hits = [], { on, acc, bar: cond } = P, G = this.groove, len = LXR.REAL_FS * 60 / this.bpm / 4;
+    if (this.rush && this.patternOn) { this.scheduleRush(s, bar, pg, P, at0, len, hits); return; }
     for (let t = 0; t < 7 && this.patternOn; t++) {
       if (!on[t][s] || !barOk(cond[t][s], bar) || this.muted[Math.min(t, 5)]) continue;
       const off = G.off[t][s];
       this.queue.push({ at: Math.max(0, at0 + off * len), t, acc: !!acc[t][s] });
       hits.push(t);
+    }
+    this.sched[s] = hits;
+  }
+  // schedule() with the snare rush up: the snare takes the hits under the rush amount (all of them at 75), one snare
+  // per step, accented if any hit it took was; above 75 it plays every step, 1, 2, 4 or 8 times (16ths to 128ths)
+  scheduleRush(s, bar, pg, P, at0, len, hits) {
+    const { on, acc, bar: cond } = P, G = this.groove, R = this.rush, p = Math.min(1, R / 75);
+    let snare = R > 75, sAcc = false;
+    for (let t = 0; t < 7; t++) {
+      if (!on[t][s] || !barOk(cond[t][s], bar)) continue;
+      if (t === 3 || rushHash(t, pg, s) < p) { snare = true; sAcc = sAcc || !!acc[t][s]; continue; } // a muted drum is still taken
+      if (this.muted[Math.min(t, 5)]) continue;
+      this.queue.push({ at: Math.max(0, at0 + G.off[t][s] * len), t, acc: !!acc[t][s] });
+      hits.push(t);
+    }
+    if (snare && !this.muted[3]) {
+      const n = R > 93.75 ? 8 : R > 87.5 ? 4 : R > 81.25 ? 2 : 1, at = at0 + G.off[3][s] * len;
+      for (let i = 0; i < n; i++) this.queue.push({ at: Math.max(0, at + i * len / n), t: 3, acc: !i && sAcc });
+      hits.push(3);
     }
     this.sched[s] = hits;
   }
