@@ -65,9 +65,6 @@ input[type=range]::-webkit-slider-runnable-track { height: 3px; border-radius: 2
 input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 13px; height: 13px; border-radius: 50%; background: var(--ink); margin-top: -5px; border: 0; }
 input[type=range]::-moz-range-track { height: 3px; border-radius: 2px; background: var(--line); }
 input[type=range]::-moz-range-thumb { width: 13px; height: 13px; border-radius: 50%; background: var(--ink); border: 0; }
-.strip .fader::-webkit-slider-runnable-track { width: 3px; height: auto; }
-.strip .fader::-webkit-slider-thumb { width: 22px; height: 10px; border-radius: 3px; margin-top: 0; margin-left: -9.5px; }
-.strip .fader::-moz-range-thumb { width: 22px; height: 10px; border-radius: 3px; }
 .field input[type=range] { width: 90px; }
 input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; margin: 0; }
 
@@ -259,9 +256,15 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .mchk input { width: 12px; height: 12px; }
 #comp-knobs { grid-template-columns: repeat(5, minmax(46px, var(--kw))) auto; gap: 0; }
 #duck-knobs { grid-template-columns: repeat(2, minmax(46px, var(--kw))) auto; gap: 0; }
-/* level meters: a recessed column of small LEDs beside each mixer fader (green, then yellow from -12 dB,
-   red from -3 dB), with a held peak LED. Fixed width; the fader keeps its centre under the name */
-.fbox { display: flex; align-items: stretch; gap: 3px; padding-left: 10px; }
+/* level meters: a recessed column of small LEDs (green, then yellow from -12 dB, red from -3 dB), with a held
+   peak LED. In the mixer the meter is the fader: a triangle on its left points at the level, and the meter
+   and triangle both drag. Fixed width, the meter centred under the name, with room either side to grab */
+.fbox { display: flex; align-items: stretch; }
+.strip .fader { position: relative; display: flex; padding: 0 12px; cursor: ns-resize; touch-action: none; user-select: none; outline: none; }
+.strip .fader .lvm { width: 7px; }
+.strip .fader .tri { position: absolute; left: 4px; bottom: calc(5px + var(--p, 0) * (100% - 10px)); width: 0; height: 0; margin-bottom: -4.5px;
+  border-left: 7px solid var(--ink); border-block: 4.5px solid transparent; }
+.strip .fader:focus-visible .lvm { outline: 2px solid color-mix(in srgb, var(--ink) 35%, transparent); outline-offset: 1px; }
 .lvm { position: relative; flex: none; width: 7px; border-radius: 3px; background: var(--lvm-bg);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, .45), 0 1px 0 color-mix(in srgb, var(--panel) 70%, #fff); }
 .lvm::before, .lvm b { content: ""; position: absolute; left: 2px; right: 2px; top: var(--lt, 2px); bottom: 2px; }
@@ -358,7 +361,7 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .strips { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
 .strip { background: var(--tint); border-radius: 8px; padding: 10px 8px; display: grid; gap: 8px; min-width: 0; justify-items: center; }
 .strip .name { font-family: var(--display); font-weight: 600; font-size: var(--fs-s); white-space: nowrap; text-transform: lowercase; }
-.strip .fader { writing-mode: vertical-lr; direction: rtl; width: 28px; height: 200px; }
+.strip .fader { height: 200px; }
 .strip > output { font-family: var(--mono); font-size: var(--fs-s); color: var(--muted); font-variant-numeric: tabular-nums; }
 .hint { margin: 0; font-size: var(--fs-s); color: var(--muted); }
 
