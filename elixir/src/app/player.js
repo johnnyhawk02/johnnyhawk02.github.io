@@ -39,8 +39,8 @@ class Player {
     this.fxGain = new Float32Array(6); this.fxAmt = new Float32Array(6).fill(1);
     // mixer mute: the sequencer skips a muted voice's steps; pads, MIDI and anything still ringing play on
     this.muted = new Uint8Array(6);
-    // snare rush 0..100: up to 98 the other tracks' hits go to the snare, above 75 a snare roll that doubles in two bands
-    // up to 90, then above 90 a free roll off the grid: a phase that runs at 2 to 8 hits a step and fires a hit at each whole
+    // snare rush 0..100: up to 98 the other tracks' hits go to the snare (the hats by 80), above 75 a snare roll that doubles
+    // in two bands up to 80, then above 80 a free roll off the grid: a phase that runs at 2 to 16 hits a step and fires a hit at each whole
     // number, so it speeds up smoothly as the fader moves (rushHead: an accent waiting for the next free hit; rushLog: the
     // roll's rate in log2 hits a step, gliding toward the fader's so a move never steps)
     this.rush = 0; this.rushPh = null; this.rushLog = 1; this.rushHead = null; this.rushGap = 0; this.clock = 0; this.snareAt = -1e9;
@@ -128,27 +128,27 @@ class Player {
     this.sched[s] = hits;
   }
   // schedule() with the snare rush up: the snare takes the other drums' hits under (rush/98)^2.5, so it comes in slowly
-  // (all of them from 98), one snare per step, accented if any hit it took was; the kick's off-beat hits go the same way,
+  // (all of them from 98; the hats, tracks 5 and 6, go faster, under (rush/80)^2.5, all of them from 80), one snare per step, accented if any hit it took was; the kick's off-beat hits go the same way,
   // but its hits on the beat (steps 0, 4, 8, 12) play on below 90; from 90 only the bar's first (step 0) plays, and from 95
   // none do, leaving just the roll.
-  // Above 75 it plays every step, once or twice (16ths, then 32nds above 81.25), the roll's extra hits swelling from 60% to full.
-  // The roll's hits are tagged (roll 2 for a hit on a step the pattern plays, 1 for the rest): above 90 they don't play and
+  // Above 75 it plays every step, once or twice (16ths, then 32nds above 77.5), the roll's extra hits swelling from 60% to full.
+  // The roll's hits are tagged (roll 2 for a hit on a step the pattern plays, 1 for the rest): above 80 they don't play and
   // the free roll in _render takes over, the first free hit after a roll-2 hit taking its accent and full level
   scheduleRush(s, bar, pg, P, at0, len, hits) {
-    const { on, acc, bar: cond } = P, G = this.groove, R = this.rush, p = Math.pow(Math.min(1, R / 98), 2.5);
+    const { on, acc, bar: cond } = P, G = this.groove, R = this.rush, p = Math.pow(Math.min(1, R / 98), 2.5), pHat = Math.pow(Math.min(1, R / 80), 2.5);
     let snare = R > 75, sAcc = false, orig = false;
     for (let t = 0; t < 7; t++) {
       if (!on[t][s] || !barOk(cond[t][s], bar)) continue;
       orig = true;
       const down = !t && !(s & 3);
       if (down && (R >= 95 || (R >= 90 && s))) continue; // the roll covers the step
-      if (t === 3 || (!down && rushHash(t, pg, s) < p)) { snare = true; sAcc = sAcc || !!acc[t][s]; continue; } // a muted drum is still taken
+      if (t === 3 || (!down && rushHash(t, pg, s) < (t >= 5 ? pHat : p))) { snare = true; sAcc = sAcc || !!acc[t][s]; continue; } // a muted drum is still taken
       if (this.muted[Math.min(t, 5)]) continue;
       this.queue.push({ at: Math.max(0, at0 + G.off[t][s] * len), t, acc: !!acc[t][s] });
       hits.push(t);
     }
     if (snare && !this.muted[3]) {
-      const n = R > 81.25 ? 2 : 1, at = at0 + G.off[3][s] * len;
+      const n = R > 77.5 ? 2 : 1, at = at0 + G.off[3][s] * len;
       const sw = R > 75 ? 0.6 + 0.4 * (R - 75) / 25 : 1;
       for (let i = 0; i < n; i++) {
         const first = !i && orig;
@@ -200,14 +200,15 @@ class Player {
       }
       this.toNext -= 64;
     } else if (this.queue.length) this.queue = [];
-    // the free roll above 90: 2 hits a step (32nds) at 90 up to 8 (128ths) at 100, tempo-relative, each where the phase
-    // crosses a whole number; the rate glides toward the fader's in log2 with a 150 ms time constant
-    if (this.playing && this.patternOn && this.rush > 90) {
-      const len = LXR.REAL_FS * 60 / this.bpm / 4, target = 1 + (this.rush - 90) / 5;
+    // the free roll above 80: 2 hits a step (32nds) at 80 up to 16 (256ths) at 100, tempo-relative, each where the phase
+    // crosses a whole number; the rate glides toward the fader's in log2 with a 40 ms time constant, and never puts hits
+    // closer than 256 samples (4 blocks), so at fast tempos the top speed is held back rather than smeared by the blocks
+    if (this.playing && this.patternOn && this.rush > 80) {
+      const len = LXR.REAL_FS * 60 / this.bpm / 4, target = Math.min(1 + (this.rush - 80) * 3 / 20, Math.log2(len / 256));
       // it starts in step with the 32nd roll it takes over from (the next step starts toNext + 64 samples from this block)
       if (this.rushPh === null) { this.rushLog = target; this.rushPh = (2 * (1 - (this.toNext + 64) / len)) % 1; }
-      else this.rushLog += (target - this.rushLog) * (1 - Math.exp(-64 / (0.15 * LXR.REAL_FS)));
-      const rate = Math.pow(2, this.rushLog), d = rate * 64 / len;
+      else this.rushLog += (target - this.rushLog) * (1 - Math.exp(-64 / (0.04 * LXR.REAL_FS)));
+      const rate = Math.min(Math.pow(2, this.rushLog), len / 256), d = rate * 64 / len;
       const sw = 0.6 + 0.4 * (this.rush - 75) / 25;
       for (let k = Math.floor(this.rushPh) + 1; k <= this.rushPh + d; k++) {
         const h = this.rushHead; this.rushHead = null;
@@ -219,9 +220,9 @@ class Player {
     if (this.queue.length) {
       const keep = [];
       for (const q of this.queue) {
-        // a voice muted after its step was booked is skipped too; above 90 the grid roll gives way to the free one, and
+        // a voice muted after its step was booked is skipped too; above 80 the grid roll gives way to the free one, and
         // no snare plays within half a free-roll gap of the last
-        if (q.at < 64 && this.rush > 90 && (q.roll || q.free) && (q.roll || this.clock - this.snareAt < this.rushGap)) { if (q.roll === 2) this.rushHead = q; }
+        if (q.at < 64 && this.rush > 80 && (q.roll || q.free) && (q.roll || this.clock - this.snareAt < this.rushGap)) { if (q.roll === 2) this.rushHead = q; }
         else if (q.at < 64) { if (q.t === 3) this.snareAt = this.clock; if (!this.muted[Math.min(q.t, 5)]) { const sw = q.sw || 1; this.e.trigger(q.t, q.acc ? 127 : Math.max(1, Math.round(this.vel * sw)), 60); this.gainTo[Math.min(q.t, 5)] = q.acc ? 1 : this.accGain * sw; } }
         else { q.at -= 64; keep.push(q); }
       }
