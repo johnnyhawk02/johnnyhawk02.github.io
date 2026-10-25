@@ -148,7 +148,7 @@ function useSong(g, keepTempo) {
   perf.tempo = clampTempo(perf.tempo); // presets from when the range was wider
   $('tempo').value = perf.tempo;
   if (STYLES[styleIdx].user && g.user) { const i = ensureUserPat(g.user); if (i >= 0) useUserSlot(i); }
-  Object.assign(master, g.master); buildMaster();
+  Object.assign(master, MASTER0, g.master); buildMaster(); // presets saved before the sidechain switch have it on
   sendMix();
   // the dial readouts come from generate; then the saved pattern, which may have been edited by hand
   generate();

@@ -1,5 +1,5 @@
 // ---- mixer ----
-const MASTER0 = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150, duckFx: false };
+const MASTER0 = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150, duckFx: false, duckOn: true };
 const master = { ...MASTER0 };
 const CH = ['DRUM 1', 'DRUM 2', 'DRUM 3', 'SNARE', 'CYMBAL', 'HIHAT'];
 // sends per voice: fx = echo (the engine's FX bus), dist = distortion, ring = ring mod, 0..100

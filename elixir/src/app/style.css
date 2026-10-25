@@ -245,18 +245,17 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .tab-steps { grid-template-columns: minmax(0, 1fr); }
 /* perform: pattern and randomise cards on the left, the mixer card on the right */
 .card { background: var(--tint); border-radius: 10px; padding: 14px 16px 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
-.card > h2, .pc-head h2 { font-size: var(--fs-s); font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.card > h2, .pc-head h2, .mhead h2 { font-size: var(--fs-s); font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
 .master-card, .fx-card, .rand-card { padding: 12px 16px 14px; gap: 8px; }
 /* master and FX knobs share one column width, so they line up at the same spacing; spare room is left at the right */
-.master-row { display: flex; gap: 16px; min-width: 0; }
-.mgroup { display: grid; gap: 4px; min-width: 0; flex: 0 1 auto; }
-.mgroup + .mgroup { border-left: 1px solid var(--line); padding-left: 16px; }
-.mlab { display: flex; align-items: center; gap: 10px; font-size: var(--fs-s); color: var(--muted); text-transform: lowercase; min-height: 24px; }
+.mhead { display: flex; align-items: center; gap: 10px; min-height: 24px; min-width: 0; font-size: var(--fs-s); color: var(--muted); text-transform: lowercase; }
+.mhead h2 { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mon { min-width: 3.4em; text-align: center; }
 .btn.tiny { font-size: var(--fs-s); padding: 2px 10px; }
 .mchk { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; cursor: pointer; }
 .mchk input { width: 12px; height: 12px; }
-#comp-knobs { grid-template-columns: repeat(5, minmax(46px, var(--kw))) auto; gap: 0; }
-#duck-knobs { grid-template-columns: repeat(2, minmax(46px, var(--kw))) auto; gap: 0; }
+#comp-knobs { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; }
+#duck-knobs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; }
 /* level meters: a recessed column of small LEDs (green, then yellow from -12 dB, red from -3 dB), with a held
    peak LED. In the mixer the meter is the fader: a triangle on its left points at the level, and the meter
    and triangle both drag. Fixed width, the meter centred under the name, with room either side to grab */
@@ -505,7 +504,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .pattern-card > h2 { margin-bottom: 0; }
 
   .master-card, .fx-card { --kw: 52px; }
-  .fx-groups, .master-row { gap: 12px; } .fxg + .fxg, .mgroup + .mgroup { padding-left: 12px; }
+  .fx-groups { gap: 12px; } .fxg + .fxg { padding-left: 12px; }
 }
 @media (min-width: 761px) and (max-width: 1300px) { .fxg:last-child .radios { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; } }
 @media (max-width: 1300px) { h1 small, .kitbar .lbl { display: none; } .field input[type=range] { width: 60px; } .topbar { gap: 8px 14px; } }
@@ -513,9 +512,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .rack { grid-template-columns: minmax(0, 1fr); padding: 16px; }
   .tab-perform { grid-template-rows: none; }
   .pattern-card, .right-col { grid-column: 1; grid-row: auto; }
-  .master-row, .fx-groups { flex-direction: column; }
+  .fx-groups { flex-direction: column; }
   .master-card, .fx-card { --kw: 60px; grid-template-columns: minmax(0, 1fr); }
-  .mgroup + .mgroup { border-left: 0; padding-left: 0; }
   .fxg + .fxg { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 8px; }
   .pcard .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
   .tabs { padding-left: 0; gap: 2px; }
@@ -573,10 +571,17 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .tab-perform .fxg + .fxg { padding-left: 14px; }
 .tab-perform .fxg .knobs { grid-auto-columns: var(--kw); }
 .tab-perform .fxg:last-child .radios { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; }
-.tab-perform .master-row { display: flex; gap: 14px; min-height: 0; }
-.tab-perform .mgroup { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 4px; }
-.tab-perform .mgroup + .mgroup { padding-left: 14px; }
-.tab-perform .mlab { min-height: 22px; }
+/* master: the compressor and the drum 1 sidechain side by side in their own cards, each heading with its on
+   button at the right. The faders are the same width in both cards (the cards start at 44px a fader and grow 5:2)
+   and a needle meter fills the right of each card */
+.bay-c { --vuw: clamp(60px, 18vw - 120px, 150px); }
+.tab-perform > .bay-c { display: flex; }
+.comp-card { flex: 5 1 calc(var(--vuw) + 262px); } .duck-card { flex: 2 1 calc(var(--vuw) + 130px); }
+.mbody { display: grid; grid-template-columns: minmax(0, 1fr) var(--vuw); gap: 14px; min-height: 0; min-width: 0; }
+.master-card .vu { display: grid; grid-template-rows: auto minmax(0, 1fr); justify-items: center; align-items: center; gap: 4px; padding: 0; min-height: 0;
+  border-left: 1px solid var(--line); padding-left: 14px; margin-left: -14px; width: calc(100% + 14px); }
+.master-card .vu svg { width: 100%; height: auto; max-height: 100%; margin: 0; }
+.master-card.off .knob, .master-card.off .vu { opacity: .45; }
 .master-card, .fx-card { --kw: 58px; }
 /* randomise: five buttons in a row, depth and wild under them */
 .tab-perform .rand-card .rand-opts { gap: 14px; }
@@ -601,7 +606,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 @media (min-width: 761px) and (min-height: 480px) {
   .tab-perform { grid-template-rows: repeat(3, minmax(0, 1fr)); overflow: hidden; }
   .tab-perform .knob .sl, .pcard .knob .sl { flex: 1 1 0; height: auto; min-height: 28px; }
-  .tab-perform .knobs, .tab-perform .pknobs, .tab-perform .perform, .tab-perform .fxg, .tab-perform .mgroup { min-height: 0; }
+  .tab-perform .knobs, .tab-perform .pknobs, .tab-perform .perform, .tab-perform .fxg { min-height: 0; }
   .tab-perform .strip .fbox { flex: 1 1 0; min-height: 48px; max-height: 150px; }
   .tab-perform .strip .fader { height: auto; }
   /* sound: the cards fill the panel's height and their faders stretch with them */
@@ -615,7 +620,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 @media (min-width: 761px) and (max-height: 640px) {
   .tab-perform .card { padding: 6px 12px 8px; gap: 2px; }
   .tab-perform .card > h2, .tab-perform .pc-head { min-height: 16px; font-size: var(--fs-xs); }
-  .tab-perform .mlab { min-height: 18px; }
+  .tab-perform .mhead { min-height: 16px; } .tab-perform .mhead h2 { font-size: var(--fs-xs); }
   .tab-perform .knob label, .tab-perform .pknobs .knob label { font-size: var(--fs-xs); line-height: 1.15; }
   .tab-perform .knob output, .tab-perform .pknobs .knob output { line-height: 1.1; }
   .tab-perform .strip { gap: 3px; }
@@ -625,8 +630,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 @media (min-width: 761px) and (max-width: 1250px) {
   .tab-perform { grid-template-columns: minmax(0, 1fr) 340px; }
   .master-card, .fx-card { --kw: 50px; }
-  .tab-perform .fx-groups, .tab-perform .master-row { gap: 10px; }
-  .tab-perform .fxg + .fxg, .tab-perform .mgroup + .mgroup { padding-left: 10px; }
+  .tab-perform .fx-groups { gap: 10px; }
+  .tab-perform .fxg + .fxg { padding-left: 10px; }
   .tab-perform .rand-card .rbtns .btn { padding: 4px 6px; }
   .tab-perform .strip .sends { gap: 2px; }
   .tab-perform .strip .sdial .dial { width: 22px; height: 22px; }
@@ -636,8 +641,12 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-perform { grid-template-columns: minmax(0, 1fr); }
   .tab-perform > .right-col { grid-column: 1; grid-row: auto; }
   .bay-c { grid-template-columns: minmax(0, 1fr); }
-  .tab-perform .fx-groups, .tab-perform .master-row { flex-direction: column; }
-  .tab-perform .fxg + .fxg, .tab-perform .mgroup + .mgroup { padding-left: 0; }
+  .tab-perform .fx-groups { flex-direction: column; }
+  .tab-perform .fxg + .fxg { padding-left: 0; }
+  .tab-perform > .bay-c { flex-direction: column; } .comp-card, .duck-card { flex: none; }
+  .mbody { grid-template-columns: minmax(0, 1fr); }
+  .master-card .vu { border-left: 0; margin: 4px 0 0; padding: 0; width: auto; }
+  .master-card .vu svg { width: 150px; max-height: none; }
   .tab-perform .rand-card .rbtns { grid-template-columns: 1fr 1fr; }
   .tab-perform .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 16px; }
   .tab-perform .strip:nth-child(4) { border-left: 0; }

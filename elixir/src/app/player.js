@@ -34,7 +34,7 @@ class Player {
     this.audible = new Float32Array(6).fill(1); this.mg = new Float32Array(6).fill(1);
     // master: drum 1 ducks the other voices (before the FX bus), then a compressor
     // on the whole mix, the same design as the LXR-02's FX compressor
-    this.master = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150, duckFx: false };
+    this.master = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150, duckFx: false, duckOn: true };
     // delay: tempo-synced time, 0 = 1/128 .. 1 = one bar, and run as a send effect (all wet,
     // the voices keep their dry path); not in the firmware
     this.delayPos = 1 + Math.log2(3 / 16) / 7;
@@ -176,7 +176,7 @@ class Player {
     for (let i = 0; i < 64; i++) pk = Math.max(pk, Math.abs(k[i]));
     pk = pk / 32768 * this.gainTo[0] * this.audible[0];
     this.duckEnv = Math.max(pk, this.duckEnv * Math.exp(-64000 / (M.duckRelease * LXR.REAL_FS)));
-    const duck0 = this.duckAt, duck1 = 1 - M.duck * Math.min(1, this.duckEnv / 0.3);
+    const duck0 = this.duckAt, duck1 = 1 - (M.duckOn ? M.duck : 0) * Math.min(1, this.duckEnv / 0.3);
     this.duckAt = duck1; this.duckMin = Math.min(this.duckMin, duck1);
     for (let n = 0; n < 6; n++) {
       // accent gain, ramped over the block, and the duck on every voice but drum 1

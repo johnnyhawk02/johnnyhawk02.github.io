@@ -1,4 +1,4 @@
-// ---- master: compressor and drum 1 sidechain ----
+// ---- master: compressor and drum 1 sidechain, each in its own card with an on button ----
 const RATIOS = [1.5, 2, 3, 4, 6, 8, 20];
 const mKnob = (label, key, lo, hi, step, show, box) => box.appendChild(dialKnob(label, {
   max: Math.round((hi - lo) / step), show: (v) => show(lo + v * step), get: () => Math.round((master[key] - lo) / step),
@@ -35,9 +35,11 @@ const meterVu = (name, aria) => {
 };
 meterVu.n = 0;
 const grVu = meterVu('reduction', 'compressor gain reduction meter'), duckVu = meterVu('ducking', 'sidechain ducking meter');
+// each card's on button reads on or off, and an off card's faders are dimmed
+const showOn = (id, on) => { $(id + '-on').setAttribute('aria-pressed', on); $(id + '-on').textContent = on ? 'on' : 'off'; $(id + '-on').closest('.card').classList.toggle('off', !on); };
 function buildMaster() {
 $('comp-knobs').innerHTML = ''; $('duck-knobs').innerHTML = '';
-$('comp-on').setAttribute('aria-pressed', master.comp); $('duck-fx').checked = master.duckFx;
+showOn('comp', master.comp); showOn('duck', master.duckOn); $('duck-fx').checked = master.duckFx;
 mKnob('threshold', 'thresh', -40, 0, 1, (v) => v + ' dB', $('comp-knobs'));
 $('comp-knobs').appendChild(dialKnob('ratio', { max: RATIOS.length - 1, show: (v) => RATIOS[v] + ':1', get: () => RATIOS.indexOf(master.ratio),
   set: (v) => { master.ratio = RATIOS[v]; sendMix(); }, dflt: () => RATIOS.indexOf(MASTER0.ratio) }));
@@ -46,10 +48,11 @@ mKnob('release', 'release', 20, 500, 10, (v) => v + ' ms', $('comp-knobs'));
 mKnob('makeup', 'makeup', 0, 12, 1, (v) => '+' + v + ' dB', $('comp-knobs'));
 mKnob('duck', 'duck', 0, 1, 0.01, (v) => Math.round(v * 100) + '%', $('duck-knobs'));
 mKnob('release', 'duckRelease', 30, 600, 10, (v) => v + ' ms', $('duck-knobs'));
-$('comp-knobs').appendChild(grVu.el); $('duck-knobs').appendChild(duckVu.el);
+$('comp-knobs').after(grVu.el); $('duck-knobs').after(duckVu.el);
 }
 buildMaster();
-$('comp-on').addEventListener('click', () => { master.comp = !master.comp; $('comp-on').setAttribute('aria-pressed', master.comp); sendMix(); });
+$('comp-on').addEventListener('click', () => { master.comp = !master.comp; showOn('comp', master.comp); sendMix(); });
+$('duck-on').addEventListener('click', () => { master.duckOn = !master.duckOn; showOn('duck', master.duckOn); sendMix(); });
 $('duck-fx').addEventListener('change', () => { master.duckFx = $('duck-fx').checked; sendMix(); });
 sendMix();
 
