@@ -4718,9 +4718,11 @@ class Player {
   // (all of them from 98; the hats, tracks 5 and 6, go faster, under (rush/80)^2.5, all of them from 80), one snare per step, accented if any hit it took was; the kick's off-beat hits go the same way,
   // but its hits on the beat (steps 0, 4, 8, 12) play on below 90; from 90 only the bar's first (step 0) plays, and from 95
   // none do, leaving just the roll.
-  // Above 75 it plays every step, once or twice (16ths, then 32nds above 77.5), the roll's extra hits swelling from 60% to full.
+  // Above 75 the snare plays only the roll: every step, once or twice (16ths, then 32nds above 77.5), on the straight grid
+  // (the groove doesn't move it), every hit at one level that swells from 60% to full, so the pattern's own snares and the
+  // hits it took don't stand out; only an accent they carried plays, on the step's first roll hit.
   // The roll's hits are tagged (roll 2 for a hit on a step the pattern plays, 1 for the rest): above 80 they don't play and
-  // the free roll in _render takes over, the first free hit after a roll-2 hit taking its accent and full level
+  // the free roll in _render takes over, the first free hit after a roll-2 hit taking its accent
   scheduleRush(s, bar, pg, P, at0, len, hits) {
     const { on, acc, bar: cond } = P, G = this.groove, R = this.rush, S = this.rs;
     const p = Math.pow(Math.min(1, R / S.only), 2.5), pHat = Math.pow(Math.min(1, R / S.hats), 2.5);
@@ -4736,11 +4738,11 @@ class Player {
       hits.push(t);
     }
     if (snare && !this.muted[3]) {
-      const n = R > (S.start + S.p32) / 2 ? 2 : 1, at = at0 + G.off[3][s] * len;
+      const n = R > (S.start + S.p32) / 2 ? 2 : 1, at = R > S.start ? at0 : at0 + G.off[3][s] * len;
       const sw = R > S.start ? 0.6 + 0.4 * (R - S.start) / (100 - S.start) : 1;
       for (let i = 0; i < n; i++) {
         const first = !i && orig;
-        this.queue.push({ at: Math.max(0, at + i * len / n), t: 3, acc: first && sAcc, sw: first ? 1 : sw, roll: R > S.start ? (first ? 2 : 1) : 0 });
+        this.queue.push({ at: Math.max(0, at + i * len / n), t: 3, acc: first && sAcc, sw, roll: R > S.start ? (first ? 2 : 1) : 0 });
       }
       hits.push(3);
     }
@@ -4801,7 +4803,7 @@ class Player {
       const sw = 0.6 + 0.4 * (this.rush - S.start) / (100 - S.start);
       for (let k = Math.floor(this.rushPh) + 1; k <= this.rushPh + d; k++) {
         const h = this.rushHead; this.rushHead = null;
-        this.queue.push({ at: (k - this.rushPh) / d * 64, t: 3, acc: !!h && h.acc, sw: h ? 1 : sw, free: true });
+        this.queue.push({ at: (k - this.rushPh) / d * 64, t: 3, acc: !!h && h.acc, sw, free: true });
       }
       this.rushPh = (this.rushPh + d) % 1; this.rushGap = len / rate / 2;
     } else { this.rushPh = null; this.rushHead = null; }
