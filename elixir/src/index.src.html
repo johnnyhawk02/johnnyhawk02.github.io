@@ -810,6 +810,12 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-steps .seq { grid-template-rows: auto auto auto minmax(0, 1fr); }
   .tab-steps .grid { max-height: 380px; }
 }
+/* what plays: perform / steps / off, on the pattern card and the steps tab */
+.src-pick button { border: 0; padding: 2px 9px; border-radius: 999px; background: none; font: inherit; font-size: .72rem; color: var(--muted); cursor: pointer; }
+.src-pick button[aria-checked="true"] { background: var(--ink); color: var(--panel); }
+.src-pick button:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.steps-src { padding: 3px; }
+.steps-src button { padding: 4px 11px; font-size: .8rem; }
 </style>
 
 <div class="wrap">
@@ -840,7 +846,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   <section class="panel rack tab-perform" data-panel="perform" role="tabpanel" aria-label="Perform">
     <div class="bay-a">
     <div class="card pattern-card">
-    <div class="pc-head"><span class="style-pick"><button class="sarrow" id="style-prev" type="button" aria-label="Previous pattern style">‹</button><h2 id="style-name" aria-live="polite">electro</h2><button class="sarrow" id="style-next" type="button" aria-label="Next pattern style">›</button></span><button class="switch" id="pattern-on" type="button" role="switch" aria-checked="true" aria-label="Pattern on"><span>on</span><span>off</span></button></div>
+    <div class="pc-head"><span class="style-pick"><button class="sarrow" id="style-prev" type="button" aria-label="Previous pattern style">‹</button><h2 id="style-name" aria-live="polite">electro</h2><button class="sarrow" id="style-next" type="button" aria-label="Next pattern style">›</button></span><span class="switch src-pick" role="radiogroup" aria-label="What plays: the perform pattern, the steps grid, or nothing (MIDI in)"><button type="button" role="radio" data-src="perform" aria-checked="true">perform</button><button type="button" role="radio" data-src="steps" aria-checked="false">steps</button><button type="button" role="radio" data-src="off" aria-checked="false">off</button></span></div>
     <div class="midi-info" id="midi-info" hidden>
       <p class="midi-status" id="midi-status">MIDI in</p>
       <p class="hint">Any channel, General MIDI drum notes; velocity sets the level.</p>
@@ -944,6 +950,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <div class="col seq" aria-label="Steps">
       <div class="seq-ctrl" id="steps-tools">
         <button class="btn" id="clear" type="button">CLEAR</button>
+        <span class="switch src-pick steps-src" role="radiogroup" aria-label="What plays: the perform pattern, the steps grid, or nothing (MIDI in)"><button type="button" role="radio" data-src="perform" aria-checked="true">perform</button><button type="button" role="radio" data-src="steps" aria-checked="false">steps</button><button type="button" role="radio" data-src="off" aria-checked="false">off</button></span>
         <button class="btn" id="grab" type="button" title="Copy the pattern the perform tab is playing into the grid">GRAB FROM PERFORM</button>
         <span class="seg" role="group" aria-label="What a click on a step sets">
           <button class="btn" type="button" data-mode="step" aria-pressed="true">STEP</button>
@@ -964,7 +971,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
         <span class="tg"><i>all but the last of</i><span class="seg"><button class="btn" type="button" data-cond="-2" aria-pressed="false" title="Every bar except bar 2 of every 2">≠2</button><button class="btn" type="button" data-cond="-4" aria-pressed="false" title="Every bar except bar 4 of every 4">≠4</button><button class="btn" type="button" data-cond="-8" aria-pressed="false" title="Every bar except bar 8 of every 8">≠8</button></span></span>
         <span class="tg"><i>first bar of</i><span class="seg"><button class="btn" type="button" data-cond="102" aria-pressed="false" title="Only on bar 1 of every 2 (the bar after a fill)">1/2</button><button class="btn" type="button" data-cond="104" aria-pressed="false" title="Only on bar 1 of every 4">1/4</button><button class="btn" type="button" data-cond="108" aria-pressed="false" title="Only on bar 1 of every 8 (where the crash goes)">1/8</button></span></span>
       </div>
-      <p class="hint">The grid plays while this tab is open and keeps its own pattern; grab from perform copies in what the perform tab plays. Save as user keeps it: the perform tab's user style plays your patterns, beat picks one, energy thins it out and fills adds fills.</p>
+      <p class="hint">Perform / steps / off picks what plays (the same switch is on the pattern card). The grid keeps its own pattern; grab from perform copies in what the perform tab plays. Save as user keeps it: the perform tab's user style plays your patterns, beat picks one, energy thins it out and fills adds fills.</p>
       <div class="grid" id="grid" role="group" aria-label="Step sequencer, 7 tracks by 16 steps"></div>
     </div>
   </section>
@@ -985,8 +992,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
       <p class="note">The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits (tick fx to duck the echo, distortion and ring mod returns as well, so their tails pump with drum 1), and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the needle meters show how far each is pulling down, in dB.</p>
       <p class="note">The red circle by play opens the recorder: pick free (records until you press stop, up to ten minutes) or a loop of 1 to 16 bars, which starts on the next bar (starting playback from bar 1 if it is stopped) and is cut to exactly that many bars at the tempo, with the echo carried in from before so it loops cleanly. Tick count-in for a bar of beeps first (a high beep then three lower boops, with the music turned down; from bar 1 if stopped), and the take starts on the bar after it. Pressing record closes the recorder; the red circle by play blinks while it waits or counts and pulses while it records. Choose 44.1 or 48 kHz, 16-bit (dithered) or 24-bit, and normalise (peak at −0.3 dB). Each take is listed with a player and a save .wav button; takes are kept until you reload the page.</p>
       <p class="note">The sound knobs on the pattern card are performance macros over all six voices at once: fm depth (the drums' FM amount and the cymbal and hat FM), decay (every amp decay), pitch (every voice's coarse tune, up to two octaves either way) and filter (every filter's cutoff). Each sits in the middle as the kit is; turning it pushes every voice's own value towards the top or the bottom, so the kit's differences stay. They change what the engine plays, not the kit: the sound tab still shows the kit's own values, and double-click sets a macro back to the middle. They are saved with presets.</p>
-      <p class="note">Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen grooves in the pattern's style, and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The arrows by the pattern card's title switch the style: electro (the original five grooves plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), techno (four on the floor, off-beat open hats, snare builds), broken beat (syncopated kicks under a snare on 2 and 4, fills in threes), IDM (lopsided kicks, hats in threes, a second bar that answers the first, stutter fills) and user (patterns you save from the steps tab with Save as user; beat picks one, energy thins it out, fills adds electro fills; Save over and Delete change the one beat has picked). Presets save the style, and a preset in user style carries its pattern with it. The switch on the pattern card turns the pattern off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge).</p>
-      <p class="note">The steps tab has its own grid, which plays while that tab is open; the perform tab plays the generated pattern. Grab from perform copies the perform tab's pattern into the grid (only when pressed). Presets save both.</p>
+      <p class="note">Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen grooves in the pattern's style, and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The arrows by the pattern card's title switch the style: electro (the original five grooves plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), techno (four on the floor, off-beat open hats, snare builds), broken beat (syncopated kicks under a snare on 2 and 4, fills in threes), IDM (lopsided kicks, hats in threes, a second bar that answers the first, stutter fills) and user (patterns you save from the steps tab with Save as user; beat picks one, energy thins it out, fills adds electro fills; Save over and Delete change the one beat has picked). Presets save the style, and a preset in user style carries its pattern with it. Off on the pattern card's switch turns the patterns off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge).</p>
+      <p class="note">The steps tab has its own grid, separate from the perform tab's generated pattern. The perform / steps / off switch (on the pattern card and on the steps tab) picks which one plays, or neither: off hands the voices to MIDI in. Grab from perform copies the perform tab's pattern into the grid (only when pressed). Presets save both patterns and the switch.</p>
       <p class="note">Drag a slider up or down, click along it, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit.</p>
       <p class="note">Randomise (sound tab) varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. In the mixer, r by each name gives that voice a random sound from the bundled kits, varied by 10%, and a varies the voice's current sound by 10%; undo takes either back. The randomise card on the perform tab: kit gives each of the six drum voices a sound straight from a random bundled kit, and alter makes small variations of the current drum sounds (5%, so each stays recognisable); both leave the mixer, FX, crossfeed and pattern alone. Press R to randomise the selected voice; Shift-R randomises every voice at once, up to the depth. Everything builds a fresh sound from voices of the bundled kits (Hrtl's LXR-02 kits and twelve generated ones, which aren't listed as presets), varies each by 10%, and rolls new crossfeed, delay time, echo feedback (usually low, now and then high), beat, energy and fills, keeping the mixer levels; save keeps it.</p>
       <p class="note">Swing (on the pattern card, and on the steps tab) delays every second 16th: 50% is straight, 66% a triplet feel, 75% the most. Each track has two dials (under the pattern sliders, and at the end of its row on the steps tab): swing sets how much of the swing that track takes (so the hats can swing while the kick stays straight), and push moves the whole track early (left) or late (right) by up to a quarter of a 16th, centre being on the grid. The groove applies to the perform patterns too and is saved with presets. In the grid, Shift-click toggles an accent (bright step with a bar on top) and The trig buttons under the tools pick a bar condition (every bar; last bar of 2, 4 or 8; all but the last of 2, 4 or 8; first bar of 2, 4 or 8), and a click on a step then sets it (click again to take it off); Cmd-click (Ctrl-click on Windows) cycles through them all. 2, 4 and 8 play the step only on the last bar of every 2, 4 or 8 (where the fills go); ≠2, ≠4 and ≠8 play it on every bar but that one; 1/2, 1/4 and 1/8 only on the first bar of every 2, 4 or 8 (the bar after a fill, where the crash goes). Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
@@ -1933,8 +1940,9 @@ $('swing-p').addEventListener('input', () => { groove.swing = Number($('swing-p'
 $('swing').addEventListener('input', () => { groove.swing = Number($('swing').value); drawGroove(); sendSeq(); });
 let playing = false, nowStep = -1;
 let patternOn = true; // off: the sequencer stays quiet and MIDI notes play the voices
+let source = 'perform'; // what plays: the perform pattern, the steps grid, or off (MIDI in); saved with presets
 function sendSeq() {
-  const copy = (a) => a.map((r) => r.slice()), P = view === 'steps' ? grid : pattern; // the open tab's pattern plays
+  const copy = (a) => a.map((r) => r.slice()), P = source === 'steps' ? grid : pattern;
   send({ type: 'seq', pattern: { on: copy(P.on), acc: copy(P.acc), bar: copy(P.bar) },
     bpm: Math.max(40, Math.min(300, Number($('tempo').value) || 120)), vel: Number($('level').value), patternOn, groove: grooveMsg(),
     accentDb: Number($('accent').value), playing });
@@ -2095,7 +2103,7 @@ function setDirty(d) {
 function songSnapshot() {
   const copy = (a) => a.map((r) => r.slice());
   return { style: STYLES[styleIdx].name, user: STYLES[styleIdx].user && userPats.length ? structuredClone(userPats[userSlot()]) : undefined, energy: Number($('energy').value), beat: Number($('beat').value), fills: Number($('fills').value),
-    tempo: Number($('tempo').value), vel: Number($('level').value), accent: Number($('accent').value), view, patternOn, groove: structuredClone(groove), macro: { ...macro },
+    tempo: Number($('tempo').value), vel: Number($('level').value), accent: Number($('accent').value), view, patternOn, source, groove: structuredClone(groove), macro: { ...macro },
     pattern: { on: copy(pattern.on), acc: copy(pattern.acc), bar: copy(pattern.bar) }, steps: { on: copy(grid.on), acc: copy(grid.acc), bar: copy(grid.bar) },
     master: { ...master }, mute: mix.mute.slice(), solo: mix.solo.slice() };
 }
@@ -2116,7 +2124,8 @@ function useSong(g) {
   cells.forEach((row, r) => row.forEach((_, s) => drawCell(r, s)));
   drawMini(); sendSeq();
   if (g.view === 'steps') setTab('steps');
-  if ((g.patternOn !== false) !== patternOn) setPatternOn(g.patternOn !== false);
+  // presets from before the selector: off if the pattern was off, else whatever tab they were saved on played
+  setSource(g.source || (g.patternOn === false ? 'off' : g.view === 'steps' ? 'steps' : 'perform'));
   Object.assign(groove, structuredClone(g.groove || GROOVE0)); drawGroove(); sendSeq();
   Object.assign(macro, MACRO0, g.macro || {}); drawMacros(); sendMacros();
 }
@@ -2194,16 +2203,19 @@ async function startMidi() {
     midiAccess.onstatechange = hook; hook();
   } catch (err) { $('midi-status').textContent = 'MIDI in: permission refused'; $('midi-status').className = 'midi-status none'; }
 }
+function setSource(src) {
+  source = src;
+  document.querySelectorAll('[data-src]').forEach((b) => b.setAttribute('aria-checked', b.dataset.src === src));
+  setPatternOn(src !== 'off');
+}
+document.querySelectorAll('[data-src]').forEach((b) => b.addEventListener('click', () => setSource(b.dataset.src)));
 function setPatternOn(on) {
   patternOn = on;
-  const b = $('pattern-on');
-  b.setAttribute('aria-checked', on); b.setAttribute('aria-label', on ? 'Pattern on' : 'Pattern off (MIDI in)');
   document.querySelector('.pattern-card').classList.toggle('midi', !on);
   $('midi-info').hidden = on;
   if (!on) startMidi();
   sendSeq();
 }
-$('pattern-on').addEventListener('click', () => setPatternOn(!patternOn));
 const aboutDlg = $('about');
 $('about-open').addEventListener('click', () => aboutDlg.showModal());
 $('about-close').addEventListener('click', () => aboutDlg.close());
