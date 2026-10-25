@@ -643,8 +643,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .groove-card .glab { align-self: center; font-size: .78rem; font-weight: 500; }
 .groove-card .sdial { display: flex; justify-content: center; min-height: 0; }
 .groove-card .sdial .sl { height: 44px; }
-/* randomise: four buttons in a row, depth and wild under them */
-.tab-perform .rand-card .rbtns { grid-template-columns: repeat(4, auto); justify-content: start; }
+/* randomise: five buttons in a row, depth and wild under them */
+.tab-perform .rand-card .rbtns { grid-template-columns: repeat(5, auto); justify-content: start; }
 .tab-perform .rand-card .rand-opts { gap: 14px; }
 /* mixer: per strip the name, pan and the three sends as small knobs, the fader, then r and a */
 .tab-perform .mix-card { grid-template-rows: auto minmax(0, 1fr); }
@@ -797,7 +797,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <div class="card rand-card" role="group" aria-label="Randomise">
       <h2>randomise</h2>
       <div class="rand perform-rand">
-        <div class="rbtns"><button class="btn" id="rand-all" type="button">kit</button>
+        <div class="rbtns"><button class="btn" id="rand-all" type="button" title="Each drum voice takes its sound from a random built-in kit">kit</button>
+        <button class="btn" id="alter" type="button" title="Small variations of the current drum sounds">alter</button>
         <button class="btn" id="xrand2" type="button">crossfeed</button>
         <button class="btn" id="new-kit" type="button" title="A new sound from voices of the built-in kits, varied by 10%, with new crossfeed, delay time and pattern">everything</button>
         <button class="btn" id="undo" type="button" disabled>undo</button></div>
@@ -878,7 +879,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
       <p class="note">Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The switch on the pattern card turns the pattern off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge).</p>
       <p class="note">The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials.</p>
       <p class="note">Drag a slider up or down, click along it, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit.</p>
-      <p class="note">Randomise (sound tab) varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. In the mixer, r by each name gives that voice a random sound from the bundled kits, varied by 10%, and a varies the voice's current sound by 10%; undo takes either back. The randomise card on the perform tab (beside the master section): kit does the same for all six drum sounds and leaves the mixer, FX, crossfeed and pattern alone. Press R for the same; Randomise all (Shift-R) does every voice at once. Everything builds a fresh sound from voices of the bundled kits (Hrtl's LXR-02 kits and twelve generated ones, which aren't listed as presets), varies each by 10%, and rolls new crossfeed, delay time, echo feedback (usually low, now and then high), beat, energy and fills, keeping the mixer levels; save keeps it.</p>
+      <p class="note">Randomise (sound tab) varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. In the mixer, r by each name gives that voice a random sound from the bundled kits, varied by 10%, and a varies the voice's current sound by 10%; undo takes either back. The randomise card on the perform tab: kit gives each of the six drum voices a sound straight from a random bundled kit, and alter makes small variations of the current drum sounds (5%, so each stays recognisable); both leave the mixer, FX, crossfeed and pattern alone. Press R to randomise the selected voice; Shift-R randomises every voice at once, up to the depth. Everything builds a fresh sound from voices of the bundled kits (Hrtl's LXR-02 kits and twelve generated ones, which aren't listed as presets), varies each by 10%, and rolls new crossfeed, delay time, echo feedback (usually low, now and then high), beat, energy and fills, keeping the mixer levels; save keeps it.</p>
       <p class="note">Swing (on the pattern card, and on the steps tab) delays every second 16th: 50% is straight, 66% a triplet feel, 75% the most. Each track has two dials (under the pattern sliders, and at the end of its row on the steps tab): swing sets how much of the swing that track takes (so the hats can swing while the kick stays straight), and push moves the whole track early (left) or late (right) by up to a quarter of a 16th, centre being on the grid. The groove applies to the perform patterns too and is saved with presets. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
     </div>
   </details>
@@ -5042,18 +5043,36 @@ function alterVoice(v) {
   delete homes[v]; randomiseVoice(v, 0.1); delete homes[v]; // centred on the current sound each time
   buildKnobs(); drawScope();
 }
-function newVoice(v) {
-  if (!sourceKits.length) return alterVoice(v);
-  undoValues = values.slice(); $('undo').disabled = false;
+// voice v takes its sound from a random built-in kit, then varies it by `vary` (0 = exactly the kit's)
+function pickVoice(v, vary) {
   const k = sourceKits[Math.floor(rnd() * sourceKits.length)].kit;
   const keep = new Set([PAR.VOL1 + v, PAR.PAN1 + v]); // the mixer's level and pan stay
   for (const par of voiceOwned(v)) if (!keep.has(par) && values[par] !== k[par]) setValue(par, k[par], true);
-  delete homes[v]; randomiseVoice(v, 0.1); delete homes[v];
+  delete homes[v]; if (vary) randomiseVoice(v, vary); delete homes[v];
   for (const par of voiceOwned(v)) if (!keep.has(par)) initValues[par] = values[par];
+}
+function newVoice(v) {
+  if (!sourceKits.length) return alterVoice(v);
+  undoValues = values.slice(); $('undo').disabled = false;
+  pickVoice(v, 0.1);
   buildKnobs(); drawScope();
 }
 $('rand').addEventListener('click', async () => { await startAudio(); randomise(); setDirty(true); });
-$('rand-all').addEventListener('click', async () => { await startAudio(); randomise([0, 1, 2, 3, 4, 5]); setDirty(true); }); // the drum sounds only
+// the perform randomise card: kit gives every drum voice a sound straight from a random built-in kit,
+// alter nudges each current drum sound a little (5%) so it stays recognisable; mixer, FX and pattern stay
+$('rand-all').addEventListener('click', async () => {
+  await startAudio();
+  if (!sourceKits.length) return;
+  undoValues = values.slice(); $('undo').disabled = false;
+  for (let v = 0; v < 6; v++) pickVoice(v, 0);
+  buildKnobs(); drawScope(); setDirty(true);
+});
+$('alter').addEventListener('click', async () => {
+  await startAudio();
+  undoValues = values.slice(); $('undo').disabled = false;
+  for (let v = 0; v < 6; v++) { delete homes[v]; randomiseVoice(v, 0.05); delete homes[v]; }
+  buildKnobs(); drawScope(); setDirty(true);
+});
 $('undo').addEventListener('click', () => {
   if (!undoValues) return;
   for (let p = 1; p < values.length; p++) if (values[p] !== undoValues[p]) setValue(p, undoValues[p], true);
