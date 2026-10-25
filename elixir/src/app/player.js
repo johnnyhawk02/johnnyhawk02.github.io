@@ -44,6 +44,10 @@ class Player {
     // number, so it speeds up smoothly as the fader moves (rushHead: an accent waiting for the next free hit; rushLog: the
     // roll's rate in log2 hits a step, gliding toward the fader's so a move never steps)
     this.rush = 0; this.rushPh = null; this.rushLog = 1; this.rushHead = null; this.rushGap = 0; this.clock = 0; this.snareAt = -1e9;
+    // and above 90 a high-pass on the whole mix, before the master compressor: 30 Hz at 90 up to 1.5 kHz at 100
+    // (hpLog: its cutoff in log Hz, gliding; hpMix: how much of it is heard, faded in and out so it never clicks;
+    // hpOn false: off and its state cleared, the mix untouched)
+    this.hpOn = false; this.hpLog = Math.log(30); this.hpMix = 0; this.hpG = 0; this.hpS = new Float64Array(4);
     // master: drum 1 ducks the other voices (before the FX bus), then a compressor
     // on the whole mix, the same design as the LXR-02's FX compressor
     this.master = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150, duckFx: false, duckOn: true };
@@ -286,6 +290,7 @@ class Player {
       if (any || bo.some((v) => v)) for (let i = 0; i < 64; i++) { const g = mk / 32768 * (fd0 + fdd * i); L[i] += bo[2 * i] * g; R[i] += bo[2 * i + 1] * g; }
     }
     for (let i = 0; i < 64; i++) { const g = (fd0 + fdd * i) / 32768; L[i] += fx[2 * i] * g; R[i] += fx[2 * i + 1] * g; }
+    if (this.rush > 90 || this.hpOn) this.highPass(L, R);
     if (M.comp) {
       // peak detector in dB, attack/release smoothing, gain = over * (1/ratio - 1) + makeup
       const ca = Math.exp(-1000 / (M.attack * LXR.REAL_FS)), cr = Math.exp(-1000 / (M.release * LXR.REAL_FS));
@@ -319,6 +324,30 @@ class Player {
       }
       this.cntGain = g;
     }
+  }
+  // the rush high-pass: a 12 dB/oct state-variable filter (TPT, Q 0.9) on both channels. Its cutoff glides toward
+  // 30 Hz * 50^((rush - 90) / 10) in log Hz with a 40 ms time constant, ramped across each block; it fades in over
+  // about 10 ms when rush goes over 90, and once rush is back at 90 or under and the cutoff has settled at 30 Hz it
+  // fades out, then turns off and clears its state
+  highPass(L, R) {
+    const FS = LXR.REAL_FS, lo = Math.log(30), up = this.rush > 90;
+    const target = up ? lo + Math.log(50) * Math.min(1, (this.rush - 90) / 10) : lo;
+    if (!this.hpOn) { this.hpOn = true; this.hpLog = lo; this.hpMix = 0; this.hpS.fill(0); this.hpG = Math.tan(Math.PI * 30 / FS); }
+    this.hpLog += (target - this.hpLog) * (1 - Math.exp(-64 / (0.04 * FS)));
+    if (!up && this.hpLog - lo < 0.01) this.hpLog = lo;
+    const g0 = this.hpG, g1 = Math.tan(Math.PI * Math.exp(this.hpLog) / FS), k = 1 / 0.9, S = this.hpS;
+    const m0 = this.hpMix, m1 = up || this.hpLog > lo ? Math.min(1, m0 + 0.15) : Math.max(0, m0 - 0.15);
+    for (let i = 0; i < 64; i++) {
+      const g = g0 + (g1 - g0) * (i + 1) / 64, a = 1 / (1 + g * (g + k)), m = m0 + (m1 - m0) * (i + 1) / 64;
+      for (let c = 0; c < 2; c++) {
+        const X = c ? R : L, x = X[i], s1 = S[2 * c], s2 = S[2 * c + 1];
+        const hp = (x - (g + k) * s1 - s2) * a, bp = g * hp + s1, lp = g * bp + s2;
+        S[2 * c] = g * hp + bp; S[2 * c + 1] = g * bp + lp;
+        X[i] = x + (hp - x) * m;
+      }
+    }
+    this.hpG = g1; this.hpMix = m1;
+    if (!m1 && !up) { this.hpOn = false; this.hpS.fill(0); }
   }
   process(L, R) {
     for (let n = 0; n < L.length; n++) {
