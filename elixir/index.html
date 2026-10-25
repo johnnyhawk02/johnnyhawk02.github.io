@@ -587,7 +587,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .master-card, .fx-card { --kw: 58px; }
 /* randomise: five buttons in a row, depth and wild under them */
 .tab-perform .rand-card .rand-opts { gap: 14px; }
-/* mixer: per strip the name, pan and the three sends as small knobs in one column, the fader, then r and a */
+/* mixer: per strip the name, pan and the three sends as small knobs in one column, a short fader, then mute */
 .tab-perform .mix-card { grid-template-rows: auto minmax(0, 1fr); }
 .tab-perform .strips { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; min-height: 0; }
 .tab-perform .strip { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 0 4px; background: none; border-radius: 0; border-left: 1px solid var(--line); min-height: 0; min-width: 0; }
@@ -597,18 +597,19 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .tab-perform .strip .sdial { display: grid; justify-items: center; gap: 1px; }
 .tab-perform .strip .sdial .dial { width: 26px; height: 26px; }
 .tab-perform .strip .sdial span { display: block; font-size: var(--fs-xs); margin: 0; order: 0; min-width: 0; }
-.tab-perform .strip .fader { height: 150px; }
-.tab-perform .sfoot { gap: 4px; }
-.sfoot .vr, .sfoot .va { width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; background: var(--tint-2); color: var(--ink); cursor: pointer;
-  font-family: var(--display); font-weight: 600; font-size: var(--fs-xs); line-height: 1; flex: none; }
-.sfoot .va:hover, .sfoot .vr:hover { background: var(--ink); color: var(--panel); }
-.sfoot .va:focus-visible, .sfoot .vr:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.tab-perform .strip .fader { height: 120px; }
+.strip .mute { flex: none; padding: 3px 8px; border: 0; border-radius: 999px; background: var(--tint-2); color: var(--ink); cursor: pointer;
+  font-family: var(--display); font-weight: 600; font-size: var(--fs-xs); line-height: 1.1; text-transform: lowercase; }
+.strip .mute:hover { background: color-mix(in srgb, var(--ink) 24%, transparent); }
+.strip .mute[aria-pressed="true"] { background: var(--led); color: #fff; }
+.strip .mute:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.strip.muted .fader, .strip.muted .sends { opacity: .45; }
 /* in a window that fits: the three rows share the height and every fader stretches to fill its card */
 @media (min-width: 761px) and (min-height: 480px) {
   .tab-perform { grid-template-rows: repeat(3, minmax(0, 1fr)); overflow: hidden; }
   .tab-perform .knob .sl, .pcard .knob .sl { flex: 1 1 0; height: auto; min-height: 28px; }
   .tab-perform .knobs, .tab-perform .pknobs, .tab-perform .perform, .tab-perform .fxg, .tab-perform .mgroup { min-height: 0; }
-  .tab-perform .strip .fbox { flex: 1 1 0; min-height: 60px; max-height: 300px; }
+  .tab-perform .strip .fbox { flex: 1 1 0; min-height: 48px; max-height: 150px; }
   .tab-perform .strip .fader { height: auto; }
   /* sound: the cards fill the panel's height and their faders stretch with them */
   .tab-sound { align-items: stretch; }
@@ -672,8 +673,27 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .tab-perform .rand-card .rbtns #undo { background: none; color: var(--muted); box-shadow: inset 0 0 0 1px var(--line); }
 .tab-perform .rand-card .rbtns #undo:not(:disabled):hover { color: var(--ink); background: var(--tint); }
 .tab-perform .rand-card .rand-opts { color: var(--ink); }
+/* per drum: its name, then random and alter */
+.vrand { display: grid; gap: 5px 12px; border-top: 1px solid color-mix(in srgb, var(--ink) 14%, transparent); padding-top: 10px; }
+.vrow { display: grid; grid-template-columns: 4.6em minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 6px; }
+.vrow .vname { font-family: var(--display); font-weight: 600; font-size: var(--fs-s); text-transform: lowercase; white-space: nowrap; }
+.vrow .btn { padding: 4px 6px; font-size: var(--fs-s); background: var(--panel); border-radius: 7px; }
+.vrow .btn:hover { background: color-mix(in srgb, var(--ink) 10%, var(--panel)); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .rand-card { --rc: color-mix(in srgb, #62bd8c 16%, var(--panel)); box-shadow: inset 0 0 0 1px color-mix(in srgb, #62bd8c 30%, var(--panel)); } }
 :root[data-theme="dark"] .rand-card { --rc: color-mix(in srgb, #62bd8c 16%, var(--panel)); box-shadow: inset 0 0 0 1px color-mix(in srgb, #62bd8c 30%, var(--panel)); }
+/* not much height: the five buttons in one row and the drums in two columns */
+@media (min-width: 761px) and (max-height: 820px) {
+  .tab-perform .rand-card .rbtns { grid-template-columns: repeat(5, auto); gap: 4px; }
+  .tab-perform .rand-card .rbtns #new-kit { grid-column: auto; }
+  .vrand { grid-template-columns: 1fr 1fr; padding-top: 6px; gap: 4px 10px; }
+  .vrow { grid-template-columns: 3.8em minmax(0, 1fr) minmax(0, 1fr); gap: 4px; }
+  .vrow .btn { padding: 3px 2px; }
+}
+@media (min-width: 761px) and (max-width: 1250px) and (max-height: 820px) {
+  .vrand { column-gap: 8px; }
+  .vrow { grid-template-columns: 3.4em minmax(0, 1fr) minmax(0, 1fr); gap: 3px; }
+  .vrow .btn { font-size: var(--fs-xs); }
+}
 @media (min-width: 761px) and (max-height: 640px) {
   .tab-perform .rand-card { padding: 8px 12px; gap: 4px; }
   .tab-perform .rand-card .rand { gap: 6px; }
@@ -805,6 +825,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
           <label class="field" for="depth">depth <input id="depth" type="range" min="1" max="100" value="30"><output id="depth-out">30%</output></label>
           <label class="field" for="wild"><input id="wild" type="checkbox"> wild</label>
         </span>
+        <div class="vrand" id="vrand"></div>
       </div>
     </div>
     <div class="card mix-card">
@@ -4486,6 +4507,8 @@ class Player {
     // accent: unaccented sequencer hits are turned down by the accent amount, after the engine
     this.gain = new Float32Array(6).fill(1); this.gainTo = new Float32Array(6).fill(1);
     this.fxGain = new Float32Array(6); this.fxAmt = new Float32Array(6).fill(1);
+    // mixer mute: audible is 0 for a muted voice; mg ramps each voice to silence (or back) over a block, so it doesn't click
+    this.audible = new Float32Array(6).fill(1); this.mg = new Float32Array(6).fill(1);
     // master: drum 1 ducks the other voices (before the FX bus), then a compressor
     // on the whole mix, the same design as the LXR-02's FX compressor
     this.master = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150, duckFx: false };
@@ -4509,6 +4532,7 @@ class Player {
     if (m.type === 'param') this.e.setParam(m.par, m.value);
     else if (m.type === 'kit') this.e.loadKit(m.values);
     else if (m.type === 'trig') { this.e.trigger(m.voice, m.vel, 60); this.gainTo[Math.min(m.voice, 5)] = 1; }
+    else if (m.type === 'mute') { m.muted.forEach((v, n) => { this.audible[n] = v ? 0 : 1; }); if (!this.playing) this.mg.set(this.audible); }
     else if (m.type === 'xmod') this.e.setCrossMod(m.amt, m.target);
     else if (m.type === 'delay') this.delayPos = m.pos;
     else if (m.type === 'atBar') { if (this.playing) this.atBar.push(m.m); else this.msg(m.m); }
@@ -4627,14 +4651,14 @@ class Player {
     e.fx.setDelaySync(isDelay ? delaySamples(this.delayPos, this.bpm) : null);
     let pk = 0;
     for (let i = 0; i < 64; i++) pk = Math.max(pk, Math.abs(k[i]));
-    pk = pk / 32768 * this.gainTo[0];
+    pk = pk / 32768 * this.gainTo[0] * this.audible[0];
     this.duckEnv = Math.max(pk, this.duckEnv * Math.exp(-64000 / (M.duckRelease * LXR.REAL_FS)));
     const duck0 = this.duckAt, duck1 = 1 - M.duck * Math.min(1, this.duckEnv / 0.3);
     this.duckAt = duck1; this.duckMin = Math.min(this.duckMin, duck1);
     for (let n = 0; n < 6; n++) {
       // accent gain, ramped over the block, and the duck on every voice but drum 1
       const d0 = n ? duck0 : 1, d1 = n ? duck1 : 1;
-      const g0 = this.gain[n] * d0, g1 = this.gainTo[n] * d1, dg = (g1 - g0) / 64;
+      const g0 = this.gain[n] * d0 * this.mg[n], g1 = this.gainTo[n] * d1 * this.audible[n], dg = (g1 - g0) / 64;
       // every voice reaches the outputs; one routed to the echo bus also feeds it at its send
       const fa = e.audioRouting[n] === LXR.MIXER_ROUTING_FX_BUS ? this.fxAmt[n] : 0;
       const pl = pans[n].triggeredPanL / 32768, pr = pans[n].triggeredPanR / 32768;
@@ -4643,7 +4667,7 @@ class Player {
       for (let i = 0; i < 64; i++) { const v = o[i] * (g0 + dg * i); L[i] += v * pl; R[i] += v * pr; const a = v < 0 ? -v : v; if (a > lv) lv = a; }
       lv *= Math.max(pl, pr); if (lv > this.lvl[n]) this.lvl[n] = lv;
       this.fxGain[n] = g1 * fa;
-      this.gain[n] = this.gainTo[n];
+      this.gain[n] = this.gainTo[n]; this.mg[n] = this.audible[n];
     }
     if (++this.lvlN >= 16) {
       this.lvlN = 0;
@@ -4661,7 +4685,7 @@ class Player {
       const bi = this.busIn; bi.fill(0);
       let any = false;
       for (let n = 0; n < 6; n++) {
-        const g = sends[n] * this.gainTo[n] * (n ? duck1 : 1);
+        const g = sends[n] * this.gainTo[n] * this.audible[n] * (n ? duck1 : 1);
         if (!g) continue;
         any = true;
         const o = out[n], pl = pans[n].triggeredPanL * g, pr = pans[n].triggeredPanR * g;
@@ -5187,12 +5211,6 @@ function randomiseVoice(voice, fixedDepth) {
     if (v !== values[par]) setValue(par, v, true);
   }
 }
-// the mixer's r and a: r takes that voice from a random built-in kit, a varies what's there; both by 10%
-function alterVoice(v) {
-  undoValues = values.slice(); $('undo').disabled = false;
-  delete homes[v]; randomiseVoice(v, 0.1); delete homes[v]; // centred on the current sound each time
-  buildKnobs(); drawScope();
-}
 // voice v takes its sound from a random built-in kit, then varies it by `vary` (0 = exactly the kit's)
 function pickVoice(v, vary) {
   const k = sourceKits[Math.floor(rnd() * sourceKits.length)].kit;
@@ -5201,28 +5219,24 @@ function pickVoice(v, vary) {
   delete homes[v]; if (vary) randomiseVoice(v, vary); delete homes[v];
   for (const par of voiceOwned(v)) if (!keep.has(par)) initValues[par] = values[par];
 }
-function newVoice(v) {
-  if (!sourceKits.length) return alterVoice(v);
+// nudge voice v's current sound by 5%, centred on what's there each time
+function alterVoice(v) { delete homes[v]; randomiseVoice(v, 0.05); delete homes[v]; }
+// a randomise-card button: keep the sound for undo, change it, redraw
+function randChange(fn) {
   undoValues = values.slice(); $('undo').disabled = false;
-  pickVoice(v, 0.1);
-  buildKnobs(); drawScope();
+  fn(); buildKnobs(); drawScope(); setDirty(true);
 }
 $('rand').addEventListener('click', async () => { await startAudio(); randomise(); setDirty(true); });
 // the perform randomise card: kit gives every drum voice a sound straight from a random built-in kit,
 // alter nudges each current drum sound a little (5%) so it stays recognisable; mixer, FX and pattern stay
 $('rand-all').addEventListener('click', async () => {
   await startAudio();
-  if (!sourceKits.length) return;
-  undoValues = values.slice(); $('undo').disabled = false;
-  for (let v = 0; v < 6; v++) pickVoice(v, 0);
-  buildKnobs(); drawScope(); setDirty(true);
+  if (sourceKits.length) randChange(() => { for (let v = 0; v < 6; v++) pickVoice(v, 0); });
 });
-$('alter').addEventListener('click', async () => {
-  await startAudio();
-  undoValues = values.slice(); $('undo').disabled = false;
-  for (let v = 0; v < 6; v++) { delete homes[v]; randomiseVoice(v, 0.05); delete homes[v]; }
-  buildKnobs(); drawScope(); setDirty(true);
-});
+$('alter').addEventListener('click', async () => { await startAudio(); randChange(() => { for (let v = 0; v < 6; v++) alterVoice(v); }); });
+// per drum (rows built with the mixer strips): random is that voice from a random built-in kit, alter nudges it by 5%
+async function randomOne(v) { await startAudio(); if (sourceKits.length) randChange(() => pickVoice(v, 0)); }
+async function alterOne(v) { await startAudio(); randChange(() => alterVoice(v)); }
 $('undo').addEventListener('click', () => {
   if (!undoValues) return;
   for (let p = 1; p < values.length; p++) if (values[p] !== undoValues[p]) setValue(p, undoValues[p], true);
@@ -6192,6 +6206,7 @@ const FX3_0 = { echo: { pct: 100 }, dist: { type: 0, p: [70, 64, 80, 90] }, ring
 const fx3 = structuredClone(FX3_0);
 const fx3Snapshot = () => ({ params: structuredClone(fx3), dsend: mix.dist.slice(), ring: mix.ring.slice() });
 const stripsEl = $('strips');
+const muted = new Array(6).fill(false);
 const fxButtons = [];
 // small slider for the groove's per-track swing share and push, 0..100
 function miniSlider(label, aria, get, set, dflt, max = 100, show = (v) => v + '%', center = false) {
@@ -6273,7 +6288,7 @@ CH.forEach((name, n) => {
   const el = document.createElement('div'); el.className = 'strip'; el.setAttribute('role', 'group'); el.setAttribute('aria-label', name);
   el.innerHTML = `    <span class="name">${name}</span><span class="sends"></span>
     <div class="fbox"><div class="fader" tabindex="0" role="slider" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="127" aria-label="${name} level"><i class="tri"></i><span class="lvm" aria-hidden="true"><b></b><s></s></span></div></div>
-    <div class="sfoot"><button class="vr" type="button" title="${name}: a random sound from the built-in kits, varied by 10%" aria-label="New random sound for ${name}">r</button><button class="va" type="button" title="${name}: vary the current sound by 10%" aria-label="Vary ${name} by 10%">a</button></div>
+    <button class="mute" type="button" aria-pressed="false" title="Mute ${name}">mute</button>
 `;
   const fader = el.querySelector('.fader'), nameEl = el.querySelector('.name');
   // the level meter is the fader: a triangle beside it points at the level, at the height the old fader's cap
@@ -6316,9 +6331,18 @@ CH.forEach((name, n) => {
   const dd = miniDial('dist', `${name} distortion send`, () => mix.dist[n], (v) => { mix.dist[n] = v; sendMix(); }, 0);
   const rd = miniDial('ring', `${name} ring mod send`, () => mix.ring[n], (v) => { mix.ring[n] = v; sendMix(); }, 0);
   sends.append(panD.el, fxd.el, dd.el, rd.el);
-  // r: randomise this voice's sound (same depth and wild settings as the randomise card)
-  el.querySelector('.vr').addEventListener('click', async () => { await startAudio(); newVoice(n); setDirty(true); });
-  el.querySelector('.va').addEventListener('click', async () => { await startAudio(); alterVoice(n); setDirty(true); });
+  // mute: silent in the player (dry, sends and meter), not saved
+  const muteB = el.querySelector('.mute');
+  muteB.addEventListener('click', () => {
+    muted[n] = !muted[n]; muteB.setAttribute('aria-pressed', muted[n]); el.classList.toggle('muted', muted[n]);
+    send({ type: 'mute', muted: muted.slice() });
+  });
+  // this drum's row in the randomise card
+  const row = document.createElement('div'); row.className = 'vrow'; row.setAttribute('role', 'group'); row.setAttribute('aria-label', `Randomise ${name}`);
+  row.innerHTML = `<span class="vname">${name}</span><button class="btn" type="button" title="${name}: a sound from a random built-in kit">random</button><button class="btn" type="button" title="${name}: a small variation of the current sound">alter</button>`;
+  const [rb, ab] = row.querySelectorAll('button');
+  rb.addEventListener('click', () => randomOne(n)); ab.addEventListener('click', () => alterOne(n));
+  $('vrand').appendChild(row);
   const redraw = () => { fxd.draw(); dd.draw(); rd.draw(); };
   // after a kit load (useKit sets the sends): redraw, and route the echo bus to match
   fxButtons[n] = () => {

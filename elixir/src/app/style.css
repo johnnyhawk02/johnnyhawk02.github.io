@@ -580,7 +580,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .master-card, .fx-card { --kw: 58px; }
 /* randomise: five buttons in a row, depth and wild under them */
 .tab-perform .rand-card .rand-opts { gap: 14px; }
-/* mixer: per strip the name, pan and the three sends as small knobs in one column, the fader, then r and a */
+/* mixer: per strip the name, pan and the three sends as small knobs in one column, a short fader, then mute */
 .tab-perform .mix-card { grid-template-rows: auto minmax(0, 1fr); }
 .tab-perform .strips { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; min-height: 0; }
 .tab-perform .strip { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 0 4px; background: none; border-radius: 0; border-left: 1px solid var(--line); min-height: 0; min-width: 0; }
@@ -590,18 +590,19 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .tab-perform .strip .sdial { display: grid; justify-items: center; gap: 1px; }
 .tab-perform .strip .sdial .dial { width: 26px; height: 26px; }
 .tab-perform .strip .sdial span { display: block; font-size: var(--fs-xs); margin: 0; order: 0; min-width: 0; }
-.tab-perform .strip .fader { height: 150px; }
-.tab-perform .sfoot { gap: 4px; }
-.sfoot .vr, .sfoot .va { width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; background: var(--tint-2); color: var(--ink); cursor: pointer;
-  font-family: var(--display); font-weight: 600; font-size: var(--fs-xs); line-height: 1; flex: none; }
-.sfoot .va:hover, .sfoot .vr:hover { background: var(--ink); color: var(--panel); }
-.sfoot .va:focus-visible, .sfoot .vr:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.tab-perform .strip .fader { height: 120px; }
+.strip .mute { flex: none; padding: 3px 8px; border: 0; border-radius: 999px; background: var(--tint-2); color: var(--ink); cursor: pointer;
+  font-family: var(--display); font-weight: 600; font-size: var(--fs-xs); line-height: 1.1; text-transform: lowercase; }
+.strip .mute:hover { background: color-mix(in srgb, var(--ink) 24%, transparent); }
+.strip .mute[aria-pressed="true"] { background: var(--led); color: #fff; }
+.strip .mute:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.strip.muted .fader, .strip.muted .sends { opacity: .45; }
 /* in a window that fits: the three rows share the height and every fader stretches to fill its card */
 @media (min-width: 761px) and (min-height: 480px) {
   .tab-perform { grid-template-rows: repeat(3, minmax(0, 1fr)); overflow: hidden; }
   .tab-perform .knob .sl, .pcard .knob .sl { flex: 1 1 0; height: auto; min-height: 28px; }
   .tab-perform .knobs, .tab-perform .pknobs, .tab-perform .perform, .tab-perform .fxg, .tab-perform .mgroup { min-height: 0; }
-  .tab-perform .strip .fbox { flex: 1 1 0; min-height: 60px; max-height: 300px; }
+  .tab-perform .strip .fbox { flex: 1 1 0; min-height: 48px; max-height: 150px; }
   .tab-perform .strip .fader { height: auto; }
   /* sound: the cards fill the panel's height and their faders stretch with them */
   .tab-sound { align-items: stretch; }
@@ -665,8 +666,27 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .tab-perform .rand-card .rbtns #undo { background: none; color: var(--muted); box-shadow: inset 0 0 0 1px var(--line); }
 .tab-perform .rand-card .rbtns #undo:not(:disabled):hover { color: var(--ink); background: var(--tint); }
 .tab-perform .rand-card .rand-opts { color: var(--ink); }
+/* per drum: its name, then random and alter */
+.vrand { display: grid; gap: 5px 12px; border-top: 1px solid color-mix(in srgb, var(--ink) 14%, transparent); padding-top: 10px; }
+.vrow { display: grid; grid-template-columns: 4.6em minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 6px; }
+.vrow .vname { font-family: var(--display); font-weight: 600; font-size: var(--fs-s); text-transform: lowercase; white-space: nowrap; }
+.vrow .btn { padding: 4px 6px; font-size: var(--fs-s); background: var(--panel); border-radius: 7px; }
+.vrow .btn:hover { background: color-mix(in srgb, var(--ink) 10%, var(--panel)); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .rand-card { --rc: color-mix(in srgb, #62bd8c 16%, var(--panel)); box-shadow: inset 0 0 0 1px color-mix(in srgb, #62bd8c 30%, var(--panel)); } }
 :root[data-theme="dark"] .rand-card { --rc: color-mix(in srgb, #62bd8c 16%, var(--panel)); box-shadow: inset 0 0 0 1px color-mix(in srgb, #62bd8c 30%, var(--panel)); }
+/* not much height: the five buttons in one row and the drums in two columns */
+@media (min-width: 761px) and (max-height: 820px) {
+  .tab-perform .rand-card .rbtns { grid-template-columns: repeat(5, auto); gap: 4px; }
+  .tab-perform .rand-card .rbtns #new-kit { grid-column: auto; }
+  .vrand { grid-template-columns: 1fr 1fr; padding-top: 6px; gap: 4px 10px; }
+  .vrow { grid-template-columns: 3.8em minmax(0, 1fr) minmax(0, 1fr); gap: 4px; }
+  .vrow .btn { padding: 3px 2px; }
+}
+@media (min-width: 761px) and (max-width: 1250px) and (max-height: 820px) {
+  .vrand { column-gap: 8px; }
+  .vrow { grid-template-columns: 3.4em minmax(0, 1fr) minmax(0, 1fr); gap: 3px; }
+  .vrow .btn { font-size: var(--fs-xs); }
+}
 @media (min-width: 761px) and (max-height: 640px) {
   .tab-perform .rand-card { padding: 8px 12px; gap: 4px; }
   .tab-perform .rand-card .rand { gap: 6px; }

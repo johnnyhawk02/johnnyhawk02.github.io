@@ -63,12 +63,6 @@ function randomiseVoice(voice, fixedDepth) {
     if (v !== values[par]) setValue(par, v, true);
   }
 }
-// the mixer's r and a: r takes that voice from a random built-in kit, a varies what's there; both by 10%
-function alterVoice(v) {
-  undoValues = values.slice(); $('undo').disabled = false;
-  delete homes[v]; randomiseVoice(v, 0.1); delete homes[v]; // centred on the current sound each time
-  buildKnobs(); drawScope();
-}
 // voice v takes its sound from a random built-in kit, then varies it by `vary` (0 = exactly the kit's)
 function pickVoice(v, vary) {
   const k = sourceKits[Math.floor(rnd() * sourceKits.length)].kit;
@@ -77,28 +71,24 @@ function pickVoice(v, vary) {
   delete homes[v]; if (vary) randomiseVoice(v, vary); delete homes[v];
   for (const par of voiceOwned(v)) if (!keep.has(par)) initValues[par] = values[par];
 }
-function newVoice(v) {
-  if (!sourceKits.length) return alterVoice(v);
+// nudge voice v's current sound by 5%, centred on what's there each time
+function alterVoice(v) { delete homes[v]; randomiseVoice(v, 0.05); delete homes[v]; }
+// a randomise-card button: keep the sound for undo, change it, redraw
+function randChange(fn) {
   undoValues = values.slice(); $('undo').disabled = false;
-  pickVoice(v, 0.1);
-  buildKnobs(); drawScope();
+  fn(); buildKnobs(); drawScope(); setDirty(true);
 }
 $('rand').addEventListener('click', async () => { await startAudio(); randomise(); setDirty(true); });
 // the perform randomise card: kit gives every drum voice a sound straight from a random built-in kit,
 // alter nudges each current drum sound a little (5%) so it stays recognisable; mixer, FX and pattern stay
 $('rand-all').addEventListener('click', async () => {
   await startAudio();
-  if (!sourceKits.length) return;
-  undoValues = values.slice(); $('undo').disabled = false;
-  for (let v = 0; v < 6; v++) pickVoice(v, 0);
-  buildKnobs(); drawScope(); setDirty(true);
+  if (sourceKits.length) randChange(() => { for (let v = 0; v < 6; v++) pickVoice(v, 0); });
 });
-$('alter').addEventListener('click', async () => {
-  await startAudio();
-  undoValues = values.slice(); $('undo').disabled = false;
-  for (let v = 0; v < 6; v++) { delete homes[v]; randomiseVoice(v, 0.05); delete homes[v]; }
-  buildKnobs(); drawScope(); setDirty(true);
-});
+$('alter').addEventListener('click', async () => { await startAudio(); randChange(() => { for (let v = 0; v < 6; v++) alterVoice(v); }); });
+// per drum (rows built with the mixer strips): random is that voice from a random built-in kit, alter nudges it by 5%
+async function randomOne(v) { await startAudio(); if (sourceKits.length) randChange(() => pickVoice(v, 0)); }
+async function alterOne(v) { await startAudio(); randChange(() => alterVoice(v)); }
 $('undo').addEventListener('click', () => {
   if (!undoValues) return;
   for (let p = 1; p < values.length; p++) if (values[p] !== undoValues[p]) setValue(p, undoValues[p], true);

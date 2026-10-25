@@ -8,6 +8,7 @@ const FX3_0 = { echo: { pct: 100 }, dist: { type: 0, p: [70, 64, 80, 90] }, ring
 const fx3 = structuredClone(FX3_0);
 const fx3Snapshot = () => ({ params: structuredClone(fx3), dsend: mix.dist.slice(), ring: mix.ring.slice() });
 const stripsEl = $('strips');
+const muted = new Array(6).fill(false);
 const fxButtons = [];
 // small slider for the groove's per-track swing share and push, 0..100
 function miniSlider(label, aria, get, set, dflt, max = 100, show = (v) => v + '%', center = false) {
@@ -89,7 +90,7 @@ CH.forEach((name, n) => {
   const el = document.createElement('div'); el.className = 'strip'; el.setAttribute('role', 'group'); el.setAttribute('aria-label', name);
   el.innerHTML = `    <span class="name">${name}</span><span class="sends"></span>
     <div class="fbox"><div class="fader" tabindex="0" role="slider" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="127" aria-label="${name} level"><i class="tri"></i><span class="lvm" aria-hidden="true"><b></b><s></s></span></div></div>
-    <div class="sfoot"><button class="vr" type="button" title="${name}: a random sound from the built-in kits, varied by 10%" aria-label="New random sound for ${name}">r</button><button class="va" type="button" title="${name}: vary the current sound by 10%" aria-label="Vary ${name} by 10%">a</button></div>
+    <button class="mute" type="button" aria-pressed="false" title="Mute ${name}">mute</button>
 `;
   const fader = el.querySelector('.fader'), nameEl = el.querySelector('.name');
   // the level meter is the fader: a triangle beside it points at the level, at the height the old fader's cap
@@ -132,9 +133,18 @@ CH.forEach((name, n) => {
   const dd = miniDial('dist', `${name} distortion send`, () => mix.dist[n], (v) => { mix.dist[n] = v; sendMix(); }, 0);
   const rd = miniDial('ring', `${name} ring mod send`, () => mix.ring[n], (v) => { mix.ring[n] = v; sendMix(); }, 0);
   sends.append(panD.el, fxd.el, dd.el, rd.el);
-  // r: randomise this voice's sound (same depth and wild settings as the randomise card)
-  el.querySelector('.vr').addEventListener('click', async () => { await startAudio(); newVoice(n); setDirty(true); });
-  el.querySelector('.va').addEventListener('click', async () => { await startAudio(); alterVoice(n); setDirty(true); });
+  // mute: silent in the player (dry, sends and meter), not saved
+  const muteB = el.querySelector('.mute');
+  muteB.addEventListener('click', () => {
+    muted[n] = !muted[n]; muteB.setAttribute('aria-pressed', muted[n]); el.classList.toggle('muted', muted[n]);
+    send({ type: 'mute', muted: muted.slice() });
+  });
+  // this drum's row in the randomise card
+  const row = document.createElement('div'); row.className = 'vrow'; row.setAttribute('role', 'group'); row.setAttribute('aria-label', `Randomise ${name}`);
+  row.innerHTML = `<span class="vname">${name}</span><button class="btn" type="button" title="${name}: a sound from a random built-in kit">random</button><button class="btn" type="button" title="${name}: a small variation of the current sound">alter</button>`;
+  const [rb, ab] = row.querySelectorAll('button');
+  rb.addEventListener('click', () => randomOne(n)); ab.addEventListener('click', () => alterOne(n));
+  $('vrand').appendChild(row);
   const redraw = () => { fxd.draw(); dd.draw(); rd.draw(); };
   // after a kit load (useKit sets the sends): redraw, and route the echo bus to match
   fxButtons[n] = () => {
