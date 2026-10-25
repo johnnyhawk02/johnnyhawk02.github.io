@@ -186,7 +186,7 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .pcard .sel select { width: 100%; min-width: 0; }
 .tab-sound .lcd canvas { height: auto; aspect-ratio: 800 / 220; }
 .tab-sound .pad { grid-auto-flow: column; justify-content: center; gap: 10px; }
-.pcard .knob .dial { width: 46px; height: 46px; }
+
 .pcard .knob label { font-size: .74rem; }
 .pcard .knob output { font-size: .7rem; }
 .voices { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -223,7 +223,7 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .pbtn[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
 .knobs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px 6px; align-items: start; }
 .knob { display: grid; justify-items: center; gap: 2px; user-select: none; touch-action: none; min-width: 0; }
-.knob .dial { width: 54px; height: 54px; cursor: ns-resize; border-radius: 50%; }
+
 .knob label { font-family: var(--display); font-weight: 500; font-size: .8rem; white-space: nowrap; text-transform: lowercase; }
 .knob output { font-family: var(--mono); font-size: .74rem; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .knob.changed output { color: var(--led); }
@@ -233,6 +233,26 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .dial .val { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
 .dial .cap { fill: none; stroke: none; }
 .dial .ptr { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
+/* vertical sliders (in place of the old dials): a thin track, an ink fill up from zero (or from the centre),
+   a small cap like the mixer faders', and detent ticks beside it */
+.sl { position: relative; display: block; width: 22px; height: var(--sh, 54px); cursor: ns-resize; touch-action: none; user-select: none; }
+.sl:focus-visible { outline: none; }
+.sl .rail { position: absolute; inset: 4px 0; }
+.sl .rail::before { content: ""; position: absolute; top: -4px; bottom: -4px; left: 50%; width: 3px; margin-left: -1.5px; border-radius: 2px; background: var(--line); }
+.sl .fill { position: absolute; left: 50%; width: 3px; margin-left: -1.5px; border-radius: 2px; background: var(--ink); bottom: calc(var(--a, 0) * 100%); height: calc(var(--w, 0) * 100%); }
+.sl .thumb { position: absolute; left: 50%; bottom: calc(var(--p, 0) * 100%); width: 18px; height: 8px; margin: 0 0 -4px -9px; border-radius: 3px; background: var(--ink); }
+.sl:focus-visible .thumb { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 28%, transparent); }
+.sl .tick { position: absolute; left: calc(50% + 5px); height: 1px; width: 3px; margin-bottom: -.5px; background: var(--muted); opacity: .7; }
+.sl .tick.major { height: 2px; width: 5px; margin-bottom: -1px; background: var(--ink); opacity: .85; }
+.pcard .sl { --sh: 44px; }
+.master-card .sl, .fx-card .sl { --sh: 42px; }
+.pknobs .sl { --sh: 50px; }
+.sdial .sl { width: 18px; --sh: 30px; }
+.sdial .sl .thumb { width: 14px; height: 6px; margin: 0 0 -3px -7px; border-radius: 2px; }
+.sdial .sl .rail { inset: 3px 0; }
+.sdial .sl .rail::before { top: -3px; bottom: -3px; }
+.grid .sdial .sl { --sh: 30px; }
+.gtable .sdial .sl { --sh: 34px; }
 .sel { grid-column: span 2; display: grid; gap: 4px; align-content: start; min-width: 0; }
 .sel label { font-family: var(--display); font-weight: 500; font-size: .8rem; text-transform: lowercase; }
 
@@ -242,8 +262,6 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .card { background: var(--tint); border-radius: 10px; padding: 14px 16px 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
 .card > h2, .pc-head h2 { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
 .tab-perform { grid-template-columns: minmax(370px, 1.3fr) minmax(0, 2.6fr); grid-template-rows: minmax(0, 1fr); gap: 14px; align-items: stretch; }
-.pattern-card { grid-column: 1; grid-row: 1; grid-template-rows: auto 1fr auto; align-content: stretch; }
-.right-col { grid-column: 2; grid-row: 1; display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 14px; min-height: 0; min-width: 0; }
 .master-card, .fx-card, .rand-card { padding: 12px 16px 14px; gap: 8px; }
 /* master and FX knobs share one column width, so they line up at the same spacing; spare room is left at the right */
 .master-card, .fx-card { --kw: 62px; }
@@ -255,13 +273,13 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .btn.tiny { font-size: .76rem; padding: 2px 10px; }
 #comp-knobs { grid-template-columns: repeat(5, minmax(46px, var(--kw))); gap: 0; }
 #duck-knobs { grid-template-columns: repeat(2, minmax(46px, var(--kw))); gap: 0; }
-.master-card .knob .dial, .fx-card .knob .dial { width: 36px; height: 36px; }
+
 .master-card .knob label, .fx-card .knob label { font-size: .7rem; line-height: 1.3; }
 .master-card .knob output, .fx-card .knob output { font-size: .66rem; line-height: 1.3; }
 .tab-perform .perform { grid-template-columns: minmax(0, 1fr); gap: 6px; padding-block: 4px; align-self: center; }
 .pknobs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; justify-items: center; }
 .pknobs .knob { gap: 1px; min-width: 0; width: 100%; }
-.pknobs .knob .dial { width: 46px; height: 46px; }
+
 .pknobs .knob label { font-family: var(--display); font-weight: 600; font-size: .86rem; }
 .pknobs .knob output { font-size: .7rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .pgh { margin: 4px 0 0; font-family: var(--display); font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
@@ -327,7 +345,7 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .grid { display: grid; grid-template-columns: 4.6em repeat(16, minmax(0, 1fr)) 34px 34px; gap: 4px; align-items: center; }
 .grid .ghead { font-size: .66rem; color: var(--muted); text-align: center; text-transform: lowercase; }
 .grid .sdial span { display: none; }
-.grid .sdial .dial { width: 26px; height: 26px; }
+
 .grid .row-name { font-family: var(--display); font-weight: 500; font-size: .78rem; color: var(--muted); background: none; border: 0;
   text-align: left; padding: 0; cursor: pointer; white-space: nowrap; overflow: hidden; text-transform: lowercase; }
 .grid .row-name.active { color: var(--ink); font-weight: 600; }
@@ -412,8 +430,6 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 @media (max-width: 720px) { .pc4-body { grid-template-columns: minmax(0, 1fr); } }
 /* pattern off: the generator's sliders give way to the MIDI note map; tempo stays (the echo syncs to it) */
 .pattern-card.midi #pk-pattern .knob:not([data-k="tempo"]), .pattern-card.midi #pk-feel { display: none; }
-.pattern-card.midi { grid-template-rows: auto auto minmax(0, 1fr) !important; }
-.pattern-card.midi .gtable { display: none; }
 /* groove per track, under the pattern sliders */
 .gtable { display: grid; grid-template-columns: 4.2em repeat(7, minmax(0, 1fr)); gap: 2px 4px; align-items: center; justify-items: center;
   border-top: 1px solid var(--line); padding-top: 8px; }
@@ -421,9 +437,8 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .gtable .glab { justify-self: start; font-family: var(--display); font-weight: 600; font-size: .9rem; }
 .gtable .gname { font-size: .68rem; color: var(--muted); }
 .gtable .sdial span { display: none; }
-.tab-perform .gtable .sdial .dial { width: 28px; height: 28px; }
+
 /* mixer header: the sound randomisers sit beside the title */
-.top-row { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: inherit; min-width: 0; }
 .rand-card { align-content: start; }
 .rand-card > h2 { margin: 0; }
 .rand-card .rand { display: grid; gap: 6px; }
@@ -478,7 +493,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .xcard { padding: 8px 10px; }
   .pcard .knobs { gap: 4px; }
   .pcard .knob { gap: 0; }
-  .pcard .knob .dial { width: 38px; height: 38px; }
+
   .pcard .knob label { font-size: .7rem; line-height: 1.3; }
   .pcard .knob output { font-size: .66rem; line-height: 1.3; }
   .pcard .sel label { font-size: .7rem; }
@@ -494,7 +509,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-perform .strip .sm { align-self: stretch; }
   .tab-perform .chan { flex: 1 1 auto; min-height: 88px; max-height: 150px; }
   @media (min-height: 720px) { .tab-perform .chan { max-height: 190px; } }
-  @media (min-height: 860px) { .tab-perform .chan { max-height: 250px; } .pknobs .knob .dial { width: 54px; height: 54px; } }
+  @media (min-height: 800px) { .pcard .sl { --sh: 60px; } }
+  @media (min-height: 860px) { .tab-perform .chan { max-height: 250px; } .pknobs .sl { --sh: 64px; } }
   .tab-perform .strip .fader { height: auto; }
   .pattern-card { grid-template-rows: auto minmax(0, 1fr) auto; }
   .tab-perform .perform { display: flex; flex-direction: column; gap: clamp(10px, 2vh, 20px); align-self: stretch; padding-block: 0; }
@@ -507,34 +523,36 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .right-col { gap: 10px; }
   .master-card, .mix-card, .fx-card { padding: 8px 14px 10px; gap: 4px; }
   .tab-perform .strip { gap: 4px; }
-  .mix-card > h2 { display: none; }
   .rand-card { padding: 8px 12px; gap: 4px; }
   .rand-card .rbtns .btn { padding: 2px 8px; font-size: .78rem; }
-  .master-card > h2 { display: none; } .master-card { grid-template-columns: minmax(0, 1fr); }
   .tab-perform .chan { min-height: 80px; }
   .tab-perform .chan .sends { gap: 2px; }
   .tab-perform .chan .sends .sdial .dial { width: 20px; height: 20px; }
   .tab-perform .shead .sdial .dial { width: 26px; height: 26px; }
   .fx-card .radios span { padding: 3px 3px; }
-  .master-card .knob .dial { width: 28px; height: 28px; } .fx-card .knob .dial { width: 28px; height: 28px; }
+
   .master-card .knob, .fx-card .knob { gap: 0; }
   .master-card .knob label, .fx-card .knob label { line-height: 1.25; }
   .master-card .knob output, .fx-card .knob output { line-height: 1.2; }
   .right-col { gap: 8px; }
+  .master-card .sl, .fx-card .sl { --sh: 30px; }
+  .pknobs .sl { --sh: 36px; }
+  .pcard .sl { --sh: 34px; }
+  .gtable .sdial .sl { --sh: 26px; }
   .fx-card { --kw: 48px; } .fx-card .radios { flex-wrap: nowrap; }
   .tab-perform .sdial .dial { width: 30px; height: 30px; }
   .tab-perform .strip .sm { font-size: 0; } /* the pan label; the slider stays */
   .radios span { padding: 4px 4px; font-size: .64rem; }
   /* six pattern sliders in a short window */
   .tab-perform .perform { gap: 0; }
-  .pknobs .knob .dial { width: 34px; height: 34px; }
+
   .pknobs .knob label { font-size: .78rem; line-height: 1.2; }
   .pknobs .knob output { font-size: .66rem; line-height: 1.2; }
   .pgh { margin-top: 2px; padding-top: 4px; }
   .tab-perform .pattern-card { gap: 4px; }
   .gtable { padding-top: 4px; }
   .pattern-card > h2 { margin-bottom: 0; }
-  .fx-card .knob .dial { width: 30px; height: 30px; }
+
   .master-card, .fx-card { --kw: 52px; }
   .fx-groups, .master-row { gap: 12px; } .fxg + .fxg, .mgroup + .mgroup { padding-left: 12px; }
 }
@@ -544,7 +562,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .rack { grid-template-columns: minmax(0, 1fr); padding: 16px; }
   .tab-perform { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
   .pattern-card, .right-col { grid-column: 1; grid-row: auto; }
-  .top-row { grid-template-columns: minmax(0, 1fr); }
   .master-row, .fx-groups { flex-direction: column; }
   .master-card, .fx-card { --kw: 60px; }
   .master-card, .fx-card { grid-template-columns: minmax(0, 1fr); }
@@ -583,6 +600,125 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .xcell { aspect-ratio: 1; }
 }
 @media (prefers-reduced-motion: reduce) { .pad, .vbtn i { transition: none; } }
+/* ---- perform as a desk: three rows of fader cards on the left (pattern and sound, effects, master and groove),
+   the randomiser and the mixer on the right. In a window that fits, the faders take the spare height ---- */
+.tab-perform { grid-template-columns: minmax(0, 1fr) clamp(340px, 31vw, 450px); grid-template-rows: none; gap: 12px; align-items: stretch; }
+.tab-perform > .card, .tab-perform > .bay-c { grid-column: 1; grid-row: auto; }
+.tab-perform > .right-col { grid-column: 2; grid-row: 1 / span 3; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 12px; min-height: 0; min-width: 0; }
+.bay-c { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; min-width: 0; min-height: 0; }
+.tab-perform .card { padding: 10px 14px 12px; gap: 6px; grid-template-rows: auto minmax(0, 1fr); align-content: stretch; min-height: 0; }
+.tab-perform .card > h2, .tab-perform .pc-head { margin: 0; min-height: 20px; }
+.tab-perform .pc-head { display: flex; align-items: center; justify-content: space-between; }
+.tab-perform .pattern-card.midi { grid-template-rows: auto auto minmax(0, 1fr); }
+.tab-perform:has(.pattern-card.midi) .groove-card { display: none; }
+/* a fader column: name on top, the fader, its value underneath */
+.tab-perform .knob, .pcard .knob { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; min-height: 0; }
+.tab-perform .knob .sl, .pcard .knob .sl { flex: none; height: 84px; }
+.tab-perform .knob label, .tab-perform .pknobs .knob label { font-family: var(--display); font-weight: 500; font-size: .74rem; line-height: 1.25; }
+.tab-perform .knob output, .tab-perform .pknobs .knob output { font-size: .66rem; line-height: 1.25; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.tab-perform .knobs, .tab-perform .pknobs { align-items: stretch; justify-items: stretch; gap: 0; }
+/* pattern and sound share one row of faders, with a rule between them */
+.tab-perform .perform { display: grid; grid-template-columns: 4fr 3fr 4fr; grid-template-rows: auto minmax(0, 1fr); gap: 2px 0; padding: 0; align-self: stretch; }
+.tab-perform #pk-pattern { grid-column: 1; grid-row: 2; }
+.tab-perform #pk-feel { grid-column: 2; grid-row: 2; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tab-perform .pgh { grid-column: 3; grid-row: 1; margin: 0; padding: 0 0 0 12px; border: 0; border-left: 1px solid var(--line); }
+.tab-perform #pk-macro { grid-column: 3; grid-row: 2; border-left: 1px solid var(--line); padding-left: 8px; }
+.tab-perform .perform > :first-child { grid-row: 2; }
+.tab-perform #pk-pattern, .tab-perform #pk-macro, .tab-perform .pgh { margin: 0; }
+/* effects: each effect's type buttons above its faders */
+.tab-perform .fx-groups { display: flex; gap: 14px; min-height: 0; }
+.tab-perform .fxg { display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 4px; }
+.tab-perform .fxg + .fxg { padding-left: 14px; }
+.tab-perform .fxg .knobs { grid-auto-columns: var(--kw); }
+.tab-perform .fxg:last-child .radios { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; }
+.tab-perform .master-row { display: flex; gap: 14px; min-height: 0; }
+.tab-perform .mgroup { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 4px; }
+.tab-perform .mgroup + .mgroup { padding-left: 14px; }
+.tab-perform .mlab { min-height: 22px; }
+.master-card, .fx-card { --kw: 58px; }
+/* groove: per track, swing share over push */
+.groove-card .gtable { grid-template-columns: 3.4em repeat(7, minmax(20px, 1fr)); grid-template-rows: auto auto auto; border: 0; padding: 0; gap: 2px; align-items: stretch; }
+.groove-card .ghead { visibility: hidden; grid-column: auto; grid-row: auto; border: 0; padding: 0; }
+.groove-card .gname { align-self: end; justify-self: center; }
+.groove-card .glab { align-self: center; font-size: .78rem; font-weight: 500; }
+.groove-card .sdial { display: flex; justify-content: center; min-height: 0; }
+.groove-card .sdial .sl { height: 44px; }
+/* randomise: four buttons in a row, depth and wild under them */
+.tab-perform .rand-card .rbtns { grid-template-columns: repeat(4, auto); justify-content: start; }
+.tab-perform .rand-card .rand-opts { gap: 14px; }
+/* mixer: per strip the name, pan and the three sends as small knobs, the fader, then r and a */
+.tab-perform .mix-card { grid-template-rows: auto minmax(0, 1fr); }
+.tab-perform .strips { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; min-height: 0; }
+.tab-perform .strip { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 0 4px; background: none; border-radius: 0; border-left: 1px solid var(--line); min-height: 0; min-width: 0; }
+.tab-perform .strip:first-child { border-left: 0; }
+.tab-perform .strip .name { font-size: .8rem; }
+.tab-perform .strip .sends { display: grid; grid-template-columns: repeat(2, auto); gap: 4px 6px; justify-content: center; }
+.tab-perform .strip .sdial { display: grid; justify-items: center; gap: 1px; }
+.tab-perform .strip .sdial .dial { width: 26px; height: 26px; }
+.tab-perform .strip .sdial span { display: block; font-size: .6rem; margin: 0; order: 0; min-width: 0; }
+.tab-perform .strip .fader { height: 200px; }
+.tab-perform .sfoot { gap: 4px; }
+.sfoot .vr, .sfoot .va { width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; background: var(--tint-2); color: var(--ink); cursor: pointer;
+  font-family: var(--display); font-weight: 600; font-size: .7rem; line-height: 1; flex: none; }
+.sfoot .va:hover, .sfoot .vr:hover { background: var(--ink); color: var(--panel); }
+.sfoot .va:focus-visible, .sfoot .vr:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+/* in a window that fits: the three rows share the height and every fader stretches to fill its card */
+@media (min-width: 761px) and (min-height: 480px) {
+  .tab-perform { grid-template-rows: repeat(3, minmax(0, 1fr)); overflow: hidden; }
+  .tab-perform .knob .sl, .pcard .knob .sl { flex: 1 1 0; height: auto; min-height: 28px; }
+  .tab-perform .knobs, .tab-perform .pknobs, .tab-perform .perform, .tab-perform .fxg, .tab-perform .mgroup { min-height: 0; }
+  .groove-card .gtable { grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr); min-height: 0; }
+  .groove-card .sdial .sl { height: auto; flex: 1 1 0; min-height: 18px; }
+  .groove-card .sdial { flex-direction: column; align-items: center; }
+  .tab-perform .strip .fader { flex: 1 1 0; height: auto; min-height: 60px; }
+  /* sound: the cards fill the panel's height and their faders stretch with them */
+  .tab-sound { align-items: stretch; }
+  .tab-sound .snd-main { grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
+  .tab-sound .pcards { align-content: stretch; min-height: 0; }
+  .pcard { display: grid; grid-template-rows: auto minmax(0, 1fr); align-content: stretch; }
+  .pcard .knobs { align-items: stretch; min-height: 0; }
+  .pcard .sel { align-self: start; }
+}
+@media (min-width: 761px) and (max-height: 640px) {
+  .tab-perform .card { padding: 6px 12px 8px; gap: 2px; }
+  .tab-perform .card > h2, .tab-perform .pc-head { min-height: 16px; font-size: .68rem; }
+  .tab-perform .mlab { min-height: 18px; }
+  .tab-perform .knob label, .tab-perform .pknobs .knob label { font-size: .7rem; line-height: 1.15; }
+  .tab-perform .knob output, .tab-perform .pknobs .knob output { line-height: 1.1; }
+  .tab-perform .strip { gap: 3px; }
+  .tab-perform .strip .sdial .dial { width: 22px; height: 22px; }
+}
+@media (min-width: 761px) and (max-width: 1250px) {
+  .tab-perform { grid-template-columns: minmax(0, 1fr) 340px; }
+  .master-card, .fx-card { --kw: 50px; }
+  .tab-perform .fx-groups, .tab-perform .master-row { gap: 10px; }
+  .tab-perform .fxg + .fxg, .tab-perform .mgroup + .mgroup { padding-left: 10px; }
+  .tab-perform .rand-card .rbtns .btn { padding: 4px 6px; }
+  .tab-perform .strip .sends { gap: 3px 2px; }
+  .tab-perform .strip .sdial .dial { width: 22px; height: 22px; }
+  .tab-perform .strip .sdial span { font-size: .56rem; }
+}
+@media (max-width: 760px) {
+  .tab-perform { grid-template-columns: minmax(0, 1fr); }
+  .tab-perform > .right-col { grid-column: 1; grid-row: auto; }
+  .bay-c { grid-template-columns: minmax(0, 1fr); }
+  .tab-perform .fx-groups, .tab-perform .master-row { flex-direction: column; }
+  .tab-perform .fxg + .fxg, .tab-perform .mgroup + .mgroup { padding-left: 0; }
+  .tab-perform .rand-card .rbtns { grid-template-columns: 1fr 1fr; }
+  .tab-perform .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 16px; }
+  .tab-perform .strip:nth-child(4) { border-left: 0; }
+  .tab-perform .strip .fader { height: 140px; }
+  .tab-perform .knob .sl, .pcard .knob .sl { height: 72px; }
+  .tab-perform .perform { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; gap: 10px; }
+  .tab-perform #pk-pattern, .tab-perform #pk-feel, .tab-perform .pgh, .tab-perform #pk-macro, .tab-perform .perform > :first-child { grid-column: 1; grid-row: auto; }
+  .tab-perform #pk-feel { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .tab-perform .pgh { border-left: 0; border-top: 1px solid var(--line); padding: 8px 0 0; }
+  .tab-perform #pk-macro { border-left: 0; padding-left: 0; }
+}
+/* each effect's type is a small dropdown beside its name */
+.fxh { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.fxh .pick { font-size: .72rem; padding: 1px 4px; border-radius: 4px; text-transform: lowercase; }
+.tab-perform .fxg { grid-template-rows: auto minmax(0, 1fr); }
 </style>
 
 <div class="wrap">
@@ -635,10 +771,29 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
         <div class="mini" id="mini" aria-hidden="true"></div>
       </div>
     </div>
-    <div class="gtable" id="gtable" role="group" aria-label="Groove per track"></div>
+    </div>
+    <div class="card fx-card" role="group" aria-label="Effects">
+      <h2>fx</h2>
+      <div class="fx-groups">
+        <div class="fxg" role="group" aria-label="FX 1, echo"><span class="fxh"><b>1</b> echo <select class="pick" id="r-echo" aria-label="echo type"></select></span><div class="knobs" id="k-echo"></div></div>
+        <div class="fxg" role="group" aria-label="FX 2, distortion"><span class="fxh"><b>2</b> distortion <select class="pick" id="r-dist" aria-label="distortion type"></select></span><div class="knobs" id="k-dist"></div></div>
+        <div class="fxg" role="group" aria-label="FX 3, ring mod"><span class="fxh"><b>3</b> ring mod <select class="pick" id="r-ring" aria-label="ring mod type"></select></span><div class="knobs" id="k-ring"></div></div>
+      </div>
+    </div>
+    <div class="bay-c">
+    <div class="card master-card" role="group" aria-label="Master">
+      <h2>master</h2>
+      <div class="master-row">
+        <div class="mgroup"><span class="mlab"><button class="btn tiny" id="comp-on" type="button" aria-pressed="true">compressor</button><output id="gr-out"></output></span><div class="knobs" id="comp-knobs"></div></div>
+        <div class="mgroup"><span class="mlab">drum 1 sidechain<output id="duck-out"></output></span><div class="knobs" id="duck-knobs"></div></div>
+      </div>
+    </div>
+      <div class="card groove-card" role="group" aria-label="Groove per track">
+        <h2>groove</h2>
+        <div class="gtable" id="gtable"></div>
+      </div>
     </div>
     <div class="right-col">
-    <div class="top-row">
     <div class="card rand-card" role="group" aria-label="Randomise">
       <h2>randomise</h2>
       <div class="rand perform-rand">
@@ -650,22 +805,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
           <label class="field" for="depth">depth <input id="depth" type="range" min="1" max="100" value="30"><output id="depth-out">30%</output></label>
           <label class="field" for="wild"><input id="wild" type="checkbox"> wild</label>
         </span>
-      </div>
-    </div>
-    <div class="card master-card" role="group" aria-label="Master">
-      <h2>master</h2>
-      <div class="master-row">
-        <div class="mgroup"><span class="mlab"><button class="btn tiny" id="comp-on" type="button" aria-pressed="true">compressor</button><output id="gr-out"></output></span><div class="knobs" id="comp-knobs"></div></div>
-        <div class="mgroup"><span class="mlab">drum 1 sidechain<output id="duck-out"></output></span><div class="knobs" id="duck-knobs"></div></div>
-      </div>
-    </div>
-    </div>
-    <div class="card fx-card" role="group" aria-label="Effects">
-      <h2>fx</h2>
-      <div class="fx-groups">
-        <div class="fxg" role="group" aria-label="FX 1, echo"><span class="fxh"><b>1</b> echo</span><div class="radios" id="r-echo"></div><div class="knobs" id="k-echo"></div></div>
-        <div class="fxg" role="group" aria-label="FX 2, distortion"><span class="fxh"><b>2</b> distortion</span><div class="radios" id="r-dist"></div><div class="knobs" id="k-dist"></div></div>
-        <div class="fxg" role="group" aria-label="FX 3, ring mod"><span class="fxh"><b>3</b> ring mod</span><div class="radios" id="r-ring"></div><div class="knobs" id="k-ring"></div></div>
       </div>
     </div>
     <div class="card mix-card">
@@ -738,7 +877,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
       <p class="note">The sound knobs on the pattern card are performance macros over all six voices at once: fm depth (the drums' FM amount and the cymbal and hat FM), decay (every amp decay), pitch (every voice's coarse tune, up to two octaves either way) and filter (every filter's cutoff). Each sits in the middle as the kit is; turning it pushes every voice's own value towards the top or the bottom, so the kit's differences stay. They change what the engine plays, not the kit: the sound tab still shows the kit's own values, and double-click sets a macro back to the middle. They are saved with presets.</p>
       <p class="note">Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The switch on the pattern card turns the pattern off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge).</p>
       <p class="note">The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials.</p>
-      <p class="note">Drag a knob up or down, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit.</p>
+      <p class="note">Drag a slider up or down, click along it, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit.</p>
       <p class="note">Randomise (sound tab) varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. In the mixer, r by each name gives that voice a random sound from the bundled kits, varied by 10%, and a varies the voice's current sound by 10%; undo takes either back. The randomise card on the perform tab (beside the master section): kit does the same for all six drum sounds and leaves the mixer, FX, crossfeed and pattern alone. Press R for the same; Randomise all (Shift-R) does every voice at once. Everything builds a fresh sound from voices of the bundled kits (Hrtl's LXR-02 kits and twelve generated ones, which aren't listed as presets), varies each by 10%, and rolls new crossfeed, delay time, echo feedback (usually low, now and then high), beat, energy and fills, keeping the mixer levels; save keeps it.</p>
       <p class="note">Swing (on the pattern card, and on the steps tab) delays every second 16th: 50% is straight, 66% a triplet feel, 75% the most. Each track has two dials (under the pattern sliders, and at the end of its row on the steps tab): swing sets how much of the swing that track takes (so the hats can swing while the kick stays straight), and push moves the whole track early (left) or late (right) by up to a quarter of a 16th, centre being on the grid. The groove applies to the perform patterns too and is saved with presets. In the grid, Shift-click toggles an accent (bright step with a bar on top) and Cmd-click (Ctrl-click on Windows) cycles a bar condition: 2 plays the step only on every second bar, 4 only on the fourth. Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
     </div>
@@ -1273,37 +1412,60 @@ const arc = (r, a, b) => {
   const x0 = 32 + r * Math.cos(a), y0 = 32 + r * Math.sin(a), x1 = 32 + r * Math.cos(b), y1 = 32 + r * Math.sin(b);
   return `M${x0.toFixed(2)} ${y0.toFixed(2)}A${r} ${r} 0 ${b - a > Math.PI ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
 };
+// a vertical slider: o = { max, get, put, show, center, detents, snap }. Click the track to jump there,
+// drag the cap (Shift: fine)
+function slider(aria, o) {
+  const el = document.createElement('div'); el.className = 'sl'; el.tabIndex = 0;
+  el.setAttribute('role', 'slider'); el.setAttribute('aria-label', aria); el.setAttribute('aria-orientation', 'vertical');
+  el.setAttribute('aria-valuemin', 0); el.setAttribute('aria-valuemax', o.max);
+  el.innerHTML = '<i class="rail"><i class="fill"></i><b class="thumb"></b></i>';
+  const rail = el.firstChild, snap = o.snap || ((v) => v);
+  for (const [v, major] of o.detents || []) {
+    const t = document.createElement('i'); t.className = major ? 'tick major' : 'tick';
+    t.style.bottom = (100 * v / o.max) + '%'; rail.prepend(t);
+  }
+  const draw = () => {
+    const v = Math.min(o.get(), o.max), f = o.max ? v / o.max : 0, c = o.center !== undefined ? o.center / o.max : 0;
+    el.style.setProperty('--p', f); el.style.setProperty('--a', Math.min(c, f)); el.style.setProperty('--w', Math.abs(f - c));
+    el.setAttribute('aria-valuenow', v); el.setAttribute('aria-valuetext', o.show(v));
+  };
+  let drag = null;
+  el.addEventListener('pointerdown', (e) => {
+    if (e.button) return;
+    const r = rail.getBoundingClientRect(), py = r.bottom - r.height * Math.min(o.get(), o.max) / o.max;
+    el.setPointerCapture(e.pointerId); el.focus({ preventScroll: true }); e.preventDefault();
+    // a press off the cap jumps there
+    drag = { last: e.clientY, h: r.height || 1, acc: o.get() };
+    if (Math.abs(e.clientY - py) > 6) { drag.acc = Math.max(0, Math.min(o.max, (r.bottom - e.clientY) / r.height * o.max)); o.put(snap(drag.acc)); }
+  });
+  el.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    drag.acc += (drag.last - e.clientY) * o.max / drag.h * (e.shiftKey ? 0.25 : 1); drag.last = e.clientY;
+    o.put(snap(Math.max(0, Math.min(o.max, drag.acc))));
+  });
+  el.addEventListener('pointerup', () => { drag = null; });
+  el.addEventListener('pointercancel', () => { drag = null; });
+  return { el, draw };
+}
 // a knob over any value: o = { max, get, set, show, dflt, changed }
 function dialKnob(label, o) {
   const el = document.createElement('div'); el.className = 'knob';
   const id = 'k' + (++dialKnob.n);
-  el.innerHTML = `<svg class="dial" id="${id}" viewBox="0 0 64 64" tabindex="0" role="slider" aria-label="${label}" aria-valuemin="0" aria-valuemax="${o.max}">
-      <path class="track" d="${arc(27, A0, A1)}"/><path class="val"/><circle class="cap" cx="32" cy="32" r="20"/><line class="ptr" x1="32" y1="32" x2="32" y2="16"/></svg>
-    <label for="${id}">${label}</label><output></output>`;
-  const dial = el.querySelector('svg'), val = el.querySelector('.val'), ptr = el.querySelector('.ptr'), out = el.querySelector('output');
-  // optional detents ([value, major]): tick marks round the dial, and a drag catches on them
+  // optional detents ([value, major]): tick marks beside the slider, and a drag catches on them
   const det = (o.detents || []).map(([v]) => v).sort((a, b) => a - b);
-  for (const [v, major] of o.detents || []) {
-    const a = A0 + (A1 - A0) * v / o.max, r0 = major ? 28.5 : 29.8, c = Math.cos(a), sn = Math.sin(a);
-    const t = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    t.setAttribute('class', major ? 'tick major' : 'tick');
-    t.setAttribute('x1', (32 + r0 * c).toFixed(2)); t.setAttribute('y1', (32 + r0 * sn).toFixed(2));
-    t.setAttribute('x2', (32 + 31.6 * c).toFixed(2)); t.setAttribute('y2', (32 + 31.6 * sn).toFixed(2));
-    dial.insertBefore(t, dial.firstChild);
-  }
   const CATCH = Math.max(1, o.max * 0.008);
   const snap = (v) => { for (const d of det) if (Math.abs(v - d) <= CATCH) return d; return v; };
   const nextDetent = (dir) => {
     const v = o.get();
     return dir > 0 ? (det.find((d) => d > v) ?? o.max) : ([...det].reverse().find((d) => d < v) ?? 0);
   };
+  const s = slider(label, { max: o.max, get: o.get, show: o.show, center: o.center, detents: o.detents, snap, put: (v) => set(v) });
+  const dial = s.el; dial.id = id;
+  el.innerHTML = `<label for="${id}">${label}</label><output></output>`;
+  const out = el.querySelector('output');
+  el.insertBefore(dial, out);
   const draw = () => {
-    const v = Math.min(o.get(), o.max), a = A0 + (A1 - A0) * (o.max ? v / o.max : 0);
-    const c = o.center !== undefined ? A0 + (A1 - A0) * o.center / o.max : A0; // a bipolar knob draws out from its middle
-    val.setAttribute('d', v === (o.center ?? 0) ? '' : arc(27, Math.min(c, a), Math.max(c, a)));
-    ptr.setAttribute('x2', (32 + 15 * Math.cos(a)).toFixed(2)); ptr.setAttribute('y2', (32 + 15 * Math.sin(a)).toFixed(2));
-    out.textContent = o.show(v);
-    dial.setAttribute('aria-valuenow', v); dial.setAttribute('aria-valuetext', o.show(v));
+    s.draw(); out.textContent = o.show(Math.min(o.get(), o.max));
     el.classList.toggle('changed', !!(o.changed && o.changed()));
   };
   const set = (v) => {
@@ -1312,11 +1474,6 @@ function dialKnob(label, o) {
     o.set(v); draw();
     detail(`${label} <em>${o.show(v)}</em>`);
   };
-  let drag = null;
-  dial.addEventListener('pointerdown', (e) => { dial.setPointerCapture(e.pointerId); drag = { y: e.clientY, v: o.get() }; dial.focus(); });
-  dial.addEventListener('pointermove', (e) => { if (drag) set(snap(drag.v + (drag.y - e.clientY) * (o.max / 160))); });
-  dial.addEventListener('pointerup', () => { drag = null; });
-  dial.addEventListener('pointercancel', () => { drag = null; });
   // with detents, the wheel and arrow keys step from one to the next (Shift + arrow: fine steps)
   const step = (dir, fine) => set(det.length && o.jump !== false && !fine ? nextDetent(dir) : o.get() + dir);
   dial.addEventListener('wheel', (e) => { e.preventDefault(); step(e.deltaY < 0 ? 1 : -1, false); }, { passive: false });
@@ -1545,8 +1702,8 @@ TRACKS.forEach((t, r) => {
     cells[r][s] = c;
     drawCell(r, s);
   }
-  const sw = miniDial('swing', `${t.name} swing share`, () => groove.share[r], (v) => { groove.share[r] = v; drawGroove(); sendSeq(); }, 100);
-  const pp = miniDial('push', `${t.name} push or pull`, () => groove.push[r], (v) => { groove.push[r] = v; drawGroove(); sendSeq(); }, 50, 100,
+  const sw = miniSlider('swing', `${t.name} swing share`, () => groove.share[r], (v) => { groove.share[r] = v; drawGroove(); sendSeq(); }, 100);
+  const pp = miniSlider('push', `${t.name} push or pull`, () => groove.push[r], (v) => { groove.push[r] = v; drawGroove(); sendSeq(); }, 50, 100,
     (v) => (v === 50 ? 'on the grid' : v < 50 ? `push ${Math.round((50 - v) / 2)}% early` : `pull ${Math.round((v - 50) / 2)}% late`), true);
   gridEl.append(sw.el, pp.el);
   grooveDials.push(sw.draw, pp.draw);
@@ -1565,10 +1722,10 @@ $('swing-p').addEventListener('input', () => { groove.swing = Number($('swing-p'
   ['d1', 'd2', 'd3', 'sn', 'cy', 'ch', 'oh'].forEach((n, r) => { const h = document.createElement('span'); h.className = 'gname'; h.textContent = n; h.title = TRACKS[r].name.toLowerCase(); gt.appendChild(h); });
   for (const [label, key, dflt, show, center, tip] of [
     ['swing', 'share', 100, (v) => v + '% of the swing', false, 'How much of the swing each track takes'],
-    ['push', 'push', 50, (v) => (v === 50 ? 'on the grid' : v < 50 ? `push ${Math.round((50 - v) / 2)}% early` : `pull ${Math.round((v - 50) / 2)}% late`), true, 'Left: early (push); right: late (pull)']]) {
+    ['push', 'push', 50, (v) => (v === 50 ? 'on the grid' : v < 50 ? `push ${Math.round((50 - v) / 2)}% early` : `pull ${Math.round((v - 50) / 2)}% late`), true, 'Down: early (push); up: late (pull)']]) {
     const l = document.createElement('span'); l.className = 'glab'; l.textContent = label; l.title = tip; gt.appendChild(l);
     TRACKS.forEach((t, r) => {
-      const d = miniDial(label, `${t.name} ${label === 'swing' ? 'swing share' : 'push or pull'}`, () => groove[key][r], (v) => { groove[key][r] = v; drawGroove(); sendSeq(); }, dflt, 100, show, center);
+      const d = miniSlider(label, `${t.name} ${label === 'swing' ? 'swing share' : 'push or pull'}`, () => groove[key][r], (v) => { groove[key][r] = v; drawGroove(); sendSeq(); }, dflt, 100, show, center);
       gt.appendChild(d.el); grooveDials.push(d.draw);
     });
   }
@@ -2135,6 +2292,23 @@ const fx3 = structuredClone(FX3_0);
 const fx3Snapshot = () => ({ params: structuredClone(fx3), dsend: mix.dist.slice(), ring: mix.ring.slice() });
 const stripsEl = $('strips');
 const fxButtons = [];
+// small slider for the groove's per-track swing share and push, 0..100
+function miniSlider(label, aria, get, set, dflt, max = 100, show = (v) => v + '%', center = false) {
+  const el = document.createElement('div'); el.className = 'sdial';
+  const put = (v) => { v = Math.max(0, Math.min(max, Math.round(v))); if (v !== get()) { set(v); draw(); } };
+  const s = slider(aria, { max, get, show, center: center ? Math.floor(max / 2) : undefined, put });
+  const dial = s.el;
+  el.append(dial); el.insertAdjacentHTML('beforeend', `<span>${label}</span>`);
+  const draw = () => { s.draw(); dial.title = `${label} ${show(get())}`; };
+  dial.addEventListener('wheel', (e) => { e.preventDefault(); put(get() + (e.deltaY < 0 ? 2 : -2)); }, { passive: false });
+  dial.addEventListener('keydown', (e) => {
+    const d = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 10, PageDown: -10 }[e.key];
+    if (d) { put(get() + d); e.preventDefault(); }
+  });
+  dial.addEventListener('dblclick', () => put(dflt));
+  draw();
+  return { el, draw };
+}
 // small dial for the mixer's sends, 0..100
 function miniDial(label, aria, get, set, dflt, max = 100, show = (v) => v + '%', center = false) {
   const el = document.createElement('div'); el.className = 'sdial';
@@ -2165,8 +2339,9 @@ function miniDial(label, aria, get, set, dflt, max = 100, show = (v) => v + '%',
 CH.forEach((name, n) => {
   const vol = PAR.VOL1 + n, pan = PAR.PAN1 + n;
   const el = document.createElement('div'); el.className = 'strip'; el.setAttribute('role', 'group'); el.setAttribute('aria-label', name);
-  el.innerHTML = `    <div class="shead"><span class="name">${name}</span><button class="vr" type="button" title="${name}: a random sound from the built-in kits, varied by 10%" aria-label="New random sound for ${name}">r</button><button class="va" type="button" title="${name}: vary the current sound by 10%" aria-label="Vary ${name} by 10%">a</button></div>
-    <div class="chan"><span class="sends"></span><input class="fader" type="range" min="0" max="127" value="${values[vol]}" aria-label="${name} level"></div>
+  el.innerHTML = `    <span class="name">${name}</span><span class="sends"></span>
+    <input class="fader" type="range" min="0" max="127" value="${values[vol]}" aria-label="${name} level">
+    <div class="sfoot"><button class="vr" type="button" title="${name}: a random sound from the built-in kits, varied by 10%" aria-label="New random sound for ${name}">r</button><button class="va" type="button" title="${name}: vary the current sound by 10%" aria-label="Vary ${name} by 10%">a</button></div>
 `;
   const fader = el.querySelector('.fader'), nameEl = el.querySelector('.name');
   // pan is a small dial; mixInputs gets an input-like stand-in so kit loads and knob edits redraw it
@@ -2267,6 +2442,12 @@ function radios(box, name, labels, get, set) {
     box.appendChild(lab);
   });
 }
+// a small dropdown for an effect's type
+function fxPick(sel, labels, get, set) {
+  sel.innerHTML = labels.map((l, i) => `<option value="${i}">${l}</option>`).join('');
+  sel.value = String(get());
+  sel.onchange = () => set(Number(sel.value));
+}
 // a 0..127 knob over one of the page's own FX settings
 const fx3Knob = (label, obj, key, dflt) => dialKnob(label, { max: 127, show: (v) => String(v), get: () => obj()[key],
   set: (v) => { obj()[key] = v; sendMix(); }, dflt: () => dflt });
@@ -2274,7 +2455,7 @@ function syncFx() {
   // 1: the firmware's delay on the engine's FX bus, always the delay here: tempo-synced time,
   // tone, feedback. 2 and 3: distortion and ring mod on their own buses (page settings)
   fxButtons.forEach((b) => b());
-  radios($('r-echo'), 'echo-mode', LXR.DELAY_NAMES.map((n) => n.toLowerCase()), () => values[PAR.FX_DELAY_TYPE],
+  fxPick($('r-echo'), LXR.DELAY_NAMES.map((n) => n.toLowerCase()), () => values[PAR.FX_DELAY_TYPE],
     (i) => setValue(PAR.FX_DELAY_TYPE, i, true));
   const ke = $('k-echo'); ke.innerHTML = '';
   // detents on the musical lengths: straight notes are the major ticks, dotted and triplet the small ones
@@ -2283,10 +2464,10 @@ function syncFx() {
     set: (v) => { delayPos = v / 1000; send({ type: 'delay', pos: delayPos }); }, dflt: () => Math.round(posOf(3 / 16) * 1000) }),
     knob('tone', PAR.FX_P3, true), knob('feedback', PAR.FX_P4, true), dialKnob('width', { max: 200, show: (v) => v + '%', detents: [[100, true]], jump: false, get: () => fx3.echo.pct,
       set: (v) => { fx3.echo.pct = v; sendMix(); }, dflt: () => FX3_0.echo.pct }));
-  radios($('r-dist'), 'dist-type', LXR.DIST_NAMES.map((n) => n.toLowerCase()), () => fx3.dist.type, (i) => { fx3.dist.type = i; sendMix(); });
+  fxPick($('r-dist'), LXR.DIST_NAMES.map((n) => n.toLowerCase()), () => fx3.dist.type, (i) => { fx3.dist.type = i; sendMix(); });
   const kd = $('k-dist'); kd.innerHTML = '';
   ['drive', 'color', 'tone', 'volume'].forEach((l, i) => kd.append(fx3Knob(l, () => fx3.dist.p, i, FX3_0.dist.p[i])));
-  radios($('r-ring'), 'ring-wave', LXR.OSC_WAVE_NAMES.map((n) => n.toLowerCase()), () => fx3.ring.wave, (i) => { fx3.ring.wave = i; sendMix(); });
+  fxPick($('r-ring'), LXR.OSC_WAVE_NAMES.map((n) => n.toLowerCase()), () => fx3.ring.wave, (i) => { fx3.ring.wave = i; sendMix(); });
   const kr = $('k-ring'); kr.innerHTML = '';
   kr.append(fx3Knob('freq', () => fx3.ring, 'freq', FX3_0.ring.freq));
 }
