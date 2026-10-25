@@ -48,7 +48,7 @@ button, select, input { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
 /* ---- controls ---- */
-.btn, .sm, .bus h2, .bus .gate, .vbtn, .pbtn { text-transform: lowercase; }
+.btn, .vbtn { text-transform: lowercase; }
 .field select, .field input { color: var(--ink); }
 .btn { font-family: var(--display); font-weight: 500; font-size: .88rem; border: 0; border-radius: 6px; padding: 6px 14px;
   background: var(--tint); color: var(--ink); cursor: pointer; white-space: nowrap; }
@@ -215,7 +215,6 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .pad { border: 2px solid var(--ink); border-radius: 10px; background: none; cursor: pointer; display: grid; place-items: center;
   align-content: center; gap: 4px; font-family: var(--display); font-weight: 600; font-size: 1rem; color: var(--ink); transition: background .2s; }
 .pad:hover { background: var(--tint); }
-.pad .led { display: none; }
 .pad.hit { background: var(--led); border-color: var(--led); color: #fff; transition: none; }
 .pad span { text-transform: lowercase; }
 .pad kbd { font-family: var(--mono); font-size: .66rem; color: var(--muted); }
@@ -223,10 +222,6 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .rand .btn { padding: 6px 12px; }
 .rand .field input[type=range] { width: 70px; }
 .pages { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--line); }
-.pbtn { font-family: var(--display); font-weight: 500; font-size: .88rem; padding: 6px 10px; border: 0; border-bottom: 2px solid transparent;
-  margin-bottom: -1px; background: none; color: var(--muted); cursor: pointer; }
-.pbtn:hover { color: var(--ink); }
-.pbtn[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
 .knobs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px 6px; align-items: start; }
 .knob { display: grid; justify-items: center; gap: 2px; user-select: none; touch-action: none; min-width: 0; }
 
@@ -319,7 +314,6 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .perform-rand { gap: 8px 6px; }
 .perform-rand .btn { padding: 6px 9px; }
 .rand-opts { display: flex; align-items: center; gap: 14px; white-space: nowrap; }
-.spacer { flex: 1; }
 .tab-perform .strips { gap: 0; }
 .tab-perform .strip { background: none; padding: 2px 12px; gap: 10px; border-left: 1px solid var(--line); border-radius: 0; }
 .tab-perform .strip:first-child { border-left: 0; }
@@ -328,7 +322,6 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .tab-perform .sdial .dial { width: 32px; height: 32px; }
 .tab-perform .sdial span { font-size: .7rem; margin-top: 2px; }
 .tab-perform .ms { gap: 6px; }
-.tab-perform .sm { font-size: .68rem; }
 .tab-perform .strip .fader { height: 230px; }
 .tab-perform .ms button { width: 28px; height: 24px; font-size: .74rem; }
 .fx-groups { display: flex; gap: 16px; }
@@ -345,24 +338,9 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .radios input:focus-visible + span { outline: 2px solid var(--ink); outline-offset: 1px; }
 .fxg .knobs { grid-template-columns: none; grid-auto-columns: var(--kw); grid-auto-flow: column; gap: 0; justify-content: start; }
 .fxg .knob output { white-space: nowrap; }
-.chan { display: flex; gap: 6px; justify-content: center; align-items: stretch; }
-.chan .sends { flex-direction: column; justify-content: center; gap: 8px; }
-.tab-perform .chan .sdial .dial { width: 26px; height: 26px; }
-.chan .sdial span { font-size: .6rem; }
-.shead { display: flex; align-items: center; justify-content: center; gap: 6px; }
-.shead .vr, .shead .va { width: 18px; height: 18px; padding: 0; border: 0; border-radius: 50%; background: var(--tint-2); color: var(--ink); cursor: pointer;
-  font-family: var(--display); font-weight: 600; font-size: .68rem; line-height: 1; flex: none; }
-.shead .va:hover, .shead .vr:hover { background: var(--ink); color: var(--panel); }
-.shead .va:focus-visible, .shead .vr:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
-.shead .sdial span { display: none; } /* the dial's own tooltip names it pan */
 .sfoot { display: flex; align-items: center; justify-content: center; gap: 8px; }
 .sfoot output { min-width: 2.2em; text-align: right; }
-.tab-perform .shead .sdial .dial { width: 30px; height: 30px; }
 /* each send's label sits to the left of its dial so three stack beside a short fader */
-.chan .sends .sdial { display: flex; align-items: center; gap: 3px; }
-.chan .sends .sdial span { order: -1; margin: 0; min-width: 2.3em; text-align: right; }
-.tab-perform .chan .sends .sdial .dial { width: 24px; height: 24px; }
-.fx-knobs { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
 .sends { display: flex; gap: 4px; justify-content: center; }
 .sdial { display: grid; justify-items: center; gap: 0; user-select: none; touch-action: none; }
 .sdial .dial { width: 34px; height: 34px; cursor: ns-resize; border-radius: 50%; }
@@ -373,7 +351,6 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .seq { display: grid; gap: 14px; width: 100%; }
 .perform { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding-block: 28px; }
 .dials { display: contents; }
-.mini { display: none; }
 .grid { display: grid; grid-template-columns: 4.6em repeat(16, minmax(0, 1fr)) 34px 34px; gap: 4px; align-items: center; }
 .grid .ghead { font-size: .66rem; color: var(--muted); text-align: center; text-transform: lowercase; }
 .grid .sdial span { display: none; }
@@ -404,12 +381,9 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 /* ---- mixer tab ---- */
 .mixer { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; max-width: 760px; width: 100%; justify-self: center; align-items: start; }
 .strips { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
-.strip, .bus { background: var(--tint); border-radius: 8px; padding: 10px 8px; display: grid; gap: 8px; min-width: 0; }
+.strip { background: var(--tint); border-radius: 8px; padding: 10px 8px; display: grid; gap: 8px; min-width: 0; }
 .strip { justify-items: center; }
 .strip .name { font-family: var(--display); font-weight: 600; font-size: .8rem; white-space: nowrap; text-transform: lowercase; }
-.sm { display: grid; gap: 2px; width: 100%; font-size: .76rem; color: var(--muted); text-transform: lowercase; }
-.sm output { font-family: var(--mono); font-size: .72rem; color: var(--ink); }
-.sm input[type=range], .sm select { width: 100%; }
 .strip .fader { writing-mode: vertical-lr; direction: rtl; width: 28px; height: 200px; }
 .strip > output { font-family: var(--mono); font-size: .74rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .ms { display: flex; gap: 4px; }
@@ -419,9 +393,6 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .ms button[aria-pressed="true"].m { background: var(--ink); color: var(--panel); }
 .ms button[aria-pressed="true"].s { background: var(--led); color: #fff; }
 .buses { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
-.bus { padding: 12px 14px; gap: 9px; }
-.bus .gate { display: flex; align-items: center; gap: 8px; font-size: .86rem; text-transform: lowercase; }
-.fx-params { display: grid; gap: 9px; }
 .hint { margin: 0; font-size: .78rem; color: var(--muted); }
 
 /* ---- about tab ---- */
@@ -538,11 +509,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .mix-card { grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
   .tab-perform .strips { min-height: 0; }
   .tab-perform .strip { display: flex; flex-direction: column; align-items: center; min-height: 0; }
-  .tab-perform .strip .sm { align-self: stretch; }
-  .tab-perform .chan { flex: 1 1 auto; min-height: 88px; max-height: 150px; }
-  @media (min-height: 720px) { .tab-perform .chan { max-height: 190px; } }
   @media (min-height: 800px) { .pcard .sl { --sh: 60px; } }
-  @media (min-height: 860px) { .tab-perform .chan { max-height: 250px; } .pknobs .sl { --sh: 64px; } }
+  @media (min-height: 860px) { .pknobs .sl { --sh: 64px; } }
   .tab-perform .strip .fader { height: auto; }
   .pattern-card { grid-template-rows: auto minmax(0, 1fr) auto; }
   .tab-perform .perform { display: flex; flex-direction: column; gap: clamp(10px, 2vh, 20px); align-self: stretch; padding-block: 0; }
@@ -557,10 +525,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-perform .strip { gap: 4px; }
   .rand-card { padding: 8px 12px; gap: 4px; }
   .rand-card .rbtns .btn { padding: 2px 8px; font-size: .78rem; }
-  .tab-perform .chan { min-height: 80px; }
-  .tab-perform .chan .sends { gap: 2px; }
-  .tab-perform .chan .sends .sdial .dial { width: 20px; height: 20px; }
-  .tab-perform .shead .sdial .dial { width: 26px; height: 26px; }
   .fx-card .radios span { padding: 3px 3px; }
 
   .master-card .knob, .fx-card .knob { gap: 0; }
@@ -573,7 +537,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .gtable .sdial .sl { --sh: 26px; }
   .fx-card { --kw: 48px; } .fx-card .radios { flex-wrap: nowrap; }
   .tab-perform .sdial .dial { width: 30px; height: 30px; }
-  .tab-perform .strip .sm { font-size: 0; } /* the pan label; the slider stays */
   .radios span { padding: 4px 4px; font-size: .64rem; }
   /* six pattern sliders in a short window */
   .tab-perform .perform { gap: 0; }
@@ -597,7 +560,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .master-row, .fx-groups { flex-direction: column; }
   .master-card, .fx-card { --kw: 60px; }
   .master-card, .fx-card { grid-template-columns: minmax(0, 1fr); }
-  .fx-row { grid-template-columns: minmax(0, 1fr); }
   .mgroup + .mgroup { border-left: 0; padding-left: 0; }
   .fxg + .fxg { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 8px; }
   .tab-perform .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 16px; }
@@ -872,7 +834,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
         <input id="level" type="range" min="1" max="127" value="100" aria-hidden="true" tabindex="-1"><output id="level-out"></output>
         <input id="accent" type="range" min="0" max="6" value="6" aria-hidden="true" tabindex="-1"><output id="accent-out"></output>
         <input id="swing-p" type="range" min="50" max="75" value="50" aria-hidden="true" tabindex="-1"><output id="swing-p-out"></output>
-        <div class="mini" id="mini" aria-hidden="true"></div>
       </div>
     </div>
     </div>
@@ -931,7 +892,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
         <button class="pad" id="pad" type="button" aria-label="Trigger the selected voice"><span>trig</span><kbd>space · 1–7</kbd></button>
         <div class="rand"><button class="btn" id="rand" type="button">randomise <span id="rand-name" class="sr">DRUM 1</span></button></div>
       </div>
-      <div class="pages" id="pages" hidden></div>
       <div class="pcards" id="knobs"></div>
     </div>
     <div class="col snd-side">
@@ -4594,8 +4554,6 @@ class Player {
     this.cntStep = 0; this.cntGain = 1; this.clk = null;
     // accent: unaccented sequencer hits are turned down by the accent amount, after the engine
     this.gain = new Float32Array(6).fill(1); this.gainTo = new Float32Array(6).fill(1);
-    // mixer: mute/solo per voice
-    this.chan = new Float32Array(6).fill(1); this.chanAt = new Float32Array(6).fill(1);
     this.fxGain = new Float32Array(6); this.fxAmt = new Float32Array(6).fill(1);
     // master: drum 1 ducks the other voices (before the FX bus), then a compressor
     // on the whole mix, the same design as the LXR-02's FX compressor
@@ -4631,7 +4589,7 @@ class Player {
         this.ring.ringmod.osc.waveform = m.ring.wave;
         this.ring.setParameter(0, m.ring.freq / 127);
         this.sendD.set(m.sendD); this.sendR.set(m.sendR); this.echoWidth = m.echo.pct / 100;
-      } this.fxAmt.set(m.fx); this.chan.set(m.chan); }
+      } this.fxAmt.set(m.fx); }
     else if (m.type === 'rec') {
       // recorder: free starts now; a loop waits for the first step of a bar and stops after its bars
       // with a count-in, the take starts on the bar after a counted one (from stop the count keeps its own time)
@@ -4652,14 +4610,14 @@ class Player {
       if (!this.playing) { this.flushBar(); if (this.rec && (this.rec.loop || this.rec.count) && (was || this.rec.count !== 'run')) this.recEnd(); }
     }
   }
-  // a preset loaded while playing: its messages wait for the first step of the next bar.
-  // A queued pattern never starts or stops the transport.
   recFlush() {
     const r = this.rec;
     if (r.n) this.events.push({ type: 'recData', L: r.L.slice(0, r.n), R: r.R.slice(0, r.n) });
     r.n = 0;
   }
   recEnd() { this.recFlush(); this.events.push({ type: 'rec', state: 'done', bars: this.rec.done, bpm: this.bpm }); this.rec = null; }
+  // a preset loaded while playing: its messages wait for the first step of the next bar.
+  // A queued pattern never starts or stops the transport.
   flushBar() {
     const q = this.atBar; this.atBar = [];
     for (const m of q) this.msg(m.type === 'seq' ? { ...m, playing: this.playing } : m);
@@ -4738,14 +4696,14 @@ class Player {
     e.fx.setDelaySync(isDelay ? delaySamples(this.delayPos, this.bpm) : null);
     let pk = 0;
     for (let i = 0; i < 64; i++) pk = Math.max(pk, Math.abs(k[i]));
-    pk = pk / 32768 * this.gainTo[0] * this.chan[0];
+    pk = pk / 32768 * this.gainTo[0];
     this.duckEnv = Math.max(pk, this.duckEnv * Math.exp(-64000 / (M.duckRelease * LXR.REAL_FS)));
     const duck0 = this.duckAt, duck1 = 1 - M.duck * Math.min(1, this.duckEnv / 0.3);
     this.duckAt = duck1; this.duckMin = Math.min(this.duckMin, duck1);
     for (let n = 0; n < 6; n++) {
-      // accent gain and mute/solo, both ramped over the block, and the duck on every voice but drum 1
+      // accent gain, ramped over the block, and the duck on every voice but drum 1
       const d0 = n ? duck0 : 1, d1 = n ? duck1 : 1;
-      const g0 = this.gain[n] * this.chanAt[n] * d0, g1 = this.gainTo[n] * this.chan[n] * d1, dg = (g1 - g0) / 64;
+      const g0 = this.gain[n] * d0, g1 = this.gainTo[n] * d1, dg = (g1 - g0) / 64;
       // every voice reaches the outputs; one routed to the echo bus also feeds it at its send
       const fa = e.audioRouting[n] === LXR.MIXER_ROUTING_FX_BUS ? this.fxAmt[n] : 0;
       const pl = pans[n].triggeredPanL / 32768, pr = pans[n].triggeredPanR / 32768;
@@ -4754,7 +4712,7 @@ class Player {
       for (let i = 0; i < 64; i++) { const v = o[i] * (g0 + dg * i); L[i] += v * pl; R[i] += v * pr; const a = v < 0 ? -v : v; if (a > lv) lv = a; }
       lv *= Math.max(pl, pr); if (lv > this.lvl[n]) this.lvl[n] = lv;
       this.fxGain[n] = g1 * fa;
-      this.gain[n] = this.gainTo[n]; this.chanAt[n] = this.chan[n];
+      this.gain[n] = this.gainTo[n];
     }
     if (++this.lvlN >= 16) {
       this.lvlN = 0;
@@ -4772,7 +4730,7 @@ class Player {
       const bi = this.busIn; bi.fill(0);
       let any = false;
       for (let n = 0; n < 6; n++) {
-        const g = sends[n] * this.gainTo[n] * this.chan[n] * (n ? duck1 : 1);
+        const g = sends[n] * this.gainTo[n] * (n ? duck1 : 1);
         if (!g) continue;
         any = true;
         const o = out[n], pl = pans[n].triggeredPanL * g, pr = pans[n].triggeredPanR * g;
@@ -4934,7 +4892,7 @@ async function startAudio() {
 }
 
 // ---- UI state ----
-let track = 0, page = 0;
+let track = 0;
 const $ = (id) => document.getElementById(id);
 
 const voicesEl = $('voices');
@@ -4948,31 +4906,15 @@ TRACKS.forEach((t, i) => {
 });
 
 function selectTrack(i) {
-  const prevVoice = TRACKS[track].voice;
   track = i;
   voicesEl.querySelectorAll('.vbtn').forEach((b, k) => b.setAttribute('aria-pressed', k === i));
   gridEl.querySelectorAll('.row-name').forEach((b, k) => b.classList.toggle('active', k === i));
-  if (TRACKS[i].voice !== prevVoice) page = Math.min(page, visiblePages().length - 1);
   $('lcd-name').textContent = TRACKS[i].name; $('rand-name').textContent = TRACKS[i].name;
-  buildPages(); buildKnobs(); drawScope();
+  buildKnobs(); drawScope();
 }
 
 function visiblePages() {
   return VOICE_PAGES[TRACKS[track].voice].groups.filter((g) => g.params.length || g.name === 'LFO');
-}
-
-const pagesEl = $('pages');
-function buildPages() {
-  pagesEl.innerHTML = '';
-  if (pagesEl.hidden) return; // the sound tab shows every page at once
-  visiblePages().forEach((g, i) => {
-    const b = document.createElement('button');
-    b.className = 'pbtn'; b.type = 'button'; b.role = 'tab';
-    b.textContent = PAGE_NAMES[g.name.replace(/ \(.*\)/, '')] || g.name.toUpperCase();
-    b.setAttribute('aria-selected', i === page);
-    b.addEventListener('click', () => { page = i; buildPages(); buildKnobs(); });
-    pagesEl.appendChild(b);
-  });
 }
 
 function detail(text) { $('lcd-detail').innerHTML = text; }
@@ -5408,7 +5350,7 @@ TRACKS.forEach((t, r) => {
 });
 function drawGroove() {
   $('swing').value = groove.swing; $('swing-out').textContent = groove.swing + '%';
-  if ($('swing-p')) { $('swing-p').value = groove.swing; showSwingP(); $('swing-p').dispatchEvent(new Event('sync')); }
+  $('swing-p').value = groove.swing; showSwingP(); $('swing-p').dispatchEvent(new Event('sync'));
   grooveDials.forEach((d) => d());
 }
 const showSwingP = () => { $('swing-p-out').innerHTML = groove.swing === 50 ? '<b>straight</b> · 50%' : `<b>${groove.swing >= 66 && groove.swing <= 67 ? 'triplet' : groove.swing < 60 ? 'light' : groove.swing < 66 ? 'medium' : 'heavy'}</b> · ${groove.swing}%`; };
@@ -5522,19 +5464,50 @@ function kitNote(t) { $('kit-msg').textContent = t; clearTimeout(noteT); if (t) 
 // (a transient that uses a user sample from the SD card would play silent, so it gets a built-in wave instead)
 const sourceKits = BUNDLED_KITS.map((k) => parseSnd(Uint8Array.from(atob(k.data), (c) => c.charCodeAt(0))));
 for (const { kit } of sourceKits) for (let n = 1; n <= 6; n++) if (kit[PAR['TRANS' + n + '_WAVE']] >= 14) kit[PAR['TRANS' + n + '_WAVE']] %= 14;
+// ---- preset format ----
+// A preset is { v, name, kit, xm, fx, fx3, dpos, song, fav }; xm, fx, fx3 and song may be missing (a sound from a
+// kit file: the sends and FX then come from the kit's own FX settings). Every preset carries the format
+// version it was saved in, and migratePreset brings any older one up to date, so the rest of the page
+// only ever sees the current shape. A change to the format bumps PRESET_V and adds a step here.
+const PRESET_V = 2;
+const PRESET_FIELDS = ['name', 'kit', 'xm', 'fx', 'fx3', 'dpos', 'song', 'fav'];
+function migratePreset(p) {
+  p = structuredClone(p);
+  if ((p.v || 1) < 2) {
+    // v1 (unversioned, up to 2026-10-25), in the order the format grew:
+    const f = p.fx3, g = p.song;
+    // echo width was saved on a 0..127 scale (127 = full bounce), now 0..200%
+    if (f && f.params.echo && f.params.echo.width !== undefined) f.params.echo = { pct: Math.round(f.params.echo.width / 127 * 200) };
+    // the distortion send was an on/off switch per voice (dist 0/1), now 0..100 (dsend)
+    if (f && !f.dsend) f.dsend = (f.dist || new Array(6).fill(0)).map((v) => (v ? 100 : 0));
+    if (f) delete f.dist;
+    if (g) {
+      g.style ??= 'electro'; // before pattern styles
+      g.accent = Math.min(6, g.accent);
+      // before pages the steps grid had one; before it had its own pattern, it edited the perform one
+      g.stepPages ??= [g.steps || g.pattern];
+      // before the perform / steps / off selector: off if the pattern was off, else the tab it was saved on played
+      g.source ??= g.patternOn === false ? 'off' : g.view === 'steps' ? 'steps' : 'perform';
+      // no longer kept: the steps grid's first page (it is stepPages[0]), the pattern switch (it is source), mute and solo
+      for (const k of ['steps', 'patternOn', 'mute', 'solo']) delete g[k];
+    }
+  }
+  p.v = PRESET_V;
+  return p;
+}
+// a preset as stored and exported, from a kit list entry
+const presetData = (k) => ({ v: PRESET_V, ...Object.fromEntries(PRESET_FIELDS.map((f) => [f, k[f]])), kit: Array.from(k.kit), fav: !!k.fav });
+// a kit list entry from a stored, built-in or imported preset
+const fromStored = (p, extra) => { const m = migratePreset(p); return { ...m, kit: Uint8Array.from(m.kit), fav: !!m.fav, userSamples: 0, ...extra }; };
 // presets: the init kit, the built-in presets (favourites baked into the build), then the ones saved here
-const fromStored = (p, extra) => ({ name: p.name, kit: Uint8Array.from(p.kit), xm: p.xm, fx: p.fx, fx3: p.fx3, dpos: p.dpos, song: p.song,
-  fav: !!p.fav, userSamples: 0, ...extra });
 const kitList = [{ name: 'Init kit', kit: factoryInit, userSamples: 0, builtin: true },
   ...BUILTIN_PRESETS.map((p) => fromStored(p, { builtin: true }))];
 const kitSel = $('kit');
 // saved presets: the kit values, crossfeed, FX and mixer sends, plus the song (pattern, perform dials,
 // tempo, velocity, accent, master), kept in this browser
-// (a new key: presets saved before presets and kits were split are left behind)
 // storage keys keep the old elexir- prefix, so presets saved before the rename still load
+// (the -v2 is from when presets and kits were split, not the preset format version)
 const SAVE_KEY = 'elexir-presets-v2';
-try { localStorage.removeItem('elexir-presets'); } catch (e) {}
-const presetData = (k) => ({ name: k.name, kit: Array.from(k.kit), xm: k.xm, fx: k.fx, fx3: k.fx3, dpos: k.dpos, song: k.song, fav: !!k.fav });
 function storedPresets() { try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || []; } catch (e) { return []; } }
 function storePresets() {
   const list = kitList.filter((k) => k.saved).map(presetData);
@@ -5578,8 +5551,7 @@ function alienName() {
 function useKit(k) {
   const kitFx = k.kit[PAR.FX_TYPE], hadDelay = kitFx === LXR.FX_DELAY;
   // the kit's own effect seeds that bus, and the voices it routed there get a 25% send on it (distortion: on)
-  Object.assign(fx3, structuredClone(FX3_0), structuredClone(k.fx3 ? k.fx3.params : {})); // older presets have no echo width
-  if (fx3.echo.width !== undefined) fx3.echo = { pct: Math.round(fx3.echo.width / 127 * 200) }; // saved on the old 0..127 scale (127 = full bounce)
+  Object.assign(fx3, structuredClone(FX3_0), structuredClone(k.fx3 ? k.fx3.params : {}));
   if (!k.fx3 && kitFx === LXR.FX_DISTORTION) fx3.dist = { type: k.kit[PAR.FX_DIST_TYPE], p: [0, 1, 2, 3].map((i) => k.kit[PAR.FX_P1 + i]) };
   if (!k.fx3 && kitFx === LXR.FX_RING) fx3.ring = { wave: k.kit[PAR.FX_WAVE], freq: k.kit[PAR.FX_P1] };
   const routed = [0, 1, 2, 3, 4, 5].map((n) => k.kit[PAR.AUDIO_OUT1 + n] === LXR.MIXER_ROUTING_FX_BUS);
@@ -5587,8 +5559,7 @@ function useKit(k) {
   initValues.set(k.kit); asDelay(initValues); values.set(initValues);
   if (k.xm) { xm.amt.splice(0, 36, ...k.xm.amt); xm.target.splice(0, 6, ...k.xm.target); xm.target.forEach((t, d) => { xSelects[d].value = t; }); xcells.forEach((d) => d()); sendX(); }
   mix.fx.splice(0, 6, ...(k.fx || deflt(LXR.FX_DELAY)));
-  // distortion send 0..100 (dsend); presets from when it was an on/off switch (dist 0/1) count on as a full send
-  mix.dist.splice(0, 6, ...(k.fx3 ? (k.fx3.dsend || k.fx3.dist.map((v) => (v ? 100 : 0))) : deflt(LXR.FX_DISTORTION)));
+  mix.dist.splice(0, 6, ...(k.fx3 ? k.fx3.dsend : deflt(LXR.FX_DISTORTION)));
   mix.ring.splice(0, 6, ...(k.fx3 ? k.fx3.ring : deflt(LXR.FX_RING)));
   // a kit's own delay time, unless it has none worth keeping (another effect, or a time
   // under 1/32 of a bar, a comb more than an echo): then a dotted eighth
@@ -5629,31 +5600,28 @@ function setDirty(d) {
 function songSnapshot() {
   const copy = (a) => a.map((r) => r.slice());
   return { style: STYLES[styleIdx].name, user: STYLES[styleIdx].user && userPats.length ? structuredClone(userPats[userSlot()]) : undefined, energy: Number($('energy').value), beat: Number($('beat').value), fills: Number($('fills').value),
-    tempo: Number($('tempo').value), vel: Number($('level').value), accent: Number($('accent').value), view, patternOn, source, groove: structuredClone(groove), macro: { ...macro },
-    pattern: { on: copy(pattern.on), acc: copy(pattern.acc), bar: copy(pattern.bar) }, steps: copyPage(pages[0]), stepPages: pages.slice(0, pageCount).map(copyPage),
-    master: { ...master }, mute: mix.mute.slice(), solo: mix.solo.slice() };
+    tempo: Number($('tempo').value), vel: Number($('level').value), accent: Number($('accent').value), view, source, groove: structuredClone(groove), macro: { ...macro },
+    pattern: { on: copy(pattern.on), acc: copy(pattern.acc), bar: copy(pattern.bar) }, stepPages: pages.slice(0, pageCount).map(copyPage),
+    master: { ...master } };
 }
 function useSong(g) {
   setStyle(styleIndex(g.style));
   for (const id of ['energy', 'beat', 'fills', 'tempo']) { $(id).value = g[id]; $(id).dispatchEvent(new Event('sync')); }
   if (STYLES[styleIdx].user && g.user) { const i = ensureUserPat(g.user); if (i >= 0) useUserSlot(i); }
-  $('level').value = g.vel; $('accent').value = Math.min(6, g.accent);
+  $('level').value = g.vel; $('accent').value = g.accent;
   for (const id of ['level', 'accent']) $(id).dispatchEvent(new Event('sync'));
   showLevels(); $('tempo').dispatchEvent(new Event('input'));
   Object.assign(master, MASTER0, g.master); buildMaster();
-  mix.mute.fill(false); mix.solo.fill(false); // there are no mute or solo buttons any more, so presets never silence a voice
   sendMix();
   // the dial readouts come from generate; then the saved pattern, which may have been edited by hand
   generate();
   copyInto(pattern, g.pattern);
-  // presets from before pages have one; from before the steps grid had its own pattern, it edited the one pattern
-  const sp = g.stepPages || [g.steps || g.pattern];
+  const sp = g.stepPages;
   sp.forEach((P, i) => copyInto(pages[i], P)); pageCount = sp.length; editPage = 0; grid = pages[0];
   drawGrid();
-  drawMini(); sendSeq();
+  sendSeq();
   if (g.view === 'steps') setTab('steps');
-  // presets from before the selector: off if the pattern was off, else whatever tab they were saved on played
-  setSource(g.source || (g.patternOn === false ? 'off' : g.view === 'steps' ? 'steps' : 'perform'));
+  setSource(g.source);
   Object.assign(groove, structuredClone(g.groove || GROOVE0)); drawGroove(); sendSeq();
   Object.assign(macro, MACRO0, g.macro || {}); drawMacros(); sendMacros();
 }
@@ -5698,7 +5666,6 @@ $('new-kit').addEventListener('click', async () => {
   setDirty(true);
   kitNote('');
 });
-// ---- preset manager: load, favourite, delete; export favourites to bake them into a release ----
 // ---- pattern on/off and MIDI in ----
 // Off: the sequencer keeps time but triggers nothing; MIDI note-ons (any channel, General MIDI drum notes) play the voices
 const MIDI_NOTES = { 35: 0, 36: 0, 41: 1, 43: 1, 45: 1, 47: 2, 48: 2, 50: 2, 38: 3, 40: 3, 49: 4, 51: 4, 55: 4, 57: 4, 42: 5, 44: 5, 46: 6 };
@@ -5744,10 +5711,7 @@ function setPatternOn(on) {
   if (!on) startMidi();
   sendSeq();
 }
-const aboutDlg = $('about');
-$('about-open').addEventListener('click', () => aboutDlg.showModal());
-$('about-close').addEventListener('click', () => aboutDlg.close());
-aboutDlg.addEventListener('click', (e) => { if (e.target === aboutDlg) aboutDlg.close(); }); // a click on the backdrop
+// ---- preset manager: load, favourite, delete; export favourites to bake them into a release ----
 const pm = $('pm');
 function drawManager() {
   const list = $('pm-list'); list.innerHTML = '';
@@ -5784,6 +5748,55 @@ function drawManager() {
   kitList.filter((k) => k.builtin).forEach(row);
 }
 $('pm-open').addEventListener('click', () => { drawManager(); $('pm-msg').textContent = ''; pm.showModal(); });
+$('pm-close').addEventListener('click', () => pm.close());
+pm.addEventListener('click', (e) => { if (e.target === pm) pm.close(); }); // a click on the backdrop
+$('pm-export').addEventListener('click', () => {
+  const favs = kitList.filter((k) => k.saved && k.fav).map(presetData);
+  if (!favs.length) { $('pm-msg').textContent = 'star some presets first'; return; }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify({ elixir: 1, presets: favs }, null, 1)], { type: 'application/json' }));
+  a.download = 'elixir-favourites.json';
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  $('pm-msg').textContent = `exported ${favs.length}`;
+});
+$('pm-import').addEventListener('change', async (e) => {
+  let n = 0;
+  for (const f of e.target.files) {
+    try {
+      const data = JSON.parse(await f.text());
+      for (const p of data.presets || []) {
+        if (!p.kit || kitList.some((k) => k.saved && k.name === p.name)) continue;
+        kitList.push(fromStored(p, { saved: true })); n++;
+      }
+    } catch (err) { $('pm-msg').textContent = `${f.name}: not a presets file`; }
+  }
+  e.target.value = '';
+  if (n) { const v = kitSel.value; storePresets(); fillKits(); kitSel.value = v; drawManager(); $('pm-msg').textContent = `imported ${n}`; }
+});
+// .SND: 8-character name, then one byte per sound parameter (crossfeed isn't part of the format)
+$('kit-export').addEventListener('click', () => {
+  const k = kitList[Number(kitSel.value)];
+  const name = (k ? k.name : 'Elixir').replace(/[^\x20-\x7e]/g, '').slice(0, 8).padEnd(8, ' ');
+  const bytes = new Uint8Array(8 + PAR.END_OF_SOUND_PARAMETERS);
+  for (let i = 0; i < 8; i++) bytes[i] = name.charCodeAt(i);
+  bytes.set(values.subarray(0, PAR.END_OF_SOUND_PARAMETERS), 8);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([bytes], { type: 'application/octet-stream' }));
+  a.download = name.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '_') + '.SND';
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+$('kit-file').addEventListener('change', async (e) => {
+  const files = [...e.target.files];
+  let last = null;
+  for (const f of files) {
+    try {
+      last = parseSnd(new Uint8Array(await f.arrayBuffer()));
+    } catch (err) { kitNote(`${f.name}: ${err.message}`); }
+  }
+  e.target.value = '';
+  // an opened kit replaces the sound (pattern and the rest stay); save makes it a preset
+  if (last) { pm.close(); useKit(last); setDirty(true); kitNote(`opened ${last.name}`); }
+});
 // TEMP: delete-all-user-presets — remove when factory presets are done
 // (elexir-presets-v2 holds only the presets saved here; the built-in ones are baked into the page)
 {
@@ -5929,55 +5942,6 @@ function addTake(t) {
   li.querySelector('.pm-del').addEventListener('click', () => { URL.revokeObjectURL(url); li.remove(); });
   list.prepend(li);
 }
-$('pm-close').addEventListener('click', () => pm.close());
-pm.addEventListener('click', (e) => { if (e.target === pm) pm.close(); }); // a click on the backdrop
-$('pm-export').addEventListener('click', () => {
-  const favs = kitList.filter((k) => k.saved && k.fav).map(presetData);
-  if (!favs.length) { $('pm-msg').textContent = 'star some presets first'; return; }
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([JSON.stringify({ elixir: 1, presets: favs }, null, 1)], { type: 'application/json' }));
-  a.download = 'elixir-favourites.json';
-  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  $('pm-msg').textContent = `exported ${favs.length}`;
-});
-$('pm-import').addEventListener('change', async (e) => {
-  let n = 0;
-  for (const f of e.target.files) {
-    try {
-      const data = JSON.parse(await f.text());
-      for (const p of data.presets || []) {
-        if (!p.kit || kitList.some((k) => k.saved && k.name === p.name)) continue;
-        kitList.push(fromStored(p, { saved: true })); n++;
-      }
-    } catch (err) { $('pm-msg').textContent = `${f.name}: not a presets file`; }
-  }
-  e.target.value = '';
-  if (n) { const v = kitSel.value; storePresets(); fillKits(); kitSel.value = v; drawManager(); $('pm-msg').textContent = `imported ${n}`; }
-});
-// .SND: 8-character name, then one byte per sound parameter (crossfeed isn't part of the format)
-$('kit-export').addEventListener('click', () => {
-  const k = kitList[Number(kitSel.value)];
-  const name = (k ? k.name : 'Elixir').replace(/[^\x20-\x7e]/g, '').slice(0, 8).padEnd(8, ' ');
-  const bytes = new Uint8Array(8 + PAR.END_OF_SOUND_PARAMETERS);
-  for (let i = 0; i < 8; i++) bytes[i] = name.charCodeAt(i);
-  bytes.set(values.subarray(0, PAR.END_OF_SOUND_PARAMETERS), 8);
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([bytes], { type: 'application/octet-stream' }));
-  a.download = name.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '_') + '.SND';
-  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-});
-$('kit-file').addEventListener('change', async (e) => {
-  const files = [...e.target.files];
-  let last = null;
-  for (const f of files) {
-    try {
-      last = parseSnd(new Uint8Array(await f.arrayBuffer()));
-    } catch (err) { kitNote(`${f.name}: ${err.message}`); }
-  }
-  e.target.value = '';
-  // an opened kit replaces the sound (pattern and the rest stay); save makes it a preset
-  if (last) { pm.close(); useKit(last); setDirty(true); kitNote(`opened ${last.name}`); }
-});
 // ---- perform: patterns from three sliders, in four styles (electro, techno, broken beat, IDM) ----
 // Each groove gives every step of every track an energy level 1..9 at which it comes in
 // ('.' = never). Energy 0 is empty; level 1 is the kick/snare skeleton, level 9 the full kit.
@@ -6175,7 +6139,7 @@ const styleIndex = (name) => Math.max(0, STYLES.findIndex((st) => st.name === na
 function setStyle(i) {
   styleIdx = (i + STYLES.length) % STYLES.length;
   $('style-name').textContent = STYLES[styleIdx].name;
-  if (typeof drawUserTools === 'function') drawUserTools();
+  drawUserTools();
 }
 const ROW = ['k', 'lo', 'hi', 's', 'cy', 'ch', 'oh'];
 const ENERGY_NAMES = [[1, 'empty'], [15, 'minimal'], [35, 'low'], [60, 'groove'], [85, 'driving'], [101, 'peak']];
@@ -6195,7 +6159,6 @@ function generate() {
   $('energy-out').innerHTML = `<b>${ENERGY_NAMES.find(([v]) => energy < v)[1]}</b> · ${energy}%`;
   $('beat-out').innerHTML = `<b>${g.name.toLowerCase()}</b> · ${st.user ? (st.grooves.length ? userSlot() + 1 : 0) : Number($('beat').value) + 1}/${st.grooves.length}`;
   $('fills-out').innerHTML = fill ? `<b>every ${fill.every}</b> · ${fill.len} steps` : `<b>off</b>`;
-  drawMini();
   sendSeq();
 }
 function genPage(g, pattern, energy, T, fill, fillOn, yields) {
@@ -6219,22 +6182,12 @@ function genPage(g, pattern, energy, T, fill, fillOn, yields) {
     }
   }
 }
-const miniEl = $('mini'), miniCells = [];
-for (let t = 0; t < 7; t++) { miniCells[t] = []; for (let s = 0; s < 16; s++) { const i = document.createElement('i'); miniEl.appendChild(i); miniCells[t][s] = i; } }
-function drawMini() {
-  for (let t = 0; t < 7; t++) for (let s = 0; s < 16; s++) {
-    const i = miniCells[t][s], on = !!pattern.on[t][s], b = pattern.bar[t][s];
-    i.className = on ? (b > 0 ? 'fill' : 'on' + (pattern.acc[t][s] ? ' acc' : '')) : '';
-    if (s === nowStep) i.classList.add('now');
-  }
-}
 // ---- mixer ----
 const MASTER0 = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150, duckFx: false };
 const master = { ...MASTER0 };
 const CH = ['DRUM 1', 'DRUM 2', 'DRUM 3', 'SNARE', 'CYMBAL', 'HIHAT'];
 // sends per voice: fx = echo (the engine's FX bus), dist = distortion, ring = ring mod, 0..100
-const mix = { fx: new Array(6).fill(0), dist: new Array(6).fill(0), ring: new Array(6).fill(0),
-  mute: new Array(6).fill(false), solo: new Array(6).fill(false) };
+const mix = { fx: new Array(6).fill(0), dist: new Array(6).fill(0), ring: new Array(6).fill(0) };
 const FX3_0 = { echo: { pct: 100 }, dist: { type: 0, p: [70, 64, 80, 90] }, ring: { wave: 0, freq: 40 } };
 const fx3 = structuredClone(FX3_0);
 const fx3Snapshot = () => ({ params: structuredClone(fx3), dsend: mix.dist.slice(), ring: mix.ring.slice() });
@@ -6467,14 +6420,12 @@ function syncFx() {
 }
 syncFx();
 function syncMixer() {
-  if (typeof syncFx === 'function') syncFx();
+  syncFx();
   for (const par in mixInputs) { mixInputs[par].value = values[par]; mixInputs[par].dispatchEvent(new Event('sync')); }
 }
 function sendMix() {
-  const anySolo = mix.solo.some(Boolean);
   send({ type: 'mix', master: { ...master }, fx: mix.fx.map((v) => v / 100), echo: fx3.echo, dist: fx3.dist, ring: fx3.ring,
-    sendD: mix.dist.map((v) => v / 100), sendR: mix.ring.map((v) => v / 100),
-    chan: mix.mute.map((m, n) => (m || (anySolo && !mix.solo[n]) ? 0 : 1)) });
+    sendD: mix.dist.map((v) => v / 100), sendR: mix.ring.map((v) => v / 100) });
 }
 
 // ---- master: compressor and drum 1 sidechain ----
@@ -6756,9 +6707,9 @@ $('style-next').addEventListener('click', () => { setStyle(styleIdx + 1); genera
 try { const t = localStorage.getItem('elexir-tab'); if (t && document.querySelector(`[data-tab="${t}"]`)) setTab(t); } catch (e) {}
 
 function markStep(s) {
-  if (nowStep >= 0) { cells.forEach((r) => r[nowStep].classList.remove('now')); miniCells.forEach((r) => r[nowStep].classList.remove('now')); }
+  if (nowStep >= 0) cells.forEach((r) => r[nowStep].classList.remove('now'));
   nowStep = s;
-  if (s >= 0) { cells.forEach((r) => r[s].classList.add('now')); miniCells.forEach((r) => r[s].classList.add('now')); }
+  if (s >= 0) cells.forEach((r) => r[s].classList.add('now'));
 }
 const barLeds = document.querySelectorAll('.bars i');
 function markBar(b) {
@@ -6780,6 +6731,12 @@ function onEvent(ev) {
   }, delay);
 }
 
+// ---- about ----
+const aboutDlg = $('about');
+$('about-open').addEventListener('click', () => aboutDlg.showModal());
+$('about-close').addEventListener('click', () => aboutDlg.close());
+aboutDlg.addEventListener('click', (e) => { if (e.target === aboutDlg) aboutDlg.close(); }); // a click on the backdrop
+
 // ---- source viewer ----
 const code = $('code'), pick = $('src-pick');
 const showSrc = () => { code.textContent = SOURCES[pick.value]; };
@@ -6795,7 +6752,7 @@ setView('perform');
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', drawScope);
 new MutationObserver(drawScope).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
-buildPages(); buildKnobs();
+buildKnobs();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawScope); else drawScope();
 drawScope();
 </script>

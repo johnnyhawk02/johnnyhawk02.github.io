@@ -1,4 +1,4 @@
-// Builds index.html (the self-contained page) from index.src.html and the engine modules.
+// Builds index.html (the self-contained page) from index.src.html, the page's code in app/ and the engine modules.
 //   node build.mjs [--no-kits] [--out file]
 //   --no-kits leaves out the kit files in kits/ (for a public build without third-party kits)
 import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
@@ -32,8 +32,17 @@ const presetDir = new URL('presets/', here);
 const presets = existsSync(presetDir) ? readdirSync(presetDir).filter((f) => /\.json$/i.test(f)).sort()
   .flatMap((f) => JSON.parse(readFileSync(new URL(f, presetDir), 'utf8')).presets || []).map((p) => ({ ...p, fav: false })) : [];
 
+// the page's own code: app/style.css, the audio thread (app/player.js) and the app's files, run in this
+// order as one classic script (each file sees the ones before it)
+const APP = ['kit', 'audio', 'sound', 'randomise', 'scope', 'steps', 'presets', 'midi', 'preset-manager', 'recorder',
+  'grooves', 'styles', 'mixer', 'fx', 'master', 'perform-knobs', 'pc4', 'crossfeed', 'main'];
+const app = APP.map((f) => read(`app/${f}.js`)).join('');
+
 const sources = { lxr: read('lxr.js'), verify: read('verify.mjs') };
 const page = read('index.src.html')
+  .replace('/*@CSS@*/\n', () => read('app/style.css'))
+  .replace('/*@PLAYER@*/\n', () => read('app/player.js'))
+  .replace('/*@APP@*/\n', () => app)
   .replace('/*@ENGINE@*/', () => bundle.replace(/<\/script/gi, '<\\/script'))
   .replace('/*@KITS@*/', () => `const BUNDLED_KITS = ${JSON.stringify(kits)};`)
   .replace('/*@PRESETS@*/', () => `const BUILTIN_PRESETS = ${JSON.stringify(presets).replace(/<\/script/gi, '<\\/script')};`)

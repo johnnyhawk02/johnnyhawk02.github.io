@@ -1,0 +1,780 @@
+/* Elixir: one flat mustard panel per tab on a green bench. Ink type and outlines, red for hits
+   and accents, blue for the groove. Plain shapes only: pills, rounded rects, thin rings. */
+:root {
+  --bg: #62bd8c;
+  --panel: #ead85a;
+  --ink: #2a2a28;
+  --muted: #6c6326;
+  --tint: color-mix(in srgb, var(--ink) 8%, transparent);
+  --tint-2: color-mix(in srgb, var(--ink) 14%, transparent);
+  --line: color-mix(in srgb, var(--ink) 16%, transparent);
+  --led: #d9574f;
+  --blue: #4f82bb;
+  --lcd: #dfcc4f;
+  --lcd-ink: #2a2a28;
+  --lcd-dim: #8f8331;
+  --cell: #dbc84c;
+  --code-bg: #f1e6a0;
+  --vu-face: #f6efcf; --vu-ink: #2a2a28; --vu-dim: #8a8160;
+  --lvm-bg: color-mix(in srgb, var(--ink) 66%, var(--panel)); --lvm-off: rgba(241, 231, 176, .12); --lvm-g: #93d46d; --lvm-y: #ecd95c; --lvm-r: #e5675f;
+  --display: "Outfit", system-ui, sans-serif;
+  --body: "Outfit", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f2419; --panel: #302c16; --ink: #f1e7b0; --muted: #b2a766; --led: #e5675f; --blue: #6f9fd6;
+  --lcd: #27240f; --lcd-ink: #f1e7b0; --lcd-dim: #7d7440; --cell: #3b3719; --code-bg: #24210e; --vu-face: #cfc48e; --vu-ink: #26241a; --vu-dim: #6e6644; --lvm-bg: #1b190b; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f2419; --panel: #302c16; --ink: #f1e7b0; --muted: #b2a766; --led: #e5675f; --blue: #6f9fd6;
+  --lcd: #27240f; --lcd-ink: #f1e7b0; --lcd-dim: #7d7440; --cell: #3b3719; --code-bg: #24210e; --vu-face: #cfc48e; --vu-ink: #26241a; --vu-dim: #6e6644; --lvm-bg: #1b190b; color-scheme: dark }
+
+/* ---- base ---- */
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5;
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) 32px max(16px, env(safe-area-inset-left, 0px)); }
+.wrap { max-width: 1480px; margin: 0 auto; display: grid; gap: 14px; }
+[hidden] { display: none !important; }
+h1 { font-family: var(--display); font-weight: 600; font-size: 1.6rem; margin: 0; white-space: nowrap; }
+h1 small { font-size: .85rem; font-weight: 400; color: var(--muted); margin-left: .5em; }
+h2 { font-family: var(--display); font-weight: 600; font-size: .95rem; margin: 0; }
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* ---- controls ---- */
+.btn, .vbtn { text-transform: lowercase; }
+.field select, .field input { color: var(--ink); }
+.btn { font-family: var(--display); font-weight: 500; font-size: .88rem; border: 0; border-radius: 6px; padding: 6px 14px;
+  background: var(--tint); color: var(--ink); cursor: pointer; white-space: nowrap; }
+.btn:hover { background: var(--tint-2); }
+.btn[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.ghost { background: none; color: var(--muted); padding-inline: 8px; }
+.btn.ghost:hover { color: var(--ink); background: var(--tint); }
+.btn.play { background: var(--ink); color: var(--panel); padding-inline: 18px; }
+.btn.play[aria-pressed="true"] { background: var(--led); color: #fff; }
+.seg { display: inline-flex; gap: 2px; }
+.field { display: flex; align-items: center; gap: 8px; font-size: .88rem; color: var(--muted); white-space: nowrap; }
+.field output { font-family: var(--mono); font-size: .8rem; color: var(--ink); min-width: 3.2em; font-variant-numeric: tabular-nums; }
+select, .field input[type=number] { border: 0; border-radius: 6px; background: var(--tint); padding: 5px 8px; font-size: .88rem; max-width: 100%; }
+.field input[type=number] { width: 4.5em; font-family: var(--mono); }
+/* sliders: hairline track, small round thumb */
+input[type=range] { -webkit-appearance: none; appearance: none; background: transparent; margin: 0; height: 18px; cursor: pointer; }
+input[type=range]::-webkit-slider-runnable-track { height: 3px; border-radius: 2px; background: var(--line); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 13px; height: 13px; border-radius: 50%; background: var(--ink); margin-top: -5px; border: 0; }
+input[type=range]::-moz-range-track { height: 3px; border-radius: 2px; background: var(--line); }
+input[type=range]::-moz-range-thumb { width: 13px; height: 13px; border-radius: 50%; background: var(--ink); border: 0; }
+.strip .fader::-webkit-slider-runnable-track { width: 3px; height: auto; }
+.strip .fader::-webkit-slider-thumb { width: 22px; height: 10px; border-radius: 3px; margin-top: 0; margin-left: -9.5px; }
+.strip .fader::-moz-range-thumb { width: 22px; height: 10px; border-radius: 3px; }
+.field input[type=range] { width: 90px; }
+input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; margin: 0; }
+
+/* ---- header ---- */
+.topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
+.kitbar, .transport, .seq-ctrl, .rand, .xfeed-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.kitbar { gap: 8px 6px; }
+.kitbar { flex: 1 1 auto; }
+.kitbar select { width: 10.5em; font-weight: 500; text-overflow: ellipsis; } /* fixed, so longer names don't shift the bar */
+.kitbar .file { position: relative; overflow: hidden; }
+.kitbar .btn { padding-inline: 10px; }
+#pc4-open { text-transform: none; }
+.stepper { display: inline-flex; gap: 2px; }
+.stepper .btn { padding-inline: 9px; font-size: 1rem; line-height: 1.2; }
+.kitbar .file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.kitbar .file:focus-within { outline: 2px solid var(--ink); outline-offset: 2px; }
+.kitbar { position: relative; }
+.kitbar .msg { position: absolute; top: calc(100% + 4px); left: 0; z-index: 5; font-size: .82rem; color: var(--ink); background: var(--panel);
+  padding: 3px 10px; border-radius: 6px; white-space: nowrap; box-shadow: 0 4px 14px rgb(0 0 0 / .15); }
+#kit-msg:empty { display: none; }
+.dirty { color: var(--led); margin-left: 4px; visibility: hidden; }
+.dirty.on { visibility: visible; }
+.pm { border: 0; border-radius: 14px; padding: 18px 20px; background: var(--panel); color: var(--ink); width: min(520px, calc(100vw - 32px));
+  max-height: min(640px, calc(100dvh - 32px)); box-shadow: 0 20px 60px rgb(0 0 0 / .35); }
+.pm[open] { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 10px; }
+.pm::backdrop { background: rgb(0 0 0 / .35); }
+/* recorder */
+.recbtn { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--ink); background: none; padding: 0; cursor: pointer; display: grid; place-items: center; flex: none; }
+.recbtn i, .rec-go-btn i { display: block; width: 12px; height: 12px; border-radius: 50%; background: #d8322b; }
+.recbtn.on { border-color: #d8322b; animation: recpulse 1s ease-in-out infinite; }
+.recbtn.wait i { animation: recpulse .5s ease-in-out infinite; }
+@keyframes recpulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .recbtn.on, .recbtn.wait i { animation: none; } }
+.rec[open] { grid-template-rows: auto auto auto auto minmax(0, 1fr); }
+.rec-opts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 12px; align-items: center; }
+.rec-opts .rlab { font-size: .78rem; color: var(--muted); }
+.rec-opts .radios span { font-size: .8rem; padding: 6px 9px; }
+.rec-fmt { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.rec-go { display: flex; align-items: center; gap: 12px; }
+.rec-go-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; }
+.rec-go-btn.on i { border-radius: 2px; }
+.rec-status { font-size: .84rem; font-family: var(--mono); }
+.pm-list.rec-takes li { grid-template-columns: minmax(0, 1fr) auto auto; }
+.pm-list.rec-takes li.group { grid-column: 1 / -1; }
+.rec-takes audio { grid-column: 1 / -1; width: 100%; height: 32px; }
+.rec-takes a.btn { text-decoration: none; padding: 3px 9px; font-size: .78rem; }
+.pm-head { display: flex; align-items: center; justify-content: space-between; }
+.pm-head h2 { margin: 0; font-family: var(--display); font-size: 1.05rem; }
+.pm-hint { margin: 0; font-size: .8rem; color: var(--muted); }
+.pm-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; min-height: 0; }
+.pm-list li { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto auto; align-items: center; gap: 6px; padding: 4px 0; border-top: 1px solid var(--line); }
+.pm-list li.group { display: block; border: 0; padding: 12px 0 4px; font-weight: 600; font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.pm-list li.empty { display: block; padding: 6px 0 10px; font-size: .84rem; color: var(--muted); }
+.pm-list li.current .pm-name { font-weight: 700; }
+.pm-list .fav { border: 0; background: none; font-size: 1.1rem; line-height: 1; cursor: pointer; color: var(--muted); padding: 2px; }
+.pm-list .fav[aria-pressed="true"] { color: var(--led); }
+.pm-list .pm-name { border: 0; background: none; text-align: left; font: inherit; color: var(--ink); cursor: pointer; padding: 4px 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pm-list .pm-name:hover { text-decoration: underline; }
+.pm-list .pm-sub { font-size: .74rem; color: var(--muted); font-family: var(--mono, monospace); }
+.pm-list .pm-del { padding: 3px 9px; font-size: .78rem; }
+.pm-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pm .file { position: relative; overflow: hidden; }
+.pm .file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.pm-sep { flex: 1; }
+.pm-foot .msg { flex-basis: 100%; }
+.pm-foot .msg:empty { display: none; }
+.pm-foot .msg { font-size: .8rem; color: var(--muted); }
+/* TEMP: delete-all-user-presets — remove when factory presets are done */
+.btn.ghost.pm-del-all { color: #d8322b; }
+.btn.ghost.pm-del-all:disabled { opacity: .4; cursor: default; }
+/* END TEMP */
+.bars { display: inline-flex; gap: 5px; }
+.bars i { width: 8px; height: 8px; border-radius: 50%; background: var(--tint-2); }
+.bars i.lit { background: var(--ink); }
+
+/* ---- tabs and panels ---- */
+.tabs { display: flex; gap: 4px; padding-left: 12px; margin-bottom: -14px; }
+.tab { font-family: var(--display); font-weight: 600; font-size: .95rem; border: 0; border-radius: 10px 10px 0 0; padding: 8px 20px 9px;
+  cursor: pointer; color: var(--ink); background: color-mix(in srgb, var(--panel) 45%, transparent); }
+.tab:hover { background: color-mix(in srgb, var(--panel) 70%, transparent); }
+.tab[aria-selected="true"] { background: var(--panel); }
+.tab:focus-visible { outline-offset: -3px; }
+.panel { background: var(--panel); border-radius: 10px; padding: 22px; }
+.rack { display: grid; gap: 28px; align-items: start; border-top-left-radius: 0; }
+.rack > .col { display: grid; gap: 14px; align-content: start; min-width: 0; }
+
+/* ---- sound tab ---- */
+.tab-sound { grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; }
+/* sound: voice picker, trig and randomise in a bar over the parameter cards; scope and crossfeed on the right */
+.snd-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.snd-bar .voices { flex: 0 1 auto; }
+.tab-sound .snd-bar .pad { height: 32px; padding: 0 14px; border-radius: 8px; }
+.tab-sound .snd-bar .pad kbd { font-size: .7rem; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.snd-side { align-content: start; }
+.xcard { padding: 10px 12px 12px; gap: 8px; }
+.tab-sound .xfeed { gap: 8px; }
+.tab-sound .xfeed-head { gap: 6px 8px; }
+.tab-sound .xfeed-head { flex-wrap: nowrap; gap: 4px; }
+.snd-side { gap: 10px !important; }
+.tab-sound .xfeed-head .field { gap: 4px; font-size: .78rem; }
+.tab-sound .xfeed-head .field input[type=range] { width: 40px; }
+.tab-sound .xfeed-head .field output { min-width: 0; }
+.tab-sound .xfeed-head .btn { padding: 4px 8px; font-size: .78rem; }
+.tab-sound .xgrid { grid-template-columns: 2.4em repeat(6, minmax(0, 1fr)); gap: 3px; }
+.tab-sound .xgrid .full { display: none; } .tab-sound .xgrid .short { display: inline; }
+.tab-sound .xgrid .col select { font-size: .64rem; padding: 2px 0; }
+.tab-sound .xgrid .lab, .tab-sound .xgrid .col { font-size: .72rem; }
+.tab-sound .xcell { aspect-ratio: 1.8; }
+.tab-sound .lcd { padding: 8px 12px; }
+.tab-sound .lcd canvas { aspect-ratio: auto; height: 56px; }
+.tab-sound .lcd { min-height: 0; }
+.pcards { display: flex; flex-wrap: wrap; gap: 10px; }
+.pcard { padding: 10px 12px 12px; gap: 8px; }
+.pcard .knobs { gap: 8px 4px; }
+.pcard .sel select { width: 100%; min-width: 0; }
+.tab-sound .lcd canvas { height: auto; aspect-ratio: 800 / 220; }
+.tab-sound .pad { grid-auto-flow: column; justify-content: center; gap: 10px; }
+
+.pcard .knob label { font-size: .74rem; }
+.pcard .knob output { font-size: .7rem; }
+.voices { display: flex; flex-wrap: wrap; gap: 4px; }
+.vbtn { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 999px; padding: 5px 11px;
+  background: var(--tint); color: var(--ink); cursor: pointer; font-family: var(--display); font-weight: 500; font-size: .86rem; }
+.vbtn:hover { background: var(--tint-2); }
+.vbtn i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); transition: background .25s; }
+.vbtn[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
+.vbtn[aria-pressed="true"] i { background: color-mix(in srgb, var(--panel) 45%, transparent); }
+.vbtn.hit i { background: var(--led); transition: none; }
+.vbtn kbd { display: none; }
+.top { display: grid; grid-template-columns: minmax(0, 1fr) 110px; gap: 12px; }
+.lcd { background: var(--lcd); color: var(--lcd-ink); border-radius: 8px; padding: 10px 14px; font-family: var(--mono);
+  display: grid; grid-template-rows: auto 1fr; gap: 6px; min-width: 0; }
+.lcd-line { display: flex; justify-content: space-between; gap: 12px; font-size: .85rem; white-space: nowrap; overflow: hidden; }
+.lcd-line b { font-weight: 500; text-transform: lowercase; }
+.lcd-line span { color: var(--lcd-dim); overflow: hidden; text-overflow: ellipsis; }
+.lcd-line span em { color: var(--lcd-ink); font-style: normal; }
+.lcd canvas { width: 100%; height: 140px; display: block; }
+.pad { border: 2px solid var(--ink); border-radius: 10px; background: none; cursor: pointer; display: grid; place-items: center;
+  align-content: center; gap: 4px; font-family: var(--display); font-weight: 600; font-size: 1rem; color: var(--ink); transition: background .2s; }
+.pad:hover { background: var(--tint); }
+.pad.hit { background: var(--led); border-color: var(--led); color: #fff; transition: none; }
+.pad span { text-transform: lowercase; }
+.pad kbd { font-family: var(--mono); font-size: .66rem; color: var(--muted); }
+.pad.hit kbd { color: inherit; }
+.rand .btn { padding: 6px 12px; }
+.rand .field input[type=range] { width: 70px; }
+.pages { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--line); }
+.knobs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px 6px; align-items: start; }
+.knob { display: grid; justify-items: center; gap: 2px; user-select: none; touch-action: none; min-width: 0; }
+
+.knob label { font-family: var(--display); font-weight: 500; font-size: .8rem; white-space: nowrap; text-transform: lowercase; }
+.knob output { font-family: var(--mono); font-size: .74rem; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.knob.changed output { color: var(--led); }
+.dial .track { fill: none; stroke: var(--line); stroke-width: 2; stroke-linecap: round; }
+.dial .tick { stroke: var(--muted); stroke-width: 1.4; opacity: .7; }
+.dial .tick.major { stroke: var(--ink); stroke-width: 2; opacity: .85; }
+.dial .val { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
+.dial .cap { fill: none; stroke: none; }
+.dial .ptr { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
+/* vertical sliders (in place of the old dials): a thin track, an ink fill up from zero (or from the centre),
+   a small cap like the mixer faders', and detent ticks beside it */
+.sl { position: relative; display: block; width: 22px; height: var(--sh, 54px); cursor: ns-resize; touch-action: none; user-select: none; }
+.sl:focus-visible { outline: none; }
+.sl .rail { position: absolute; inset: 4px 0; }
+.sl .rail::before { content: ""; position: absolute; top: -4px; bottom: -4px; left: 50%; width: 3px; margin-left: -1.5px; border-radius: 2px; background: var(--line); }
+.sl .fill { position: absolute; left: 50%; width: 3px; margin-left: -1.5px; border-radius: 2px; background: var(--ink); bottom: calc(var(--a, 0) * 100%); height: calc(var(--w, 0) * 100%); }
+.sl .thumb { position: absolute; left: 50%; bottom: calc(var(--p, 0) * 100%); width: 18px; height: 8px; margin: 0 0 -4px -9px; border-radius: 3px; background: var(--ink); }
+.sl:focus-visible .thumb { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 28%, transparent); }
+.sl .tick { position: absolute; left: calc(50% + 5px); height: 1px; width: 3px; margin-bottom: -.5px; background: var(--muted); opacity: .7; }
+.sl .tick.major { height: 2px; width: 5px; margin-bottom: -1px; background: var(--ink); opacity: .85; }
+.pcard .sl { --sh: 44px; }
+.master-card .sl, .fx-card .sl { --sh: 42px; }
+.pknobs .sl { --sh: 50px; }
+.sdial .sl { width: 18px; --sh: 30px; }
+.sdial .sl .thumb { width: 14px; height: 6px; margin: 0 0 -3px -7px; border-radius: 2px; }
+.sdial .sl .rail { inset: 3px 0; }
+.sdial .sl .rail::before { top: -3px; bottom: -3px; }
+.grid .sdial .sl { --sh: 30px; }
+.gtable .sdial .sl { --sh: 34px; }
+.sel { grid-column: span 2; display: grid; gap: 4px; align-content: start; min-width: 0; }
+.sel label { font-family: var(--display); font-weight: 500; font-size: .8rem; text-transform: lowercase; }
+
+/* ---- pattern tab ---- */
+.tab-steps { grid-template-columns: minmax(0, 1fr); }
+/* perform: pattern and randomise cards on the left, the mixer card on the right */
+.card { background: var(--tint); border-radius: 10px; padding: 14px 16px 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.card > h2, .pc-head h2 { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.tab-perform { grid-template-columns: minmax(370px, 1.3fr) minmax(0, 2.6fr); grid-template-rows: minmax(0, 1fr); gap: 14px; align-items: stretch; }
+.master-card, .fx-card, .rand-card { padding: 12px 16px 14px; gap: 8px; }
+/* master and FX knobs share one column width, so they line up at the same spacing; spare room is left at the right */
+.master-card, .fx-card { --kw: 62px; }
+.master-row { display: flex; gap: 16px; min-width: 0; }
+.mgroup { display: grid; gap: 4px; min-width: 0; flex: 0 1 auto; }
+.mgroup + .mgroup { border-left: 1px solid var(--line); padding-left: 16px; }
+.mlab { display: flex; align-items: center; gap: 10px; font-size: .78rem; color: var(--muted); text-transform: lowercase; min-height: 24px; }
+.btn.tiny { font-size: .76rem; padding: 2px 10px; }
+.mchk { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; cursor: pointer; }
+.mchk input { width: 12px; height: 12px; }
+#comp-knobs { grid-template-columns: repeat(5, minmax(46px, var(--kw))) auto; gap: 0; }
+#duck-knobs { grid-template-columns: repeat(2, minmax(46px, var(--kw))) auto; gap: 0; }
+/* level meters: a recessed column of small LEDs beside each mixer fader (green, then yellow from -12 dB,
+   red from -3 dB), with a held peak LED. Fixed width; the fader keeps its centre under the name */
+.fbox { display: flex; align-items: stretch; gap: 3px; padding-left: 10px; }
+.lvm { position: relative; flex: none; width: 7px; border-radius: 3px; background: var(--lvm-bg);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .45), 0 1px 0 color-mix(in srgb, var(--panel) 70%, #fff); }
+.lvm::before, .lvm b { content: ""; position: absolute; left: 2px; right: 2px; top: var(--lt, 2px); bottom: 2px; }
+.lvm::before { background: repeating-linear-gradient(to top, var(--lvm-off) 0 3px, transparent 3px 5px); }
+.lvm b { background: linear-gradient(to top, var(--lvm-g) 0 66.7%, var(--lvm-y) 66.7% 91.7%, var(--lvm-r) 91.7%);
+  -webkit-mask: repeating-linear-gradient(to top, #000 0 3px, transparent 3px 5px); mask: repeating-linear-gradient(to top, #000 0 3px, transparent 3px 5px);
+  clip-path: inset(100% 0 0 0); }
+.lvm s { position: absolute; left: 2px; right: 2px; height: 3px; bottom: 2px; background: var(--lvm-g); display: none; }
+.lvm s.y { background: var(--lvm-y); } .lvm s.r { background: var(--lvm-r); }
+/* needle meters for gain reduction and ducking: a fixed-size cream face, so nothing around them moves */
+.vu { display: flex; flex-direction: column; align-items: center; gap: 2px; padding-left: 6px; min-height: 0; }
+.vu span { font-family: var(--display); font-weight: 500; font-size: .74rem; line-height: 1.25; color: var(--muted); }
+.vu svg { display: block; width: 58px; height: 38px; flex: none; margin-block: auto; }
+@media (min-width: 761px) and (max-height: 640px) { .vu span { font-size: .7rem; line-height: 1.15; } }
+.vu .face { fill: var(--vu-face); stroke: color-mix(in srgb, var(--ink) 22%, transparent); }
+.vu .scale { fill: none; stroke: var(--vu-ink); stroke-width: .7; }
+.vu .hot { fill: none; stroke: var(--led); stroke-width: 1.6; }
+.vu .tk { stroke: var(--vu-ink); stroke-width: .7; }
+.vu text { font-family: var(--mono); font-size: 5.2px; fill: var(--vu-ink); text-anchor: middle; }
+.vu text.unit { fill: var(--vu-dim); font-size: 4.6px; }
+.vu .needle { stroke: var(--vu-ink); stroke-width: .9; stroke-linecap: round; }
+.vu .hub { fill: color-mix(in srgb, var(--vu-ink) 85%, var(--vu-face)); }
+
+.master-card .knob label, .fx-card .knob label { font-size: .7rem; line-height: 1.3; }
+.master-card .knob output, .fx-card .knob output { font-size: .66rem; line-height: 1.3; }
+.tab-perform .perform { grid-template-columns: minmax(0, 1fr); gap: 6px; padding-block: 4px; align-self: center; }
+.pknobs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; justify-items: center; }
+.pknobs .knob { gap: 1px; min-width: 0; width: 100%; }
+
+.pknobs .knob label { font-family: var(--display); font-weight: 600; font-size: .86rem; }
+.pknobs .knob output { font-size: .7rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.pgh { margin: 4px 0 0; font-family: var(--display); font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+  border-top: 1px solid var(--line); padding-top: 8px; }
+.perform-rand { gap: 8px 6px; }
+.perform-rand .btn { padding: 6px 9px; }
+.rand-opts { display: flex; align-items: center; gap: 14px; white-space: nowrap; }
+.tab-perform .strips { gap: 0; }
+.tab-perform .strip { background: none; padding: 2px 12px; gap: 10px; border-left: 1px solid var(--line); border-radius: 0; }
+.tab-perform .strip:first-child { border-left: 0; }
+.tab-perform .strip .name { font-size: .84rem; }
+.tab-perform .sends { gap: 10px; }
+.tab-perform .sdial .dial { width: 32px; height: 32px; }
+.tab-perform .sdial span { font-size: .7rem; margin-top: 2px; }
+.tab-perform .ms { gap: 6px; }
+.tab-perform .strip .fader { height: 230px; }
+.tab-perform .ms button { width: 28px; height: 24px; font-size: .74rem; }
+.fx-groups { display: flex; gap: 16px; }
+.fxg { display: grid; gap: 4px; align-content: start; min-width: 0; flex: none; }
+.fxg:last-child { flex: 0 1 auto; } /* ring mod: its wave buttons wrap before anything overflows */
+.fxg + .fxg { border-left: 1px solid var(--line); padding-left: 16px; }
+.fxh { font-size: .74rem; color: var(--muted); text-transform: lowercase; }
+.fxh b { color: var(--ink); font-weight: 600; margin-right: 2px; }
+.radios { display: flex; flex-wrap: wrap; gap: 2px; }
+.radios label { position: relative; cursor: pointer; }
+.radios input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.radios span { display: block; font-size: .68rem; line-height: 1; padding: 4px 6px; border-radius: 4px; background: var(--tint-2); color: var(--ink); text-transform: lowercase; }
+.radios input:checked + span { background: var(--ink); color: var(--panel); }
+.radios input:focus-visible + span { outline: 2px solid var(--ink); outline-offset: 1px; }
+.fxg .knobs { grid-template-columns: none; grid-auto-columns: var(--kw); grid-auto-flow: column; gap: 0; justify-content: start; }
+.fxg .knob output { white-space: nowrap; }
+.sfoot { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.sfoot output { min-width: 2.2em; text-align: right; }
+/* each send's label sits to the left of its dial so three stack beside a short fader */
+.sends { display: flex; gap: 4px; justify-content: center; }
+.sdial { display: grid; justify-items: center; gap: 0; user-select: none; touch-action: none; }
+.sdial .dial { width: 34px; height: 34px; cursor: ns-resize; border-radius: 50%; }
+.sdial .dial .val { stroke-width: 4; }
+.sdial .dial .ptr { stroke-width: 4; }
+.sdial span { font-size: .66rem; color: var(--muted); text-transform: lowercase; line-height: 1; }
+.tab-sound .hint { font-size: .8rem; }
+.seq { display: grid; gap: 14px; width: 100%; }
+.perform { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding-block: 28px; }
+.dials { display: contents; }
+.grid { display: grid; grid-template-columns: 4.6em repeat(16, minmax(0, 1fr)) 34px 34px; gap: 4px; align-items: center; }
+.grid .ghead { font-size: .66rem; color: var(--muted); text-align: center; text-transform: lowercase; }
+.grid .sdial span { display: none; }
+
+.grid .row-name { font-family: var(--display); font-weight: 500; font-size: .78rem; color: var(--muted); background: none; border: 0;
+  text-align: left; padding: 0; cursor: pointer; white-space: nowrap; overflow: hidden; text-transform: lowercase; }
+.grid .row-name.active { color: var(--ink); font-weight: 600; }
+.cell { position: relative; aspect-ratio: 1.35; min-width: 0; border: 0; border-radius: 4px; background: var(--tint); cursor: pointer; padding: 0;
+  font-family: var(--mono); font-size: .7rem; font-weight: 500; color: #fff; line-height: 1; }
+.cell.q { background: var(--tint-2); }
+.cell.on { background: var(--blue); }
+.cell.on.acc { background: var(--led); }
+.cell.now { outline: 2px solid var(--ink); outline-offset: 1px; }
+
+/* ---- crossfeed tab ---- */
+.xfeed { display: grid; gap: 12px; width: 100%; }
+.xfeed-head .field input[type=range] { width: 80px; }
+.xgrid { display: grid; grid-template-columns: 4.6em repeat(6, minmax(0, 1fr)); gap: 4px; align-items: center; }
+.xgrid .lab { font-size: .8rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: lowercase; }
+.xgrid .col { display: grid; gap: 3px; justify-items: center; font-size: .8rem; font-weight: 600; min-width: 0; text-transform: lowercase; }
+.xgrid .col select { font-size: .76rem; padding: 3px 2px; width: 100%; appearance: none; -webkit-appearance: none; text-align: center;
+  text-align-last: center; cursor: pointer; }
+.xgrid .short { display: none; }
+.xcell { aspect-ratio: 4.4; min-width: 0; border: 0; border-radius: 4px; cursor: ns-resize; touch-action: none; user-select: none;
+  background: var(--tint); color: var(--ink); font-family: var(--mono); font-size: .72rem; padding: 0; }
+.xcell.diag { box-shadow: inset 0 0 0 1px var(--line); }
+
+/* ---- mixer tab ---- */
+.mixer { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; max-width: 760px; width: 100%; justify-self: center; align-items: start; }
+.strips { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.strip { background: var(--tint); border-radius: 8px; padding: 10px 8px; display: grid; gap: 8px; min-width: 0; }
+.strip { justify-items: center; }
+.strip .name { font-family: var(--display); font-weight: 600; font-size: .8rem; white-space: nowrap; text-transform: lowercase; }
+.strip .fader { writing-mode: vertical-lr; direction: rtl; width: 28px; height: 200px; }
+.strip > output { font-family: var(--mono); font-size: .74rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ms { display: flex; gap: 4px; }
+.ms button { font-family: var(--display); font-weight: 600; font-size: .74rem; height: 24px; border-radius: 5px; border: 0;
+  background: var(--tint); color: var(--ink); cursor: pointer; padding: 0; }
+.ms button { width: 26px; }
+.ms button[aria-pressed="true"].m { background: var(--ink); color: var(--panel); }
+.ms button[aria-pressed="true"].s { background: var(--led); color: #fff; }
+.buses { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
+.hint { margin: 0; font-size: .78rem; color: var(--muted); }
+
+/* ---- about tab ---- */
+.about { display: grid; gap: 0; min-width: 0; }
+.pc-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pc-head h2 { margin: 0; }
+.switch { display: inline-flex; border: 0; padding: 2px; border-radius: 999px; background: var(--tint-2); cursor: pointer; font-family: var(--display); font-weight: 600; }
+.switch span { padding: 2px 9px; border-radius: 999px; font-size: .72rem; color: var(--muted); }
+.switch[aria-checked="true"] span:first-child, .switch[aria-checked="false"] span:last-child { background: var(--ink); color: var(--panel); }
+.switch:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.midi-info { display: grid; gap: 6px; align-content: start; font-size: .82rem; }
+.midi-info p { margin: 0; }
+.midi-status { font-weight: 600; }
+.midi-status.live { color: var(--ink); } .midi-status.none { color: var(--led); }
+.midi-map { display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 2px 10px; margin: 0; font-size: .8rem; }
+.midi-map dt { font-family: var(--mono); color: var(--muted); font-size: .74rem; }
+.midi-map dd { margin: 0; }
+.midi-map dd.hit { color: var(--led); }
+/* the Faderfox PC4 mockup: 24 knobs (four rows of six) on the left, the perform controls to drop onto them on the right */
+.pc4 { width: min(880px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto; }
+.pc4-body { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.pc4-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px 8px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; }
+.pc4-knob { display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 0; padding: 3px 2px 2px; border: 1px dashed transparent; border-radius: 8px; font-size: .9rem; cursor: pointer; }
+.pc4-knob.over, .pc4-knob:focus-visible { border-color: var(--ink); outline: none; }
+.pc4-knob.hit .pc4-dial { box-shadow: 0 0 0 3px var(--led); }
+.pc4-cc { font-family: var(--mono); font-size: .66rem; color: var(--muted); }
+.pc4-dial { position: relative; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel); }
+.pc4-dial::before { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: var(--line); opacity: .45; }
+.pc4-ptr { position: absolute; inset: 0; transform: rotate(-135deg); }
+.pc4-ptr::after { content: ''; position: absolute; left: 50%; top: 2px; width: 2px; height: 8px; margin-left: -1px; border-radius: 1px; background: var(--ink); }
+.pc4-label { min-height: 1.2em; text-align: center; line-height: 1.2; font-family: var(--display); font-weight: 600; font-size: .84rem; overflow-wrap: anywhere; }
+.pc4-knob.empty .pc4-label { color: var(--muted); font-weight: 400; }
+.pc4-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; align-content: start; }
+.pc4-tile { position: relative; height: 40px; display: flex; align-items: center; justify-content: center; padding: 4px 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font-family: var(--display); font-weight: 500; font-size: .84rem; text-align: center; cursor: grab; user-select: none; }
+.pc4-tile.used { opacity: .5; }
+.pc4-tile.sel { outline: 2px solid var(--ink); }
+.pc4-badge { position: absolute; top: 2px; right: 6px; font-family: var(--mono); font-size: .6rem; color: var(--muted); }
+@media (max-width: 720px) { .pc4-body { grid-template-columns: minmax(0, 1fr); } }
+/* pattern off: the generator's sliders give way to the MIDI note map; tempo stays (the echo syncs to it) */
+.pattern-card.midi #pk-pattern .knob:not([data-k="tempo"]), .pattern-card.midi #pk-feel { display: none; }
+/* groove per track, under the pattern sliders */
+.gtable { display: grid; grid-template-columns: 4.2em repeat(7, minmax(0, 1fr)); gap: 2px 4px; align-items: center; justify-items: center;
+  border-top: 1px solid var(--line); padding-top: 8px; }
+.gtable .ghead { border: 0; padding: 0; margin: 0; justify-self: start; }
+.gtable .glab { justify-self: start; font-family: var(--display); font-weight: 600; font-size: .9rem; }
+.gtable .gname { font-size: .68rem; color: var(--muted); }
+.gtable .sdial span { display: none; }
+
+/* mixer header: the sound randomisers sit beside the title */
+.rand-card { align-content: start; }
+.rand-card > h2 { margin: 0; }
+.rand-card .rand { display: grid; gap: 6px; }
+.rand-card .rbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.rand-card .rbtns .btn { padding: 4px 8px; font-size: .82rem; }
+.rand-card .rand-opts { gap: 10px; font-size: .8rem; }
+.rand-card .field input[type=range] { width: 56px; }
+.strip .name.lvl { font-family: var(--mono); font-weight: 500; }
+.title { border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
+.title:hover b { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+.title:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; border-radius: 4px; }
+.about-dlg { border: 0; border-radius: 14px; padding: 0; background: var(--panel); color: var(--ink); width: min(900px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px); box-shadow: 0 20px 60px rgb(0 0 0 / .35); }
+.about-dlg[open] { display: grid; grid-template-rows: auto minmax(0, 1fr); }
+.about-dlg::backdrop { background: rgb(0 0 0 / .35); }
+.about-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 22px; border-bottom: 1px solid var(--line);
+  font-family: var(--display); font-size: 1.2rem; }
+.about-dlg .about { overflow: auto; padding: 4px 22px 4px; }
+.about > * { min-width: 0; }
+details { background: var(--panel); }
+details + details { border-top: 1px solid var(--line); }
+summary { cursor: pointer; padding: 12px 0; font-family: var(--display); font-weight: 600; font-size: .95rem; text-transform: lowercase; }
+.body { padding: 0 0 18px; display: grid; gap: 10px; max-width: 80ch; }
+.body p { margin: 0; overflow-wrap: anywhere; }
+.body code { font-family: var(--mono); font-size: .82em; }
+.src a { color: inherit; }
+.note { font-size: .9rem; line-height: 1.6; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; padding: 0 0 18px; }
+.stat { background: var(--tint); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; }
+.stat b { font-family: var(--display); font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.stat span { font-size: .8rem; color: var(--muted); }
+.code-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 0 10px; flex-wrap: wrap; }
+pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background: var(--code-bg); font-family: var(--mono);
+  font-size: .76rem; line-height: 1.55; border-radius: 8px; max-height: 560px; margin-bottom: 18px; }
+
+/* ---- smaller screens ---- */
+@media (max-width: 1180px) {
+  .tab-sound .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .mixer { grid-template-columns: minmax(0, 1fr); }
+}
+/* every tab fits the window; the mixer's faders take whatever height is left, and a tab
+   that still doesn't fit scrolls inside its panel rather than the page */
+@media (min-width: 761px) and (min-height: 480px) {
+  body { height: 100dvh; box-sizing: border-box; padding-bottom: 14px; overflow: hidden; }
+  .wrap { height: 100%; grid-template-rows: auto auto minmax(0, 1fr); }
+  .wrap > .panel { min-height: 0; overflow: auto; padding: 16px; }
+  .tab-perform { overflow: hidden; grid-template-rows: minmax(0, 1fr); }
+  /* sound: compact cards, the scope takes the spare height on the left */
+  .pcards { gap: 8px; --kw: 46px; }
+  .pcard { padding: 8px 10px 8px; gap: 4px; }
+  .pcard > h2, .xcard > h2 { font-size: .68rem; }
+  .xcard { padding: 8px 10px; }
+  .pcard .knobs { gap: 4px; }
+  .pcard .knob { gap: 0; }
+
+  .pcard .knob label { font-size: .7rem; line-height: 1.3; }
+  .pcard .knob output { font-size: .66rem; line-height: 1.3; }
+  .pcard .sel label { font-size: .7rem; }
+  .pcard .sel select { padding: 3px 6px; font-size: .8rem; }
+  .vbtn { padding: 4px 10px; font-size: .82rem; }
+  /* steps: the grid's rows share the height, up to a comfortable size */
+  .tab-steps .seq { height: 100%; grid-template-rows: auto auto minmax(0, 1fr); }
+  .tab-steps .grid { grid-template-rows: auto; grid-auto-rows: minmax(18px, 1fr); max-height: 490px; min-height: 0; }
+  .tab-steps .cell { aspect-ratio: auto; height: 100%; }
+  .mix-card { grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
+  .tab-perform .strips { min-height: 0; }
+  .tab-perform .strip { display: flex; flex-direction: column; align-items: center; min-height: 0; }
+  @media (min-height: 800px) { .pcard .sl { --sh: 60px; } }
+  @media (min-height: 860px) { .pknobs .sl { --sh: 64px; } }
+  .tab-perform .strip .fader { height: auto; }
+  .pattern-card { grid-template-rows: auto minmax(0, 1fr) auto; }
+  .tab-perform .perform { display: flex; flex-direction: column; gap: clamp(10px, 2vh, 20px); align-self: stretch; padding-block: 0; }
+  .tab-perform #pk-pattern { margin-top: auto; }
+  .tab-perform .pgh { margin-top: auto; }
+  .tab-perform #pk-macro { margin-bottom: auto; }
+}
+@media (min-width: 761px) and (max-width: 1250px) { .tab-sound { grid-template-columns: minmax(0, 1fr) 270px; } .tab-sound .lcd-line span { display: none; } }
+@media (min-width: 761px) and (max-height: 640px) {
+  .right-col { gap: 10px; }
+  .master-card, .mix-card, .fx-card { padding: 8px 14px 10px; gap: 4px; }
+  .tab-perform .strip { gap: 4px; }
+  .rand-card { padding: 8px 12px; gap: 4px; }
+  .rand-card .rbtns .btn { padding: 2px 8px; font-size: .78rem; }
+  .fx-card .radios span { padding: 3px 3px; }
+
+  .master-card .knob, .fx-card .knob { gap: 0; }
+  .master-card .knob label, .fx-card .knob label { line-height: 1.25; }
+  .master-card .knob output, .fx-card .knob output { line-height: 1.2; }
+  .right-col { gap: 8px; }
+  .master-card .sl, .fx-card .sl { --sh: 30px; }
+  .pknobs .sl { --sh: 36px; }
+  .pcard .sl { --sh: 34px; }
+  .gtable .sdial .sl { --sh: 26px; }
+  .fx-card { --kw: 48px; } .fx-card .radios { flex-wrap: nowrap; }
+  .tab-perform .sdial .dial { width: 30px; height: 30px; }
+  .radios span { padding: 4px 4px; font-size: .64rem; }
+  /* six pattern sliders in a short window */
+  .tab-perform .perform { gap: 0; }
+
+  .pknobs .knob label { font-size: .78rem; line-height: 1.2; }
+  .pknobs .knob output { font-size: .66rem; line-height: 1.2; }
+  .pgh { margin-top: 2px; padding-top: 4px; }
+  .tab-perform .pattern-card { gap: 4px; }
+  .gtable { padding-top: 4px; }
+  .pattern-card > h2 { margin-bottom: 0; }
+
+  .master-card, .fx-card { --kw: 52px; }
+  .fx-groups, .master-row { gap: 12px; } .fxg + .fxg, .mgroup + .mgroup { padding-left: 12px; }
+}
+@media (min-width: 761px) and (max-width: 1300px) { .fxg:last-child .radios { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; } }
+@media (max-width: 1300px) { h1 small, .kitbar .lbl { display: none; } .field input[type=range] { width: 60px; } .topbar { gap: 8px 14px; } }
+@media (max-width: 760px) {
+  .rack { grid-template-columns: minmax(0, 1fr); padding: 16px; }
+  .tab-perform { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  .pattern-card, .right-col { grid-column: 1; grid-row: auto; }
+  .master-row, .fx-groups { flex-direction: column; }
+  .master-card, .fx-card { --kw: 60px; }
+  .master-card, .fx-card { grid-template-columns: minmax(0, 1fr); }
+  .mgroup + .mgroup { border-left: 0; padding-left: 0; }
+  .fxg + .fxg { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 8px; }
+  .tab-perform .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 16px; }
+  .tab-perform .strip:nth-child(4) { border-left: 0; }
+  .tab-perform .strip .fader { height: 140px; }
+  .pcard .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+  .tabs { padding-left: 0; gap: 2px; }
+  .topbar > * { min-width: 0; }
+  .kitbar { flex-wrap: nowrap; width: 100%; gap: 4px; }
+  .kitbar .field { flex: 1 1 auto; min-width: 0; }
+  .kitbar select { width: 100%; min-width: 0; }
+  .kitbar .btn { padding-inline: 8px; }
+  .transport { width: 100%; }
+  .transport .bars { margin-left: auto; }
+  .tab { flex: 1 1 0; min-width: 0; padding: 8px 4px; font-size: .8rem; }
+  .top { grid-template-columns: minmax(0, 1fr) 76px; }
+  .lcd canvas { height: 100px; }
+  .pad kbd { display: none; }
+  .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .perform { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-block: 8px; gap: 18px 8px; }
+  .grid { grid-template-columns: 4em repeat(16, minmax(0, 1fr)); gap: 2px; }
+  .grid .ghead, .grid .sdial { display: none; } /* no room for the groove dials on a phone; they are on the perform tab too */
+  .cell { aspect-ratio: .6; border-radius: 2px; font-size: .52rem; letter-spacing: -.04em; }
+  .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .strip .fader { height: 110px; }
+  .buses { grid-template-columns: minmax(0, 1fr); }
+  .transport .field input[type=range] { width: 70px; }
+}
+@media (max-width: 520px) {
+  .xgrid .full { display: none; } .xgrid .short { display: inline; }
+  .xgrid { grid-template-columns: 3.4em repeat(6, minmax(0, 1fr)); }
+  .xcell { aspect-ratio: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .pad, .vbtn i { transition: none; } }
+/* ---- perform as a desk: three rows of fader cards on the left (pattern and sound, effects, master and groove),
+   the randomiser and the mixer on the right. In a window that fits, the faders take the spare height ---- */
+.tab-perform { grid-template-columns: minmax(0, 1fr) clamp(340px, 31vw, 450px); grid-template-rows: none; gap: 12px; align-items: stretch; }
+.tab-perform > .card, .tab-perform > .bay-c { grid-column: 1; grid-row: auto; }
+.tab-perform > .right-col { grid-column: 2; grid-row: 1 / span 3; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 12px; min-height: 0; min-width: 0; }
+.bay-c { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; min-width: 0; min-height: 0; }
+.tab-perform .card { padding: 10px 14px 12px; gap: 6px; grid-template-rows: auto minmax(0, 1fr); align-content: stretch; min-height: 0; }
+.tab-perform .card > h2, .tab-perform .pc-head { margin: 0; min-height: 20px; }
+.tab-perform .pc-head { display: flex; align-items: center; justify-content: space-between; }
+.tab-perform .pattern-card.midi { grid-template-rows: auto auto minmax(0, 1fr); }
+.tab-perform:has(.pattern-card.midi) .groove-card { display: none; }
+/* a fader column: name on top, the fader, its value underneath */
+.tab-perform .knob, .pcard .knob { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; min-height: 0; }
+.tab-perform .knob .sl, .pcard .knob .sl { flex: none; height: 84px; }
+.tab-perform .knob label, .tab-perform .pknobs .knob label { font-family: var(--display); font-weight: 500; font-size: .74rem; line-height: 1.25; }
+.tab-perform .knob output, .tab-perform .pknobs .knob output { font-size: .66rem; line-height: 1.25; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.tab-perform .knobs, .tab-perform .pknobs { align-items: stretch; justify-items: stretch; gap: 0; }
+/* pattern and sound share one row of faders, with a rule between them */
+.tab-perform .perform { display: grid; grid-template-columns: 4fr 3fr 4fr; grid-template-rows: auto minmax(0, 1fr); gap: 2px 0; padding: 0; align-self: stretch; }
+.tab-perform #pk-pattern { grid-column: 1; grid-row: 2; }
+.tab-perform #pk-feel { grid-column: 2; grid-row: 2; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tab-perform .pgh { grid-column: 3; grid-row: 1; margin: 0; padding: 0 0 0 12px; border: 0; border-left: 1px solid var(--line); }
+.tab-perform #pk-macro { grid-column: 3; grid-row: 2; border-left: 1px solid var(--line); padding-left: 8px; }
+.tab-perform .perform > :first-child { grid-row: 2; }
+.tab-perform #pk-pattern, .tab-perform #pk-macro, .tab-perform .pgh { margin: 0; }
+/* effects: each effect's type buttons above its faders */
+.tab-perform .fx-groups { display: flex; gap: 14px; min-height: 0; }
+.tab-perform .fxg { display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 4px; }
+.tab-perform .fxg + .fxg { padding-left: 14px; }
+.tab-perform .fxg .knobs { grid-auto-columns: var(--kw); }
+.tab-perform .fxg:last-child .radios { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; }
+.tab-perform .master-row { display: flex; gap: 14px; min-height: 0; }
+.tab-perform .mgroup { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 4px; }
+.tab-perform .mgroup + .mgroup { padding-left: 14px; }
+.tab-perform .mlab { min-height: 22px; }
+.master-card, .fx-card { --kw: 58px; }
+/* groove: per track, swing share over push */
+.groove-card .gtable { grid-template-columns: 3.4em repeat(7, minmax(20px, 1fr)); grid-template-rows: auto auto auto; border: 0; padding: 0; gap: 2px; align-items: stretch; }
+.groove-card .ghead { visibility: hidden; grid-column: auto; grid-row: auto; border: 0; padding: 0; }
+.groove-card .gname { align-self: end; justify-self: center; }
+.groove-card .glab { align-self: center; font-size: .78rem; font-weight: 500; }
+.groove-card .sdial { display: flex; justify-content: center; min-height: 0; }
+.groove-card .sdial .sl { height: 44px; }
+/* randomise: five buttons in a row, depth and wild under them */
+.tab-perform .rand-card .rbtns { grid-template-columns: repeat(5, auto); justify-content: start; }
+.tab-perform .rand-card .rand-opts { gap: 14px; }
+/* mixer: per strip the name, pan and the three sends as small knobs in one column, the fader, then r and a */
+.tab-perform .mix-card { grid-template-rows: auto minmax(0, 1fr); }
+.tab-perform .strips { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; min-height: 0; }
+.tab-perform .strip { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 0 4px; background: none; border-radius: 0; border-left: 1px solid var(--line); min-height: 0; min-width: 0; }
+.tab-perform .strip:first-child { border-left: 0; }
+.tab-perform .strip .name { font-size: .8rem; }
+.tab-perform .strip .sends { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: none; }
+.tab-perform .strip .sdial { display: grid; justify-items: center; gap: 1px; }
+.tab-perform .strip .sdial .dial { width: 26px; height: 26px; }
+.tab-perform .strip .sdial span { display: block; font-size: .6rem; margin: 0; order: 0; min-width: 0; }
+.tab-perform .strip .fader { height: 150px; }
+.tab-perform .sfoot { gap: 4px; }
+.sfoot .vr, .sfoot .va { width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; background: var(--tint-2); color: var(--ink); cursor: pointer;
+  font-family: var(--display); font-weight: 600; font-size: .7rem; line-height: 1; flex: none; }
+.sfoot .va:hover, .sfoot .vr:hover { background: var(--ink); color: var(--panel); }
+.sfoot .va:focus-visible, .sfoot .vr:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+/* in a window that fits: the three rows share the height and every fader stretches to fill its card */
+@media (min-width: 761px) and (min-height: 480px) {
+  .tab-perform { grid-template-rows: repeat(3, minmax(0, 1fr)); overflow: hidden; }
+  .tab-perform .knob .sl, .pcard .knob .sl { flex: 1 1 0; height: auto; min-height: 28px; }
+  .tab-perform .knobs, .tab-perform .pknobs, .tab-perform .perform, .tab-perform .fxg, .tab-perform .mgroup { min-height: 0; }
+  .groove-card .gtable { grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr); min-height: 0; }
+  .groove-card .sdial .sl { height: auto; flex: 1 1 0; min-height: 18px; }
+  .groove-card .sdial { flex-direction: column; align-items: center; }
+  .tab-perform .strip .fbox { flex: 1 1 0; min-height: 60px; max-height: 300px; }
+  .tab-perform .strip .fader { height: auto; }
+  /* sound: the cards fill the panel's height and their faders stretch with them */
+  .tab-sound { align-items: stretch; }
+  .tab-sound .snd-main { grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
+  .tab-sound .pcards { align-content: stretch; min-height: 0; }
+  .pcard { display: grid; grid-template-rows: auto minmax(0, 1fr); align-content: stretch; }
+  .pcard .knobs { align-items: stretch; min-height: 0; }
+  .pcard .sel { align-self: start; }
+}
+@media (min-width: 761px) and (max-height: 640px) {
+  .tab-perform .card { padding: 6px 12px 8px; gap: 2px; }
+  .tab-perform .card > h2, .tab-perform .pc-head { min-height: 16px; font-size: .68rem; }
+  .tab-perform .mlab { min-height: 18px; }
+  .tab-perform .knob label, .tab-perform .pknobs .knob label { font-size: .7rem; line-height: 1.15; }
+  .tab-perform .knob output, .tab-perform .pknobs .knob output { line-height: 1.1; }
+  .tab-perform .strip { gap: 3px; }
+  .tab-perform .strip .sends { gap: 1px; }
+  .tab-perform .strip .sdial .dial { width: 22px; height: 22px; }
+}
+@media (min-width: 761px) and (max-width: 1250px) {
+  .tab-perform { grid-template-columns: minmax(0, 1fr) 340px; }
+  .master-card, .fx-card { --kw: 50px; }
+  .tab-perform .fx-groups, .tab-perform .master-row { gap: 10px; }
+  .tab-perform .fxg + .fxg, .tab-perform .mgroup + .mgroup { padding-left: 10px; }
+  .tab-perform .rand-card .rbtns .btn { padding: 4px 6px; }
+  .tab-perform .strip .sends { gap: 2px; }
+  .tab-perform .strip .sdial .dial { width: 22px; height: 22px; }
+  .tab-perform .strip .sdial span { font-size: .56rem; }
+}
+@media (max-width: 760px) {
+  .tab-perform { grid-template-columns: minmax(0, 1fr); }
+  .tab-perform > .right-col { grid-column: 1; grid-row: auto; }
+  .bay-c { grid-template-columns: minmax(0, 1fr); }
+  .tab-perform .fx-groups, .tab-perform .master-row { flex-direction: column; }
+  .tab-perform .fxg + .fxg, .tab-perform .mgroup + .mgroup { padding-left: 0; }
+  .tab-perform .rand-card .rbtns { grid-template-columns: 1fr 1fr; }
+  .tab-perform .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 16px; }
+  .tab-perform .strip:nth-child(4) { border-left: 0; }
+  .tab-perform .strip .fader { height: 110px; }
+  .tab-perform .knob .sl, .pcard .knob .sl { height: 72px; }
+  .tab-perform .perform { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; gap: 10px; }
+  .tab-perform #pk-pattern, .tab-perform #pk-feel, .tab-perform .pgh, .tab-perform #pk-macro, .tab-perform .perform > :first-child { grid-column: 1; grid-row: auto; }
+  .tab-perform #pk-feel { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .tab-perform .pgh { border-left: 0; border-top: 1px solid var(--line); padding: 8px 0 0; }
+  .tab-perform #pk-macro { border-left: 0; padding-left: 0; }
+}
+/* each effect's type is a small dropdown beside its name */
+.fxh { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.fxh .pick { font-size: .72rem; padding: 1px 4px; border-radius: 4px; text-transform: lowercase; }
+.tab-perform .fxg { grid-template-rows: auto minmax(0, 1fr); }
+/* randomise stands out: a green-tinted card with the panel's yellow as its buttons, and everything as the main button */
+.rand-card { --rc: color-mix(in srgb, var(--bg) 34%, var(--panel)); background: var(--rc); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bg) 55%, var(--panel)); }
+.rand-card > h2 { color: var(--ink); }
+.tab-perform .rand-card { padding: 12px 14px 12px; gap: 8px; }
+.tab-perform .rand-card .rand { gap: 10px; }
+.tab-perform .rand-card .rbtns { grid-template-columns: repeat(3, minmax(0, 1fr)); justify-content: stretch; gap: 6px; }
+.tab-perform .rand-card .rbtns .btn { padding: 7px 6px; font-size: .9rem; background: var(--panel); border-radius: 7px; }
+.tab-perform .rand-card .rbtns .btn:hover { background: color-mix(in srgb, var(--ink) 10%, var(--panel)); }
+.tab-perform .rand-card .rbtns #new-kit { grid-column: span 2; background: var(--ink); color: var(--panel); font-weight: 600; }
+.tab-perform .rand-card .rbtns #new-kit:hover { background: color-mix(in srgb, var(--panel) 14%, var(--ink)); }
+.tab-perform .rand-card .rbtns #undo { background: none; color: var(--muted); box-shadow: inset 0 0 0 1px var(--line); }
+.tab-perform .rand-card .rbtns #undo:not(:disabled):hover { color: var(--ink); background: var(--tint); }
+.tab-perform .rand-card .rand-opts { color: var(--ink); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .rand-card { --rc: color-mix(in srgb, #62bd8c 16%, var(--panel)); box-shadow: inset 0 0 0 1px color-mix(in srgb, #62bd8c 30%, var(--panel)); } }
+:root[data-theme="dark"] .rand-card { --rc: color-mix(in srgb, #62bd8c 16%, var(--panel)); box-shadow: inset 0 0 0 1px color-mix(in srgb, #62bd8c 30%, var(--panel)); }
+@media (min-width: 761px) and (max-height: 640px) {
+  .tab-perform .rand-card { padding: 8px 12px; gap: 4px; }
+  .tab-perform .rand-card .rand { gap: 6px; }
+  .tab-perform .rand-card .rbtns .btn { padding: 4px 6px; font-size: .84rem; }
+}
+/* pattern and sound sit side by side in their own cards; the pattern card's title is its style, between two arrows */
+.tab-perform > .bay-a { grid-column: 1; grid-row: auto; display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 12px; min-width: 0; min-height: 0; }
+.tab-perform .perform { grid-template-columns: 4fr 3fr; grid-template-rows: minmax(0, 1fr); }
+.tab-perform #pk-pattern, .tab-perform #pk-feel, .tab-perform .perform > :first-child { grid-row: 1; }
+.tab-perform .sound-card #pk-macro { grid-column: 1; grid-row: 2; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 0; padding: 0; margin: 0; min-height: 0; }
+.tab-perform .pattern-card .pc-head, .tab-perform .sound-card > h2 { min-height: 24px; }
+.tab-perform .sound-card > h2 { display: flex; align-items: center; }
+.style-pick { display: inline-flex; align-items: center; gap: 2px; margin-left: -5px; }
+.style-pick h2 { min-width: 9.4em; text-align: center; white-space: nowrap; }
+.sarrow { width: 20px; height: 20px; padding: 0; border: 0; border-radius: 5px; background: none; color: var(--muted); cursor: pointer;
+  font-family: var(--display); font-weight: 600; font-size: .95rem; line-height: 1; }
+.sarrow:hover { background: var(--tint-2); color: var(--ink); }
+.sarrow:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.pattern-card.midi .sarrow { visibility: hidden; }
+/* pattern off: the MIDI note map on the left, the tempo fader beside it */
+.tab-perform .pattern-card.midi { grid-template-columns: minmax(0, 1fr) 64px; grid-template-rows: auto minmax(0, 1fr); column-gap: 8px; }
+.tab-perform .pattern-card.midi .pc-head { grid-column: 1 / -1; }
+.tab-perform .pattern-card.midi .midi-info { gap: 2px; min-height: 0; overflow: hidden; font-size: .78rem; }
+.tab-perform .pattern-card.midi .midi-map { gap: 0 10px; line-height: 1.35; font-size: .76rem; }
+.tab-perform .pattern-card.midi .perform, .tab-perform .pattern-card.midi #pk-pattern { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 760px) {
+  .tab-perform > .bay-a { grid-template-columns: minmax(0, 1fr); }
+  .tab-perform .perform { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  .tab-perform #pk-pattern, .tab-perform #pk-feel, .tab-perform .perform > :first-child { grid-row: auto; }
+}
+.up-cur { font-family: var(--mono); font-size: .72rem; color: var(--muted); min-width: 7em; }
+.up-tools .btn:disabled { opacity: .4; cursor: default; }
+/* steps: the trig conditions laid out in groups under the tools; the grid's steps are smaller so it all fits */
+.trig-row { gap: 6px 14px; }
+.trig-row .trl { font-family: var(--display); font-weight: 600; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.trig-row .tg { display: inline-flex; align-items: center; gap: 6px; }
+.trig-row .tg i { font-style: normal; font-size: .74rem; color: var(--muted); white-space: nowrap; }
+.trig-row .tg .btn { min-width: 2.6em; font-family: var(--mono); }
+@media (min-width: 761px) and (min-height: 480px) {
+  .tab-steps .seq { grid-template-rows: auto auto auto minmax(0, 1fr); }
+  .tab-steps .grid { max-height: 380px; }
+}
+/* what plays: perform / steps / off, on the pattern card and the steps tab */
+.src-pick button { border: 0; padding: 2px 9px; border-radius: 999px; background: none; font: inherit; font-size: .72rem; color: var(--muted); cursor: pointer; }
+.src-pick button[aria-checked="true"] { background: var(--ink); color: var(--panel); }
+.src-pick button:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.steps-src { padding: 3px; }
+.steps-src button { padding: 4px 11px; font-size: .8rem; }
+/* steps: the page row; pages past the length are dimmed, the playing page gets a dot */
+.page-row { gap: 6px 14px; }
+.page-row .pages .btn { min-width: 2.2em; font-family: var(--mono); position: relative; }
+.page-row .pages .btn.off { opacity: .45; }
+.page-row .pages .btn.now::after { content: ''; position: absolute; left: 50%; bottom: 2px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--led); }
+.page-row .pick { font-size: .78rem; padding: 3px 6px; border-radius: 6px; }
+@media (min-width: 761px) and (min-height: 480px) { .tab-steps .seq { grid-template-rows: auto auto auto auto minmax(0, 1fr); } .tab-steps .grid { max-height: 340px; } }

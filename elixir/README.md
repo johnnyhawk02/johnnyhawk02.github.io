@@ -51,7 +51,9 @@ and the hardware sequencer. Only the stereo outputs are modelled.
 | `index.html` | the whole app in one file, built by `src/build.mjs` |
 | `src/lxr.js` | the engine (ES module, no dependencies) |
 | `src/lxr-tables.js`, `src/lxr-ui-data.js` | wavetables, init kit, parameter and menu data from the firmware |
-| `src/index.src.html` | the page; `src/build.mjs` bundles it with the engine and kits |
+| `src/index.src.html` | the page's markup; `src/build.mjs` bundles it with the code in `src/app/`, the engine and kits |
+| `src/app/` | the page's code: `style.css`, the audio thread (`player.js`) and the app's files, run in the order `build.mjs` lists them |
+| `src/test/smoke.mjs` | loads every built-in preset, older preset shapes and saved ones, and checks the state and audio against `baseline.json` |
 | `src/kits/` | the generator's source kits (`.SND`): Hrtl DLC kits and generated E01–E12 |
 | `src/presets/` | built-in presets: favourites exported from the preset manager (`.json`) |
 | `src/verify.mjs` | the sample-for-sample comparison |
@@ -61,6 +63,7 @@ and the hardware sequencer. Only the stereo outputs are modelled.
 
 ```sh
 node src/build.mjs --out index.html          # rebuild the page
+node src/test/smoke.mjs index.html --check src/test/baseline.json   # nothing changed (needs Playwright)
 
 # reference (Debian/Ubuntu): qemu-user-static gcc-arm-linux-gnueabihf libc6-dev-armhf-cross
 git clone https://github.com/erica-synths/lxr-desktop-app
