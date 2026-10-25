@@ -1,8 +1,7 @@
 // ---- snare rush settings: the rush's break points and glides, in a popup opened from the button above the dial ----
-// Kept in this browser (not in presets); the defaults are the player's own (Player.rs)
+// Saved with each preset (song.rushSet) and kept in this browser as the working values between reloads; the defaults are the player's own (Player.rs)
 const RUSH_DFLT = { start: 75, p32: 80, top: 4, hats: 80, only: 98, kicks: 90, first: 95, hp: 90, hpTop: 1500, rollMs: 40, hpMs: 40 };
 const rushSet = { ...RUSH_DFLT };
-try { Object.assign(rushSet, JSON.parse(localStorage.getItem('elexir-rush') || '{}')); } catch (e) { /* defaults */ }
 const saveRushSet = () => { try { localStorage.setItem('elexir-rush', JSON.stringify(rushSet)); } catch (e) { /* not kept */ } };
 // straight to the player, not held for the bar like a preset
 function sendRushSet() {
@@ -29,6 +28,23 @@ const RUSH_ROWS = [
 ];
 const rushClamp = { start: (v) => Math.min(v, rushSet.p32 - 1), p32: (v) => Math.max(v, rushSet.start + 1),
   kicks: (v) => Math.min(v, rushSet.first), first: (v) => Math.max(v, rushSet.kicks) };
+// settings from a preset or storage: the defaults, then each known value rounded to its step, in range and in order
+function setRushSet(src) {
+  Object.assign(rushSet, RUSH_DFLT);
+  const ok = (v) => typeof v === 'number' && Number.isFinite(v);
+  for (const [k, label, min, max, step] of RUSH_ROWS) {
+    if (!label || !src || !ok(src[k])) continue;
+    rushSet[k] = k === 'top' ? Math.min(4, Math.max(2, Math.round(src[k]))) : Math.min(max, Math.max(min, Math.round(src[k] / step) * step));
+  }
+  if (rushSet.p32 <= rushSet.start) { rushSet.p32 = Math.min(99, rushSet.start + 1); rushSet.start = rushSet.p32 - 1; }
+  if (rushSet.first < rushSet.kicks) rushSet.first = rushSet.kicks;
+}
+try { setRushSet(JSON.parse(localStorage.getItem('elexir-rush') || '{}')); } catch (e) { /* defaults */ }
+// a preset's settings: they replace the working ones, here and in the player
+function useRushSet(src) {
+  setRushSet(src); saveRushSet(); sendRushSet();
+  if (rushDlg.open) rushDraws.forEach((d) => d());
+}
 const rushDraws = [];
 for (const [k, label, min, max, step, show] of RUSH_ROWS) {
   const box = $('rs-opts');

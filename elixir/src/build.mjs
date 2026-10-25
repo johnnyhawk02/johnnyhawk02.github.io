@@ -33,6 +33,8 @@ const presets = existsSync(presetDir) ? readdirSync(presetDir).filter((f) => /\.
   .flatMap((f) => JSON.parse(readFileSync(new URL(f, presetDir), 'utf8')).presets || []).map((p) => ({ ...p, fav: false })) : [];
 // the page reads presets in the current format only (PRESET_V in app/presets.js)
 const PRESET_V = Number(/const PRESET_V = (\d+);/.exec(read('app/presets.js'))[1]);
+// and they carry the snare rush and its settings, so loading one sets them (app/rush-set.js)
+for (const p of presets) if (p.song && (typeof p.song.rush !== 'number' || !p.song.rushSet)) throw new Error(`presets/: ${p.name} has no song.rush and song.rushSet`);
 for (const p of presets) if (p.v !== PRESET_V) throw new Error(`presets/: ${p.name} is format v${p.v || 1}, the page reads v${PRESET_V}`);
 
 // the page's own code: app/style.css, the audio thread (app/player.js) and the app's files, run in this

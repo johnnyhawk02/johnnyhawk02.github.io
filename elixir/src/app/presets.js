@@ -26,7 +26,7 @@ for (const { kit } of sourceKits) for (let n = 1; n <= 6; n++) if (kit[PAR['TRAN
 // kit file: the sends and FX then come from the kit's own FX settings). Only presets in the current format
 // (v = PRESET_V) are read; older ones are skipped. A change to the format bumps PRESET_V and rewrites the
 // built-in presets in presets/*.json to match (build.mjs refuses any in another format).
-const PRESET_V = 3;
+const PRESET_V = 4;
 const PRESET_FIELDS = ['name', 'kit', 'xm', 'fx', 'fx3', 'dpos', 'song', 'fav'];
 const isCurrent = (p) => !!(p && p.v === PRESET_V && p.kit);
 // a preset as stored and exported, from a kit list entry
@@ -38,7 +38,7 @@ const kitList = [{ name: 'Init kit', kit: factoryInit, userSamples: 0, builtin: 
   ...BUILTIN_PRESETS.map((p) => fromStored(p, { builtin: true }))];
 const kitSel = $('kit');
 // saved presets: the kit values, crossfeed, FX and mixer sends, plus the song (pattern, perform dials,
-// tempo, velocity, accent, master), kept in this browser
+// tempo, velocity, accent, master, snare rush and its settings), kept in this browser
 // storage keys keep the old elexir- prefix, so presets saved before the rename still load
 // (the -v2 is from when presets and kits were split, not the preset format version)
 const SAVE_KEY = 'elexir-presets-v2';
@@ -138,9 +138,9 @@ function setDirty(d) {
 function songSnapshot() {
   const copy = (a) => a.map((r) => r.slice());
   return { style: STYLES[styleIdx].name, user: STYLES[styleIdx].user && userPats.length ? structuredClone(userPats[userSlot()]) : undefined, energy: perf.energy, beat: perf.beat, fills: perf.fills,
-    tempo: perf.tempo, vel: perf.vel, accent: perf.accent, view, source, groove: structuredClone(groove), macro: { ...macro },
+    tempo: perf.tempo, rush: perf.rush, vel: perf.vel, accent: perf.accent, view, source, groove: structuredClone(groove), macro: { ...macro },
     pattern: { on: copy(pattern.on), acc: copy(pattern.acc), bar: copy(pattern.bar) }, stepPages: pages.slice(0, pageCount).map(copyPage),
-    master: { ...master } };
+    master: { ...master }, rushSet: { ...rushSet } };
 }
 function useSong(g, keepTempo) {
   setStyle(styleIndex(g.style));
@@ -150,6 +150,8 @@ function useSong(g, keepTempo) {
   if (STYLES[styleIdx].user && g.user) { const i = ensureUserPat(g.user); if (i >= 0) useUserSlot(i); }
   Object.assign(master, MASTER0, g.master); buildMaster(); // presets saved before the sidechain switch have it on
   sendMix();
+  perf.rush = Math.max(0, Math.min(100, Number(g.rush) || 0)); send({ type: 'rush', v: perf.rush });
+  useRushSet(g.rushSet);
   // the dial readouts come from generate; then the saved pattern, which may have been edited by hand
   generate();
   copyInto(pattern, g.pattern);
