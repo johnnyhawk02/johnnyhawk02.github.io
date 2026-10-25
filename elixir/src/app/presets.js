@@ -26,7 +26,7 @@ for (const { kit } of sourceKits) for (let n = 1; n <= 6; n++) if (kit[PAR['TRAN
 // kit file: the sends and FX then come from the kit's own FX settings). Only presets in the current format
 // (v = PRESET_V) are read; older ones are skipped. A change to the format bumps PRESET_V and rewrites the
 // built-in presets in presets/*.json to match (build.mjs refuses any in another format).
-const PRESET_V = 2;
+const PRESET_V = 3;
 const PRESET_FIELDS = ['name', 'kit', 'xm', 'fx', 'fx3', 'dpos', 'song', 'fav'];
 const isCurrent = (p) => !!(p && p.v === PRESET_V && p.kit);
 // a preset as stored and exported, from a kit list entry

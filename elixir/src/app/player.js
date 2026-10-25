@@ -22,8 +22,8 @@ class Player {
     this.pattern = { on: [], acc: [], bar: [] };
     this.playing = false; this.bpm = 120; this.vel = 100; this.accGain = 0.5;
     this.step = 0; this.bar = 0; this.toNext = 0; this.atBar = [];
-    // groove: odd 16ths late by swing (in steps) times each track's share, plus each track's push (-) or pull (+)
-    this.groove = { swing: 0, share: new Array(7).fill(1), nudge: new Array(7).fill(0) };
+    // groove: per track and step, how far its hits sit off the grid in 16ths (+ late, - early)
+    this.groove = { off: Array.from({ length: 7 }, () => new Array(16).fill(0)) };
     this.queue = []; this.sched = []; this.fresh = false; this.rec = null;
     // count-in: a beep then three boops over the bar before a take, with the mix turned down under them
     this.cntStep = 0; this.cntGain = 1; this.clk = null;
@@ -103,7 +103,7 @@ class Player {
     const hits = [], { on, acc, bar: cond } = P, G = this.groove, len = LXR.REAL_FS * 60 / this.bpm / 4;
     for (let t = 0; t < 7 && this.patternOn; t++) {
       if (!on[t][s] || !barOk(cond[t][s], bar)) continue;
-      const off = (s % 2 ? G.swing * G.share[t] : 0) + G.nudge[t];
+      const off = G.off[t][s];
       this.queue.push({ at: Math.max(0, at0 + off * len), t, acc: !!acc[t][s] });
       hits.push(t);
     }

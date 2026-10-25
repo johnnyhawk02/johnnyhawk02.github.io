@@ -1,14 +1,18 @@
 // ---- perform state: the perform dials (pattern card, PC4, presets) read and write here ----
-// Swing is the groove's; tempo is shown in the header's field too
+// The groove type and depth are the groove's; tempo is shown in the header's field too
 const perf = { energy: 60, beat: 0, fills: 40, tempo: 118, vel: 100, accent: 6 };
 // [min, max, default] of each, as the knobs and the PC4 map them
-const PERF_RANGE = { energy: [0, 100, 60], beat: [0, 15, 0], fills: [0, 100, 40], tempo: [70, 170, 118], vel: [1, 127, 100], accent: [0, 6, 6], swing: [50, 75, 50] };
-const perfGet = (k) => (k === 'swing' ? groove.swing : perf[k]);
+const PERF_RANGE = { energy: [0, 100, 60], beat: [0, 15, 0], fills: [0, 100, 40], tempo: [70, 170, 118], vel: [1, 127, 100], accent: [0, 6, 6],
+  groove: [0, GROOVE_TYPES.length - 1, 0], depth: [0, 100, 100] };
+const perfGet = (k) => (k === 'groove' ? grooveIdx() : k === 'depth' ? groove.depth : perf[k]);
 const perfDraws = []; // the perform knobs' redraws
 const drawPerf = () => perfDraws.forEach((d) => d());
 // a change to one of them, and what follows from it
 function setPerf(k, v) {
-  if (k === 'swing') { groove.swing = v; drawGroove(); sendSeq(); return; } // drawGroove redraws the knobs
+  if (k === 'groove' || k === 'depth') { // drawGroove redraws the knobs
+    if (k === 'groove') groove.type = GROOVE_TYPES[v].name; else groove.depth = v;
+    drawGroove(); sendSeq(); return;
+  }
   perf[k] = v;
   if (k === 'tempo') { $('tempo').value = v; sendSeq(); }
   else if (k === 'vel' || k === 'accent') sendSeq();
@@ -27,5 +31,6 @@ function perfText(k) {
   if (k === 'tempo') return `${v} bpm`;
   if (k === 'vel') return `${v} / 127`;
   if (k === 'accent') return `+${v} dB`;
-  return v === 50 ? 'straight · 50%' : `${v >= 66 && v <= 67 ? 'triplet' : v < 60 ? 'light' : v < 66 ? 'medium' : 'heavy'} · ${v}%`;
+  if (k === 'groove') return GROOVE_TYPES[v].name;
+  return `${v}%`;
 }

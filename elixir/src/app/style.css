@@ -236,7 +236,6 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .sdial .sl .rail { inset: 3px 0; }
 .sdial .sl .rail::before { top: -3px; bottom: -3px; }
 .grid .sdial .sl { --sh: 30px; }
-.gtable .sdial .sl { --sh: 34px; }
 .sel { grid-column: span 2; display: grid; gap: 4px; align-content: start; min-width: 0; }
 .sel label { font-family: var(--display); font-weight: 500; font-size: var(--fs-s); text-transform: lowercase; }
 
@@ -330,8 +329,7 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .tab-sound .hint { font-size: var(--fs-s); }
 .seq { display: grid; gap: 14px; width: 100%; }
 .perform { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding-block: 28px; }
-.grid { display: grid; grid-template-columns: 4.6em repeat(16, minmax(0, 1fr)) 34px 34px; gap: 4px; align-items: center; }
-.grid .ghead { font-size: var(--fs-xs); color: var(--muted); text-align: center; text-transform: lowercase; }
+.grid { display: grid; grid-template-columns: 4.6em repeat(16, minmax(0, 1fr)); gap: 4px; align-items: center; }
 .grid .sdial span { display: none; }
 
 .grid .row-name { font-family: var(--display); font-weight: 500; font-size: var(--fs-s); color: var(--muted); background: none; border: 0;
@@ -403,13 +401,6 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 @media (max-width: 720px) { .pc4-body { grid-template-columns: minmax(0, 1fr); } }
 /* pattern off: the generator's sliders give way to the MIDI note map; tempo stays (the echo syncs to it) */
 .pattern-card.midi #pk-pattern .knob:not([data-k="tempo"]), .pattern-card.midi #pk-feel { display: none; }
-/* groove per track, under the pattern sliders */
-.gtable { display: grid; grid-template-columns: 4.2em repeat(7, minmax(0, 1fr)); gap: 2px 4px; align-items: center; justify-items: center;
-  border-top: 1px solid var(--line); padding-top: 8px; }
-.gtable .ghead { border: 0; padding: 0; margin: 0; justify-self: start; }
-.gtable .glab { justify-self: start; font-family: var(--display); font-weight: 600; font-size: var(--fs-m); }
-.gtable .gname { font-size: var(--fs-xs); color: var(--muted); }
-.gtable .sdial span { display: none; }
 
 /* mixer header: the sound randomisers sit beside the title */
 .rand-card { align-content: start; }
@@ -499,7 +490,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .master-card .sl, .fx-card .sl { --sh: 30px; }
   .pknobs .sl { --sh: 36px; }
   .pcard .sl { --sh: 34px; }
-  .gtable .sdial .sl { --sh: 26px; }
   .fx-card { --kw: 48px; } .fx-card .radios { flex-wrap: nowrap; }
   .tab-perform .sdial .dial { width: 30px; height: 30px; }
   .radios span { padding: 4px 4px; font-size: var(--fs-xs); }
@@ -510,7 +500,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .pknobs .knob output { font-size: var(--fs-xs); line-height: 1.2; }
   .pgh { margin-top: 2px; padding-top: 4px; }
   .tab-perform .pattern-card { gap: 4px; }
-  .gtable { padding-top: 4px; }
   .pattern-card > h2 { margin-bottom: 0; }
 
   .master-card, .fx-card { --kw: 52px; }
@@ -541,7 +530,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .knobs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .perform { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-block: 8px; gap: 18px 8px; }
   .grid { grid-template-columns: 4em repeat(16, minmax(0, 1fr)); gap: 2px; }
-  .grid .ghead, .grid .sdial { display: none; } /* no room for the groove dials on a phone; they are on the perform tab too */
   .cell { aspect-ratio: .6; border-radius: 2px; font-size: var(--fs-xs); letter-spacing: -.04em; }
   .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .strip .fader { height: 110px; }
@@ -553,16 +541,15 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .xcell { aspect-ratio: 1; }
 }
 @media (prefers-reduced-motion: reduce) { .pad, .vbtn i { transition: none; } }
-/* ---- perform as a desk: three rows of fader cards on the left (pattern and sound, effects, master and groove),
+/* ---- perform as a desk: three rows of fader cards on the left (pattern and sound, effects, master),
    the randomiser and the mixer on the right. In a window that fits, the faders take the spare height ---- */
 .tab-perform { grid-template-columns: minmax(0, 1fr) clamp(340px, 31vw, 450px); grid-template-rows: none; gap: 12px; align-items: stretch; }
 .tab-perform > .card, .tab-perform > .bay-c { grid-column: 1; grid-row: auto; }
 .tab-perform > .right-col { grid-column: 2; grid-row: 1 / span 3; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 12px; min-height: 0; min-width: 0; }
-.bay-c { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; min-width: 0; min-height: 0; }
+.bay-c { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; min-width: 0; min-height: 0; }
 .tab-perform .card { padding: 10px 14px 12px; gap: 6px; grid-template-rows: auto minmax(0, 1fr); align-content: stretch; min-height: 0; }
 .tab-perform .card > h2, .tab-perform .pc-head { margin: 0; min-height: 20px; }
 .tab-perform .pc-head { display: flex; align-items: center; justify-content: space-between; }
-.tab-perform:has(.pattern-card.midi) .groove-card { display: none; }
 /* a fader column: name on top, the fader, its value underneath */
 .tab-perform .knob, .pcard .knob { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; min-height: 0; }
 .tab-perform .knob .sl, .pcard .knob .sl { flex: none; height: 84px; }
@@ -572,7 +559,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 /* pattern and sound share one row of faders, with a rule between them */
 .tab-perform .perform { display: grid; gap: 2px 0; padding: 0; align-self: stretch; }
 .tab-perform #pk-pattern { grid-column: 1; grid-row: 2; }
-.tab-perform #pk-feel { grid-column: 2; grid-row: 2; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tab-perform #pk-feel { grid-column: 2; grid-row: 2; grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .tab-perform .pgh { grid-column: 3; grid-row: 1; margin: 0; padding: 0 0 0 12px; border: 0; border-left: 1px solid var(--line); }
 .tab-perform #pk-macro { grid-column: 3; grid-row: 2; border-left: 1px solid var(--line); padding-left: 8px; }
 .tab-perform .perform > :first-child { grid-row: 2; }
@@ -588,13 +575,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .tab-perform .mgroup + .mgroup { padding-left: 14px; }
 .tab-perform .mlab { min-height: 22px; }
 .master-card, .fx-card { --kw: 58px; }
-/* groove: per track, swing share over push */
-.groove-card .gtable { grid-template-columns: 3.4em repeat(7, minmax(20px, 1fr)); grid-template-rows: auto auto auto; border: 0; padding: 0; gap: 2px; align-items: stretch; }
-.groove-card .ghead { visibility: hidden; grid-column: auto; grid-row: auto; border: 0; padding: 0; }
-.groove-card .gname { align-self: end; justify-self: center; }
-.groove-card .glab { align-self: center; font-size: var(--fs-s); font-weight: 500; }
-.groove-card .sdial { display: flex; justify-content: center; min-height: 0; }
-.groove-card .sdial .sl { height: 44px; }
 /* randomise: five buttons in a row, depth and wild under them */
 .tab-perform .rand-card .rand-opts { gap: 14px; }
 /* mixer: per strip the name, pan and the three sends as small knobs in one column, the fader, then r and a */
@@ -618,9 +598,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-perform { grid-template-rows: repeat(3, minmax(0, 1fr)); overflow: hidden; }
   .tab-perform .knob .sl, .pcard .knob .sl { flex: 1 1 0; height: auto; min-height: 28px; }
   .tab-perform .knobs, .tab-perform .pknobs, .tab-perform .perform, .tab-perform .fxg, .tab-perform .mgroup { min-height: 0; }
-  .groove-card .gtable { grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr); min-height: 0; }
-  .groove-card .sdial .sl { height: auto; flex: 1 1 0; min-height: 18px; }
-  .groove-card .sdial { flex-direction: column; align-items: center; }
   .tab-perform .strip .fbox { flex: 1 1 0; min-height: 60px; max-height: 300px; }
   .tab-perform .strip .fader { height: auto; }
   /* sound: the cards fill the panel's height and their faders stretch with them */
@@ -693,7 +670,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-perform .rand-card .rbtns .btn { padding: 4px 6px; font-size: var(--fs-s); }
 }
 /* pattern and sound sit side by side in their own cards; the pattern card's title is its style, between two arrows */
-.tab-perform > .bay-a { grid-column: 1; grid-row: auto; display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 12px; min-width: 0; min-height: 0; }
+.tab-perform > .bay-a { grid-column: 1; grid-row: auto; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px; min-width: 0; min-height: 0; }
 .tab-perform .perform { grid-template-columns: 4fr 3fr; grid-template-rows: minmax(0, 1fr); }
 .tab-perform #pk-pattern, .tab-perform #pk-feel, .tab-perform .perform > :first-child { grid-row: 1; }
 .tab-perform .sound-card #pk-macro { grid-column: 1; grid-row: 2; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 0; padding: 0; margin: 0; min-height: 0; }

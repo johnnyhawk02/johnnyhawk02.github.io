@@ -37,7 +37,7 @@ for (const p of presets) if (p.v !== PRESET_V) throw new Error(`presets/: ${p.na
 
 // the page's own code: app/style.css, the audio thread (app/player.js) and the app's files, run in this
 // order as one classic script (each file sees the ones before it)
-const APP = ['kit', 'audio', 'perform-state', 'sound', 'randomise', 'scope', 'steps', 'presets', 'midi', 'preset-manager', 'recorder',
+const APP = ['kit', 'audio', 'groove-types', 'perform-state', 'sound', 'randomise', 'scope', 'steps', 'presets', 'midi', 'preset-manager', 'recorder',
   'grooves', 'styles', 'mixer', 'fx', 'master', 'perform-knobs', 'pc4', 'crossfeed', 'main'];
 const app = APP.map((f) => read(`app/${f}.js`)).join('');
 

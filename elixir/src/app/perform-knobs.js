@@ -9,7 +9,7 @@ function perfKnob(k, label, opts = {}) {
 }
 $('pk-pattern').append(perfKnob('energy', 'energy', { short: true }), perfKnob('beat', 'beat', { short: true }),
   perfKnob('fills', 'fills', { short: true }), perfKnob('tempo', 'tempo'));
-$('pk-feel').append(perfKnob('vel', 'velocity'), perfKnob('accent', 'accent'), perfKnob('swing', 'swing', { short: true, detents: [[16, true]] }));
+$('pk-feel').append(perfKnob('vel', 'velocity'), perfKnob('accent', 'accent'), perfKnob('groove', 'groove'), perfKnob('depth', 'depth'));
 // the header's tempo field
 $('tempo').addEventListener('change', () => setPerf('tempo', Math.max(40, Math.min(300, Math.round(Number($('tempo').value)) || perf.tempo))));
 const macroKnobs = [['fm', 'fm depth'], ['decay', 'decay'], ['pitch', 'pitch'], ['filter', 'filter']].map(([m, label]) => {

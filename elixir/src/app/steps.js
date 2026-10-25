@@ -16,13 +16,8 @@ const copyPage = (P) => ({ on: P.on.map((r) => r.slice()), acc: P.acc.map((r) =>
     acc.forEach((s) => { grid.acc[t][s] = 1; });
     for (const [s, b] of Object.entries(bars)) { grid.on[t][s] = 1; grid.bar[t][s] = b; }
   });
-// groove: swing 50..75% (50 straight, 66 triplet feel), and per track how much of the swing it takes
-// (0..100%) and a push (early) or pull (late) of up to a quarter of a 16th (50 = on the grid)
-const GROOVE0 = { swing: 50, share: new Array(7).fill(100), push: new Array(7).fill(50) };
-const groove = structuredClone(GROOVE0);
-const grooveMsg = () => ({ swing: (groove.swing - 50) / 50, share: groove.share.map((v) => v / 100), nudge: groove.push.map((v) => (v - 50) / 50 * 0.25) });
 const gridEl = $('grid');
-const cells = [], grooveDials = [];
+const cells = [];
 let mode = 'step';
 let barCond = 2; // the trig condition a click sets while a trig button is down
 function setMode(m, cond) {
@@ -60,9 +55,6 @@ function clickCell(r, s, e) {
   drawCell(r, s); sendSeq();
 }
 for (let i = 0; i < 17; i++) gridEl.appendChild(document.createElement('span'));
-for (const [l, tip] of [['swing', 'How much of the swing each track takes'], ['push', 'Left: early (push), right: late (pull); centre is on the grid']]) {
-  const h = document.createElement('span'); h.className = 'ghead'; h.textContent = l; h.title = tip; gridEl.appendChild(h);
-}
 TRACKS.forEach((t, r) => {
   const name = document.createElement('button');
   name.className = 'row-name' + (r === track ? ' active' : ''); name.type = 'button'; name.textContent = t.name;
@@ -78,33 +70,16 @@ TRACKS.forEach((t, r) => {
     cells[r][s] = c;
     drawCell(r, s);
   }
-  const sw = miniSlider('swing', `${t.name} swing share`, () => groove.share[r], (v) => { groove.share[r] = v; drawGroove(); sendSeq(); }, 100);
-  const pp = miniSlider('push', `${t.name} push or pull`, () => groove.push[r], (v) => { groove.push[r] = v; drawGroove(); sendSeq(); }, 50, 100,
-    (v) => (v === 50 ? 'on the grid' : v < 50 ? `push ${Math.round((50 - v) / 2)}% early` : `pull ${Math.round((v - 50) / 2)}% late`), true);
-  gridEl.append(sw.el, pp.el);
-  grooveDials.push(sw.draw, pp.draw);
 });
+// the groove on the steps tab: the same type and depth as the perform faders
+const grooveSel = $('groove-type'), grooveDepth = $('gdepth');
+GROOVE_TYPES.forEach((g, i) => grooveSel.appendChild(new Option(g.name, i)));
 function drawGroove() {
-  $('swing').value = groove.swing; $('swing-out').textContent = groove.swing + '%';
-  grooveDials.forEach((d) => d());
+  grooveSel.value = grooveIdx(); grooveDepth.value = groove.depth; $('gdepth-out').textContent = groove.depth + '%';
   drawPerf();
 }
-// the same groove on the perform page: per track its swing share and push (swing itself is a perform dial)
-{
-  const gt = $('gtable');
-  { const h = document.createElement('span'); h.className = 'pgh ghead'; h.textContent = 'groove'; gt.appendChild(h); }
-  ['d1', 'd2', 'd3', 'sn', 'cy', 'ch', 'oh'].forEach((n, r) => { const h = document.createElement('span'); h.className = 'gname'; h.textContent = n; h.title = TRACKS[r].name.toLowerCase(); gt.appendChild(h); });
-  for (const [label, key, dflt, show, center, tip] of [
-    ['swing', 'share', 100, (v) => v + '% of the swing', false, 'How much of the swing each track takes'],
-    ['push', 'push', 50, (v) => (v === 50 ? 'on the grid' : v < 50 ? `push ${Math.round((50 - v) / 2)}% early` : `pull ${Math.round((v - 50) / 2)}% late`), true, 'Down: early (push); up: late (pull)']]) {
-    const l = document.createElement('span'); l.className = 'glab'; l.textContent = label; l.title = tip; gt.appendChild(l);
-    TRACKS.forEach((t, r) => {
-      const d = miniSlider(label, `${t.name} ${label === 'swing' ? 'swing share' : 'push or pull'}`, () => groove[key][r], (v) => { groove[key][r] = v; drawGroove(); sendSeq(); }, dflt, 100, show, center);
-      gt.appendChild(d.el); grooveDials.push(d.draw);
-    });
-  }
-}
-$('swing').addEventListener('input', () => { groove.swing = Number($('swing').value); drawGroove(); sendSeq(); });
+grooveSel.addEventListener('change', () => setPerf('groove', Number(grooveSel.value)));
+grooveDepth.addEventListener('input', () => setPerf('depth', Number(grooveDepth.value)));
 let playing = false, nowStep = -1;
 let patternOn = true; // off: the sequencer stays quiet and MIDI notes play the voices
 let source = 'perform'; // what plays: the perform pattern, the steps grid, or off (MIDI in); saved with presets
