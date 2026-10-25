@@ -435,6 +435,85 @@ td.rank{font-family:var(--display);font-size:15px}
 @media (prefers-reduced-motion:no-preference){.confetti{animation:fall 2.5s linear infinite}@keyframes fall{from{transform:translateY(-30px)}to{transform:translateY(30px)}}.lvcard{animation:pop .4s ease-out}}
 @media (prefers-reduced-motion:reduce){.ball.throw,.ball.wobble{animation:none}}
 @media (max-width:640px){.tcard{grid-template-columns:auto minmax(0,1fr);padding:10px 12px}.tbag{grid-column:1/-1}#tCaught{grid-column:1/-1}}
+/* worlds, day/night, powers, buddy */
+.worldpick{display:flex;flex-direction:column;gap:12px}
+.wtitle{margin:0;text-align:center;font:600 26px var(--display);text-wrap:balance}
+.worlds{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.world{border:0;border-radius:20px;padding:12px 10px 14px;color:#fff;cursor:pointer;background:linear-gradient(150deg,var(--w1),var(--w2));box-shadow:inset 0 -5px 0 rgba(0,0,0,.2),var(--pop);display:flex;flex-direction:column;align-items:center;gap:2px;text-shadow:0 2px 0 rgba(0,0,0,.25);transition:transform .08s}
+.world:active{transform:translateY(3px)}
+.world img{width:84px;height:84px;image-rendering:pixelated;filter:drop-shadow(0 3px 0 rgba(0,0,0,.25))}
+.world b{font:600 20px var(--display)}
+.world small{font:700 12px var(--body);opacity:.92}
+.world[aria-pressed=true]{outline:4px solid var(--ink);outline-offset:3px}
+.worldbtn{border:2px solid var(--line);background:var(--panel);border-radius:18px;padding:6px 16px;box-shadow:var(--pop);cursor:pointer;display:flex;flex-direction:column;align-items:center;line-height:1.1;font-family:var(--display)}
+.worldbtn .k{font-size:11px;color:var(--muted)}.worldbtn b{font-size:18px;font-weight:600}.worldbtn small{font:700 11px var(--body);color:var(--sky)}
+/* sky that moves */
+.bfield::before{left:var(--cx,80%);top:var(--cy,12%);right:auto;transform:translate(-50%,-50%);z-index:2;transition:left 1s linear,top 1s linear,background .6s}
+.bfield[data-time=night]::before{background:#f4f1d6;box-shadow:0 0 0 7px rgba(240,235,200,.14),0 0 34px 12px rgba(240,235,200,.22),inset -6px -4px 0 rgba(0,0,0,.08)}
+.skyshade{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(rgba(10,16,60,calc(var(--night,0)*.62)),rgba(10,16,60,calc(var(--night,0)*.42)));transition:background 1s}
+.skyshade::before{content:"";position:absolute;inset:0 0 55% 0;opacity:var(--night,0);background:radial-gradient(circle at 12% 30%,#fff 0 1.5px,transparent 2.5px),radial-gradient(circle at 34% 12%,#fff 0 1px,transparent 2px),radial-gradient(circle at 58% 40%,#fff 0 1.5px,transparent 2.5px),radial-gradient(circle at 72% 18%,#fff 0 1px,transparent 2px),radial-gradient(circle at 90% 34%,#fff 0 1.5px,transparent 2.5px),radial-gradient(circle at 46% 26%,#fff 0 1px,transparent 2px),radial-gradient(circle at 22% 52%,#fff 0 1px,transparent 2px)}
+.bfield .foe{z-index:3}
+.hpbox,.envtag{z-index:4}
+.abil{font:700 12px var(--body);color:#6a4bd6}
+.buddymini{position:absolute;left:12px;bottom:40px;z-index:4;display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.88);color:#1b2340;border-radius:999px;padding:2px 10px 2px 2px;font:700 12px var(--body)}
+.buddymini img{width:34px;height:34px;image-rendering:pixelated}
+.powers{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.power{border:2px dashed var(--line);background:var(--panel);border-radius:14px;padding:8px 12px;cursor:pointer;font:600 14px var(--display);display:flex;align-items:center;gap:6px}
+.power:disabled{opacity:.45;cursor:default}
+.power .dot{width:12px;height:12px;border-radius:50%;background:var(--c,var(--sky))}
+.power.assist{border-style:solid;border-color:var(--sun);background:color-mix(in srgb,var(--sun) 22%,var(--panel))}
+.power.assist img{width:28px;height:28px;image-rendering:pixelated;margin:-6px 0}
+/* buddy */
+.pickbuddy{display:flex;flex-direction:column;gap:12px}
+.pbgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.pbgrid button{border:2px solid var(--line);background:var(--panel);border-radius:16px;padding:6px 4px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;font:600 13px var(--display);box-shadow:var(--pop)}
+.pbgrid button[aria-pressed=true]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--panel))}
+.pbgrid img{width:64px;height:64px;image-rendering:pixelated}
+.pbconfirm{display:flex;flex-wrap:wrap;align-items:center;gap:12px;background:var(--panel);border:2px solid var(--line);border-radius:20px;padding:12px;box-shadow:var(--pop)}
+.pbconfirm img{width:72px;height:72px;image-rendering:pixelated}
+.bdhead{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.bdname{font:600 28px var(--display);overflow-wrap:anywhere}
+.bdlv{text-align:center;background:var(--accent);color:#fff;border-radius:16px;padding:6px 12px;flex:none}
+.bdlv .k{display:block;font:600 11px var(--display);opacity:.9}.bdlv b{font:600 22px var(--display)}
+.buddyfield{aspect-ratio:16/10}
+.pal{position:absolute;left:50%;bottom:8%;width:min(52%,300px);aspect-ratio:1;transform:translateX(-50%);z-index:3;display:grid;place-items:center;cursor:pointer}
+.pal img{position:relative;width:100%;height:100%;image-rendering:pixelated}
+@media (prefers-reduced-motion:no-preference){.pal:not(.asleep) img{animation:hop 2.4s ease-in-out infinite}@keyframes hop{0%,70%,100%{transform:translateY(0)}80%{transform:translateY(-8%)}90%{transform:translateY(0)}}
+ .pal.happy img{animation:jump .5s ease-out 2}@keyframes jump{50%{transform:translateY(-14%) scale(1.04)}}}
+.pal.asleep img{filter:brightness(.7) saturate(.7)}
+.zzz{position:absolute;right:8%;top:6%;font:600 20px var(--display);color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.3);opacity:0}
+.pal.asleep .zzz{opacity:1}
+@media (prefers-reduced-motion:no-preference){.pal.asleep .zzz{animation:zz 2s ease-in-out infinite}@keyframes zz{50%{transform:translateY(-10px);opacity:.5}}}
+.hearts{position:absolute;inset:0;pointer-events:none}
+.hearts i{position:absolute;bottom:50%;font-style:normal;color:#ff5c8a;font-size:26px;animation:heart 1.2s ease-out forwards}
+@keyframes heart{from{transform:translateY(0) scale(.6);opacity:1}to{transform:translateY(-120px) scale(1.2);opacity:0}}
+.pal.evolving img{animation:evo .25s steps(2) infinite}
+@keyframes evo{50%{filter:brightness(0) invert(1)}}
+.speech{position:absolute;left:50%;top:7%;transform:translateX(-50%);z-index:4;background:#fff;color:#1b2340;border-radius:16px;padding:6px 14px;font:700 15px var(--body);max-width:80%;text-align:center;box-shadow:0 3px 0 rgba(0,0,0,.15)}
+.speech::after{content:"";position:absolute;left:50%;bottom:-8px;border:8px solid transparent;border-top-color:#fff;border-bottom:0;transform:translateX(-50%)}
+.toyball{position:absolute;z-index:5;width:15%;max-width:70px;aspect-ratio:1;border:0;background:none;padding:0;cursor:pointer;transform:translate(-50%,-50%);transition:left .35s ease-out,top .35s ease-out}
+.toyball .pb{width:100%;height:100%}
+.meters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.meters span{font:600 13px var(--display);color:var(--muted)}
+.meter2{height:14px;background:var(--soft);border-radius:7px;overflow:hidden;margin-top:3px;border:2px solid var(--line)}
+.meter2 i{display:block;height:100%;border-radius:5px;transition:width .5s;background:var(--leaf)}
+.acts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.act{border:2px solid var(--line);background:var(--panel);border-radius:18px;padding:12px 8px;cursor:pointer;box-shadow:var(--pop);display:flex;flex-direction:column;align-items:center;gap:2px;transition:transform .08s}
+.act:active:not(:disabled){transform:translateY(3px);box-shadow:none}
+.act b{font:600 19px var(--display)}.act small{font:700 12px var(--body);color:var(--muted)}
+.act:disabled{opacity:.4;cursor:default}
+.feedrow{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.evolve{text-align:center;background:color-mix(in srgb,var(--sun) 28%,var(--panel));border:3px solid var(--sun);border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:8px;align-items:center}
+.evolve .opts2{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.evolve .opts2 button{display:flex;flex-direction:column;align-items:center;border:2px solid var(--line);background:var(--panel);border-radius:14px;padding:4px 10px 8px;cursor:pointer;font:600 14px var(--display)}
+.evolve img{width:64px;height:64px;image-rendering:pixelated}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%);z-index:40;background:var(--ink);color:var(--panel);padding:10px 18px;border-radius:999px;font:700 14px var(--body);box-shadow:0 4px 0 rgba(0,0,0,.2);max-width:calc(100% - 32px);text-align:center}
+.tabs .short{display:none}
+@media (max-width:640px){.tabs .long{display:none}.tabs .short{display:inline}.acts{grid-template-columns:repeat(2,minmax(0,1fr))}.bdname{font-size:22px}.worlds{grid-template-columns:repeat(2,minmax(0,1fr))}.buddyfield{aspect-ratio:1/1}.qbar{flex-direction:row;flex-wrap:wrap}.worldbtn{flex:1 1 100%}}
+.berry{--b:#e2416a;display:inline-block;width:20px;height:20px;border-radius:50% 50% 45% 45%;background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.6) 0 12%,transparent 14%),var(--b);position:relative;flex:none;box-shadow:inset 0 0 0 2px rgba(0,0,0,.25)}
+.berry::before{content:"";position:absolute;left:50%;top:-5px;width:8px;height:6px;border-radius:0 80% 0 80%;background:#3faa4a;transform:translateX(-20%)}
+.berry.oran{--b:#3b7de0}.berry.sitrus{--b:#f2cf2a}.berry.puff{--b:#f28dbb;border-radius:40%}
+.throwbtn .berry{width:24px;height:24px}
 </style>
 
 </head>
@@ -448,7 +527,7 @@ td.rank{font-family:var(--display);font-size:15px}
       <div class="sub">Look up every Pokémon, play games and keep your own notes.</div>
     </div>
     <div class="spacer"></div>
-    <div class="tabs" role="tablist"><button role="tab" id="tabDex" aria-selected="true">Pokédex</button><button role="tab" id="tabGame" aria-selected="false">Guess my Pokémon</button><button role="tab" id="tabQuiz" aria-selected="false">Who's That?</button><button role="tab" id="tabBattle" aria-selected="false">Battle</button></div>
+    <div class="tabs" role="tablist"><button role="tab" id="tabDex" aria-selected="true">Pokédex</button><button role="tab" id="tabGame" aria-selected="false"><span class="long">Guess my Pokémon</span><span class="short">Guess</span></button><button role="tab" id="tabQuiz" aria-selected="false">Who's That?</button><button role="tab" id="tabBattle" aria-selected="false">Battle</button><button role="tab" id="tabBuddy" aria-selected="false">Buddy</button></div>
     <div class="sync" id="sync"><i></i><span>Connecting notes…</span></div>
   </header>
 
@@ -463,33 +542,89 @@ td.rank{font-family:var(--display);font-size:15px}
       <div class="tbag" id="tBag"></div>
       <button class="btn" id="tCaught">My Pokémon: 0</button>
     </div>
-    <div class="qbar">
-      <div class="seg big" role="group" aria-label="Level" id="bLevels">
-        <button data-lv="easy" aria-pressed="true">Easy<small>One type, hints on</small></button>
-        <button data-lv="hard" aria-pressed="false">Hard<small>Two types, double XP</small></button>
-      </div>
+    <div class="worldpick" id="bWorldPick" hidden>
+      <h2 class="wtitle">Choose a world to explore</h2>
+      <p class="sub" style="margin:0;text-align:center">Wild Pokémon from that region will appear.</p>
+      <div class="worlds" id="bWorlds"></div>
     </div>
-    <div class="qstage">
-      <div class="qhud">
-        <div><span class="k">Battle</span><b id="bRound">1/10</b></div>
-        <div><span class="k">Wins</span><b id="bScore">0</b></div>
-        <div><span class="k">Streak</span><b id="bStreak">0</b></div>
-        <div><span class="k">Best</span><b id="bBest">0</b></div>
+    <div id="bMain">
+      <div class="qbar">
+        <button class="worldbtn" id="bWorldBtn"><span class="k">World</span><b id="bWorldName">Kanto</b><small>Change</small></button>
+        <div class="seg big" role="group" aria-label="Level" id="bLevels">
+          <button data-lv="easy" aria-pressed="true">Easy<small>One type, hints on</small></button>
+          <button data-lv="hard" aria-pressed="false">Hard<small>Two types, double XP</small></button>
+        </div>
       </div>
-      <div class="bfield" id="bField">
-        <div class="hpbox"><div class="hpname" id="bName">Wild Pokémon</div><div id="bTypes"></div><div class="hp"><span>HP</span><div class="hpbar"><i id="bHp"></i></div></div></div>
-        <div class="envtag" id="bEnv">Grassy meadow</div>
-        <div class="foe" id="bFoe"><div class="plat" aria-hidden="true"></div><img id="bImg" alt=""><div class="boom" id="bBoom" aria-hidden="true"></div><div class="ball" id="bBall" hidden></div><div class="stars3" id="bStars" aria-hidden="true"></div></div>
+      <div class="qstage">
+        <div class="qhud">
+          <div><span class="k">Battle</span><b id="bRound">1/10</b></div>
+          <div><span class="k">Wins</span><b id="bScore">0</b></div>
+          <div><span class="k">Streak</span><b id="bStreak">0</b></div>
+          <div><span class="k">Best</span><b id="bBest">0</b></div>
+        </div>
+        <div class="bfield" id="bField">
+          <div class="skyshade" aria-hidden="true"></div>
+          <div class="hpbox"><div class="hpname" id="bName">Wild Pokémon</div><div id="bTypes"></div><div class="abil" id="bAbility" hidden></div><div class="hp"><span>HP</span><div class="hpbar"><i id="bHp"></i></div></div></div>
+          <div class="envtag" id="bEnv">Grassy meadow</div>
+          <div class="buddymini" id="bBuddy" hidden></div>
+          <div class="foe" id="bFoe"><div class="plat" aria-hidden="true"></div><img id="bImg" alt=""><div class="boom" id="bBoom" aria-hidden="true"></div><div class="ball" id="bBall" hidden></div><div class="stars3" id="bStars" aria-hidden="true"></div></div>
+        </div>
+        <p class="qtitle" id="bTitle">A wild Pokémon appeared!</p>
+        <p class="bsub" id="bSub">Which attack should you use?</p>
+        <div class="moves" id="bMoves"></div>
+        <div class="powers" id="bPowers"></div>
+        <div class="gtools"><button class="btn big" id="bHint">Hint</button><button class="btn primary big" id="bNext" hidden>Next battle →</button></div>
       </div>
-      <p class="qtitle" id="bTitle">A wild Pokémon appeared!</p>
-      <p class="bsub" id="bSub">Which attack should you use?</p>
-      <div class="moves" id="bMoves"></div>
-      <div class="gtools"><button class="btn big" id="bHint">Hint</button><button class="btn primary big" id="bNext" hidden>Next battle →</button></div>
-    </div>
-    <div class="levelup" id="lvUp" hidden role="dialog" aria-label="Level up">
-      <div class="lvcard"><div class="confetti" aria-hidden="true"></div><div class="lvbig" id="lvNum">Lv 2</div><div class="lvt">Level up!</div><div id="lvText"></div><button class="btn primary big" id="lvOk">Awesome!</button></div>
     </div>
   </section>
+  <section class="quiz" id="buddy" hidden>
+    <div class="pickbuddy" id="pbWrap" hidden>
+      <h2 class="wtitle">Choose your buddy!</h2>
+      <p class="sub" style="margin:0;text-align:center">Your buddy lives here. Feed it, play with it and help it grow. It might even evolve!</p>
+      <div class="field"><label class="lbl" for="pbSearch">Find any Pokémon</label><input type="search" id="pbSearch" placeholder="Type a name, like Eevee"></div>
+      <div class="pbgrid" id="pbGrid"></div>
+      <div class="pbconfirm" id="pbConfirm" hidden>
+        <img id="pbImg" alt="">
+        <div class="field" style="flex:1;min-width:0"><label class="lbl" for="pbNick">Give it a nickname (optional)</label><input type="text" id="pbNick" maxlength="16" placeholder="Sparky"></div>
+        <button class="btn primary big" id="pbGo">Be my buddy!</button>
+      </div>
+    </div>
+    <div id="bdMain" hidden>
+      <div class="bdhead">
+        <div style="min-width:0"><div class="bdname" id="bdName">Sparky</div><div class="sub" id="bdSpecies">Pikachu · Lv 1</div></div>
+        <div class="bdlv"><span class="k">Friendship</span><b id="bdLevel">Lv 1</b></div>
+      </div>
+      <div class="xpbar" aria-label="Buddy experience"><i id="bdXp"></i></div>
+      <div class="bfield buddyfield" id="bdField">
+        <div class="skyshade" aria-hidden="true"></div>
+        <div class="envtag" id="bdEnv">Meadow</div>
+        <div class="speech" id="bdSpeech">Hi!</div>
+        <div class="pal" id="bdPal"><div class="plat" aria-hidden="true"></div><img id="bdImg" alt=""><div class="zzz" aria-hidden="true">Z z z</div><div class="hearts" id="bdHearts" aria-hidden="true"></div></div>
+        <button class="toyball" id="bdToy" hidden aria-label="Tap the ball"><i class="pb"></i></button>
+      </div>
+      <div class="meters">
+        <div><span>Happy</span><div class="meter2"><i id="mHappy"></i></div></div>
+        <div><span>Full</span><div class="meter2"><i id="mFood"></i></div></div>
+        <div><span>Energy</span><div class="meter2"><i id="mEnergy"></i></div></div>
+      </div>
+      <div class="acts" id="bdActs">
+        <button class="act" data-act="pet"><b>Pet</b><small>Show some love</small></button>
+        <button class="act" data-act="feed"><b>Feed</b><small>Berries and treats</small></button>
+        <button class="act" data-act="play"><b>Play</b><small>Catch the ball</small></button>
+        <button class="act" data-act="train"><b>Train</b><small>Practise moves</small></button>
+        <button class="act" data-act="walk"><b>Walk</b><small>Find things</small></button>
+        <button class="act" data-act="sleep" id="bdSleep"><b>Sleep</b><small>Rest and recharge</small></button>
+      </div>
+      <div class="feedrow" id="bdFeed" hidden></div>
+      <div class="evolve" id="bdEvolve" hidden></div>
+      <div class="gtools"><button class="linkbtn" id="bdChange">Choose a different buddy</button></div>
+      <div class="pbconfirm" id="bdBye" hidden><span style="flex:1;font-weight:700" id="bdByeText">Say goodbye?</span><button class="btn" id="bdByeNo">Keep my buddy</button><button class="btn primary" id="bdByeYes">Choose a new one</button></div>
+    </div>
+  </section>
+    <div class="levelup" id="lvUp" hidden role="dialog" aria-label="Level up">
+      <div class="lvcard"><div class="confetti" aria-hidden="true"></div><div class="lvbig" id="lvNum">Lv 2</div><div class="lvt" id="lvHead">Level up!</div><div id="lvText"></div><button class="btn primary big" id="lvOk">Awesome!</button></div>
+    </div>
+  <div class="toast" id="toast" hidden></div>
   <section class="quiz" id="quiz" hidden>
     <div class="qbar">
       <div class="seg big" role="group" aria-label="Level" id="qLevels">
@@ -655,7 +790,7 @@ const LS_KEY = "pokedex-notes-v1";
 function setSync(cls, text){ const el=$("sync"); el.className="sync "+cls; el.querySelector("span").textContent=text; }
 function loadLocal(){ try { NOTES = JSON.parse(localStorage.getItem(LS_KEY) || "{}"); } catch { NOTES = {}; } }
 function saveLocal(){ try { localStorage.setItem(LS_KEY, JSON.stringify(NOTES)); return true; } catch { return false; } }
-function useLocal(msg){ mode="local"; loadLocal(); trLoadLocal(); setSync("local", msg); render(); renderTrainer(); }
+function useLocal(msg){ mode="local"; loadLocal(); trLoadLocal(); bdLoadLocal(); setSync("local", msg); render(); renderTrainer(); renderBuddy(); renderBattleBuddy(); }
 
 async function initNotes(){
   const timeout = new Promise(r => setTimeout(() => r(null), 11000));
@@ -673,7 +808,7 @@ async function initNotes(){
   setSync("ok", "Notes synced to your account");
   notesCol.onSnapshot(snap => {
     const next = {};
-    snap.docs.forEach(d => { const b = d.data(); if (d.id === "trainer") trFromSnap(b); else if (b && b.pid) next[b.pid] = b; });
+    snap.docs.forEach(d => { const b = d.data(); if (d.id === "trainer") trFromSnap(b); else if (d.id === "buddy") bdFromSnap(b); else if (b && b.pid) next[b.pid] = b; });
     // keep locally pending edits for the open note
     NOTES = next; renderTrainer();
     render(); if (state.sel && !document.activeElement?.closest?.("#drawer")) renderDrawer();
@@ -927,7 +1062,7 @@ function buildControls(){
 
 // ---------- guessing game ----------
 const GAMES = ["","Red & Blue","Gold & Silver","Ruby & Sapphire","Diamond & Pearl","Black & White","X & Y","Sun & Moon","Sword & Shield","Scarlet & Violet"];
-const SWATCH = {Black:"#2b2b2b",Blue:"#3b7de0",Brown:"#9a6a3a",Gray:"#9aa0a8",Green:"#45a849",Pink:"#f28dbb",Purple:"#8d55c6",Red:"#e0393e",White:"#f7f7f7",Yellow:"#f2cf2a"};
+const SWATCH = {Red:"#e0393e",Orange:"#f5862a",Yellow:"#f2cf2a",Green:"#45a849",Blue:"#3b7de0",Purple:"#8d55c6",Pink:"#f28dbb",Brown:"#9a6a3a",Black:"#2b2b2b",White:"#f7f7f7",Gray:"#9aa0a8"};
 const SIZES = [["Tiny","Smaller than a cat",0,0.5],["Medium","About as tall as a kid",0.5,1.3],["Big","Taller than a grown-up",1.3,2.5],["Giant","Bigger than a car or a house",2.5,1e9]];
 const G = { pool:[], w:null, asked:new Set(), history:[], trail:[], q:null, guess:null, wrong:new Set(), n:0, done:false, forms:false, firstType:null };
 let QUESTIONS = [];
@@ -938,7 +1073,7 @@ function buildQuestions(){
   const Q = [];
   const yn = (key, text, f, pen=1, hint="") => Q.push({key, text, f, pen, hint});
   const ch = (key, text, options, pen=1, hint="", miss=0.05) => Q.push({key, text, options, pen, hint, miss});
-  ch("color", "What colour is it?", Object.keys(SWATCH).map(c => ({label:c, swatch:SWATCH[c], f:p => p.color === c})), 1.15, "Pick the colour you see the most.", 0.12);
+  ch("color", "What colour is it?", Object.keys(SWATCH).map(c => ({label:c, swatch:SWATCH[c], f:p => p.color === c || (p.cols||[]).includes(c)})), 1.15, "Pick the colour you see the most.", 0.12);
   ch("type", "What type is it?", TYPES.map(t => ({label:t, type:t, f:p => p.types.includes(t)})), 1.15, "If it has two types, pick either one.");
   ch("size", "How big is it?", SIZES.map(([l,h,lo,hi],i) => ({label:l, sub:h, f:p => p.height >= lo && p.height < hi, idx:i})), 0.9, "", 0.08);
   ch("game", "Which games did it first appear in?", GAMES.slice(1).map((g,i) => ({label:"Pokémon "+g, f:p => p.gen === i+1, idx:i})), 0.55, "Tap Not sure if you don't know.");
@@ -1065,19 +1200,21 @@ function renderGame(){
   $("gLeft").textContent = `${ranked.filter(r=>r.s>=ranked[0].s*0.1).length.toLocaleString()} Pokémon still in the running`;
 }
 function setTab(t){
-  [["dex","tabDex"],["game","tabGame"],["quiz","tabQuiz"],["battle","tabBattle"]].forEach(([v,b]) => { $(b).setAttribute("aria-selected", t===v); $(v).hidden = t!==v; });
+  [["dex","tabDex"],["game","tabGame"],["quiz","tabQuiz"],["battle","tabBattle"],["buddy","tabBuddy"]].forEach(([v,b]) => { $(b).setAttribute("aria-selected", t===v); $(v).hidden = t!==v; });
   if (t!=="quiz") clearInterval(QZ.timer);
   if (t==="game" && !G.w){ buildQuestions(); gStart(); }
   if (t==="quiz" && !QZ.cur) qzStart();
-  if (t==="battle" && !BT.foe) btStart();
+  if (t==="battle") enterBattle();
+  if (t==="buddy") enterBuddy();
 }
 function buildGame(){
-  $("tabDex").onclick = () => setTab("dex"); $("tabGame").onclick = () => setTab("game"); $("tabQuiz").onclick = () => setTab("quiz"); buildQuiz(); $("tabBattle").onclick = () => setTab("battle"); buildBattle();
+  $("tabDex").onclick = () => setTab("dex"); $("tabGame").onclick = () => setTab("game"); $("tabQuiz").onclick = () => setTab("quiz"); buildQuiz(); $("tabBattle").onclick = () => setTab("battle"); buildBattle(); $("tabBuddy").onclick = () => setTab("buddy"); buildBuddy();
   $("gPeek").onchange = e => $("gMind").classList.toggle("blur", !e.target.checked);
   $("gForms").onchange = e => { G.forms = e.target.checked; gStart(); };
   if (location.hash === "#guess") setTab("game");
   if (location.hash === "#whos-that") setTab("quiz");
   if (location.hash === "#battle") setTab("battle");
+  if (location.hash === "#buddy") setTab("buddy");
 }
 
 // ---------- who's that pokémon ----------
@@ -1154,34 +1291,81 @@ const CHART="111111111111h011h11hh212111112h1h12112hh1111211121h1111h2h111h2h1h2
 const MOVES = {Normal:"Tackle",Fire:"Flamethrower",Water:"Water Gun",Grass:"Vine Whip",Electric:"Thunderbolt",Ice:"Ice Beam",Fighting:"Karate Chop",Poison:"Poison Sting",Ground:"Dig",Flying:"Gust",Psychic:"Confusion",Bug:"Bug Bite",Rock:"Rock Throw",Ghost:"Shadow Ball",Dragon:"Dragon Breath",Dark:"Bite",Steel:"Iron Tail",Fairy:"Moonblast"};
 const HINTS = {Normal:"Fighting moves are strong against Normal Pokémon!",Fire:"Water puts out fire! Rocks and ground smother it too.",Water:"Plants soak up water, and electricity zaps it!",Grass:"Fire burns plants, and birds and bugs nibble them!",Electric:"The ground soaks up electricity!",Ice:"Fire melts ice! Rock, fighting and steel smash it.",Fighting:"Flying, psychic and fairy power beat fighters!",Poison:"Dig into the ground, or use psychic power!",Ground:"Water and plants beat the ground. So does ice!",Flying:"Lightning, ice and rocks knock flyers down!",Psychic:"Bugs, ghosts and the dark scare psychics!",Bug:"Fire, birds and rocks beat bugs!",Rock:"Water, plants, fighting, ground and steel break rocks!",Ghost:"Ghosts and the dark beat ghosts!",Dragon:"Ice, fairies and other dragons beat dragons!",Dark:"Fighting, bugs and fairies beat the dark!",Steel:"Fire, fighting and ground beat steel!",Fairy:"Poison and steel beat fairies!"};
 const ENVS = {Normal:"Grassy meadow",Fire:"Volcano",Water:"Ocean",Grass:"Sunny meadow",Electric:"Power plant",Ice:"Snowfield",Fighting:"Dojo",Poison:"Swamp",Ground:"Desert",Flying:"Up in the clouds",Psychic:"Dream world",Bug:"Forest",Rock:"Rocky mountain",Ghost:"Haunted night",Dragon:"Dragon peaks",Dark:"Midnight alley",Steel:"Factory",Fairy:"Flower garden"};
+const WORLDS = [
+  {gen:1,name:"Kanto",games:"Red & Blue",star:25,w1:"#e3262f",w2:"#ff9a5c"},
+  {gen:2,name:"Johto",games:"Gold & Silver",star:250,w1:"#c9961a",w2:"#9aa3b5"},
+  {gen:3,name:"Hoenn",games:"Ruby & Sapphire",star:384,w1:"#c0392b",w2:"#2e6fd8"},
+  {gen:4,name:"Sinnoh",games:"Diamond & Pearl",star:483,w1:"#4a7bd8",w2:"#e48fb8"},
+  {gen:5,name:"Unova",games:"Black & White",star:643,w1:"#2b2b38",w2:"#8a93a6"},
+  {gen:6,name:"Kalos",games:"X & Y",star:716,w1:"#2f6fd8",w2:"#d6324a"},
+  {gen:7,name:"Alola",games:"Sun & Moon",star:722,w1:"#f29a1f",w2:"#7a4bc9"},
+  {gen:8,name:"Galar",games:"Sword & Shield",star:888,w1:"#2a9fd8",w2:"#d6326e"},
+  {gen:9,name:"Paldea",games:"Scarlet & Violet",star:1007,w1:"#d63a2f",w2:"#7a3fc9"},
+  {gen:0,name:"Every world",games:"All 1,025 Pokémon",star:151,w1:"#2fb05f",w2:"#2b8fd8"}];
+// Abilities that block a whole type. The foe shows its ability, and kids learn the twist.
+const FOE_ABILITIES = {"Levitate":["Ground","floats in the air, so Ground moves can't reach it!"],"Flash Fire":["Fire","soaks up fire and gets even stronger!"],"Water Absorb":["Water","drinks the water and feels better!"],"Storm Drain":["Water","pulls all the water away!"],"Dry Skin":["Water","loves water. It heals it!"],"Volt Absorb":["Electric","soaks up the electricity!"],"Lightning Rod":["Electric","catches the lightning like a lightning rod!"],"Motor Drive":["Electric","zooms faster when zapped!"],"Sap Sipper":["Grass","munches the plants!"],"Earth Eater":["Ground","eats the ground like a snack!"],"Well-Baked Body":["Fire","is baked hard, so fire can't hurt it!"]};
 const BALLS = [["poke","Poké Ball",1],["great","Great Ball",1.6],["ultra","Ultra Ball",2.3],["master","Master Ball",99]];
 const TITLES = [[1,"Rookie Trainer"],[2,"Bug Catcher"],[3,"Youngster"],[4,"Camper"],[5,"Ace Trainer"],[7,"Gym Challenger"],[9,"Gym Leader"],[12,"Elite Four"],[15,"Champion"],[20,"Pokémon Master"]];
 const mult = (atk, defs) => defs.reduce((m,d) => m * ({"0":0,"h":0.5,"1":1,"2":2})[CHART[TYPES.indexOf(atk)*18 + TYPES.indexOf(d)]], 1);
-const BT = { level:"easy", round:0, score:0, streak:0, done:false, foe:null, rounds:10, hp:100, legend:false, busy:false };
+const BT = { level:"easy", round:0, score:0, streak:0, done:false, foe:null, rounds:10, hp:100, legend:false, busy:false, ability:null, razz:false, assisted:false };
+const emult = t => (BT.ability && FOE_ABILITIES[BT.ability][0] === t) ? 0 : mult(t, BT.foe.types);
+
+function toast(msg){ const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.tm); toast.tm = setTimeout(() => t.hidden = true, 2600); }
+
+// ----- the sky: sun by day, moon by night, one full turn every 10 minutes (same clock for everyone) -----
+function skyState(){
+  const t = (Date.now() % 600000) / 600000, day = t < 0.5, p = day ? t/0.5 : (t-0.5)/0.5;
+  const edge = Math.min(1, Math.min(p, 1-p) / 0.1);           // 0 at the horizon, 1 high up
+  const night = day ? 1 - edge*1 : 1;
+  const left = Math.round((0.5 - (t % 0.5)) * 1200);
+  const label = day ? (edge < 0.6 ? (p < 0.5 ? "Sunrise" : "Sunset") : "Daytime") : "Night";
+  return { day, x: 6 + 88*p, y: 44 - 34*Math.sin(Math.PI*p), night: Math.max(0, Math.min(1, day ? night*0.7 : 1)), label, left };
+}
+function applySky(){
+  const s = skyState();
+  document.querySelectorAll(".bfield").forEach(el => {
+    if (el.offsetParent === null) return;
+    el.style.setProperty("--cx", s.x.toFixed(2) + "%"); el.style.setProperty("--cy", s.y.toFixed(2) + "%");
+    el.style.setProperty("--night", s.night.toFixed(2)); el.dataset.time = s.day ? "day" : "night";
+    const tag = el.querySelector(".envtag"); if (tag && tag.dataset.base) tag.textContent = `${tag.dataset.base} · ${s.label}`;
+  });
+  return s;
+}
+setInterval(applySky, 1000);
 
 // ----- trainer progress (saved with the notes: db doc "trainer", or browser storage) -----
-let TR = { xp:0, level:1, balls:{poke:5, great:0, ultra:0, master:0} };
+let TR = { xp:0, level:1, balls:{poke:5, great:0, ultra:0, master:0}, items:{focus:3, razz:3}, world:null };
 const TR_KEY = "pokedex-trainer-v1";
 const xpNeed = lv => 40 + (lv-1)*20;
 const titleFor = lv => TITLES.filter(([l]) => lv >= l).pop()[1];
-function trLoadLocal(){ try { const t = JSON.parse(localStorage.getItem(TR_KEY) || "null"); if (t) TR = {...TR, ...t, balls:{...TR.balls, ...t.balls}}; } catch {} }
-let trSaving = null, trAgain = false;
-async function trSave(){
-  if (mode !== "db"){ try { localStorage.setItem(TR_KEY, JSON.stringify(TR)); } catch {} return; }
-  if (trSaving){ trAgain = true; return; }
-  trSaving = true;
-  try { do { trAgain = false; await notesCol.doc("trainer").set({...TR, balls:{...TR.balls}}); } while (trAgain); } catch {}
-  trSaving = null;
+function trMerge(t){ if (t) TR = {...TR, ...t, balls:{...TR.balls, ...t.balls}, items:{...TR.items, ...(t.items||{})}}; }
+function trLoadLocal(){ try { trMerge(JSON.parse(localStorage.getItem(TR_KEY) || "null")); } catch {} }
+// one write at a time per document; a write requested mid-flight is folded into one follow-up
+function makeSaver(docId, lsKey, get){
+  let busy = false, again = false;
+  return async function save(){
+    if (mode !== "db"){ try { localStorage.setItem(lsKey, JSON.stringify(get())); } catch {} return; }
+    if (busy){ again = true; return; }
+    busy = true;
+    try { do { again = false; const v = get(); if (v) await notesCol.doc(docId).set(JSON.parse(JSON.stringify(v))); else await notesCol.doc(docId).delete(); } while (again); } catch {}
+    busy = false;
+  };
 }
-function trFromSnap(b){ if (b && typeof b.xp === "number"){ TR = {...TR, ...b, balls:{...TR.balls, ...b.balls}}; renderTrainer(); } }
+const trSave = makeSaver("trainer", TR_KEY, () => TR);
+function trFromSnap(b){ if (b && typeof b.xp === "number"){ trMerge(b); renderTrainer(); } }
 function caughtCount(){ return Object.values(NOTES).filter(n => n.caught).length; }
 function renderTrainer(){
   if (!$("tLevel")) return;
   $("tLevel").textContent = "Lv " + TR.level; $("tTitle").textContent = titleFor(TR.level);
   const need = xpNeed(TR.level);
   $("tXp").style.width = Math.min(100, TR.xp/need*100) + "%"; $("tXpText").textContent = `${TR.xp} / ${need} XP to next level`;
-  $("tBag").innerHTML = BALLS.filter(([k]) => k === "poke" || TR.balls[k] > 0).map(([k,l]) => `<span title="${l}"><i class="pb ${k}"></i>×${TR.balls[k]}</span>`).join("");
+  $("tBag").innerHTML = BALLS.filter(([k]) => k === "poke" || TR.balls[k] > 0).map(([k,l]) => `<span title="${l}"><i class="pb ${k}"></i>×${TR.balls[k]}</span>`).join("") +
+    `<span title="Razz Berries"><i class="berry"></i>×${TR.items.razz}</span>`;
   $("tCaught").textContent = "My Pokémon: " + caughtCount();
+}
+function showLevelUp(head, big, lines){
+  $("lvHead").textContent = head; $("lvNum").textContent = big;
+  $("lvText").innerHTML = lines.map(g => `<div>${esc(g)}</div>`).join(""); $("lvUp").hidden = false; $("lvOk").focus();
 }
 function gainXp(n){
   TR.xp += n; const rewards = [];
@@ -1189,6 +1373,7 @@ function gainXp(n){
     TR.xp -= xpNeed(TR.level); TR.level++;
     const lv = TR.level; const got = [];
     TR.balls.poke += 3; got.push("3 Poké Balls");
+    TR.items.focus++; TR.items.razz++; got.push("1 Focus power and 1 Razz Berry");
     if (lv >= 3){ TR.balls.great += 2; got.push("2 Great Balls"); }
     if (lv >= 6){ TR.balls.ultra += 1; got.push("1 Ultra Ball"); }
     if (lv % 5 === 0){ TR.balls.master += 1; got.push("a Master Ball! It catches anything!"); }
@@ -1197,52 +1382,97 @@ function gainXp(n){
     rewards.push([lv, got]);
   }
   trSave(); renderTrainer();
-  if (rewards.length){ const [lv, got] = rewards[rewards.length-1];
-    $("lvNum").textContent = "Lv " + lv; $("lvText").innerHTML = got.map(g => `<div>${esc(g)}</div>`).join(""); $("lvUp").hidden = false; $("lvOk").focus(); }
+  if (rewards.length){ const [lv, got] = rewards[rewards.length-1]; showLevelUp("Level up!", "Lv " + lv, got); }
+}
+
+// ----- worlds -----
+function renderWorlds(){
+  $("bWorlds").innerHTML = WORLDS.map(w => `<button class="world" style="--w1:${w.w1};--w2:${w.w2}" data-gen="${w.gen}" aria-pressed="${TR.world===w.gen}">${SPRITES[w.star]?`<img alt="" src="${SPRITES[w.star]}">`:""}<b>${w.name}</b><small>Pokémon ${w.games}</small></button>`).join("");
+}
+function showWorldPick(){ renderWorlds(); $("bWorldPick").hidden = false; $("bMain").hidden = true; }
+function pickWorld(gen){
+  TR.world = gen; trSave();
+  $("bWorldPick").hidden = true; $("bMain").hidden = false;
+  $("bWorldName").textContent = WORLDS.find(w => w.gen === gen).name;
+  btStart(); applySky();
 }
 
 function btBest(){ try { return +(localStorage.getItem("battle-best-"+BT.level) || 0); } catch { return 0; } }
-function btPool(){ return ALL.filter(p => !p.form && SPRITES[p.id] && (BT.level === "easy" ? p.types.length === 1 && p.gen <= 5 : p.types.length === 2)); }
+function inWorld(p){ return !TR.world || p.gen === TR.world; }
+function btPool(){ return ALL.filter(p => !p.form && SPRITES[p.id] && inWorld(p) && (BT.level === "easy" ? p.types.length === 1 : p.types.length === 2)); }
 function btStart(){ BT.round = 0; BT.score = 0; BT.streak = 0; $("bNext").onclick = btNext; btNext(); }
 function btNext(){
   let pool = btPool();
   if (!pool.length){ $("bTitle").textContent = "Loading Pokémon…"; return; }
   if (BT.round >= BT.rounds){ btEnd(); return; }
-  BT.round++; BT.done = false; BT.busy = false; BT.hp = 100;
+  BT.round++; BT.done = false; BT.busy = false; BT.hp = 100; BT.razz = false; BT.assisted = false;
+  const sky = skyState();
   // rare Legendary encounters once the trainer reaches level 5
   BT.legend = TR.level >= 5 && Math.random() < 0.1;
-  if (BT.legend) pool = ALL.filter(p => !p.form && SPRITES[p.id] && (p.legendary || p.mythical));
+  if (BT.legend){ const lp = ALL.filter(p => !p.form && SPRITES[p.id] && (p.legendary || p.mythical)); pool = lp.filter(inWorld).length ? lp.filter(inWorld) : lp; }
+  // at night, Ghost and Dark Pokémon come out more often
+  else if (!sky.day && Math.random() < 0.45){ const np = pool.filter(p => p.types.includes("Ghost") || p.types.includes("Dark")); if (np.length) pool = np; }
   let foe, good, bad, tries = 0;
   do {
     foe = pool[Math.floor(Math.random()*pool.length)];
-    const scored = TYPES.map(t => [t, mult(t, foe.types)]);
+    BT.foe = foe;
+    const abil = foe.abilities.filter(a => !a[1]).map(a => a[0]);
+    BT.ability = abil.find(a => FOE_ABILITIES[a]) || null;
+    const scored = TYPES.map(t => [t, emult(t)]);
     good = scored.filter(([,m]) => m >= 2); bad = scored.filter(([,m]) => m < 2);
   } while ((!good.length || bad.length < 3) && ++tries < 200);
-  BT.foe = foe;
   const win = good[Math.floor(Math.random()*good.length)];
-  const weak = shuffle(bad.filter(([,m]) => m < 1)), meh = shuffle(bad.filter(([,m]) => m >= 1));
-  const picks = shuffle([win, ...[...weak.slice(0,1), ...shuffle([...weak.slice(1), ...meh])].slice(0,3)]);
+  // if the ability blocks a type that would normally win, always offer that type: it's the lesson
+  const trick = BT.ability ? bad.filter(([t]) => t === FOE_ABILITIES[BT.ability][0] && mult(t, foe.types) >= 1) : [];
+  const weak = shuffle(bad.filter(([t,m]) => m < 1 && !trick.some(x => x[0] === t))), meh = shuffle(bad.filter(([t,m]) => m >= 1 && !trick.some(x => x[0] === t)));
+  const picks = shuffle([win, ...[...trick, ...weak.slice(0,1), ...shuffle([...weak.slice(1), ...meh])].slice(0,3)]);
   const f = $("bFoe"); f.className = "foe" + (BT.legend ? " legend" : "");
   $("bBall").hidden = true; $("bBall").className = "ball";
   $("bImg").src = SPRITES[foe.id]; $("bImg").alt = foe.name;
   $("bName").innerHTML = esc(foe.name) + (BT.legend ? '<span class="rare">RARE!</span>' : "") + (NOTES[foe.id]?.caught ? ' <span title="Already caught" style="color:#e3262f">◉</span>' : "");
+  $("bAbility").hidden = !BT.ability; if (BT.ability) $("bAbility").textContent = "Ability: " + BT.ability;
   const env = foe.types[0] === "Normal" && foe.types[1] ? foe.types[1] : foe.types[0];
-  $("bField").dataset.env = env; $("bEnv").textContent = ENVS[env];
+  $("bField").dataset.env = env; $("bEnv").dataset.base = ENVS[env];
   $("bTypes").innerHTML = foe.types.map(t=>`<span class="tp" style="--tc:${tc(t)}">${t}</span>`).join("");
   setHp(100);
   $("bTitle").className = "qtitle"; $("bTitle").textContent = BT.legend ? `Whoa! A Legendary ${foe.name} appeared!` : `A wild ${foe.name} appeared!`;
-  $("bSub").textContent = "Which attack should you use?";
+  $("bSub").textContent = BT.ability ? `Look out, it has ${BT.ability}! Which attack should you use?` : "Which attack should you use?";
   $("bMoves").className = "moves";
   $("bMoves").innerHTML = picks.map(([t]) => `<button class="move" style="--tc:${tc(t)}" data-t="${t}">${MOVES[t]}<small>${t}</small></button>`).join("");
   $("bMoves").querySelectorAll(".move").forEach(b => b.onclick = () => btAttack(b.dataset.t));
   $("bHint").hidden = BT.level !== "easy" || BT.legend; $("bHint").disabled = false;
   $("bNext").hidden = true;
-  btHud();
+  renderPowers(); renderBattleBuddy(); applySky(); btHud();
 }
 function setHp(v){ BT.hp = v; $("bHp").style.width = v + "%"; $("bHp").style.background = v < 25 ? "#e3262f" : v < 70 ? "#f5a800" : ""; }
-function btAttack(t){
+function buddyHelpType(){
+  const b = buddyMon(); if (!b || !BT.foe) return null;
+  return b.types.find(t => emult(t) >= 2) || null;
+}
+function renderPowers(){
+  const el = $("bPowers");
+  if (BT.done){ el.innerHTML = ""; return; }
+  const b = buddyMon(), help = buddyHelpType();
+  el.innerHTML = `<button class="power" id="pwFocus" style="--c:#7a5be0" ${TR.items.focus>0?"":"disabled"}><i class="dot"></i>Focus ×${TR.items.focus} <span class="sub">hides 2 wrong moves</span></button>` +
+    (b && help && !BT.assisted ? `<button class="power assist" id="pwAssist">${SPRITES[b.id]?`<img alt="" src="${SPRITES[b.id]}">`:""}${esc(BUDDY.nick)} can help!</button>` : "");
+  if ($("pwFocus")) $("pwFocus").onclick = useFocus;
+  if ($("pwAssist")) $("pwAssist").onclick = () => { BT.assisted = true; btAttack(help, true); };
+}
+function useFocus(){
+  if (BT.done || TR.items.focus <= 0) return;
+  const wrong = [...$("bMoves").querySelectorAll(".move:not(:disabled)")].filter(b => emult(b.dataset.t) < 2);
+  shuffle(wrong).slice(0,2).forEach(b => { b.disabled = true; });
+  TR.items.focus--; trSave(); renderTrainer();
+  $("pwFocus").disabled = true; $("pwFocus").innerHTML = `<i class="dot"></i>Focused!`;
+}
+function renderBattleBuddy(){
+  const b = buddyMon();
+  $("bBuddy").hidden = !b;
+  if (b) $("bBuddy").innerHTML = `${SPRITES[b.id]?`<img alt="" src="${SPRITES[b.id]}">`:""}${esc(BUDDY.nick)} is cheering!`;
+}
+function btAttack(t, byBuddy){
   if (BT.done) return; BT.done = true;
-  const foe = BT.foe, m = mult(t, foe.types), win = m >= 2;
+  const foe = BT.foe, m = emult(t), win = m >= 2, blocked = m === 0 && mult(t, foe.types) > 0 && BT.ability;
   if (win){ BT.score++; BT.streak++; } else BT.streak = 0;
   const f = $("bFoe");
   f.querySelector(".boom").style.background = `radial-gradient(circle,#fff,${tc(t)} 60%,transparent 70%)`;
@@ -1250,29 +1480,36 @@ function btAttack(t){
   setHp(win ? 12 : m === 1 ? 60 : m > 0 ? 82 : 100);
   $("bMoves").querySelectorAll(".move").forEach(b => { b.disabled = true;
     if (b.dataset.t === t) b.classList.add("picked");
-    if (mult(b.dataset.t, foe.types) >= 2) b.classList.add("right"); });
-  const words = m >= 4 ? "It's super-duper effective!" : m >= 2 ? "It's super effective!" : m === 0 ? `It doesn't affect ${foe.name}!` : m < 1 ? "It's not very effective…" : "It hit, but it wasn't super effective.";
+    if (emult(b.dataset.t) >= 2) b.classList.add("right"); });
+  $("bPowers").innerHTML = "";
+  const who = byBuddy ? `${BUDDY.nick} used ${MOVES[t]}!` : `${MOVES[t]}!`;
+  const words = blocked ? `But ${foe.name} has ${BT.ability}!` : m >= 4 ? "It's super-duper effective!" : m >= 2 ? "It's super effective!" : m === 0 ? `It doesn't affect ${foe.name}!` : m < 1 ? "It's not very effective…" : "It hit, but it wasn't super effective.";
   $("bTitle").className = "qtitle " + (win ? "right" : "wrong");
-  $("bTitle").textContent = `${MOVES[t]}! ${words}`;
-  const best = $("bMoves").querySelector(".move.right");
+  $("bTitle").textContent = `${who} ${words}`;
+  const best = $("bMoves").querySelector(".move.right") || {dataset:{t:buddyHelpType()||t}};
   const xp = win ? (BT.level === "hard" ? 20 : 10) + Math.min(10, (BT.streak-1)*2) + (BT.legend ? 30 : 0) : 2;
-  $("bSub").textContent = win ? `${foe.name} is worn out! ${t} beats ${foe.types.join(" and ")}. +${xp} XP.` : `Try ${MOVES[best.dataset.t]} next time. ${best.dataset.t} beats ${foe.types.join(" and ")}! +${xp} XP.`;
+  $("bSub").textContent = blocked ? `${foe.name} ${FOE_ABILITIES[BT.ability][1]} Try ${MOVES[best.dataset.t]} instead. +${xp} XP.`
+    : win ? `${foe.name} is worn out! ${t} beats ${foe.types.join(" and ")}. +${xp} XP.` : `Try ${MOVES[best.dataset.t]} next time. ${best.dataset.t} beats ${foe.types.join(" and ")}! +${xp} XP.`;
   $("bHint").hidden = true;
+  if (win){ buddyGain(byBuddy ? 10 : 3, byBuddy ? 3 : 1); if (Math.random() < 0.25){ TR.items.razz++; setTimeout(() => toast("You found a Razz Berry!"), 900); } }
   setTimeout(() => { $("bMoves").classList.add("catchrow"); showCatchChoices(win); gainXp(xp); }, 700);
   btHud();
 }
 function showCatchChoices(win){
   const balls = BALLS.filter(([k]) => TR.balls[k] > 0);
   const throwBtns = balls.map(([k,l]) => `<button class="btn big throwbtn" data-ball="${k}"><i class="pb ${k}"></i>Throw ${l} (${TR.balls[k]})</button>`).join("");
-  $("bMoves").innerHTML = (throwBtns || `<span class="sub">You're out of Poké Balls! Win battles and level up to get more.</span>`) +
+  const razz = TR.items.razz > 0 && !BT.razz ? `<button class="btn big throwbtn" id="bRazz"><i class="berry"></i>Give a Razz Berry (${TR.items.razz})</button>` : "";
+  $("bMoves").innerHTML = (throwBtns || `<span class="sub">You're out of Poké Balls! Win battles, level up or walk your buddy to get more.</span>`) + razz +
     `<button class="btn big" id="bSkip">${win ? "Let it go" : "Run away"}</button>`;
   $("bMoves").querySelectorAll("[data-ball]").forEach(b => b.onclick = () => throwBall(b.dataset.ball));
+  if ($("bRazz")) $("bRazz").onclick = () => { if (BT.busy) return; BT.razz = true; TR.items.razz--; trSave(); renderTrainer();
+    $("bTitle").className = "qtitle"; $("bTitle").textContent = `${BT.foe.name} is munching the Razz Berry!`; $("bSub").textContent = "It's calmer now and easier to catch."; showCatchChoices(win); };
   $("bSkip").onclick = finishEncounter;
-  if (!$("bSub").dataset.keep) $("bSub").textContent += win ? " Throw a ball to catch it!" : " It's still strong, but you can try to catch it.";
+  if (!$("bSub").dataset.keep && !BT.razz) $("bSub").textContent += win ? " Throw a ball to catch it!" : " It's still strong, but you can try to catch it.";
 }
 function catchChance(ball){
   if (ball === "master") return 1;
-  const bonus = BALLS.find(b => b[0] === ball)[2];
+  const bonus = BALLS.find(b => b[0] === ball)[2] * (BT.razz ? 1.5 : 1);
   const rate = (BT.foe.capture ?? 45) / 255, hpf = 1 + (100 - BT.hp) / 40;   // weaker = easier
   return Math.min(0.97, rate * bonus * hpf * 0.9 + 0.15);
 }
@@ -1285,9 +1522,8 @@ function throwBall(kind){
   ball.innerHTML = `<i class="pb ${kind}"></i>`; ball.hidden = false; ball.className = "ball throw";
   $("bMoves").querySelectorAll("button").forEach(b => b.disabled = true);
   $("bTitle").className = "qtitle"; $("bTitle").textContent = `You threw a ${BALLS.find(b=>b[0]===kind)[1]}!`; $("bSub").textContent = "";
-  const steps = [];
   setTimeout(() => { f.classList.add("inball"); ball.className = "ball rest"; }, 700);
-  for (let i = 0; i < shakes; i++) steps.push(setTimeout(() => { ball.className = "ball rest"; void ball.offsetWidth; ball.className = "ball wobble"; $("bSub").textContent = "Wobble… ".repeat(i+1).trim(); }, 1100 + i*800));
+  for (let i = 0; i < shakes; i++) setTimeout(() => { ball.className = "ball rest"; void ball.offsetWidth; ball.className = "ball wobble"; $("bSub").textContent = "Wobble… ".repeat(i+1).trim(); }, 1100 + i*800);
   setTimeout(() => {
     const foe = BT.foe;
     if (ok){
@@ -1309,7 +1545,7 @@ function throwBall(kind){
   }, 1100 + shakes*800 + 200);
 }
 function finishEncounter(caught){
-  $("bMoves").innerHTML = ""; $("bMoves").className = "moves";
+  $("bMoves").innerHTML = ""; $("bMoves").className = "moves"; $("bPowers").innerHTML = "";
   if (caught !== true){ $("bTitle").className = "qtitle"; $("bTitle").textContent = BT.hp <= 12 ? `${BT.foe.name} ran back into the wild.` : `You got away safely!`; $("bSub").textContent = ""; }
   $("bNext").hidden = false; $("bNext").textContent = BT.round >= BT.rounds ? "See my score" : "Next battle →";
   $("bNext").focus({preventScroll:true});
@@ -1323,7 +1559,7 @@ function btEnd(){
   const stars = BT.score >= 10 ? 3 : BT.score >= 7 ? 2 : BT.score >= 4 ? 1 : 0;
   const msg = ["Good try! Every trainer starts somewhere.","Nice battling, Trainer!","Great job! You know your types!","Perfect! You're a Type Master!"][stars];
   const bonus = stars * 10;
-  $("bFoe").className = "foe"; $("bImg").removeAttribute("src"); $("bBall").hidden = true;
+  $("bFoe").className = "foe"; $("bImg").removeAttribute("src"); $("bBall").hidden = true; $("bAbility").hidden = true; $("bPowers").innerHTML = "";
   $("bTitle").className = "qtitle"; $("bTitle").textContent = `You won ${BT.score} out of ${BT.rounds} battles!`;
   $("bSub").textContent = (isBest ? `New best score for ${BT.level}! ` : "") + (bonus ? `Star bonus: +${bonus} XP` : "");
   $("bMoves").className = "moves";
@@ -1332,15 +1568,185 @@ function btEnd(){
   $("bNext").textContent = "Battle again"; $("bNext").onclick = btStart; btHud();
   if (bonus) gainXp(bonus);
 }
+function enterBattle(){
+  if (TR.world === null || TR.world === undefined) showWorldPick();
+  else { $("bWorldName").textContent = WORLDS.find(w => w.gen === TR.world).name; if (!BT.foe) btStart(); }
+  applySky();
+}
 function buildBattle(){
   $("bNext").onclick = btNext;
   $("bHint").onclick = () => { if (BT.done || !BT.foe) return; $("bHint").disabled = true;
-    $("bSub").innerHTML = `<span class="hintbox">${esc(BT.foe.types.map(t => HINTS[t]).join(" "))}</span>`; };
+    $("bSub").innerHTML = `<span class="hintbox">${esc(BT.foe.types.map(t => HINTS[t]).join(" "))}${BT.ability?` And remember: ${esc(BT.foe.name)} ${esc(FOE_ABILITIES[BT.ability][1])}`:""}</span>`; };
   $("bLevels").addEventListener("click", e => { const b = e.target.closest("[data-lv]"); if (!b) return;
     BT.level = b.dataset.lv; $("bLevels").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x===b)); btStart(); });
+  $("bWorlds").addEventListener("click", e => { const b = e.target.closest("[data-gen]"); if (b) pickWorld(+b.dataset.gen); });
+  $("bWorldBtn").onclick = showWorldPick;
   $("lvOk").onclick = () => { $("lvUp").hidden = true; };
   $("tCaught").onclick = () => { state.mCaught = true; $("mCaught").checked = true; state.sort = "updated"; state.dir = "desc"; setTab("dex"); render(); };
   renderTrainer();
+}
+
+// ---------- buddy: raise a partner Pokémon ----------
+const BD_KEY = "pokedex-buddy-v1";
+const STARTERS = [25,133,1,4,7,152,155,158,252,255,258,387,390,393,495,498,501,650,653,656,722,725,728,810,813,816,906,909,912,39,52,54,172,175,216,447];
+let BUDDY = null, bdPick = null, bdToyTimer = null;
+const bdSave = makeSaver("buddy", BD_KEY, () => BUDDY);
+function bdLoadLocal(){ try { const b = JSON.parse(localStorage.getItem(BD_KEY) || "null"); if (b && b.id) BUDDY = b; } catch {} }
+function bdFromSnap(b){ if (b && b.id){ BUDDY = b; renderBuddy(); renderBattleBuddy(); } }
+const buddyMon = () => BUDDY ? ALL.find(p => p.id === BUDDY.id) : null;
+const bdNeed = lv => 30 + (lv-1)*15;
+// stats drift with real time; we only write when the player does something
+function bdNow(){
+  if (!BUDDY) return null;
+  const mins = Math.max(0, (Date.now() - (BUDDY.last || Date.now())) / 60000);
+  const c = (v) => Math.max(0, Math.min(100, v));
+  return { happy: c(BUDDY.happy - mins*0.2), food: c(BUDDY.food - mins*0.33),
+           energy: c(BUDDY.energy + (BUDDY.asleep ? mins*2 : -mins*0.15)) };
+}
+function bdCommit(delta){
+  const n = bdNow();
+  BUDDY.happy = Math.max(0, Math.min(100, n.happy + (delta.happy||0)));
+  BUDDY.food = Math.max(0, Math.min(100, n.food + (delta.food||0)));
+  BUDDY.energy = Math.max(0, Math.min(100, n.energy + (delta.energy||0)));
+  BUDDY.last = Date.now();
+}
+function evoStage(p){ let s = 1, cur = p; while (cur && cur.evolvesFrom){ s++; cur = ALL.find(x => !x.form && x.name === cur.evolvesFrom); } return s; }
+function evolutionsOf(p){ return ALL.filter(x => !x.form && x.evolvesFrom === p.name && SPRITES[x.id]); }
+function evoReady(){ const p = buddyMon(); if (!p) return []; const opts = evolutionsOf(p); const need = evoStage(p) === 1 ? 6 : 14; return BUDDY.level >= need ? opts : []; }
+function buddyGain(xp, love){
+  if (!BUDDY) return;
+  BUDDY.xp += xp; let up = false;
+  while (BUDDY.xp >= bdNeed(BUDDY.level)){ BUDDY.xp -= bdNeed(BUDDY.level); BUDDY.level++; up = true; }
+  if (love) bdCommit({happy: love}); else BUDDY.last = BUDDY.last || Date.now();
+  bdSave(); renderBuddy();
+  if (up){ const ev = evoReady().length ? " It's ready to evolve!" : ""; toast(`${BUDDY.nick} grew to friendship level ${BUDDY.level}!${ev}`); }
+}
+function say(text){ $("bdSpeech").textContent = text; }
+function moodLine(){
+  const n = bdNow(), p = buddyMon(), sky = skyState(), nm = BUDDY.nick;
+  if (BUDDY.asleep) return sky.day ? `${nm} is having a nap. Shh!` : `${nm} is sleeping under the moon.`;
+  if (n.food < 25) return "I'm hungry! Can I have a berry?";
+  if (n.energy < 20) return sky.day ? "I'm so sleepy…" : "It's night time. Can we go to sleep?";
+  if (n.happy < 30) return "Let's play together!";
+  if (!sky.day && Math.random() < 0.5) return "Look at the moon! It's so pretty.";
+  return [`${p.name}! ${p.name}!`, "I'm happy you're here!", "What shall we do today?", "Let's go for a walk!", "You're the best trainer!"][Math.floor(Math.random()*5)];
+}
+function renderBuddy(){
+  if (!$("bdMain")) return;
+  const has = !!BUDDY && !!buddyMon();
+  $("pbWrap").hidden = has; $("bdMain").hidden = !has;
+  if (!has){ renderBuddyPicker(); return; }
+  const p = buddyMon(), n = bdNow();
+  $("bdName").textContent = BUDDY.nick;
+  $("bdSpecies").textContent = `${p.name} · ${p.types.join(" / ")} type`;
+  $("bdLevel").textContent = "Lv " + BUDDY.level;
+  $("bdXp").style.width = Math.min(100, BUDDY.xp / bdNeed(BUDDY.level) * 100) + "%";
+  $("bdImg").src = SPRITES[p.id] || ""; $("bdImg").alt = p.name;
+  const env = p.types[0] === "Normal" && p.types[1] ? p.types[1] : p.types[0];
+  $("bdField").dataset.env = env; $("bdEnv").dataset.base = ENVS[env];
+  const bar = (id, v) => { $(id).style.width = v + "%"; $(id).style.background = v < 25 ? "#e3262f" : v < 55 ? "#f5a800" : ""; };
+  bar("mHappy", n.happy); bar("mFood", n.food); bar("mEnergy", n.energy);
+  $("bdPal").classList.toggle("asleep", !!BUDDY.asleep);
+  $("bdSleep").innerHTML = BUDDY.asleep ? "<b>Wake up</b><small>Time to play</small>" : "<b>Sleep</b><small>Rest and recharge</small>";
+  $("bdActs").querySelectorAll(".act").forEach(b => { if (b.dataset.act !== "sleep" && b.dataset.act !== "pet") b.disabled = !!BUDDY.asleep; });
+  const evo = evoReady();
+  $("bdEvolve").hidden = !evo.length;
+  if (evo.length) $("bdEvolve").innerHTML = `<b style="font:600 20px var(--display)">${esc(BUDDY.nick)} is ready to evolve!</b>
+    <div class="opts2">${evo.map(e => `<button data-evo="${e.id}">${SPRITES[e.id]?`<img alt="" src="${SPRITES[e.id]}">`:""}Evolve into ${esc(e.name)}</button>`).join("")}</div>
+    <span class="sub">Or keep playing. You can evolve any time.</span>`;
+  applySky();
+}
+function renderBuddyPicker(){
+  const q = $("pbSearch").value.trim().toLowerCase();
+  const list = q ? ALL.filter(p => !p.form && SPRITES[p.id] && p.name.toLowerCase().includes(q)).slice(0, 30) : STARTERS.map(id => ALL.find(p => p.id === id)).filter(Boolean);
+  $("pbGrid").innerHTML = list.map(p => `<button data-id="${p.id}" aria-pressed="${bdPick===p.id}">${SPRITES[p.id]?`<img alt="" src="${SPRITES[p.id]}">`:""}${esc(p.name)}</button>`).join("") || `<span class="sub">No Pokémon with that name.</span>`;
+  $("pbConfirm").hidden = !bdPick;
+  if (bdPick){ const p = ALL.find(x => x.id === bdPick); $("pbImg").src = SPRITES[p.id] || ""; $("pbNick").placeholder = p.name; }
+}
+function hearts(n){
+  const h = $("bdHearts");
+  for (let i = 0; i < n; i++){ const e = document.createElement("i"); e.textContent = "♥"; e.style.left = (25 + Math.random()*50) + "%"; e.style.animationDelay = (i*0.12) + "s"; h.appendChild(e); setTimeout(() => e.remove(), 1600); }
+  $("bdPal").classList.remove("happy"); void $("bdPal").offsetWidth; $("bdPal").classList.add("happy");
+}
+function bdAct(act){
+  if (!BUDDY) return;
+  const n = bdNow(), nm = BUDDY.nick, p = buddyMon();
+  $("bdFeed").hidden = act !== "feed";
+  if (act === "pet"){ bdCommit({happy: 6}); hearts(3); say(BUDDY.asleep ? `${nm} smiles in its sleep.` : `${nm} loves that!`); buddyGain(2); return; }
+  if (act === "sleep"){ bdCommit({}); BUDDY.asleep = !BUDDY.asleep; say(BUDDY.asleep ? "Goodnight! Zzz…" : "Good morning! I feel great!"); bdSave(); renderBuddy(); return; }
+  if (act === "feed"){
+    $("bdFeed").innerHTML = [["oran","Oran Berry","+25 full",{food:25}],["sitrus","Sitrus Berry","+40 full",{food:40,happy:2}],["puff","Poké Puff","a sweet treat",{food:10,happy:12}]]
+      .map(([k,l,s]) => `<button class="btn big throwbtn" data-food="${k}"><i class="berry ${k}"></i>${l}<span class="sub">${s}</span></button>`).join("");
+    $("bdFeed").querySelectorAll("[data-food]").forEach(b => b.onclick = () => {
+      const f = {oran:{food:25},sitrus:{food:40,happy:2},puff:{food:10,happy:12}}[b.dataset.food];
+      if (bdNow().food >= 95 && b.dataset.food !== "puff"){ say(`${nm} is too full to eat any more!`); return; }
+      bdCommit(f); hearts(1); say(b.dataset.food === "puff" ? "Yummy! My favourite!" : "Munch munch… thank you!"); buddyGain(3); $("bdFeed").hidden = true;
+    });
+    say("What shall I eat?"); return;
+  }
+  if (act === "train"){
+    if (n.energy < 15){ say("I'm too tired to train. Can I rest?"); return; }
+    if (n.food < 10){ say("I need a snack first!"); return; }
+    const mv = MOVES[p.types[0]];
+    bdCommit({energy:-15, food:-5, happy:2}); say(`${nm} practised ${mv}! It's getting stronger.`); $("bdPal").classList.remove("happy"); void $("bdPal").offsetWidth; $("bdPal").classList.add("happy"); buddyGain(15); return;
+  }
+  if (act === "walk"){
+    if (n.energy < 10){ say("My legs are tired. Let's rest first."); return; }
+    bdCommit({energy:-10, food:-5, happy:4});
+    const r = Math.random(); let msg;
+    if (r < 0.35){ TR.balls.poke++; trSave(); renderTrainer(); msg = `${nm} found a Poké Ball! It's in your battle bag.`; }
+    else if (r < 0.55){ TR.items.razz++; trSave(); renderTrainer(); msg = `${nm} found a Razz Berry for your battles!`; }
+    else if (r < 0.65){ TR.items.focus++; trSave(); renderTrainer(); msg = `${nm} learned to focus! You got a Focus power.`; }
+    else { const w = ALL.filter(x => !x.form && SPRITES[x.id] && x.gen === (TR.world || p.gen) && !x.legendary && !x.mythical); const s = w[Math.floor(Math.random()*w.length)]; msg = `On your walk, ${nm} saw a wild ${s.name}!`; }
+    say(msg); buddyGain(8); return;
+  }
+  if (act === "play"){
+    if (n.energy < 15){ say("I'm too sleepy to play right now."); return; }
+    startToyGame(); return;
+  }
+}
+function startToyGame(){
+  const toy = $("bdToy"); let hits = 0, left = 12;
+  $("bdActs").querySelectorAll(".act").forEach(b => b.disabled = true);
+  const move = () => { toy.style.left = (15 + Math.random()*70) + "%"; toy.style.top = (20 + Math.random()*55) + "%"; };
+  toy.hidden = false; move(); say(`Tap the ball 5 times! ${left}s`);
+  toy.onclick = () => { hits++; move(); say(`${hits} / 5! Keep going!`); if (hits >= 5) end(true); };
+  clearInterval(bdToyTimer);
+  bdToyTimer = setInterval(() => { left--; if (left <= 0) end(false); else if (left % 2 === 0) move(); }, 1000);
+  function end(won){
+    clearInterval(bdToyTimer); toy.hidden = true; toy.onclick = null;
+    if (won){ bdCommit({happy:15, energy:-12, food:-5}); hearts(5); say("That was so much fun! Again!"); buddyGain(12); }
+    else { bdCommit({happy:5, energy:-8}); say("That was fun, even if the ball got away!"); buddyGain(4); }
+    renderBuddy();
+  }
+}
+function evolveTo(id){
+  const from = buddyMon(), to = ALL.find(p => p.id === id); if (!to) return;
+  $("bdEvolve").hidden = true; $("bdPal").classList.add("evolving"); say(`What? ${BUDDY.nick} is evolving!`);
+  setTimeout(() => {
+    const keepNick = BUDDY.nick !== from.name;
+    BUDDY.id = to.id; if (!keepNick) BUDDY.nick = to.name; bdCommit({happy:10}); bdSave();
+    $("bdPal").classList.remove("evolving"); renderBuddy(); hearts(6);
+    say(`Congratulations! ${from.name} evolved into ${to.name}!`);
+    showLevelUp("It evolved!", to.name, [`${from.name} evolved into ${to.name}!`, `${to.types.join(" / ")} type`]);
+  }, 2400);
+}
+function enterBuddy(){ renderBuddy(); if (BUDDY && buddyMon()) say(moodLine()); }
+function buildBuddy(){
+  $("pbSearch").addEventListener("input", renderBuddyPicker);
+  $("pbGrid").addEventListener("click", e => { const b = e.target.closest("[data-id]"); if (!b) return; bdPick = +b.dataset.id; renderBuddyPicker(); $("pbNick").focus({preventScroll:true}); $("pbConfirm").scrollIntoView({block:"nearest", behavior:"smooth"}); });
+  $("pbGo").onclick = () => {
+    const p = ALL.find(x => x.id === bdPick); if (!p) return;
+    BUDDY = { id:p.id, nick:($("pbNick").value.trim() || p.name).slice(0,16), xp:0, level:1, happy:70, food:70, energy:80, asleep:false, last:Date.now(), since:Date.now() };
+    bdPick = null; $("pbNick").value = ""; bdSave(); renderBuddy(); hearts(4); say(`Hi! I'm ${BUDDY.nick}! Let's be best friends!`); renderBattleBuddy();
+  };
+  $("bdActs").addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (b && !b.disabled) bdAct(b.dataset.act); });
+  $("bdPal").onclick = () => bdAct("pet");
+  $("bdEvolve").addEventListener("click", e => { const b = e.target.closest("[data-evo]"); if (b) evolveTo(+b.dataset.evo); });
+  $("bdChange").onclick = () => { $("bdBye").hidden = false; $("bdByeText").textContent = `Say goodbye to ${BUDDY.nick}? Your new buddy starts at level 1.`; };
+  $("bdByeNo").onclick = () => { $("bdBye").hidden = true; };
+  $("bdByeYes").onclick = () => { BUDDY = null; $("bdBye").hidden = true; bdSave(); renderBuddy(); renderBattleBuddy(); };
+  setInterval(() => { if (!$("buddy").hidden && BUDDY) { renderBuddy(); if (Math.random() < 0.15) say(moodLine()); } }, 20000);
 }
 
 async function boot(){
@@ -1348,7 +1754,7 @@ async function boot(){
     const r = await fetch("pokemon.json"); ALL = await r.json();
   } catch(e){ $("tbody").innerHTML = `<tr><td class="empty" colspan="14">Could not load the Pokédex data. Reload the page to try again.</td></tr>`; return; }
   buildControls(); render(); buildGame();
-  fetch("sprites.json").then(r=>r.json()).then(s => { SPRITES = s; render(); if (state.sel) renderDrawer(); if (G.w) renderGame(); if (!$("quiz").hidden && !QZ.cur) qzStart(); if (!$("battle").hidden && !BT.foe) btStart(); }).catch(()=>{});
+  fetch("sprites.json").then(r=>r.json()).then(s => { SPRITES = s; render(); if (state.sel) renderDrawer(); if (G.w) renderGame(); if (!$("quiz").hidden && !QZ.cur) qzStart(); if (!$("battle").hidden) enterBattle(); if (!$("buddy").hidden) enterBuddy(); }).catch(()=>{});
   initNotes();
 }
 boot();
