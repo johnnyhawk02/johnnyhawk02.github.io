@@ -23,16 +23,17 @@
   --cell: #dbc84c;
   --code-bg: #f1e6a0;
   --vu-face: #f6efcf; --vu-ink: #2a2a28; --vu-dim: #8a8160;
+  --lvm-bg: color-mix(in srgb, var(--ink) 66%, var(--panel)); --lvm-off: rgba(241, 231, 176, .12); --lvm-g: #93d46d; --lvm-y: #ecd95c; --lvm-r: #e5675f;
   --display: "Outfit", system-ui, sans-serif;
   --body: "Outfit", system-ui, -apple-system, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0f2419; --panel: #302c16; --ink: #f1e7b0; --muted: #b2a766; --led: #e5675f; --blue: #6f9fd6;
-  --lcd: #27240f; --lcd-ink: #f1e7b0; --lcd-dim: #7d7440; --cell: #3b3719; --code-bg: #24210e; --vu-face: #cfc48e; --vu-ink: #26241a; --vu-dim: #6e6644; color-scheme: dark } }
+  --lcd: #27240f; --lcd-ink: #f1e7b0; --lcd-dim: #7d7440; --cell: #3b3719; --code-bg: #24210e; --vu-face: #cfc48e; --vu-ink: #26241a; --vu-dim: #6e6644; --lvm-bg: #1b190b; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #0f2419; --panel: #302c16; --ink: #f1e7b0; --muted: #b2a766; --led: #e5675f; --blue: #6f9fd6;
-  --lcd: #27240f; --lcd-ink: #f1e7b0; --lcd-dim: #7d7440; --cell: #3b3719; --code-bg: #24210e; --vu-face: #cfc48e; --vu-ink: #26241a; --vu-dim: #6e6644; color-scheme: dark }
+  --lcd: #27240f; --lcd-ink: #f1e7b0; --lcd-dim: #7d7440; --cell: #3b3719; --code-bg: #24210e; --vu-face: #cfc48e; --vu-ink: #26241a; --vu-dim: #6e6644; --lvm-bg: #1b190b; color-scheme: dark }
 
 /* ---- base ---- */
 * { box-sizing: border-box; }
@@ -273,6 +274,18 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .btn.tiny { font-size: .76rem; padding: 2px 10px; }
 #comp-knobs { grid-template-columns: repeat(5, minmax(46px, var(--kw))) auto; gap: 0; }
 #duck-knobs { grid-template-columns: repeat(2, minmax(46px, var(--kw))) auto; gap: 0; }
+/* level meters: a recessed column of small LEDs beside each mixer fader (green, then yellow from -12 dB,
+   red from -3 dB), with a held peak LED. Fixed width; the fader keeps its centre under the name */
+.fbox { display: flex; align-items: stretch; gap: 3px; padding-left: 10px; }
+.lvm { position: relative; flex: none; width: 7px; border-radius: 3px; background: var(--lvm-bg);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .45), 0 1px 0 color-mix(in srgb, var(--panel) 70%, #fff); }
+.lvm::before, .lvm b { content: ""; position: absolute; left: 2px; right: 2px; top: var(--lt, 2px); bottom: 2px; }
+.lvm::before { background: repeating-linear-gradient(to top, var(--lvm-off) 0 3px, transparent 3px 5px); }
+.lvm b { background: linear-gradient(to top, var(--lvm-g) 0 66.7%, var(--lvm-y) 66.7% 91.7%, var(--lvm-r) 91.7%);
+  -webkit-mask: repeating-linear-gradient(to top, #000 0 3px, transparent 3px 5px); mask: repeating-linear-gradient(to top, #000 0 3px, transparent 3px 5px);
+  clip-path: inset(100% 0 0 0); }
+.lvm s { position: absolute; left: 2px; right: 2px; height: 3px; bottom: 2px; background: var(--lvm-g); display: none; }
+.lvm s.y { background: var(--lvm-y); } .lvm s.r { background: var(--lvm-r); }
 /* needle meters for gain reduction and ducking: a fixed-size cream face, so nothing around them moves */
 .vu { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding-left: 6px; min-height: 0; }
 .vu span { font-family: var(--display); font-weight: 500; font-size: .7rem; line-height: 1.3; color: var(--muted); }
@@ -682,7 +695,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .groove-card .gtable { grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr); min-height: 0; }
   .groove-card .sdial .sl { height: auto; flex: 1 1 0; min-height: 18px; }
   .groove-card .sdial { flex-direction: column; align-items: center; }
-  .tab-perform .strip .fader { flex: 1 1 0; height: auto; min-height: 60px; }
+  .tab-perform .strip .fbox { flex: 1 1 0; min-height: 60px; }
+  .tab-perform .strip .fader { height: auto; }
   /* sound: the cards fill the panel's height and their faders stretch with them */
   .tab-sound { align-items: stretch; }
   .tab-sound .snd-main { grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
@@ -731,6 +745,26 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .fxh { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 .fxh .pick { font-size: .72rem; padding: 1px 4px; border-radius: 4px; text-transform: lowercase; }
 .tab-perform .fxg { grid-template-rows: auto minmax(0, 1fr); }
+/* randomise stands out: a green-tinted card with the panel's yellow as its buttons, and everything as the main button */
+.rand-card { --rc: color-mix(in srgb, var(--bg) 34%, var(--panel)); background: var(--rc); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bg) 55%, var(--panel)); }
+.rand-card > h2 { color: var(--ink); }
+.tab-perform .rand-card { padding: 12px 14px 12px; gap: 8px; }
+.tab-perform .rand-card .rand { gap: 10px; }
+.tab-perform .rand-card .rbtns { grid-template-columns: repeat(3, minmax(0, 1fr)); justify-content: stretch; gap: 6px; }
+.tab-perform .rand-card .rbtns .btn { padding: 7px 6px; font-size: .9rem; background: var(--panel); border-radius: 7px; }
+.tab-perform .rand-card .rbtns .btn:hover { background: color-mix(in srgb, var(--ink) 10%, var(--panel)); }
+.tab-perform .rand-card .rbtns #new-kit { grid-column: span 2; background: var(--ink); color: var(--panel); font-weight: 600; }
+.tab-perform .rand-card .rbtns #new-kit:hover { background: color-mix(in srgb, var(--panel) 14%, var(--ink)); }
+.tab-perform .rand-card .rbtns #undo { background: none; color: var(--muted); box-shadow: inset 0 0 0 1px var(--line); }
+.tab-perform .rand-card .rbtns #undo:not(:disabled):hover { color: var(--ink); background: var(--tint); }
+.tab-perform .rand-card .rand-opts { color: var(--ink); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .rand-card { --rc: color-mix(in srgb, #62bd8c 16%, var(--panel)); box-shadow: inset 0 0 0 1px color-mix(in srgb, #62bd8c 30%, var(--panel)); } }
+:root[data-theme="dark"] .rand-card { --rc: color-mix(in srgb, #62bd8c 16%, var(--panel)); box-shadow: inset 0 0 0 1px color-mix(in srgb, #62bd8c 30%, var(--panel)); }
+@media (min-width: 761px) and (max-height: 640px) {
+  .tab-perform .rand-card { padding: 8px 12px; gap: 4px; }
+  .tab-perform .rand-card .rand { gap: 6px; }
+  .tab-perform .rand-card .rbtns .btn { padding: 4px 6px; font-size: .84rem; }
+}
 </style>
 
 <div class="wrap">
@@ -4488,6 +4522,8 @@ class Player {
     this.sendD = new Float32Array(6); this.sendR = new Float32Array(6); this.echoWidth = 1;
     this.busIn = new Float32Array(128); this.busOut = new Int16Array(128);
     this.duckEnv = 0; this.duckAt = 1; this.compEnv = 0; this.gr = 0; this.duckMin = 1;
+    // level meters: each voice's peak after its fader, accent, mute and duck
+    this.lvl = new Float32Array(6); this.lvlN = 0; this.lvlOn = false;
     this.events = [];
     this._render(this.A); this._render(this.B);
   }
@@ -4603,9 +4639,17 @@ class Player {
       const fa = e.audioRouting[n] === LXR.MIXER_ROUTING_FX_BUS ? this.fxAmt[n] : 0;
       const pl = pans[n].triggeredPanL / 32768, pr = pans[n].triggeredPanR / 32768;
       const o = out[n];
-      for (let i = 0; i < 64; i++) { const v = o[i] * (g0 + dg * i); L[i] += v * pl; R[i] += v * pr; }
+      let lv = 0;
+      for (let i = 0; i < 64; i++) { const v = o[i] * (g0 + dg * i); L[i] += v * pl; R[i] += v * pr; const a = v < 0 ? -v : v; if (a > lv) lv = a; }
+      lv *= Math.max(pl, pr); if (lv > this.lvl[n]) this.lvl[n] = lv;
       this.fxGain[n] = g1 * fa;
       this.gain[n] = this.gainTo[n]; this.chanAt[n] = this.chan[n];
+    }
+    if (++this.lvlN >= 16) {
+      this.lvlN = 0;
+      const on = this.lvl.some((v) => v > 1e-4);
+      if (on || this.lvlOn) this.events.push({ type: 'lvl', l: Array.from(this.lvl) });
+      this.lvlOn = on; this.lvl.fill(0);
     }
     // the firmware's FX bus (distortion, ring mod, compressor or delay), sample-exact
     const fx = e.renderFx(this.fxGain, this.echoWidth);
@@ -5840,11 +5884,54 @@ function miniDial(label, aria, get, set, dflt, max = 100, show = (v) => v + '%',
   draw();
   return { el, draw };
 }
+// level meters: one LED per 5 px, -36 dB at the bottom to 0 dB at the top; the peak falls at 24 dB/s and
+// the top LED reached holds for 0.7 s. The player sends each voice's peak; one frame loop draws them all
+const LVM_FLOOR = -36, lvms = [];
+let lvmRaf = 0, lvmT = 0;
+function lvMeter(box) {
+  const m = { box, lit: box.querySelector('b'), pk: box.querySelector('s'), n: 0, in: 0, db: LVM_FLOOR, hold: LVM_FLOOR, ht: 0, shown: -1, held: -1 };
+  // fit a whole number of LEDs and give the top any spare pixels
+  new ResizeObserver(() => {
+    const h = box.clientHeight - 4;
+    m.n = Math.max(0, Math.floor((h + 2) / 5));
+    box.style.setProperty('--lt', (2 + h - (5 * m.n - 2)) + 'px');
+    m.shown = m.held = -1; lvmDraw(m);
+  }).observe(box);
+  lvms.push(m);
+}
+function lvmDraw(m) {
+  const leds = (db) => db <= LVM_FLOOR ? 0 : Math.min(m.n, Math.ceil((db - LVM_FLOOR) / -LVM_FLOOR * m.n));
+  const a = leds(m.db), h = leds(m.hold);
+  if (a !== m.shown) { m.shown = a; m.lit.style.clipPath = `inset(${(m.n - a) * 5}px 0 0 0)`; }
+  if (h !== m.held) {
+    m.held = h;
+    m.pk.style.display = h > a ? 'block' : 'none';
+    if (h) { m.pk.style.bottom = (2 + (h - 1) * 5) + 'px'; m.pk.className = h > m.n * 0.917 ? 'r' : h > m.n * 0.667 ? 'y' : ''; }
+  }
+}
+function lvmFrame(t) {
+  const dt = lvmT ? Math.min(0.1, (t - lvmT) / 1000) : 0; lvmT = t;
+  let live = false;
+  for (const m of lvms) {
+    const db = m.in > 0 ? 20 * Math.log10(m.in) : -99; m.in = 0;
+    m.db = Math.max(db, m.db - 24 * dt, LVM_FLOOR);
+    if (m.db >= m.hold) { m.hold = m.db; m.ht = t; }
+    else if (t - m.ht > 700) m.hold = Math.max(LVM_FLOOR, m.hold - 24 * dt);
+    lvmDraw(m);
+    if (m.db > LVM_FLOOR || m.hold > LVM_FLOOR) live = true;
+  }
+  lvmRaf = live ? requestAnimationFrame(lvmFrame) : 0;
+  if (!live) lvmT = 0;
+}
+function lvmFeed(l) {
+  for (let n = 0; n < lvms.length; n++) lvms[n].in = Math.max(lvms[n].in, l[n]);
+  if (!lvmRaf) lvmRaf = requestAnimationFrame(lvmFrame);
+}
 CH.forEach((name, n) => {
   const vol = PAR.VOL1 + n, pan = PAR.PAN1 + n;
   const el = document.createElement('div'); el.className = 'strip'; el.setAttribute('role', 'group'); el.setAttribute('aria-label', name);
   el.innerHTML = `    <span class="name">${name}</span><span class="sends"></span>
-    <input class="fader" type="range" min="0" max="127" value="${values[vol]}" aria-label="${name} level">
+    <div class="fbox"><input class="fader" type="range" min="0" max="127" value="${values[vol]}" aria-label="${name} level"><span class="lvm" aria-hidden="true"><b></b><s></s></span></div>
     <div class="sfoot"><button class="vr" type="button" title="${name}: a random sound from the built-in kits, varied by 10%" aria-label="New random sound for ${name}">r</button><button class="va" type="button" title="${name}: vary the current sound by 10%" aria-label="Vary ${name} by 10%">a</button></div>
 `;
   const fader = el.querySelector('.fader'), nameEl = el.querySelector('.name');
@@ -5900,6 +5987,7 @@ CH.forEach((name, n) => {
     redraw();
   };
   fxButtons[n]();
+  lvMeter(el.querySelector('.lvm'));
   stripsEl.appendChild(el);
 });
 
@@ -6269,8 +6357,9 @@ const barLeds = document.querySelectorAll('.bars i');
 function markBar(b) { barLeds.forEach((l, i) => l.classList.toggle('lit', b >= 0 && b % barLeds.length === i)); }
 function onEvent(ev) {
   if (ev.type === 'rec' || ev.type === 'recData') return recEvent(ev);
-  if (ev.type !== 'step' || !playing) return;
   const delay = ctx && ctx.outputLatency ? ctx.outputLatency * 1000 : 0;
+  if (ev.type === 'lvl') { if (delay) setTimeout(() => lvmFeed(ev.l), delay); else lvmFeed(ev.l); return; }
+  if (ev.type !== 'step' || !playing) return;
   setTimeout(() => {
     if (!playing) return;
     markStep(ev.step); markBar(ev.bar);
