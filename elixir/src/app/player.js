@@ -124,21 +124,27 @@ class Player {
     }
     this.sched[s] = hits;
   }
-  // schedule() with the snare rush up: the snare takes the hits under the rush amount (all of them at 75), one snare
-  // per step, accented if any hit it took was; above 75 it plays every step, 1, 2, 4 or 8 times (16ths to 128ths)
+  // schedule() with the snare rush up: the snare takes the other drums' hits under (rush/75)^2.5, so it comes in slowly
+  // (all of them at 75), one snare per step, accented if any hit it took was; the kick keeps all its hits throughout.
+  // Above 75 it plays every step, 1, 2, 4 or 8 times (16ths to 128ths), the roll's extra hits swelling from 60% to full
   scheduleRush(s, bar, pg, P, at0, len, hits) {
-    const { on, acc, bar: cond } = P, G = this.groove, R = this.rush, p = Math.min(1, R / 75);
-    let snare = R > 75, sAcc = false;
+    const { on, acc, bar: cond } = P, G = this.groove, R = this.rush, p = Math.pow(Math.min(1, R / 75), 2.5);
+    let snare = R > 75, sAcc = false, orig = false;
     for (let t = 0; t < 7; t++) {
       if (!on[t][s] || !barOk(cond[t][s], bar)) continue;
-      if (t === 3 || rushHash(t, pg, s) < p) { snare = true; sAcc = sAcc || !!acc[t][s]; continue; } // a muted drum is still taken
+      orig = true;
+      if (t === 3 || (t && rushHash(t, pg, s) < p)) { snare = true; sAcc = sAcc || !!acc[t][s]; continue; } // a muted drum is still taken
       if (this.muted[Math.min(t, 5)]) continue;
       this.queue.push({ at: Math.max(0, at0 + G.off[t][s] * len), t, acc: !!acc[t][s] });
       hits.push(t);
     }
     if (snare && !this.muted[3]) {
       const n = R > 93.75 ? 8 : R > 87.5 ? 4 : R > 81.25 ? 2 : 1, at = at0 + G.off[3][s] * len;
-      for (let i = 0; i < n; i++) this.queue.push({ at: Math.max(0, at + i * len / n), t: 3, acc: !i && sAcc });
+      const sw = R > 75 ? 0.6 + 0.4 * (R - 75) / 25 : 1;
+      for (let i = 0; i < n; i++) {
+        const first = !i && orig;
+        this.queue.push({ at: Math.max(0, at + i * len / n), t: 3, acc: first && sAcc, sw: first ? 1 : sw });
+      }
       hits.push(3);
     }
     this.sched[s] = hits;
@@ -190,7 +196,7 @@ class Player {
       const keep = [];
       for (const q of this.queue) {
         // a voice muted after its step was booked is skipped too
-        if (q.at < 64) { if (!this.muted[Math.min(q.t, 5)]) { this.e.trigger(q.t, q.acc ? 127 : this.vel, 60); this.gainTo[Math.min(q.t, 5)] = q.acc ? 1 : this.accGain; } }
+        if (q.at < 64) { if (!this.muted[Math.min(q.t, 5)]) { const sw = q.sw || 1; this.e.trigger(q.t, q.acc ? 127 : Math.max(1, Math.round(this.vel * sw)), 60); this.gainTo[Math.min(q.t, 5)] = q.acc ? 1 : this.accGain * sw; } }
         else { q.at -= 64; keep.push(q); }
       }
       this.queue = keep;
