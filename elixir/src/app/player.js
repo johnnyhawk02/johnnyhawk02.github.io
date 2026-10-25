@@ -39,8 +39,10 @@ class Player {
     this.fxGain = new Float32Array(6); this.fxAmt = new Float32Array(6).fill(1);
     // mixer mute: the sequencer skips a muted voice's steps; pads, MIDI and anything still ringing play on
     this.muted = new Uint8Array(6);
-    // snare rush 0..100: up to 98 the other tracks' hits go to the snare, above 75 a snare roll that doubles in four bands
-    this.rush = 0;
+    // snare rush 0..100: up to 98 the other tracks' hits go to the snare, above 75 a snare roll that doubles in three bands
+    // up to 90, then above 90 a free roll off the grid: a phase that runs at 4 to 8 hits a step and fires a hit at each whole
+    // number, so it speeds up smoothly as the fader moves (rushHead: an accent waiting for the next free hit)
+    this.rush = 0; this.rushPh = null; this.rushHead = null; this.rushGap = 0; this.clock = 0; this.snareAt = -1e9;
     // master: drum 1 ducks the other voices (before the FX bus), then a compressor
     // on the whole mix, the same design as the LXR-02's FX compressor
     this.master = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150, duckFx: false, duckOn: true };
@@ -92,7 +94,7 @@ class Player {
       this.pattern = m.pattern; this.patternOn = m.patternOn !== false; this.bpm = m.bpm;
       if (m.groove) this.groove = m.groove; this.vel = m.vel; this.e.bpm = m.bpm;
       this.accGain = Math.pow(10, -m.accentDb / 20);
-      if (m.playing && !this.playing) { this.step = 0; this.bar = 0; this.toNext = 0; this.queue = []; this.fresh = true; }
+      if (m.playing && !this.playing) { this.rushPh = null; this.rushHead = null; this.step = 0; this.bar = 0; this.toNext = 0; this.queue = []; this.fresh = true; }
       const was = this.playing; this.playing = m.playing;
       // stopping ends a loop or a count-in (a count from stop is not playing yet, so it carries on)
       if (!this.playing) { this.flushBar(); if (this.rec && (this.rec.loop || this.rec.count) && (was || this.rec.count !== 'run')) this.recEnd(); }
@@ -128,7 +130,9 @@ class Player {
   // (all of them from 98), one snare per step, accented if any hit it took was; the kick's off-beat hits go the same way,
   // but its hits on the beat (steps 0, 4, 8, 12) play on below 90; from 90 only the bar's first (step 0) plays, and from 95
   // none do, leaving just the roll.
-  // Above 75 it plays every step, 1, 2, 4 or 8 times (16ths to 128ths), the roll's extra hits swelling from 60% to full
+  // Above 75 it plays every step, 1, 2 or 4 times (16ths to 64ths), the roll's extra hits swelling from 60% to full.
+  // The roll's hits are tagged (roll 2 for a hit on a step the pattern plays, 1 for the rest): above 90 they don't play and
+  // the free roll in _render takes over, the first free hit after a roll-2 hit taking its accent and full level
   scheduleRush(s, bar, pg, P, at0, len, hits) {
     const { on, acc, bar: cond } = P, G = this.groove, R = this.rush, p = Math.pow(Math.min(1, R / 98), 2.5);
     let snare = R > 75, sAcc = false, orig = false;
@@ -143,11 +147,11 @@ class Player {
       hits.push(t);
     }
     if (snare && !this.muted[3]) {
-      const n = R > 93.75 ? 8 : R > 87.5 ? 4 : R > 81.25 ? 2 : 1, at = at0 + G.off[3][s] * len;
+      const n = R > 87.5 ? 4 : R > 81.25 ? 2 : 1, at = at0 + G.off[3][s] * len;
       const sw = R > 75 ? 0.6 + 0.4 * (R - 75) / 25 : 1;
       for (let i = 0; i < n; i++) {
         const first = !i && orig;
-        this.queue.push({ at: Math.max(0, at + i * len / n), t: 3, acc: first && sAcc, sw: first ? 1 : sw });
+        this.queue.push({ at: Math.max(0, at + i * len / n), t: 3, acc: first && sAcc, sw: first ? 1 : sw, roll: R > 75 ? (first ? 2 : 1) : 0 });
       }
       hits.push(3);
     }
@@ -195,16 +199,31 @@ class Player {
       }
       this.toNext -= 64;
     } else if (this.queue.length) this.queue = [];
+    // the free roll above 90: 4 hits a step at 90 up to 8 at 100, tempo-relative, each where the phase crosses a whole number
+    if (this.playing && this.patternOn && this.rush > 90) {
+      const len = LXR.REAL_FS * 60 / this.bpm / 4, rate = 4 * Math.pow(2, (this.rush - 90) / 10), d = rate * 64 / len;
+      // it starts in step with the grid roll it takes over from (the next step starts toNext + 64 samples from this block)
+      if (this.rushPh === null) this.rushPh = (4 * (1 - (this.toNext + 64) / len)) % 1;
+      const sw = 0.6 + 0.4 * (this.rush - 75) / 25;
+      for (let k = Math.floor(this.rushPh) + 1; k <= this.rushPh + d; k++) {
+        const h = this.rushHead; this.rushHead = null;
+        this.queue.push({ at: (k - this.rushPh) / d * 64, t: 3, acc: !!h && h.acc, sw: h ? 1 : sw, free: true });
+      }
+      this.rushPh = (this.rushPh + d) % 1; this.rushGap = len / rate / 2;
+    } else { this.rushPh = null; this.rushHead = null; }
     // hits due in this block
     if (this.queue.length) {
       const keep = [];
       for (const q of this.queue) {
-        // a voice muted after its step was booked is skipped too
-        if (q.at < 64) { if (!this.muted[Math.min(q.t, 5)]) { const sw = q.sw || 1; this.e.trigger(q.t, q.acc ? 127 : Math.max(1, Math.round(this.vel * sw)), 60); this.gainTo[Math.min(q.t, 5)] = q.acc ? 1 : this.accGain * sw; } }
+        // a voice muted after its step was booked is skipped too; above 90 the grid roll gives way to the free one, and
+        // no snare plays within half a free-roll gap of the last
+        if (q.at < 64 && this.rush > 90 && (q.roll || q.free) && (q.roll || this.clock - this.snareAt < this.rushGap)) { if (q.roll === 2) this.rushHead = q; }
+        else if (q.at < 64) { if (q.t === 3) this.snareAt = this.clock; if (!this.muted[Math.min(q.t, 5)]) { const sw = q.sw || 1; this.e.trigger(q.t, q.acc ? 127 : Math.max(1, Math.round(this.vel * sw)), 60); this.gainTo[Math.min(q.t, 5)] = q.acc ? 1 : this.accGain * sw; } }
         else { q.at -= 64; keep.push(q); }
       }
       this.queue = keep;
     }
+    this.clock += 64;
     const out = this.e.renderBlock(), e = this.e;
     const pans = [e.drums[0], e.drums[1], e.drums[2], e.snare, e.cymbal, e.hat];
     const [L, R] = dst;
