@@ -937,7 +937,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
       <p class="note">The master section sits after everything, in two cards, each with a power button: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits (tick fx to duck the echo, distortion and ring mod returns as well, so their tails pump with drum 1), and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the needle meters show how far each is pulling down, in dB.</p>
       <p class="note">The red circle by play opens the recorder: pick free (records until you press stop, up to ten minutes) or a loop of 1 to 16 bars, which starts on the next bar (starting playback from bar 1 if it is stopped) and is cut to exactly that many bars at the tempo, with the echo carried in from before so it loops cleanly. Tick count-in for a bar of beeps first (a high beep then three lower boops, with the music turned down; from bar 1 if stopped), and the take starts on the bar after it. Pressing record closes the recorder; the red circle by play blinks while it waits or counts and pulses while it records. Choose 44.1 or 48 kHz, 16-bit (dithered) or 24-bit, and normalise (peak at −0.3 dB). Each take is listed with a player and a save .wav button; takes are kept until you reload the page.</p>
       <p class="note">The sound knobs on the pattern card are performance macros over all six voices at once: fm depth (the drums' FM amount and the cymbal and hat FM), decay (every amp decay), pitch (every voice's coarse tune, up to two octaves either way) and filter (every filter's cutoff). Each sits in the middle as the kit is; turning it pushes every voice's own value towards the top or the bottom, so the kit's differences stay. They change what the engine plays, not the kit: the sound tab still shows the kit's own values, and double-click sets a macro back to the middle. They are saved with presets.</p>
-      <p class="note">Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of thirty-two grooves in the pattern's style, and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. Rush hands the other drums' hits to the snare as it goes up, slowly at first and more as it rises (from 98% only the snare plays); the kick's downbeats keep going up to 90%, then only the first kick of each bar plays, and from 95% none. Above 75% it also rolls the snare on every step alongside the drums still playing, doubling to 32nds and then 64ths at 87.5%; above 90% the roll comes off the grid and speeds up smoothly as the dial moves, from 64ths at 90% to 128ths at 100%, the roll swelling louder as it rises; it isn't saved with presets. The arrows by the pattern card's title switch the style: electro (the original five grooves plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), techno (four on the floor, off-beat open hats, snare builds), broken beat (syncopated kicks under a snare on 2 and 4, fills in threes), IDM (lopsided kicks, hats in threes, a second bar that answers the first, stutter fills), breakcore (chopped amen breaks, ghost snares, stuttering snare rolls, a second bar that re-cuts the first) and user (patterns you save from the steps tab with Save as user; beat picks one, energy thins it out, fills adds electro fills; Save over and Delete change the one beat has picked). Presets save the style, and a preset in user style carries its pattern with it. Off on the pattern card's switch turns the patterns off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge).</p>
+      <p class="note">Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of thirty-two grooves in the pattern's style, and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. Rush hands the other drums' hits to the snare as it goes up, slowly at first and more as it rises (from 98% only the snare plays); the kick's downbeats keep going up to 90%, then only the first kick of each bar plays, and from 95% none. Above 75% it also rolls the snare on every step alongside the drums still playing, doubling to 32nds at 81.25%; above 90% the roll comes off the grid and speeds up smoothly as the dial moves, gliding from 32nds at 90% to 128ths at 100%, the roll swelling louder as it rises; it isn't saved with presets. The arrows by the pattern card's title switch the style: electro (the original five grooves plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), techno (four on the floor, off-beat open hats, snare builds), broken beat (syncopated kicks under a snare on 2 and 4, fills in threes), IDM (lopsided kicks, hats in threes, a second bar that answers the first, stutter fills), breakcore (chopped amen breaks, ghost snares, stuttering snare rolls, a second bar that re-cuts the first) and user (patterns you save from the steps tab with Save as user; beat picks one, energy thins it out, fills adds electro fills; Save over and Delete change the one beat has picked). Presets save the style, and a preset in user style carries its pattern with it. Off on the pattern card's switch turns the patterns off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge).</p>
       <p class="note">The steps tab has its own grid of up to eight pages (bars) of 16 steps, played in turn: the page buttons pick the page to edit (one past the length adds pages, copied from the last), length sets how many play, and expand to 2, 4 or 8 bakes the trig conditions into that many pages, each step landing on the bars its condition plays, with the conditions cleared. User patterns and presets keep all the pages. The grid is separate from the perform tab's generated pattern. The perform / steps / off switch (on the pattern card and on the steps tab) picks which one plays, or neither: off hands the voices to MIDI in. Grab from perform copies the perform tab's pattern into the grid (only when pressed). Presets save both patterns and the switch.</p>
       <p class="note">Drag a slider up or down, click along it, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit.</p>
       <p class="note">Randomise (sound tab) varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. In the mixer, r by each name gives that voice a random sound from the bundled kits, varied by 10%, and a varies the voice's current sound by 10%; undo takes either back. The randomise card on the perform tab: kit gives each of the six drum voices a sound straight from a random bundled kit, and alter makes small variations of the current drum sounds (5%, so each stays recognisable); both leave the mixer, FX, crossfeed and pattern alone. Press R to randomise the selected voice; Shift-R randomises every voice at once, up to the depth. Everything builds a fresh sound from voices of the bundled kits (Hrtl's LXR-02 kits and twelve generated ones, which aren't listed as presets), varies each by 10%, and rolls new crossfeed, delay time, echo feedback (usually low, now and then high), beat, energy and fills, keeping the mixer levels; save keeps it.</p>
@@ -4537,10 +4537,11 @@ class Player {
     this.fxGain = new Float32Array(6); this.fxAmt = new Float32Array(6).fill(1);
     // mixer mute: the sequencer skips a muted voice's steps; pads, MIDI and anything still ringing play on
     this.muted = new Uint8Array(6);
-    // snare rush 0..100: up to 98 the other tracks' hits go to the snare, above 75 a snare roll that doubles in three bands
-    // up to 90, then above 90 a free roll off the grid: a phase that runs at 4 to 8 hits a step and fires a hit at each whole
-    // number, so it speeds up smoothly as the fader moves (rushHead: an accent waiting for the next free hit)
-    this.rush = 0; this.rushPh = null; this.rushHead = null; this.rushGap = 0; this.clock = 0; this.snareAt = -1e9;
+    // snare rush 0..100: up to 98 the other tracks' hits go to the snare, above 75 a snare roll that doubles in two bands
+    // up to 90, then above 90 a free roll off the grid: a phase that runs at 2 to 8 hits a step and fires a hit at each whole
+    // number, so it speeds up smoothly as the fader moves (rushHead: an accent waiting for the next free hit; rushLog: the
+    // roll's rate in log2 hits a step, gliding toward the fader's so a move never steps)
+    this.rush = 0; this.rushPh = null; this.rushLog = 1; this.rushHead = null; this.rushGap = 0; this.clock = 0; this.snareAt = -1e9;
     // master: drum 1 ducks the other voices (before the FX bus), then a compressor
     // on the whole mix, the same design as the LXR-02's FX compressor
     this.master = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150, duckFx: false, duckOn: true };
@@ -4628,7 +4629,7 @@ class Player {
   // (all of them from 98), one snare per step, accented if any hit it took was; the kick's off-beat hits go the same way,
   // but its hits on the beat (steps 0, 4, 8, 12) play on below 90; from 90 only the bar's first (step 0) plays, and from 95
   // none do, leaving just the roll.
-  // Above 75 it plays every step, 1, 2 or 4 times (16ths to 64ths), the roll's extra hits swelling from 60% to full.
+  // Above 75 it plays every step, once or twice (16ths, then 32nds above 81.25), the roll's extra hits swelling from 60% to full.
   // The roll's hits are tagged (roll 2 for a hit on a step the pattern plays, 1 for the rest): above 90 they don't play and
   // the free roll in _render takes over, the first free hit after a roll-2 hit taking its accent and full level
   scheduleRush(s, bar, pg, P, at0, len, hits) {
@@ -4645,7 +4646,7 @@ class Player {
       hits.push(t);
     }
     if (snare && !this.muted[3]) {
-      const n = R > 87.5 ? 4 : R > 81.25 ? 2 : 1, at = at0 + G.off[3][s] * len;
+      const n = R > 81.25 ? 2 : 1, at = at0 + G.off[3][s] * len;
       const sw = R > 75 ? 0.6 + 0.4 * (R - 75) / 25 : 1;
       for (let i = 0; i < n; i++) {
         const first = !i && orig;
@@ -4697,11 +4698,14 @@ class Player {
       }
       this.toNext -= 64;
     } else if (this.queue.length) this.queue = [];
-    // the free roll above 90: 4 hits a step at 90 up to 8 at 100, tempo-relative, each where the phase crosses a whole number
+    // the free roll above 90: 2 hits a step (32nds) at 90 up to 8 (128ths) at 100, tempo-relative, each where the phase
+    // crosses a whole number; the rate glides toward the fader's in log2 with a 150 ms time constant
     if (this.playing && this.patternOn && this.rush > 90) {
-      const len = LXR.REAL_FS * 60 / this.bpm / 4, rate = 4 * Math.pow(2, (this.rush - 90) / 10), d = rate * 64 / len;
-      // it starts in step with the grid roll it takes over from (the next step starts toNext + 64 samples from this block)
-      if (this.rushPh === null) this.rushPh = (4 * (1 - (this.toNext + 64) / len)) % 1;
+      const len = LXR.REAL_FS * 60 / this.bpm / 4, target = 1 + (this.rush - 90) / 5;
+      // it starts in step with the 32nd roll it takes over from (the next step starts toNext + 64 samples from this block)
+      if (this.rushPh === null) { this.rushLog = target; this.rushPh = (2 * (1 - (this.toNext + 64) / len)) % 1; }
+      else this.rushLog += (target - this.rushLog) * (1 - Math.exp(-64 / (0.15 * LXR.REAL_FS)));
+      const rate = Math.pow(2, this.rushLog), d = rate * 64 / len;
       const sw = 0.6 + 0.4 * (this.rush - 75) / 25;
       for (let k = Math.floor(this.rushPh) + 1; k <= this.rushPh + d; k++) {
         const h = this.rushHead; this.rushHead = null;
@@ -4997,7 +5001,7 @@ function perfText(k) {
   if (k === 'tempo') return `${v} bpm`;
   if (k === 'vel') return `${v} / 127`;
   if (k === 'accent') return `+${v} dB`;
-  if (k === 'rush') return v ? `${v}%` : 'off';
+  if (k === 'rush') return v ? `${Math.round(v)}%` : 'off';
   if (k === 'groove') return GROOVE_TYPES[v].name;
   return `${v}%`;
 }
@@ -6781,7 +6785,8 @@ function drawPc4() {
 function pc4Midi(cc, val) {
   if (cc < 1 || cc > 24) return;
   const c = pc4Ctrl(pc4Map[cc - 1]);
-  if (c) { const [lo, hi] = pc4Range(c); pc4Write(c, Math.round(lo + (hi - lo) * val / 127)); }
+  // rush goes through unrounded, so the free roll's rate follows the knob's full resolution
+  if (c) { const [lo, hi] = pc4Range(c), v = lo + (hi - lo) * val / 127; pc4Write(c, c.perf === 'rush' ? v : Math.round(v)); }
   pc4Point(cc);
   const el = pc4Knobs[cc - 1];
   el.classList.add('hit'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('hit'), 120);

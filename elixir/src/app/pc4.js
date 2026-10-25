@@ -80,7 +80,8 @@ function drawPc4() {
 function pc4Midi(cc, val) {
   if (cc < 1 || cc > 24) return;
   const c = pc4Ctrl(pc4Map[cc - 1]);
-  if (c) { const [lo, hi] = pc4Range(c); pc4Write(c, Math.round(lo + (hi - lo) * val / 127)); }
+  // rush goes through unrounded, so the free roll's rate follows the knob's full resolution
+  if (c) { const [lo, hi] = pc4Range(c), v = lo + (hi - lo) * val / 127; pc4Write(c, c.perf === 'rush' ? v : Math.round(v)); }
   pc4Point(cc);
   const el = pc4Knobs[cc - 1];
   el.classList.add('hit'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('hit'), 120);

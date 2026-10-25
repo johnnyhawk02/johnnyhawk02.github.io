@@ -39,10 +39,11 @@ class Player {
     this.fxGain = new Float32Array(6); this.fxAmt = new Float32Array(6).fill(1);
     // mixer mute: the sequencer skips a muted voice's steps; pads, MIDI and anything still ringing play on
     this.muted = new Uint8Array(6);
-    // snare rush 0..100: up to 98 the other tracks' hits go to the snare, above 75 a snare roll that doubles in three bands
-    // up to 90, then above 90 a free roll off the grid: a phase that runs at 4 to 8 hits a step and fires a hit at each whole
-    // number, so it speeds up smoothly as the fader moves (rushHead: an accent waiting for the next free hit)
-    this.rush = 0; this.rushPh = null; this.rushHead = null; this.rushGap = 0; this.clock = 0; this.snareAt = -1e9;
+    // snare rush 0..100: up to 98 the other tracks' hits go to the snare, above 75 a snare roll that doubles in two bands
+    // up to 90, then above 90 a free roll off the grid: a phase that runs at 2 to 8 hits a step and fires a hit at each whole
+    // number, so it speeds up smoothly as the fader moves (rushHead: an accent waiting for the next free hit; rushLog: the
+    // roll's rate in log2 hits a step, gliding toward the fader's so a move never steps)
+    this.rush = 0; this.rushPh = null; this.rushLog = 1; this.rushHead = null; this.rushGap = 0; this.clock = 0; this.snareAt = -1e9;
     // master: drum 1 ducks the other voices (before the FX bus), then a compressor
     // on the whole mix, the same design as the LXR-02's FX compressor
     this.master = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150, duckFx: false, duckOn: true };
@@ -130,7 +131,7 @@ class Player {
   // (all of them from 98), one snare per step, accented if any hit it took was; the kick's off-beat hits go the same way,
   // but its hits on the beat (steps 0, 4, 8, 12) play on below 90; from 90 only the bar's first (step 0) plays, and from 95
   // none do, leaving just the roll.
-  // Above 75 it plays every step, 1, 2 or 4 times (16ths to 64ths), the roll's extra hits swelling from 60% to full.
+  // Above 75 it plays every step, once or twice (16ths, then 32nds above 81.25), the roll's extra hits swelling from 60% to full.
   // The roll's hits are tagged (roll 2 for a hit on a step the pattern plays, 1 for the rest): above 90 they don't play and
   // the free roll in _render takes over, the first free hit after a roll-2 hit taking its accent and full level
   scheduleRush(s, bar, pg, P, at0, len, hits) {
@@ -147,7 +148,7 @@ class Player {
       hits.push(t);
     }
     if (snare && !this.muted[3]) {
-      const n = R > 87.5 ? 4 : R > 81.25 ? 2 : 1, at = at0 + G.off[3][s] * len;
+      const n = R > 81.25 ? 2 : 1, at = at0 + G.off[3][s] * len;
       const sw = R > 75 ? 0.6 + 0.4 * (R - 75) / 25 : 1;
       for (let i = 0; i < n; i++) {
         const first = !i && orig;
@@ -199,11 +200,14 @@ class Player {
       }
       this.toNext -= 64;
     } else if (this.queue.length) this.queue = [];
-    // the free roll above 90: 4 hits a step at 90 up to 8 at 100, tempo-relative, each where the phase crosses a whole number
+    // the free roll above 90: 2 hits a step (32nds) at 90 up to 8 (128ths) at 100, tempo-relative, each where the phase
+    // crosses a whole number; the rate glides toward the fader's in log2 with a 150 ms time constant
     if (this.playing && this.patternOn && this.rush > 90) {
-      const len = LXR.REAL_FS * 60 / this.bpm / 4, rate = 4 * Math.pow(2, (this.rush - 90) / 10), d = rate * 64 / len;
-      // it starts in step with the grid roll it takes over from (the next step starts toNext + 64 samples from this block)
-      if (this.rushPh === null) this.rushPh = (4 * (1 - (this.toNext + 64) / len)) % 1;
+      const len = LXR.REAL_FS * 60 / this.bpm / 4, target = 1 + (this.rush - 90) / 5;
+      // it starts in step with the 32nd roll it takes over from (the next step starts toNext + 64 samples from this block)
+      if (this.rushPh === null) { this.rushLog = target; this.rushPh = (2 * (1 - (this.toNext + 64) / len)) % 1; }
+      else this.rushLog += (target - this.rushLog) * (1 - Math.exp(-64 / (0.15 * LXR.REAL_FS)));
+      const rate = Math.pow(2, this.rushLog), d = rate * 64 / len;
       const sw = 0.6 + 0.4 * (this.rush - 75) / 25;
       for (let k = Math.floor(this.rushPh) + 1; k <= this.rushPh + d; k++) {
         const h = this.rushHead; this.rushHead = null;

@@ -33,7 +33,7 @@ function perfText(k) {
   if (k === 'tempo') return `${v} bpm`;
   if (k === 'vel') return `${v} / 127`;
   if (k === 'accent') return `+${v} dB`;
-  if (k === 'rush') return v ? `${v}%` : 'off';
+  if (k === 'rush') return v ? `${Math.round(v)}%` : 'off';
   if (k === 'groove') return GROOVE_TYPES[v].name;
   return `${v}%`;
 }
