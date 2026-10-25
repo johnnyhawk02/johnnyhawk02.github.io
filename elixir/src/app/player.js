@@ -125,7 +125,8 @@ class Player {
     this.sched[s] = hits;
   }
   // schedule() with the snare rush up: the snare takes the other drums' hits under (rush/75)^2.5, so it comes in slowly
-  // (all of them at 75), one snare per step, accented if any hit it took was; the kick keeps all its hits throughout.
+  // (all of them at 75), one snare per step, accented if any hit it took was; the kick's off-beat hits go the same way,
+  // but its hits on the beat (steps 0, 4, 8, 12) play on up to 90 and drop out above it, leaving just the roll.
   // Above 75 it plays every step, 1, 2, 4 or 8 times (16ths to 128ths), the roll's extra hits swelling from 60% to full
   scheduleRush(s, bar, pg, P, at0, len, hits) {
     const { on, acc, bar: cond } = P, G = this.groove, R = this.rush, p = Math.pow(Math.min(1, R / 75), 2.5);
@@ -133,7 +134,9 @@ class Player {
     for (let t = 0; t < 7; t++) {
       if (!on[t][s] || !barOk(cond[t][s], bar)) continue;
       orig = true;
-      if (t === 3 || (t && rushHash(t, pg, s) < p)) { snare = true; sAcc = sAcc || !!acc[t][s]; continue; } // a muted drum is still taken
+      const down = !t && !(s & 3);
+      if (down && R > 90) continue; // the roll covers the step
+      if (t === 3 || (!down && rushHash(t, pg, s) < p)) { snare = true; sAcc = sAcc || !!acc[t][s]; continue; } // a muted drum is still taken
       if (this.muted[Math.min(t, 5)]) continue;
       this.queue.push({ at: Math.max(0, at0 + G.off[t][s] * len), t, acc: !!acc[t][s] });
       hits.push(t);
