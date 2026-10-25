@@ -30,8 +30,9 @@ class Player {
     // accent: unaccented sequencer hits are turned down by the accent amount, after the engine
     this.gain = new Float32Array(6).fill(1); this.gainTo = new Float32Array(6).fill(1);
     this.fxGain = new Float32Array(6); this.fxAmt = new Float32Array(6).fill(1);
-    // mixer mute: audible is 0 for a muted voice; mg ramps each voice to silence (or back) over a block, so it doesn't click
-    this.audible = new Float32Array(6).fill(1); this.mg = new Float32Array(6).fill(1);
+    // mixer mute: a muted voice isn't triggered at all (sequencer, pads or MIDI); what it was still sounding fades out
+    // over about 6 ms (mg), and after unmuting it stays silent until the voice's next hit
+    this.muted = new Uint8Array(6); this.audible = new Float32Array(6).fill(1); this.mg = new Float32Array(6).fill(1);
     // master: drum 1 ducks the other voices (before the FX bus), then a compressor
     // on the whole mix, the same design as the LXR-02's FX compressor
     this.master = { comp: true, thresh: -12, ratio: 3, attack: 5, release: 120, makeup: 0, duck: 0.4, duckRelease: 150, duckFx: false, duckOn: true };
@@ -54,8 +55,8 @@ class Player {
   msg(m) {
     if (m.type === 'param') this.e.setParam(m.par, m.value);
     else if (m.type === 'kit') this.e.loadKit(m.values);
-    else if (m.type === 'trig') { this.e.trigger(m.voice, m.vel, 60); this.gainTo[Math.min(m.voice, 5)] = 1; }
-    else if (m.type === 'mute') { m.muted.forEach((v, n) => { this.audible[n] = v ? 0 : 1; }); if (!this.playing) this.mg.set(this.audible); }
+    else if (m.type === 'trig') this.hit(m.voice, m.vel, 1);
+    else if (m.type === 'mute') m.muted.forEach((v, n) => { this.muted[n] = v ? 1 : 0; if (v) this.audible[n] = 0; });
     else if (m.type === 'xmod') this.e.setCrossMod(m.amt, m.target);
     else if (m.type === 'delay') this.delayPos = m.pos;
     else if (m.type === 'atBar') { if (this.playing) this.atBar.push(m.m); else this.msg(m.m); }
@@ -105,12 +106,19 @@ class Player {
     const P = this.pattern.pages ? this.pattern.pages[bar % this.pattern.pages.length] : this.pattern; // pages: one bar each, in turn
     const hits = [], { on, acc, bar: cond } = P, G = this.groove, len = LXR.REAL_FS * 60 / this.bpm / 4;
     for (let t = 0; t < 7 && this.patternOn; t++) {
-      if (!on[t][s] || !barOk(cond[t][s], bar)) continue;
+      if (!on[t][s] || !barOk(cond[t][s], bar) || this.muted[Math.min(t, 5)]) continue;
       const off = G.off[t][s];
       this.queue.push({ at: Math.max(0, at0 + off * len), t, acc: !!acc[t][s] });
       hits.push(t);
     }
     this.sched[s] = hits;
+  }
+  // trigger track t (6 = open hat, on voice 5) unless its voice is muted
+  hit(t, vel, g) {
+    const v = Math.min(t, 5);
+    if (this.muted[v]) return;
+    this.e.trigger(t, vel, 60); this.gainTo[v] = g;
+    if (!this.audible[v]) { this.audible[v] = 1; this.mg[v] = 1; }
   }
   clickAt(hi) { this.clk = { n: 0, ph: 0, w: 2 * Math.PI * (hi ? 1760 : 880) / LXR.REAL_FS }; }
   _render(dst) {
@@ -158,7 +166,7 @@ class Player {
     if (this.queue.length) {
       const keep = [];
       for (const q of this.queue) {
-        if (q.at < 64) { this.e.trigger(q.t, q.acc ? 127 : this.vel, 60); this.gainTo[Math.min(q.t, 5)] = q.acc ? 1 : this.accGain; }
+        if (q.at < 64) this.hit(q.t, q.acc ? 127 : this.vel, q.acc ? 1 : this.accGain);
         else { q.at -= 64; keep.push(q); }
       }
       this.queue = keep;
@@ -174,14 +182,15 @@ class Player {
     e.fx.setDelaySync(isDelay ? delaySamples(this.delayPos, this.bpm) : null);
     let pk = 0;
     for (let i = 0; i < 64; i++) pk = Math.max(pk, Math.abs(k[i]));
-    pk = pk / 32768 * this.gainTo[0] * this.audible[0];
+    pk = pk / 32768 * this.gainTo[0] * this.mg[0];
     this.duckEnv = Math.max(pk, this.duckEnv * Math.exp(-64000 / (M.duckRelease * LXR.REAL_FS)));
     const duck0 = this.duckAt, duck1 = 1 - (M.duckOn ? M.duck : 0) * Math.min(1, this.duckEnv / 0.3);
     this.duckAt = duck1; this.duckMin = Math.min(this.duckMin, duck1);
     for (let n = 0; n < 6; n++) {
       // accent gain, ramped over the block, and the duck on every voice but drum 1
       const d0 = n ? duck0 : 1, d1 = n ? duck1 : 1;
-      const g0 = this.gain[n] * d0 * this.mg[n], g1 = this.gainTo[n] * d1 * this.audible[n], dg = (g1 - g0) / 64;
+      const m1 = this.audible[n] || Math.max(0, this.mg[n] - 0.25);
+      const g0 = this.gain[n] * d0 * this.mg[n], g1 = this.gainTo[n] * d1 * m1, dg = (g1 - g0) / 64;
       // every voice reaches the outputs; one routed to the echo bus also feeds it at its send
       const fa = e.audioRouting[n] === LXR.MIXER_ROUTING_FX_BUS ? this.fxAmt[n] : 0;
       const pl = pans[n].triggeredPanL / 32768, pr = pans[n].triggeredPanR / 32768;
@@ -190,7 +199,7 @@ class Player {
       for (let i = 0; i < 64; i++) { const v = o[i] * (g0 + dg * i); L[i] += v * pl; R[i] += v * pr; const a = v < 0 ? -v : v; if (a > lv) lv = a; }
       lv *= Math.max(pl, pr); if (lv > this.lvl[n]) this.lvl[n] = lv;
       this.fxGain[n] = g1 * fa;
-      this.gain[n] = this.gainTo[n]; this.mg[n] = this.audible[n];
+      this.gain[n] = this.gainTo[n]; this.mg[n] = m1;
     }
     if (++this.lvlN >= 16) {
       this.lvlN = 0;
@@ -208,7 +217,7 @@ class Player {
       const bi = this.busIn; bi.fill(0);
       let any = false;
       for (let n = 0; n < 6; n++) {
-        const g = sends[n] * this.gainTo[n] * this.audible[n] * (n ? duck1 : 1);
+        const g = sends[n] * this.gainTo[n] * this.mg[n] * (n ? duck1 : 1);
         if (!g) continue;
         any = true;
         const o = out[n], pl = pans[n].triggeredPanL * g, pr = pans[n].triggeredPanR * g;

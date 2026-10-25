@@ -133,7 +133,7 @@ CH.forEach((name, n) => {
   const dd = miniDial('dist', `${name} distortion send`, () => mix.dist[n], (v) => { mix.dist[n] = v; sendMix(); }, 0);
   const rd = miniDial('ring', `${name} ring mod send`, () => mix.ring[n], (v) => { mix.ring[n] = v; sendMix(); }, 0);
   sends.append(panD.el, fxd.el, dd.el, rd.el);
-  // mute: silent in the player (dry, sends and meter), not saved
+  // mute: the player stops triggering this voice and fades out what's ringing; not saved
   const muteB = el.querySelector('.mute');
   muteB.addEventListener('click', () => {
     muted[n] = !muted[n]; muteB.setAttribute('aria-pressed', muted[n]); el.classList.toggle('muted', muted[n]);

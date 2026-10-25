@@ -581,7 +581,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .master-card .vu { display: grid; grid-template-rows: auto minmax(0, 1fr); justify-items: center; align-items: center; gap: 4px; padding: 0; min-height: 0;
   border-left: 1px solid var(--line); padding-left: 14px; margin-left: -14px; width: calc(100% + 14px); }
 .master-card .vu svg { width: 100%; height: auto; max-height: 100%; margin: 0; }
-.master-card.off .knob, .master-card.off .vu { opacity: .45; }
+.master-card.off .knob, .master-card.off .vu, .master-card.off .mchk { opacity: .45; }
+.master-card.off .mchk { cursor: default; }
 .master-card, .fx-card { --kw: 58px; }
 /* randomise: five buttons in a row, depth and wild under them */
 .tab-perform .rand-card .rand-opts { gap: 14px; }
