@@ -772,6 +772,31 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-perform .rand-card .rand { gap: 6px; }
   .tab-perform .rand-card .rbtns .btn { padding: 4px 6px; font-size: .84rem; }
 }
+/* pattern and sound sit side by side in their own cards; the pattern card's title is its style, between two arrows */
+.tab-perform > .bay-a { grid-column: 1; grid-row: auto; display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 12px; min-width: 0; min-height: 0; }
+.tab-perform .perform { grid-template-columns: 4fr 3fr; grid-template-rows: minmax(0, 1fr); }
+.tab-perform #pk-pattern, .tab-perform #pk-feel, .tab-perform .perform > :first-child { grid-row: 1; }
+.tab-perform .sound-card #pk-macro { grid-column: 1; grid-row: 2; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 0; padding: 0; margin: 0; min-height: 0; }
+.tab-perform .pattern-card .pc-head, .tab-perform .sound-card > h2 { min-height: 24px; }
+.tab-perform .sound-card > h2 { display: flex; align-items: center; }
+.style-pick { display: inline-flex; align-items: center; gap: 2px; margin-left: -5px; }
+.style-pick h2 { min-width: 9.4em; text-align: center; white-space: nowrap; }
+.sarrow { width: 20px; height: 20px; padding: 0; border: 0; border-radius: 5px; background: none; color: var(--muted); cursor: pointer;
+  font-family: var(--display); font-weight: 600; font-size: .95rem; line-height: 1; }
+.sarrow:hover { background: var(--tint-2); color: var(--ink); }
+.sarrow:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.pattern-card.midi .sarrow { visibility: hidden; }
+/* pattern off: the MIDI note map on the left, the tempo fader beside it */
+.tab-perform .pattern-card.midi { grid-template-columns: minmax(0, 1fr) 64px; grid-template-rows: auto minmax(0, 1fr); column-gap: 8px; }
+.tab-perform .pattern-card.midi .pc-head { grid-column: 1 / -1; }
+.tab-perform .pattern-card.midi .midi-info { gap: 2px; min-height: 0; overflow: hidden; font-size: .78rem; }
+.tab-perform .pattern-card.midi .midi-map { gap: 0 10px; line-height: 1.35; font-size: .76rem; }
+.tab-perform .pattern-card.midi .perform, .tab-perform .pattern-card.midi #pk-pattern { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 760px) {
+  .tab-perform > .bay-a { grid-template-columns: minmax(0, 1fr); }
+  .tab-perform .perform { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  .tab-perform #pk-pattern, .tab-perform #pk-feel, .tab-perform .perform > :first-child { grid-row: auto; }
+}
 </style>
 
 <div class="wrap">
@@ -800,8 +825,9 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   </nav>
 
   <section class="panel rack tab-perform" data-panel="perform" role="tabpanel" aria-label="Perform">
+    <div class="bay-a">
     <div class="card pattern-card">
-    <div class="pc-head"><h2>pattern</h2><button class="switch" id="pattern-on" type="button" role="switch" aria-checked="true" aria-label="Pattern on"><span>on</span><span>off</span></button></div>
+    <div class="pc-head"><span class="style-pick"><button class="sarrow" id="style-prev" type="button" aria-label="Previous pattern style">‹</button><h2 id="style-name" aria-live="polite">electro</h2><button class="sarrow" id="style-next" type="button" aria-label="Next pattern style">›</button></span><button class="switch" id="pattern-on" type="button" role="switch" aria-checked="true" aria-label="Pattern on"><span>on</span><span>off</span></button></div>
     <div class="midi-info" id="midi-info" hidden>
       <p class="midi-status" id="midi-status">MIDI in</p>
       <p class="hint">Any channel, General MIDI drum notes; velocity sets the level.</p>
@@ -813,7 +839,6 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <div class="perform" id="perform">
       <div class="pknobs" id="pk-pattern"></div>
       <div class="pknobs" id="pk-feel"></div>
-      <h3 class="pgh">sound</h3><div class="pknobs macro" id="pk-macro" role="group" aria-label="Sound macros"></div>
       <div hidden>
         <input id="energy" type="range" min="0" max="100" value="60" aria-hidden="true" tabindex="-1"><output id="energy-out"></output>
         <input id="beat" type="range" min="0" max="15" step="1" value="0" aria-hidden="true" tabindex="-1"><output id="beat-out"></output>
@@ -823,6 +848,11 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
         <input id="swing-p" type="range" min="50" max="75" value="50" aria-hidden="true" tabindex="-1"><output id="swing-p-out"></output>
         <div class="mini" id="mini" aria-hidden="true"></div>
       </div>
+    </div>
+    </div>
+    <div class="card sound-card" role="group" aria-label="Sound macros">
+      <h2>sound</h2>
+      <div class="pknobs macro" id="pk-macro"></div>
     </div>
     </div>
     <div class="card fx-card" role="group" aria-label="Effects">
@@ -929,7 +959,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
       <p class="note">The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits (tick fx to duck the echo, distortion and ring mod returns as well, so their tails pump with drum 1), and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the needle meters show how far each is pulling down, in dB.</p>
       <p class="note">The red circle by play opens the recorder: pick free (records until you press stop, up to ten minutes) or a loop of 1 to 16 bars, which starts on the next bar (starting playback from bar 1 if it is stopped) and is cut to exactly that many bars at the tempo, with the echo carried in from before so it loops cleanly. Tick count-in for a bar of beeps first (a high beep then three lower boops, with the music turned down; from bar 1 if stopped), and the take starts on the bar after it. Pressing record closes the recorder; the red circle by play blinks while it waits or counts and pulses while it records. Choose 44.1 or 48 kHz, 16-bit (dithered) or 24-bit, and normalise (peak at −0.3 dB). Each take is listed with a player and a save .wav button; takes are kept until you reload the page.</p>
       <p class="note">The sound knobs on the pattern card are performance macros over all six voices at once: fm depth (the drums' FM amount and the cymbal and hat FM), decay (every amp decay), pitch (every voice's coarse tune, up to two octaves either way) and filter (every filter's cutoff). Each sits in the middle as the kit is; turning it pushes every voice's own value towards the top or the bottom, so the kit's differences stay. They change what the engine plays, not the kit: the sound tab still shows the kit's own values, and double-click sets a macro back to the middle. They are saved with presets.</p>
-      <p class="note">Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The switch on the pattern card turns the pattern off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge).</p>
+      <p class="note">Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen grooves in the pattern's style, and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The arrows by the pattern card's title switch the style: electro (the original five grooves plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), techno (four on the floor, off-beat open hats, snare builds), broken beat (syncopated kicks under a snare on 2 and 4, fills in threes) and IDM (lopsided kicks, hats in threes, a second bar that answers the first, stutter fills). Presets save the style. The switch on the pattern card turns the pattern off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge).</p>
       <p class="note">The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials.</p>
       <p class="note">Drag a slider up or down, click along it, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit.</p>
       <p class="note">Randomise (sound tab) varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. In the mixer, r by each name gives that voice a random sound from the bundled kits, varied by 10%, and a varies the voice's current sound by 10%; undo takes either back. The randomise card on the perform tab: kit gives each of the six drum voices a sound straight from a random bundled kit, and alter makes small variations of the current drum sounds (5%, so each stays recognisable); both leave the mixer, FX, crossfeed and pattern alone. Press R to randomise the selected voice; Shift-R randomises every voice at once, up to the depth. Everything builds a fresh sound from voices of the bundled kits (Hrtl's LXR-02 kits and twelve generated ones, which aren't listed as presets), varies each by 10%, and rolls new crossfeed, delay time, echo feedback (usually low, now and then high), beat, energy and fills, keeping the mixer levels; save keeps it.</p>
@@ -2015,12 +2045,13 @@ function setDirty(d) {
 }
 function songSnapshot() {
   const copy = (a) => a.map((r) => r.slice());
-  return { energy: Number($('energy').value), beat: Number($('beat').value), fills: Number($('fills').value),
+  return { style: STYLES[styleIdx].name, energy: Number($('energy').value), beat: Number($('beat').value), fills: Number($('fills').value),
     tempo: Number($('tempo').value), vel: Number($('level').value), accent: Number($('accent').value), view, patternOn, groove: structuredClone(groove), macro: { ...macro },
     pattern: { on: copy(pattern.on), acc: copy(pattern.acc), bar: copy(pattern.bar) },
     master: { ...master }, mute: mix.mute.slice(), solo: mix.solo.slice() };
 }
 function useSong(g) {
+  setStyle(styleIndex(g.style));
   for (const id of ['energy', 'beat', 'fills', 'tempo']) { $(id).value = g[id]; $(id).dispatchEvent(new Event('sync')); }
   $('level').value = g.vel; $('accent').value = Math.min(6, g.accent);
   for (const id of ['level', 'accent']) $(id).dispatchEvent(new Event('sync'));
@@ -2073,7 +2104,7 @@ $('new-kit').addEventListener('click', async () => {
   send({ type: 'kit', values: effValues() });
   buildKnobs(); drawScope();
   randomiseX();
-  $('beat').value = Math.floor(rnd() * GROOVES.length); $('energy').value = 45 + Math.floor(rnd() * 46); $('fills').value = Math.floor(rnd() * 101);
+  $('beat').value = Math.floor(rnd() * STYLES[styleIdx].grooves.length); $('energy').value = 45 + Math.floor(rnd() * 46); $('fills').value = Math.floor(rnd() * 101);
   for (const id of ['beat', 'energy', 'fills']) $(id).dispatchEvent(new Event('sync'));
   if (view === 'steps') setTab('perform'); else generate();
   setDirty(true);
@@ -2356,10 +2387,11 @@ $('kit-file').addEventListener('change', async (e) => {
   // an opened kit replaces the sound (pattern and the rest stay); save makes it a preset
   if (last) { pm.close(); useKit(last); setDirty(true); kitNote(`opened ${last.name}`); }
 });
-// ---- perform: electro patterns from three sliders ----
+// ---- perform: patterns from three sliders, in four styles (electro, techno, broken beat, IDM) ----
 // Each groove gives every step of every track an energy level 1..9 at which it comes in
 // ('.' = never). Energy 0 is empty; level 1 is the kick/snare skeleton, level 9 the full kit.
 // Tracks: kick (drum 1), low tom (drum 2), high tom (drum 3), snare, cymbal, closed hat, open hat.
+// An optional `alt` holds extra hits that play only on every second bar. Every style has sixteen grooves.
 const GROOVES = [
   { name: 'Planet', k: '1.....2...1..4..', lo: '.......6.....7..', hi: '...7......8....6', s: '....1.......1..6', cy: '8...............', ch: '3737373737373737', oh: '..............5.' },
   { name: 'Breaker', k: '1.3.......1.5...', lo: '...........7..6.', hi: '.....7........7.', s: '....1..7.6..1...', cy: '8...............', ch: '2626262626262626', oh: '......4.......5.' },
@@ -2380,6 +2412,118 @@ const GROOVES = [
   { name: 'Pack jam', k: '1..1..1...1..3..', lo: '..........7..7..', hi: '..6.....6.......', s: '....1.......1.6.', cy: '8...............', ch: '2626262626262626', oh: '......4.........' },
   { name: 'Sharevari', k: '1...1..31...1...', lo: '..........6.....', hi: '..6.............', s: '....1.......1...', cy: '8...............', ch: '6.2.6.2.6.2.6.2.', oh: '..............5.' },
 ];
+// techno: four on the floor from the first level, open hats on the off-beats, claps on 2 and 4
+const TECHNO = [
+  { name: 'Warehouse', k: '1...1...1...1...', lo: '..............6.', hi: '................', s: '....4.......4...', cy: '8...............', ch: '.6.6.6.6.6.6.6.6', oh: '..2...2...2...2.' },
+  { name: 'Detroit', k: '1...1...1...1...', lo: '.......6......6.', hi: '...7......7.....', s: '....3.......3..7', cy: '8...............', ch: '4747474747474747', oh: '..5.......5.....' },
+  { name: 'Berlin', k: '1...1...1...1..6', lo: '..........5.....', hi: '.......8........', s: '............4...', cy: '7.......7.......', ch: '.5.5.5.5.5.5.5.5', oh: '..2...2...2...2.' },
+  { name: 'Minimal', k: '1...1...1...1...', lo: '.....6.......6..', hi: '...........7....', s: '..........4.....', cy: '8...............', ch: '..3...3...3...3.', oh: '..............6.' },
+  { name: 'Acid', k: '1...1...1...1...', lo: '...6..6...6..6..', hi: '.......7.......7', s: '....3.......3...', cy: '8...............', ch: '3.5.3.5.3.5.3.5.', oh: '..4...4...4...4.' },
+  { name: 'Dub', k: '1...1...1...1...', lo: '..........6.....', hi: '......7.........', s: '...5.....6..5...', cy: '8...............', ch: '..3...3...3...3.', oh: '......4.......4.' },
+  { name: 'Hard', k: '1...1...1...1...', lo: '..6...6...6...6.', hi: '.......7.......7', s: '....2.......2...', cy: '..8...8...8...8.', ch: '3333333333333333', oh: '..4...4...4...4.' },
+  { name: 'Loop', k: '1...1...1...1...', lo: '...6.......6....', hi: '.....7.......7..', s: '..5.....5.......', cy: '8...............', ch: '.4.4.4.4.4.4.4.4', oh: '..2...2...2...2.' },
+  { name: 'Tribal', k: '1...1...1...1...', lo: '..5..5....5..5..', hi: '.5...5.6...5..6.', s: '....3.......3...', cy: '8...............', ch: '..6...6...6...6.', oh: '..............4.' },
+  { name: 'Skip', k: '1...1...1...1.5.', lo: '.......6........', hi: '...........7....', s: '....3.......3...', cy: '8...............', ch: '.5.5.5.5.5.5.5.5', oh: '..2...2...2...2.' },
+  { name: 'Schranz', k: '1...1...1...1...', lo: '..7...7...7...7.', hi: '...8.......8....', s: '....2..6....2.6.', cy: '..8...8...8...8.', ch: '4444444444444444', oh: '..3...3...3...3.' },
+  { name: 'Hypnotic', k: '1...1...1...1...', lo: '........6.......', hi: '..7.......7.....', s: '..............5.', cy: '8.......7.......', ch: '.4.4.4.4.4.4.4.4', oh: '..3...3...3...3.' },
+  { name: 'Rave', k: '1...1...1...1...', lo: '...............6', hi: '..............6.', s: '....2.......2...', cy: '8...............', ch: '3.5.3.5.3.5.3.5.', oh: '..2...2...2...2.' },
+  { name: 'Industrial', k: '1...1...1...1.4.', lo: '..5.......5.....', hi: '......6.......6.', s: '....3...7...3...', cy: '8...............', ch: '5.5.5.5.5.5.5.5.', oh: '..4...4...4...4.' },
+  { name: 'Peak time', k: '1...1...1...1...', lo: '..........7.....', hi: '......7.........', s: '....2.......2...', cy: '..6...6...6...6.', ch: '3333333333333333', oh: '..2...2...2...2.' },
+  { name: 'Deep', k: '1...1...1...1...', lo: '.......5........', hi: '...............7', s: '....4.......4...', cy: '8...............', ch: '.6.6.6.6.6.6.6.6', oh: '..3...3...3...3.' },
+];
+// broken beat: a snare on 2 and 4 over a kick that never sits where you expect, with ghost notes and loose hats
+const BROKEN = [
+  { name: 'West', k: '1.....3...1..4..', lo: '.........6......', hi: '..............7.', s: '....1.....5.1...', cy: '8...............', ch: '3.6.3.6.3.6.3.6.', oh: '.......4........', alt: { k: '..............5.' } },
+  { name: 'Bruk', k: '1..3.....1....5.', lo: '......6.........', hi: '...........7....', s: '....1..6....1...', cy: '8...............', ch: '3.3.3.3.3.3.3.3.', oh: '..........4.....' },
+  { name: 'Shuffle', k: '1......3..1.....', lo: '.....6.......6..', hi: '...7............', s: '....1..5.5..1...', cy: '8...............', ch: '2.4.2.4.2.4.2.4.', oh: '..............5.' },
+  { name: 'Bounce', k: '1..2..1....3..4.', lo: '........6.......', hi: '.........7......', s: '....1.......1...', cy: '8...............', ch: '3.6.3.6.3.6.3.6.', oh: '.......5........', alt: { s: '..............6.' } },
+  { name: 'Push', k: '1....2....1..3..', lo: '...6........6...', hi: '................', s: '....1..6..5.1...', cy: '8...............', ch: '3.5.3.5.3.5.3.5.', oh: '..........4.....' },
+  { name: 'Stagger', k: '1..3......1...2.', lo: '......6........6', hi: '.......7........', s: '....1.....1.....', cy: '8...............', ch: '3.3.3.3.3.3.3.3.', oh: '..4.........5...' },
+  { name: 'Halfstep', k: '1......2..3.....', lo: '....6.......6...', hi: '.....7..........', s: '........1.....5.', cy: '8...............', ch: '2.4.2.4.2.4.2.4.', oh: '......5.......5.' },
+  { name: 'Pocket', k: '1.....2..3......', lo: '..........6..6..', hi: '..7.............', s: '....1..5....1.6.', cy: '8...............', ch: '3.6.3.6.3.6.3.6.', oh: '...........4....', alt: { k: '.............4..' } },
+  { name: 'Slip', k: '1..3...2..1.....', lo: '.............6..', hi: '.....7..........', s: '....1.......1..5', cy: '8...............', ch: '3.5.3.5.3.5.3.5.', oh: '..............4.' },
+  { name: 'Sway', k: '1.....1....3....', lo: '...6......6.....', hi: '.........7....7.', s: '....1.......1...', cy: '8...............', ch: '2.6.2.6.2.6.2.6.', oh: '.......4.......4' },
+  { name: 'Lean', k: '1.3.......2..4..', lo: '.......6........', hi: '..............7.', s: '....1...6...1...', cy: '8...............', ch: '3.3.3.3.3.3.3.3.', oh: '......5.........', alt: { s: '..........6.....' } },
+  { name: 'Hop', k: '1....3.2..1.....', lo: '...........6....', hi: '.6..............', s: '....1.......1.5.', cy: '8...............', ch: '3.5.3.5.3.5.3.5.', oh: '..4.............' },
+  { name: 'Stumble', k: '1..2.....3.4....', lo: '......6.......6.', hi: '..7.............', s: '....1..6....1...', cy: '8...............', ch: '2.4.2.4.2.4.2.4.', oh: '..........5.....' },
+  { name: 'Strut', k: '1.....3.1....2..', lo: '....6...........', hi: '...........7....', s: '....1.5.....1...', cy: '8...............', ch: '3.6.3.6.3.6.3.6.', oh: '..............4.' },
+  { name: 'Spring', k: '1..3..2....1....', lo: '.........6......', hi: '.......7.....7..', s: '....1.......1..6', cy: '8...............', ch: '3.5.3.5.3.5.3.5.', oh: '..5.............', alt: { k: '..............4.' } },
+  { name: 'Limp', k: '1......2.3....4.', lo: '...6............', hi: '..........7.....', s: '....1.....6.1...', cy: '8...............', ch: '2.6.2.6.2.6.2.6.', oh: '......4.........' },
+];
+// IDM: lopsided kicks, hats in threes against the four, melodic toms, and a second bar that answers the first
+const IDM = [
+  { name: 'Glitch', k: '1..4...1.3..1...', lo: '.....6.......7..', hi: '..7.......6.....', s: '....1........1.5', cy: '8...............', ch: '3..3..3..3..3..3', oh: '.........5......', alt: { s: '..........6.....', k: '..............5.' } },
+  { name: 'Shard', k: '1.....2.3..1....', lo: '..6.....6.....6.', hi: '...7.7.......7..', s: '....1.6.....15..', cy: '8...............', ch: '4.3.4..34.3.4..3', oh: '..........5.....', alt: { hi: '.............666' } },
+  { name: 'Fold', k: '1..1..1...2.....', lo: '.........6..6...', hi: '.......7.....7..', s: '....1......1..5.', cy: '8...............', ch: '35.35.35.35.35.3', oh: '...............5' },
+  { name: 'Prism', k: '1....3...2..4...', lo: '...6.....6......', hi: '.6.....6.....6..', s: '......1.....1.7.', cy: '8...............', ch: '5.3.3.5.3.3.5.3.', oh: '..............4.', alt: { k: '..............3.' } },
+  { name: 'Lattice', k: '1...3..2...1..4.', lo: '..5.......5.....', hi: '.....6.......6..', s: '....1.......1...', cy: '8...............', ch: '2.3.42.3.42.3.4.', oh: '.......5........', alt: { s: '.........5....5.' } },
+  { name: 'Splinter', k: '1.2.....1..3..2.', lo: '...7..........7.', hi: '....7..7........', s: '.....1.....1....', cy: '8.......8.......', ch: '3.3.33.3.33.3.33', oh: '..............5.' },
+  { name: 'Drift', k: '1.........2.....', lo: '...5....5....5..', hi: '......6......6..', s: '....1........1..', cy: '8...............', ch: '4..3..4..3..4.3.', oh: '..........4.....', alt: { k: '......3.........' } },
+  { name: 'Cascade', k: '1..2..1.......3.', lo: '.........6.6.6..', hi: '........7.7.7...', s: '....1.......1.55', cy: '8...............', ch: '3.4.3.4.34343434', oh: '......5.........' },
+  { name: 'Tangle', k: '1.3..1....2..3..', lo: '....6......6....', hi: '..7.....7......7', s: '......1......1..', cy: '8...............', ch: '3.3.3.3.3.3.3.3.', oh: '.........4......', alt: { s: '...5............' } },
+  { name: 'Fractal', k: '1..1...1..1....3', lo: '.....6.....6....', hi: '..6.....6.....6.', s: '....1.......1...', cy: '8...............', ch: '3.44.3.44.3.44.3', oh: '..............5.' },
+  { name: 'Static', k: '1...2.....1..2..', lo: '........6.......', hi: '.6..............', s: '....1..5....1...', cy: '8...............', ch: '4444444444444444', oh: '.....3.....3....' },
+  { name: 'Mosaic', k: '1.....1.....1...', lo: '...6.....6......', hi: '.......7.....7..', s: '....1.......1..5', cy: '8...............', ch: '3.4.43.4.43.4.43', oh: '..............5.' },
+  { name: 'Ripple', k: '1..3..2..3..1...', lo: '..........6.6...', hi: '.............6.6', s: '....1.......1...', cy: '8...............', ch: '2.5.5.2.5.5.2.5.', oh: '.......5........', alt: { k: '...............4' } },
+  { name: 'Clockwork', k: '1...1..2..1..3..', lo: '.......6.......6', hi: '...6.......6....', s: '....1.......1.6.', cy: '8...............', ch: '3434343434343434', oh: '..............5.' },
+  { name: 'Scatter', k: '1.2...3...1....3', lo: '...6......6.....', hi: '.....7.....7....', s: '.....1......1...', cy: '8...............', ch: '3.4..3.4..3.4..3', oh: '........5.......', alt: { s: '..............6.' } },
+  { name: 'Pulse', k: '1..1..1..1..1...', lo: '..........6.....', hi: '.....7..........', s: '....1.......1...', cy: '8...............', ch: '3.3.3.3.3.3.3.3.', oh: '..............4.' },
+];
+// Each style's fill, over the last `len` steps of the fill bar: it returns the hits (track x step) and the
+// tracks that give way to it there. A crash marks the first bar after each fill.
+const blankFill = () => Array.from({ length: 7 }, () => new Array(16).fill(0));
+const STYLES = [
+  { name: 'electro', grooves: GROOVES, fill(f) {
+    // snare roll (16ths when busy, 8ths otherwise), toms falling from high to low in the gaps, a kick to start it
+    const on = blankFill(), start = 16 - f.len;
+    for (let s = start; s < 16; s++) {
+      const r = s - start, half = r < f.len / 2;
+      if (r % 2 === 0 || f.busy && s >= 14) on[3][s] = 1;
+      else on[half ? 2 : 1][s] = 1;
+    }
+    on[0][start] = 1;
+    if (!f.busy) on[1][15] = 1;
+    return { on, yields: [0, 1, 2, 3] };
+  } },
+  { name: 'techno', grooves: TECHNO, fill(f) {
+    // a snare build (8ths, or 16ths when busy) with an open hat at the end; a busy fill drops the kick out
+    const on = blankFill(), start = 16 - f.len;
+    for (let s = start; s < 16; s++) if (f.busy || (s - start) % 2 === 0) on[3][s] = 1;
+    on[6][15] = 1;
+    return { on, yields: f.busy ? [0, 1, 2, 3] : [1, 2, 3] };
+  } },
+  { name: 'broken beat', grooves: BROKEN, fill(f) {
+    // threes across the bar: snare, a kick when busy, then a tom (high, then low)
+    const on = blankFill(), start = 16 - f.len;
+    for (let s = start; s < 16; s++) {
+      const r = s - start;
+      if (r % 3 === 0) on[3][s] = 1;
+      else if (r % 3 === 2) on[r < f.len / 2 ? 2 : 1][s] = 1;
+      else if (f.busy) on[0][s] = 1;
+    }
+    on[0][start] = 1;
+    if (f.busy) on[3][15] = 1;
+    return { on, yields: [0, 1, 2, 3] };
+  } },
+  { name: 'IDM', grooves: IDM, fill(f) {
+    // a stutter: the kick repeats through the first half and the snare through the second (every 16th when busy,
+    // 8ths otherwise), with the high tom on the last step; a busy fill cuts the closed hat too
+    const on = blankFill(), start = 16 - f.len;
+    for (let s = start; s < 16; s++) {
+      const r = s - start;
+      if (!f.busy && r % 2 && f.len > 2) continue;
+      on[r < f.len / 2 ? 0 : 3][s] = 1;
+    }
+    on[2][15] = 1;
+    return { on, yields: f.busy ? [0, 1, 2, 3, 5] : [0, 1, 2, 3] };
+  } },
+];
+let styleIdx = 0; // saved with presets by name; presets from before the styles were electro
+const styleIndex = (name) => Math.max(0, STYLES.findIndex((st) => st.name === name));
+function setStyle(i) {
+  styleIdx = (i + STYLES.length) % STYLES.length;
+  $('style-name').textContent = STYLES[styleIdx].name;
+}
 const ROW = ['k', 'lo', 'hi', 's', 'cy', 'ch', 'oh'];
 const ENERGY_NAMES = [[1, 'empty'], [15, 'minimal'], [35, 'low'], [60, 'groove'], [85, 'driving'], [101, 'peak']];
 function fillShape(fills) {
@@ -2387,31 +2531,22 @@ function fillShape(fills) {
   return { every: fills < 34 ? 8 : fills < 67 ? 4 : 2, len: 2 * Math.round(1 + fills / 100 * 3), busy: fills >= 50 };
 }
 function generate() {
-  const energy = Number($('energy').value), g = GROOVES[Number($('beat').value)], fills = Number($('fills').value);
+  const st = STYLES[styleIdx], energy = Number($('energy').value), g = st.grooves[Number($('beat').value)], fills = Number($('fills').value);
   const T = energy ? 1 + energy / 100 * 8 : 0, fill = T >= 2 ? fillShape(fills) : null; // fills once there is a groove
   for (const a of [pattern.on, pattern.acc, pattern.bar]) a.forEach((r) => r.fill(0));
-  const fillOn = Array.from({ length: 7 }, () => new Array(16).fill(0));
-  if (fill) {
-    // last `len` steps of the fill bar: snare roll (16ths when busy, 8ths otherwise),
-    // toms falling from high to low in the gaps, a kick to start it and a crash after it
-    const start = 16 - fill.len;
-    for (let s = start; s < 16; s++) {
-      const r = s - start, half = r < fill.len / 2;
-      if (r % 2 === 0 || fill.busy && s >= 14) fillOn[3][s] = 1;
-      else fillOn[half ? 2 : 1][s] = 1;
-    }
-    fillOn[0][start] = 1;
-    if (!fill.busy) fillOn[1][15] = 1;
-  }
+  const { on: fillOn, yields } = fill ? st.fill(fill) : { on: blankFill(), yields: [] };
   for (let t = 0; t < 7; t++) {
-    const lv = g[ROW[t]];
+    const lv = g[ROW[t]], alt = (g.alt && g.alt[ROW[t]]) || '';
     for (let s = 0; s < 16; s++) {
       const c = lv[s], reg = c !== '.' && Number(c) <= T;
-      const inFill = fill && t <= 3 && s >= 16 - fill.len; // kick, toms and snare give way to the fill
+      const win = fill && s >= 16 - fill.len, inFill = win && yields.includes(t); // these tracks give way to the fill
       const fil = !!fillOn[t][s];
       let on = 0, cond = 0;
       if (inFill) { if (reg && fil) on = 1; else if (reg) { on = 1; cond = -fill.every; } else if (fil) { on = 1; cond = fill.every; } }
       else if (reg) on = 1;
+      else if (win && fil) { on = 1; cond = fill.every; }
+      // the second bar's extra hits, outside the fill
+      else if (!win && alt[s] && alt[s] !== '.' && Number(alt[s]) <= T) { on = 1; cond = 2; }
       // crash on the first bar after each fill, once there is enough energy
       if (fill && t === 4 && s === 0 && !on && T >= 3) { on = 1; cond = 100 + fill.every; }
       pattern.on[t][s] = on; pattern.bar[t][s] = cond;
@@ -2419,7 +2554,7 @@ function generate() {
     }
   }
   $('energy-out').innerHTML = `<b>${ENERGY_NAMES.find(([v]) => energy < v)[1]}</b> · ${energy}%`;
-  $('beat-out').innerHTML = `<b>${g.name.toLowerCase()}</b> · ${Number($('beat').value) + 1}/${GROOVES.length}`;
+  $('beat-out').innerHTML = `<b>${g.name.toLowerCase()}</b> · ${Number($('beat').value) + 1}/${st.grooves.length}`;
   $('fills-out').innerHTML = fill ? `<b>every ${fill.every}</b> · ${fill.len} steps` : `<b>off</b>`;
   drawMini();
   sendSeq();
@@ -2954,6 +3089,8 @@ function setView(v) {
   else generate();
 }
 for (const id of ['energy', 'beat', 'fills']) $(id).addEventListener('input', generate);
+$('style-prev').addEventListener('click', () => { setStyle(styleIdx - 1); generate(); });
+$('style-next').addEventListener('click', () => { setStyle(styleIdx + 1); generate(); });
 try { const t = localStorage.getItem('elexir-tab'); if (t && document.querySelector(`[data-tab="${t}"]`)) setTab(t); } catch (e) {}
 
 function markStep(s) {
