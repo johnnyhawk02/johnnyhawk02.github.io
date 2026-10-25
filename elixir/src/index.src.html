@@ -926,7 +926,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
       <p class="note">Save keeps everything as a preset in this browser under a two-word alien name: the sound (kit, crossfeed, FX and sends) and the song (pattern, perform dials, tempo, velocity, accent, master), and loading it brings all of that back. A red star by save means a randomise has changed things since the last save or load. ‹ and › step through the presets; while playing, a new preset comes in at the start of the next bar. Presets opens the preset manager: load, delete, and star favourites; export favourites downloads them as a file, and favourites sent in that way are built into the next release. Open .snd there loads an LXR kit file as the current sound, and export .snd downloads it as an LXR kit file (.SND, without the crossfeed, which the hardware doesn't have).</p>
       <p class="note">There are three effects, all the LXR-02's own FX-slot code run as sends: each mixer strip has three send dials left of its fader: echo, dist and ring. Every voice keeps its dry sound and each effect's output is fully wet. The echo's time is synced to the tempo: from 1/128 of a bar fully left to one bar fully right, gliding through the musical lengths (the readout names the nearest, with ≈ when it is between); randomise picks 1/2, 1/4, dotted 1/8, 1/8 or 1/16 (now and then 1/128) and puts it within 10 ms of it either way (at 120 bpm; the window scales with the tempo). Ticks round the time dial mark the musical lengths (long for straight notes, short for dotted and triplet); a drag catches on them, and the scroll wheel and arrow keys step from one to the next (Shift + arrow for fine steps). The FX section above the mixer sets all three: echo mode (normal or ping-pong), time, tone, feedback and width (100% is the firmware's own; 0% is mono; the firmware's ping-pong only bounces sound that reaches it off-centre, and most drums sit in the middle, so above 100% width pushes the echo's input to one side, and at 200% a centred drum bounces fully; on a normal echo, above 100% widens the echoes' stereo); distortion type (tube, fold or rat), drive, color, tone and volume; ring mod carrier wave and frequency. A kit that used distortion or ring mod in its FX slot loads those settings into that effect with a little of each routed voice sent to it. The sync, the sends, the extra buses and the larger delay buffer are additions to the firmware.</p>
       <p class="note">The master section sits after everything: drum 1 sidechain ducks every other voice (before the FX bus) by up to the duck amount whenever drum 1 hits (tick fx to duck the echo, distortion and ring mod returns as well, so their tails pump with drum 1), and the compressor works on the whole mix like the LXR-02's FX-slot compressor; the needle meters show how far each is pulling down, in dB.</p>
-      <p class="note">The red circle by play opens the recorder: pick free (records until you press stop, up to ten minutes) or a loop of 1 to 16 bars, which starts on the next bar (starting playback from bar 1 if it is stopped) and is cut to exactly that many bars at the tempo, with the echo carried in from before so it loops cleanly. Choose 44.1 or 48 kHz, 16-bit (dithered) or 24-bit, and normalise (peak at −0.3 dB). Each take is listed with a player and a save .wav button; takes are kept until you reload the page.</p>
+      <p class="note">The red circle by play opens the recorder: pick free (records until you press stop, up to ten minutes) or a loop of 1 to 16 bars, which starts on the next bar (starting playback from bar 1 if it is stopped) and is cut to exactly that many bars at the tempo, with the echo carried in from before so it loops cleanly. Tick count-in for a bar of beeps first (a high beep then three lower boops, with the music turned down; from bar 1 if stopped), and the take starts on the bar after it. Pressing record closes the recorder; the red circle by play blinks while it waits or counts and pulses while it records. Choose 44.1 or 48 kHz, 16-bit (dithered) or 24-bit, and normalise (peak at −0.3 dB). Each take is listed with a player and a save .wav button; takes are kept until you reload the page.</p>
       <p class="note">The sound knobs on the pattern card are performance macros over all six voices at once: fm depth (the drums' FM amount and the cymbal and hat FM), decay (every amp decay), pitch (every voice's coarse tune, up to two octaves either way) and filter (every filter's cutoff). Each sits in the middle as the kit is; turning it pushes every voice's own value towards the top or the bottom, so the kit's differences stay. They change what the engine plays, not the kit: the sound tab still shows the kit's own values, and double-click sets a macro back to the middle. They are saved with presets.</p>
       <p class="note">Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen electro grooves (the original five plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The switch on the pattern card turns the pattern off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge).</p>
       <p class="note">The steps tab opens the same pattern in the step editor; going back to the perform tab rebuilds it from the dials.</p>
@@ -974,6 +974,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <span class="rlab">length</span><div class="radios" id="rec-len"></div>
     <span class="rlab">format</span><div class="rec-fmt"><div class="radios" id="rec-rate"></div><div class="radios" id="rec-bits"></div>
       <label class="field" for="rec-norm"><input id="rec-norm" type="checkbox"> normalise</label></div>
+    <span class="rlab">start</span><div><label class="field" for="rec-count"><input id="rec-count" type="checkbox"> count-in</label></div>
   </div>
   <p class="pm-hint" id="rec-hint"></p>
   <div class="rec-go"><button class="btn rec-go-btn" id="rec-go" type="button"><i></i><span>record</span></button><span class="rec-status" id="rec-status" aria-live="polite"></span></div>
@@ -1039,6 +1040,8 @@ class Player {
     // groove: odd 16ths late by swing (in steps) times each track's share, plus each track's push (-) or pull (+)
     this.groove = { swing: 0, share: new Array(7).fill(1), nudge: new Array(7).fill(0) };
     this.queue = []; this.sched = []; this.fresh = false; this.rec = null;
+    // count-in: a beep then three boops over the bar before a take, with the mix turned down under them
+    this.cntStep = 0; this.cntGain = 1; this.clk = null;
     // accent: unaccented sequencer hits are turned down by the accent amount, after the engine
     this.gain = new Float32Array(6).fill(1); this.gainTo = new Float32Array(6).fill(1);
     // mixer: mute/solo per voice
@@ -1081,8 +1084,11 @@ class Player {
       } this.fxAmt.set(m.fx); this.chan.set(m.chan); }
     else if (m.type === 'rec') {
       // recorder: free starts now; a loop waits for the first step of a bar and stops after its bars
-      this.rec = { loop: m.bars > 0, bars: m.bars, on: !(m.bars > 0), done: 0, L: new Float32Array(16384), R: new Float32Array(16384), n: 0 };
-      this.events.push({ type: 'rec', state: this.rec.on ? 'on' : 'wait' });
+      // with a count-in, the take starts on the bar after a counted one (from stop the count keeps its own time)
+      this.rec = { loop: m.bars > 0, bars: m.bars, on: !(m.bars > 0) && !m.count, count: m.count ? (this.playing ? 'wait' : 'run') : null,
+        done: 0, L: new Float32Array(16384), R: new Float32Array(16384), n: 0 };
+      if (this.rec.count === 'run') { this.cntStep = 0; this.toNext = 0; }
+      this.events.push({ type: 'rec', state: this.rec.on ? 'on' : this.rec.count === 'run' ? 'count' : 'wait' });
     } else if (m.type === 'recStop') { if (this.rec) this.recEnd(); }
     else if (m.type === 'seq') {
       // a live pattern change (the perform sliders, the grid) wins over one still waiting for the bar
@@ -1091,8 +1097,9 @@ class Player {
       if (m.groove) this.groove = m.groove; this.vel = m.vel; this.e.bpm = m.bpm;
       this.accGain = Math.pow(10, -m.accentDb / 20);
       if (m.playing && !this.playing) { this.step = 0; this.bar = 0; this.toNext = 0; this.queue = []; this.fresh = true; }
-      this.playing = m.playing;
-      if (!this.playing) { this.flushBar(); if (this.rec && this.rec.loop) this.recEnd(); }
+      const was = this.playing; this.playing = m.playing;
+      // stopping ends a loop or a count-in (a count from stop is not playing yet, so it carries on)
+      if (!this.playing) { this.flushBar(); if (this.rec && (this.rec.loop || this.rec.count) && (was || this.rec.count !== 'run')) this.recEnd(); }
     }
   }
   // a preset loaded while playing: its messages wait for the first step of the next bar.
@@ -1118,16 +1125,33 @@ class Player {
     }
     this.sched[s] = hits;
   }
+  clickAt(hi) { this.clk = { n: 0, ph: 0, w: 2 * Math.PI * (hi ? 1760 : 880) / LXR.REAL_FS }; }
   _render(dst) {
+    const rc = this.rec;
+    if (!this.playing && rc && rc.count === 'run') {
+      // a count-in from stop keeps its own time, then starts the transport at bar 1 for the take
+      const len = LXR.REAL_FS * 60 / this.bpm / 4;
+      while (this.toNext <= 0 && !this.playing) {
+        if (this.cntStep === 16) {
+          rc.count = 'end'; this.playing = true; this.step = 0; this.bar = 0; this.queue = []; this.fresh = true;
+          this.events.push({ type: 'rec', state: 'play' });
+        } else { if (this.cntStep % 4 === 0) this.clickAt(this.cntStep === 0); this.cntStep++; this.toNext += len; }
+      }
+      if (!this.playing) this.toNext -= 64;
+    }
     if (this.playing) {
       if (this.toNext <= 0) {
         if (this.step === 0 && this.atBar.length) this.flushBar();
-        if (this.step === 0 && this.rec && this.rec.loop) {
+        if (this.step === 0 && this.rec) {
+          // a count-in takes the bar before; then a loop (or a counted free take) starts on this one
           const r = this.rec;
-          if (!r.on) { r.on = true; this.events.push({ type: 'rec', state: 'on' }); }
+          if (r.count === 'wait') { r.count = 'run'; this.events.push({ type: 'rec', state: 'count' }); }
+          else if (!r.on) { r.on = true; r.count = null; this.events.push({ type: 'rec', state: 'on' }); }
+          else if (!r.loop) r.done++;
           else if (++r.done >= r.bars) this.recEnd();
-          if (this.rec) this.events.push({ type: 'rec', state: 'bar', done: r.done });
-        } else if (this.step === 0 && this.rec) this.rec.done++;
+          if (this.rec && r.loop && r.on) this.events.push({ type: 'rec', state: 'bar', done: r.done });
+        }
+        if (this.rec && this.rec.count === 'run' && this.step % 4 === 0) this.clickAt(this.step === 0);
         const len = LXR.REAL_FS * 60 / this.bpm / 4;
         // on starting, this step's own hits; after that each tick books the next step's, a step ahead,
         // so a track pushed early can still come in before its grid time
@@ -1227,6 +1251,21 @@ class Player {
     // the recorder takes the finished mix at the engine's own rate
     const r = this.rec;
     if (r && r.on) { r.L.set(L, r.n); r.R.set(R, r.n); r.n += 64; if (r.n === r.L.length) this.recFlush(); }
+    // the count-in is after the recorder, so neither its beeps nor the turned-down mix are in the take
+    const to = r && r.count === 'run' ? 0.25 : 1;
+    if (to !== 1 || this.cntGain !== 1 || this.clk) {
+      let g = this.cntGain;
+      for (let i = 0; i < 64; i++) {
+        g += (to - g) * 0.003; if (Math.abs(to - g) < 1e-4) g = to;
+        let c = 0, k = this.clk;
+        if (k) {
+          c = 0.35 * Math.sin(k.ph) * Math.min(1, k.n / 48) * Math.exp(-k.n / (0.04 * LXR.REAL_FS));
+          k.ph += k.w; if (++k.n > 0.15 * LXR.REAL_FS) this.clk = k = null;
+        }
+        L[i] = L[i] * g + c; R[i] = R[i] * g + c;
+      }
+      this.cntGain = g;
+    }
   }
   process(L, R) {
     for (let n = 0; n < L.length; n++) {
@@ -2145,7 +2184,7 @@ $('pm-open').addEventListener('click', () => { drawManager(); $('pm-msg').textCo
 // A loop starts on the first step of a bar (starting playback if it is stopped) and stops after its bars,
 // so the take is exactly that many bars and the echo carried over from before the loop keeps it seamless.
 const recDlg = $('rec'), LENS = [0, 1, 2, 4, 8, 16], RATES = [44100, 48000], BITS = [16, 24];
-const recSet = { len: 3, rate: 0, bits: 0, norm: false };
+const recSet = { len: 3, rate: 0, bits: 0, norm: false, count: false };
 try { Object.assign(recSet, JSON.parse(localStorage.getItem('elexir-rec') || '{}')); } catch (e) { /* defaults */ }
 const saveRecSet = () => { try { localStorage.setItem('elexir-rec', JSON.stringify(recSet)); } catch (e) { /* not kept */ } };
 let recState = 'off', recChunks = [], recT0 = 0, recTimer = 0, recBars = 0, recLoop = false, takeNo = 0;
@@ -2155,22 +2194,27 @@ radios($('rec-rate'), 'rec-rate', ['44.1k', '48k'], () => recSet.rate, (i) => { 
 radios($('rec-bits'), 'rec-bits', ['16-bit', '24-bit'], () => recSet.bits, (i) => { recSet.bits = i; saveRecSet(); });
 $('rec-norm').checked = recSet.norm;
 $('rec-norm').addEventListener('change', () => { recSet.norm = $('rec-norm').checked; saveRecSet(); });
+$('rec-count').checked = recSet.count;
+$('rec-count').addEventListener('change', () => { recSet.count = $('rec-count').checked; saveRecSet(); recHint(); });
 function recHint() {
   const b = LENS[recSet.len];
   $('rec-hint').textContent = b
     ? `Records exactly ${b} bar${b > 1 ? 's' : ''} from the start of the next bar (from bar 1 if stopped), ready to loop. Changes you make while it records are in the take.`
+    : recSet.count ? 'Records everything from the bar after the count until you press stop, up to ten minutes.'
     : 'Records everything from now until you press stop, up to ten minutes.';
+  if (recSet.count) $('rec-hint').textContent += ' Count-in: one bar of beeps first (from bar 1 if stopped), with the music turned down; neither is in the take.';
 }
 recHint();
 function recUi() {
   const b = $('rec-open'), go = $('rec-go');
-  b.classList.toggle('on', recState === 'on'); b.classList.toggle('wait', recState === 'wait');
+  b.classList.toggle('on', recState === 'on'); b.classList.toggle('wait', recState === 'wait' || recState === 'count');
   go.classList.toggle('on', recState !== 'off'); go.querySelector('span').textContent = recState === 'off' ? 'record' : 'stop';
   recDlg.querySelectorAll('.rec-opts input').forEach((i) => { i.disabled = recState !== 'off'; });
 }
 function recStatus() {
   const st = $('rec-status');
   if (recState === 'wait') st.textContent = 'waiting for the next bar…';
+  else if (recState === 'count') st.textContent = 'counting in…';
   else if (recState === 'on' && recLoop) st.textContent = `● bar ${Math.min(recBars + 1, LENS[recSet.len])} of ${LENS[recSet.len]}`;
   else if (recState === 'on') {
     const t = (performance.now() - recT0) / 1000;
@@ -2181,21 +2225,25 @@ function recStatus() {
 async function recStart() {
   await startAudio();
   recChunks = []; recBars = 0; recLoop = LENS[recSet.len] > 0;
-  recState = recLoop ? 'wait' : 'on'; recT0 = performance.now();
-  if (node) node.port.postMessage({ type: 'rec', bars: LENS[recSet.len] }); else if (fallback) fallback.msg({ type: 'rec', bars: LENS[recSet.len] });
-  if (recLoop && !playing) $('play').click(); // a loop needs the transport; it starts at bar 1
+  const count = recSet.count, m = { type: 'rec', bars: LENS[recSet.len], count };
+  recState = count ? (playing ? 'wait' : 'count') : recLoop ? 'wait' : 'on'; recT0 = performance.now();
+  if (node) node.port.postMessage(m); else if (fallback) fallback.msg(m);
+  // a loop needs the transport; it starts at bar 1 (after a count-in, the player starts it itself)
+  if (recLoop && !count && !playing) $('play').click();
   clearInterval(recTimer); recTimer = setInterval(recStatus, 250);
   recUi(); recStatus();
 }
 function recEvent(ev) {
   if (ev.type === 'recData') { recChunks.push(ev); return; }
+  if (ev.state === 'count') recState = 'count';
+  if (ev.state === 'play') { playing = true; $('play').setAttribute('aria-pressed', true); $('play').textContent = 'STOP'; }
   if (ev.state === 'on') { recState = 'on'; recT0 = performance.now(); }
   if (ev.state === 'bar') recBars = ev.done;
   if (ev.state === 'done') { clearInterval(recTimer); recState = 'off'; finishTake(ev); }
   recUi(); recStatus();
 }
 $('rec-go').addEventListener('click', () => {
-  if (recState === 'off') recStart();
+  if (recState === 'off') { recStart(); recDlg.close(); } // the button by play shows the take's progress
   else { const m = { type: 'recStop' }; if (node) node.port.postMessage(m); else if (fallback) fallback.msg(m); }
 });
 $('rec-open').addEventListener('click', () => { recUi(); recDlg.showModal(); });
