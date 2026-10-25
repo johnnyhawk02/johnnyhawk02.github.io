@@ -23,39 +23,16 @@ const sourceKits = BUNDLED_KITS.map((k) => parseSnd(Uint8Array.from(atob(k.data)
 for (const { kit } of sourceKits) for (let n = 1; n <= 6; n++) if (kit[PAR['TRANS' + n + '_WAVE']] >= 14) kit[PAR['TRANS' + n + '_WAVE']] %= 14;
 // ---- preset format ----
 // A preset is { v, name, kit, xm, fx, fx3, dpos, song, fav }; xm, fx, fx3 and song may be missing (a sound from a
-// kit file: the sends and FX then come from the kit's own FX settings). Every preset carries the format
-// version it was saved in, and migratePreset brings any older one up to date, so the rest of the page
-// only ever sees the current shape. A change to the format bumps PRESET_V and adds a step here.
+// kit file: the sends and FX then come from the kit's own FX settings). Only presets in the current format
+// (v = PRESET_V) are read; older ones are skipped. A change to the format bumps PRESET_V and rewrites the
+// built-in presets in presets/*.json to match (build.mjs refuses any in another format).
 const PRESET_V = 2;
 const PRESET_FIELDS = ['name', 'kit', 'xm', 'fx', 'fx3', 'dpos', 'song', 'fav'];
-function migratePreset(p) {
-  p = structuredClone(p);
-  if ((p.v || 1) < 2) {
-    // v1 (unversioned, up to 2026-10-25), in the order the format grew:
-    const f = p.fx3, g = p.song;
-    // echo width was saved on a 0..127 scale (127 = full bounce), now 0..200%
-    if (f && f.params.echo && f.params.echo.width !== undefined) f.params.echo = { pct: Math.round(f.params.echo.width / 127 * 200) };
-    // the distortion send was an on/off switch per voice (dist 0/1), now 0..100 (dsend)
-    if (f && !f.dsend) f.dsend = (f.dist || new Array(6).fill(0)).map((v) => (v ? 100 : 0));
-    if (f) delete f.dist;
-    if (g) {
-      g.style ??= 'electro'; // before pattern styles
-      g.accent = Math.min(6, g.accent);
-      // before pages the steps grid had one; before it had its own pattern, it edited the perform one
-      g.stepPages ??= [g.steps || g.pattern];
-      // before the perform / steps / off selector: off if the pattern was off, else the tab it was saved on played
-      g.source ??= g.patternOn === false ? 'off' : g.view === 'steps' ? 'steps' : 'perform';
-      // no longer kept: the steps grid's first page (it is stepPages[0]), the pattern switch (it is source), mute and solo
-      for (const k of ['steps', 'patternOn', 'mute', 'solo']) delete g[k];
-    }
-  }
-  p.v = PRESET_V;
-  return p;
-}
+const isCurrent = (p) => !!(p && p.v === PRESET_V && p.kit);
 // a preset as stored and exported, from a kit list entry
 const presetData = (k) => ({ v: PRESET_V, ...Object.fromEntries(PRESET_FIELDS.map((f) => [f, k[f]])), kit: Array.from(k.kit), fav: !!k.fav });
 // a kit list entry from a stored, built-in or imported preset
-const fromStored = (p, extra) => { const m = migratePreset(p); return { ...m, kit: Uint8Array.from(m.kit), fav: !!m.fav, userSamples: 0, ...extra }; };
+const fromStored = (p, extra) => ({ ...structuredClone(p), kit: Uint8Array.from(p.kit), fav: !!p.fav, userSamples: 0, ...extra });
 // presets: the init kit, the built-in presets (favourites baked into the build), then the ones saved here
 const kitList = [{ name: 'Init kit', kit: factoryInit, userSamples: 0, builtin: true },
   ...BUILTIN_PRESETS.map((p) => fromStored(p, { builtin: true }))];
@@ -70,7 +47,7 @@ function storePresets() {
   const list = kitList.filter((k) => k.saved).map(presetData);
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(list)); } catch (e) {}
 }
-for (const p of storedPresets()) kitList.push(fromStored(p, { saved: true }));
+for (const p of storedPresets().filter(isCurrent)) kitList.push(fromStored(p, { saved: true }));
 function fillKits() {
   kitSel.innerHTML = '';
   const groups = [['built in', (k) => k.builtin], ['mine', (k) => k.saved]];
@@ -168,7 +145,7 @@ function useSong(g) {
   $('level').value = g.vel; $('accent').value = g.accent;
   for (const id of ['level', 'accent']) $(id).dispatchEvent(new Event('sync'));
   showLevels(); $('tempo').dispatchEvent(new Event('input'));
-  Object.assign(master, MASTER0, g.master); buildMaster();
+  Object.assign(master, g.master); buildMaster();
   sendMix();
   // the dial readouts come from generate; then the saved pattern, which may have been edited by hand
   generate();
@@ -179,8 +156,8 @@ function useSong(g) {
   sendSeq();
   if (g.view === 'steps') setTab('steps');
   setSource(g.source);
-  Object.assign(groove, structuredClone(g.groove || GROOVE0)); drawGroove(); sendSeq();
-  Object.assign(macro, MACRO0, g.macro || {}); drawMacros(); sendMacros();
+  Object.assign(groove, structuredClone(g.groove)); drawGroove(); sendSeq();
+  Object.assign(macro, g.macro); drawMacros(); sendMacros();
 }
 $('kit-save').addEventListener('click', () => {
   const k = { name: presetName(), kit: Uint8Array.from(values), xm: { amt: xm.amt.slice(), target: xm.target.slice() }, fx: mix.fx.slice(),

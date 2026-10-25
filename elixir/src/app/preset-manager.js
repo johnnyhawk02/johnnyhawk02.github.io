@@ -47,18 +47,20 @@ $('pm-export').addEventListener('click', () => {
   $('pm-msg').textContent = `exported ${favs.length}`;
 });
 $('pm-import').addEventListener('change', async (e) => {
-  let n = 0;
+  let n = 0, old = 0;
   for (const f of e.target.files) {
     try {
       const data = JSON.parse(await f.text());
       for (const p of data.presets || []) {
-        if (!p.kit || kitList.some((k) => k.saved && k.name === p.name)) continue;
+        if (!isCurrent(p)) { old++; continue; }
+        if (kitList.some((k) => k.saved && k.name === p.name)) continue;
         kitList.push(fromStored(p, { saved: true })); n++;
       }
     } catch (err) { $('pm-msg').textContent = `${f.name}: not a presets file`; }
   }
   e.target.value = '';
-  if (n) { const v = kitSel.value; storePresets(); fillKits(); kitSel.value = v; drawManager(); $('pm-msg').textContent = `imported ${n}`; }
+  if (old && !n) $('pm-msg').textContent = `${old} skipped: saved by an older version`;
+  if (n) { const v = kitSel.value; storePresets(); fillKits(); kitSel.value = v; drawManager(); $('pm-msg').textContent = `imported ${n}` + (old ? `, ${old} skipped (saved by an older version)` : ''); }
 });
 // .SND: 8-character name, then one byte per sound parameter (crossfeed isn't part of the format)
 $('kit-export').addEventListener('click', () => {

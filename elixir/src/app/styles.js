@@ -85,8 +85,6 @@ function nextUserName() {
   for (let i = 0; i < 50; i++) { const n = alienName().replace(/'/g, ''); if (!userPats.some((x) => x.name === n)) return n; }
   return alienName();
 }
-// patterns saved before they had names were called user 1, user 2...
-if (userPats.some((x) => /^user \d+$/.test(x.name))) { for (const x of userPats) if (/^user \d+$/.test(x.name)) x.name = nextUserName(); storeUserPats(); }
 function useUserSlot(i) { setStyle(userStyle()); $('beat').value = slotBeat(i); $('beat').dispatchEvent(new Event('sync')); }
 function drawUserTools() {
   const on = STYLES[styleIdx].user && userPats.length > 0;

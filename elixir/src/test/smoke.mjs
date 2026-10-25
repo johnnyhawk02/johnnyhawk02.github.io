@@ -1,4 +1,4 @@
-// Smoke test for the built page: loads every built-in preset, a set of presets in older saved shapes,
+// Smoke test for the built page: loads every built-in preset, a set of presets as stored in the browser,
 // and presets saved from the page itself, and records for each the app state and a hash of four bars
 // of audio rendered offline by the page's own Player. Run against a baseline to check a refactor
 // changed nothing:
@@ -14,21 +14,13 @@ const checkAt = args.indexOf('--check');
 const baseline = checkAt >= 0 ? JSON.parse(readFileSync(args[checkAt + 1], 'utf8')) : null;
 const page_ = resolve(args.find((a, i) => !a.startsWith('--') && i !== checkAt + 1) || 'index.html');
 
-// presets as older versions of the page saved them
-const kit = JSON.parse(readFileSync(new URL('../presets/elixir-favourites.json', import.meta.url))).presets[0].kit.map((v, i) => (i % 5 ? v : (v + 3) % 128));
-const pat = (n) => Array.from({ length: 7 }, (_, t) => Array.from({ length: 16 }, (_, s) => ((s + t) % n === 0 ? 1 : 0)));
+// presets as saved in this browser (current format), covering kit-derived FX, steps pages, styles and the pattern off
+const STORED = JSON.parse(readFileSync(new URL('stored-presets.json', import.meta.url), 'utf8'));
+// and one saved by an older version, which is skipped
+const OLD = { name: 'Old format', kit: STORED[0].kit, song: STORED[0].song };
 const zero = () => Array.from({ length: 7 }, () => new Array(16).fill(0));
-const song = { energy: 70, beat: 3, fills: 50, tempo: 124, vel: 90, accent: 4, view: 'perform', master: { comp: false, thresh: -20 }, mute: [], solo: [],
-  pattern: { on: pat(3), acc: zero(), bar: zero() } };
-const LEGACY = [
-  { name: 'Old nofx', kit, xm: { amt: new Array(36).fill(0), target: ['fm', 'fm', 'fm', 'filter', 'fm', 'ring'] }, fx: [10, 0, 0, 0, 0, 0], dpos: 0.5, song },
-  { name: 'Old distflag', kit, fx: [0, 0, 0, 0, 0, 0], fx3: { params: { echo: { width: 64 }, dist: { type: 1, p: [1, 2, 3, 4] }, ring: { wave: 2, freq: 9 } }, dist: [1, 0, 1, 0, 0, 0], ring: [0, 5, 0, 0, 0, 0] }, song: { ...song, view: 'steps' } },
-  { name: 'Old steps', kit, fx3: { params: { echo: { pct: 150 }, dist: { type: 0, p: [70, 64, 80, 90] }, ring: { wave: 0, freq: 40 } }, dsend: [0, 0, 0, 50, 0, 0], ring: [0, 0, 0, 0, 0, 0] },
-    song: { ...song, patternOn: false, steps: { on: pat(5), acc: zero(), bar: zero() }, groove: { swing: 60, share: new Array(7).fill(80), push: new Array(7).fill(40) }, macro: { fm: 150 } } },
-  { name: 'Old style', kit, fx3: { params: { echo: { pct: 100 }, dist: { type: 0, p: [70, 64, 80, 90] }, ring: { wave: 0, freq: 40 } }, dsend: [0, 0, 0, 0, 0, 0], ring: [0, 0, 0, 0, 0, 0] },
-    song: { ...song, style: 'techno', source: 'steps', stepPages: [{ on: pat(2), acc: zero(), bar: zero() }, { on: pat(4), acc: zero(), bar: zero() }] } },
-];
-const USER_PATS = [{ name: 'user 1', on: pat(3), acc: zero(), bar: zero() }];
+const pat = (n) => Array.from({ length: 7 }, (_, t) => Array.from({ length: 16 }, (_, s) => ((s + t) % n === 0 ? 1 : 0)));
+const USER_PATS = [{ name: 'Qaqaz', on: pat(3), acc: zero(), bar: zero() }];
 
 const browser = await chromium.launch();
 const errors = [];
@@ -84,9 +76,9 @@ for (let st = 0; st < 5; st++) for (const beat of [0, 7, 15]) {
 await page.close();
 
 // 2. presets in older shapes, plus old user pattern names
-page = await open({ 'elexir-presets-v2': JSON.stringify(LEGACY), 'elexir-user-patterns': JSON.stringify(USER_PATS) });
+page = await open({ 'elexir-presets-v2': JSON.stringify([...STORED, OLD]), 'elexir-user-patterns': JSON.stringify(USER_PATS) });
 await page.evaluate((p) => { window.__probe = p; }, probe.toString());
-const nl = await loadAll(page, 'legacy', 'saved');
+const nl = await loadAll(page, 'stored', 'saved');
 out['user patterns'] = { names: await page.evaluate(() => JSON.stringify(userPats.map((u) => u.name))) };
 
 // 3. presets saved now: a steps preset with pages, a user-style preset, a sound tweak; then a reload loads them
@@ -103,7 +95,7 @@ out['export'] = { json: await page.evaluate(() => JSON.stringify(kitList.filter(
 await page.close();
 await browser.close();
 
-console.error(`${nb} built-in, ${nl} legacy, ${ns} saved presets; ${errors.length} page errors`);
+console.error(`${nb} built-in, ${nl} stored, ${ns} saved presets; ${errors.length} page errors`);
 for (const e of errors) console.error('  error:', e);
 if (!baseline) { console.log(JSON.stringify(out, null, 1)); process.exit(errors.length ? 1 : 0); }
 let bad = errors.length;

@@ -31,6 +31,9 @@ const kits = !noKits && existsSync(kitDir) ? readdirSync(kitDir, { recursive: tr
 const presetDir = new URL('presets/', here);
 const presets = existsSync(presetDir) ? readdirSync(presetDir).filter((f) => /\.json$/i.test(f)).sort()
   .flatMap((f) => JSON.parse(readFileSync(new URL(f, presetDir), 'utf8')).presets || []).map((p) => ({ ...p, fav: false })) : [];
+// the page reads presets in the current format only (PRESET_V in app/presets.js)
+const PRESET_V = Number(/const PRESET_V = (\d+);/.exec(read('app/presets.js'))[1]);
+for (const p of presets) if (p.v !== PRESET_V) throw new Error(`presets/: ${p.name} is format v${p.v || 1}, the page reads v${PRESET_V}`);
 
 // the page's own code: app/style.css, the audio thread (app/player.js) and the app's files, run in this
 // order as one classic script (each file sees the ones before it)
