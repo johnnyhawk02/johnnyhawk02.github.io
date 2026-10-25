@@ -46,6 +46,18 @@ const STYLES = [
     on[2][15] = 1;
     return { on, yields: f.busy ? [0, 1, 2, 3, 5] : [0, 1, 2, 3] };
   } },
+  { name: 'breakcore', grooves: BREAKCORE, fill(f) {
+    // a snare roll that speeds up: 8ths in the first half and 16ths in the second (16ths all through when busy),
+    // a kick to start it and the high tom on the last step; a busy fill cuts the hats too
+    const on = blankFill(), start = 16 - f.len;
+    for (let s = start; s < 16; s++) {
+      const r = s - start;
+      if (f.busy || r >= f.len / 2 || r % 2 === 0) on[3][s] = 1;
+    }
+    on[0][start] = 1;
+    on[2][15] = 1;
+    return { on, yields: f.busy ? [0, 1, 2, 3, 5, 6] : [0, 1, 2, 3] };
+  } },
 ];
 let styleIdx = 0; // saved with presets by name; presets from before the styles were electro
 // user: patterns saved from the steps tab (up to 16, in localStorage). Beat spreads them over its range;
