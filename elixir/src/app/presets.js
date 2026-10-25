@@ -110,10 +110,14 @@ function useKit(k) {
 kitSel.addEventListener('change', () => {
   loadPreset(kitList[Number(kitSel.value)]);
 });
+// bpm by the preset menu: ticked, a loaded preset brings its own tempo; unticked, the tempo stays as it is
+const presetBpm = $('preset-bpm');
+try { presetBpm.checked = localStorage.getItem('elexir-preset-bpm') !== '0'; } catch (e) { /* default: ticked */ }
+presetBpm.addEventListener('change', () => { try { localStorage.setItem('elexir-preset-bpm', presetBpm.checked ? '1' : '0'); } catch (e) { /* not kept */ } });
 function loadPreset(k) {
   kitSel.value = kitList.indexOf(k);
   barSync = true;
-  try { useKit(k); if (k.song) useSong(k.song); } finally { barSync = false; }
+  try { useKit(k); if (k.song) useSong(k.song, !presetBpm.checked); } finally { barSync = false; }
   setDirty(false);
   if (playing) kitNote(`${k.name} from the next bar`);
 }
@@ -138,9 +142,10 @@ function songSnapshot() {
     pattern: { on: copy(pattern.on), acc: copy(pattern.acc), bar: copy(pattern.bar) }, stepPages: pages.slice(0, pageCount).map(copyPage),
     master: { ...master } };
 }
-function useSong(g) {
+function useSong(g, keepTempo) {
   setStyle(styleIndex(g.style));
-  for (const k of ['energy', 'beat', 'fills', 'tempo', 'vel', 'accent']) perf[k] = g[k];
+  for (const k of ['energy', 'beat', 'fills', 'tempo', 'vel', 'accent']) if (!(keepTempo && k === 'tempo')) perf[k] = g[k];
+  perf.tempo = clampTempo(perf.tempo); // presets from when the range was wider
   $('tempo').value = perf.tempo;
   if (STYLES[styleIdx].user && g.user) { const i = ensureUserPat(g.user); if (i >= 0) useUserSlot(i); }
   Object.assign(master, g.master); buildMaster();

@@ -73,6 +73,19 @@ for (let st = 0; st < 6; st++) for (const beat of [0, 7, 15]) {
     setStyle(st); setPerf('beat', beat); return (0, eval)('(' + window.__probe + ')')();
   }, [st, beat]);
 }
+// bpm unticked: a preset loads without its tempo, and the box is remembered; ticked: the preset's tempo
+const bpmFails = await page.evaluate(() => {
+  const k = kitList.find((p) => p.song && p.song.tempo !== 99), box = $('preset-bpm'), f = [];
+  const tempo = () => [perf.tempo, Number($('tempo').value), (window.__all.concat(pending).map((m) => (m.type === 'atBar' ? m.m : m)).filter((m) => m.type === 'seq').pop() || {}).bpm];
+  if (!box.checked) f.push('bpm not ticked by default');
+  setPerf('tempo', 99); box.click(); loadPreset(k);
+  if (tempo().some((t) => t !== 99)) f.push(`unticked: tempo ${tempo()} after loading ${k.name}, not 99`);
+  if (localStorage.getItem('elexir-preset-bpm') !== '0') f.push('unticked not stored');
+  box.click(); loadPreset(k);
+  if (tempo().some((t) => t !== k.song.tempo)) f.push(`ticked: tempo ${tempo()}, not ${k.song.tempo}`);
+  return f;
+});
+errors.push(...bpmFails);
 await page.close();
 
 // 2. presets in older shapes, plus old user pattern names

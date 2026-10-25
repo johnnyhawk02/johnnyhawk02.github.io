@@ -75,6 +75,8 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .kitbar select { width: 10.5em; font-weight: 500; text-overflow: ellipsis; } /* fixed, so longer names don't shift the bar */
 .kitbar .file { position: relative; overflow: hidden; }
 .kitbar .btn { padding-inline: 10px; }
+.kitbar .bpm-chk { gap: 4px; font-size: var(--fs-s); }
+.kitbar .bpm-chk input { width: 14px; height: 14px; }
 #pc4-open { text-transform: none; }
 .stepper { display: inline-flex; gap: 2px; }
 .stepper .btn { padding-inline: 9px; font-size: var(--fs-m); line-height: 1.2; }
@@ -520,8 +522,9 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .topbar > * { min-width: 0; }
   .kitbar { flex-wrap: nowrap; width: 100%; gap: 4px; }
   .kitbar .field { flex: 1 1 auto; min-width: 0; }
+  .kitbar .bpm-chk { flex: 0 0 auto; gap: 3px; }
   .kitbar select { width: 100%; min-width: 0; }
-  .kitbar .btn { padding-inline: 8px; }
+  .kitbar .btn { padding-inline: 6px; }
   .transport { width: 100%; }
   .transport .bars { margin-left: auto; }
   .tab { flex: 1 1 0; min-width: 0; padding: 8px 4px; font-size: var(--fs-s); }

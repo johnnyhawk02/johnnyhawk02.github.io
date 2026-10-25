@@ -11,7 +11,7 @@ $('pk-pattern').append(perfKnob('energy', 'energy', { short: true }), perfKnob('
   perfKnob('fills', 'fills', { short: true }), perfKnob('tempo', 'tempo'));
 $('pk-feel').append(perfKnob('vel', 'velocity'), perfKnob('accent', 'accent'), perfKnob('groove', 'groove'), perfKnob('depth', 'depth'));
 // the header's tempo field
-$('tempo').addEventListener('change', () => setPerf('tempo', Math.max(40, Math.min(300, Math.round(Number($('tempo').value)) || perf.tempo))));
+$('tempo').addEventListener('change', () => setPerf('tempo', clampTempo(Math.round(Number($('tempo').value)) || perf.tempo)));
 const macroKnobs = [['fm', 'fm depth'], ['decay', 'decay'], ['pitch', 'pitch'], ['filter', 'filter']].map(([m, label]) => {
   const pitch = m === 'pitch', max = pitch ? 48 : 200, mid = MACRO0[m];
   return dialKnob(label, { max, center: mid, detents: pitch ? [[0, false], [12, false], [24, true], [36, false], [48, false]] : [[mid, true]], jump: false,

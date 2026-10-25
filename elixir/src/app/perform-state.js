@@ -2,8 +2,9 @@
 // The groove type and depth are the groove's; tempo is shown in the header's field too
 const perf = { energy: 60, beat: 0, fills: 40, tempo: 118, vel: 100, accent: 6 };
 // [min, max, default] of each, as the knobs and the PC4 map them
-const PERF_RANGE = { energy: [0, 100, 60], beat: [0, 15, 0], fills: [0, 100, 40], tempo: [70, 170, 118], vel: [1, 127, 100], accent: [0, 6, 6],
+const PERF_RANGE = { energy: [0, 100, 60], beat: [0, 15, 0], fills: [0, 100, 40], tempo: [40, 240, 118], vel: [1, 127, 100], accent: [0, 6, 6],
   groove: [0, GROOVE_TYPES.length - 1, 0], depth: [0, 100, 100] };
+const clampTempo = (v) => Math.max(PERF_RANGE.tempo[0], Math.min(PERF_RANGE.tempo[1], v));
 const perfGet = (k) => (k === 'groove' ? grooveIdx() : k === 'depth' ? groove.depth : perf[k]);
 const perfDraws = []; // the perform knobs' redraws
 const drawPerf = () => perfDraws.forEach((d) => d());

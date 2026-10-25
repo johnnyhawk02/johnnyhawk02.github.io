@@ -741,8 +741,9 @@ const ECC83_TABLE = new Float64Array([
   0.3399398748, 0.3407211248, 0.3415023748, 0.3422836248, 0.3430648748, 0.3438461248
 ]);
 const FX_BUFFER_SIZE = 0x7fff;
-// not in the firmware: a tempo-synced delay needs up to a bar (3.4 s at 70 bpm), so the buffer
-// is allocated larger and the delay's index mask widens only while it is synced
+// not in the firmware: a tempo-synced delay needs up to a bar (6 s at 40 bpm), so the buffer is allocated
+// larger and the delay's index mask widens only while it is synced (ping-pong gets half: 5.94 s, so a whole-bar
+// ping-pong under 40.4 bpm is a touch short)
 const SYNC_BUFFER_SIZE = 0x7ffff;
 const F_32768 = f(32768);
 const F_REAL_FS = f(REAL_FS);
