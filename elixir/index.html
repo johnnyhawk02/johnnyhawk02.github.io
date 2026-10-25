@@ -425,6 +425,8 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .pc4-tile.used { opacity: .5; }
 .pc4-tile.sel { outline: 2px solid var(--ink); }
 .pc4-badge { position: absolute; top: 2px; right: 6px; font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted); }
+/* in a short window the knobs and controls scroll, so they never run under reset to default */
+.pc4-body { min-height: 0; overflow-y: auto; }
 @media (max-width: 720px) { .pc4-body { grid-template-columns: minmax(0, 1fr); } }
 /* pattern off: the generator's sliders give way to the MIDI note map; tempo stays (the echo syncs to it) */
 .pattern-card.midi #pk-pattern .knob:not([data-k="tempo"]), .pattern-card.midi #pk-feel { display: none; }
@@ -782,6 +784,62 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .page-row .pages .btn.now::after { content: ''; position: absolute; left: 50%; bottom: 2px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--led); }
 .page-row .pick { font-size: var(--fs-s); padding: 3px 6px; border-radius: 6px; }
 @media (min-width: 761px) and (min-height: 480px) { .tab-steps .seq { grid-template-rows: auto auto auto auto minmax(0, 1fr); } .tab-steps .grid { max-height: 340px; } }
+/* ---- fit fixes: readouts, mixer strips, toolbars ---- */
+/* the echo's time readout names a length ("66% ≈1/8."): its column is a little wider than the rest */
+#k-echo { grid-template-columns: calc(var(--kw) + 16px); }
+/* the pattern card's readouts may run a few px into the gap beside them before they're cut */
+.tab-perform .pattern-card .knob output { max-width: calc(100% + 10px); letter-spacing: -.02em; word-spacing: -.25em; }
+/* sound tab: trig and randomise stay together when the bar wraps */
+.snd-acts { display: inline-flex; align-items: center; gap: 8px 12px; }
+/* steps tab: groove and its depth wrap as one */
+.groove-ctl { gap: 8px 12px; }
+.up-cur:empty { display: none; }
+/* narrow mixer strips: a slimmer level pill and fader, so the strip's fader never meets the next strip's pill */
+@media (min-width: 761px) and (max-width: 1300px) {
+  .tab-perform .strip { padding: 0 2px; }
+  .strip .lvl { min-width: 0; padding: 1px 3px; }
+  .tab-perform .strip .fader { padding: 0 2px 0 9px; }
+  .strip .fader .tri { left: 1px; }
+}
+/* phone: the pattern card's mode switch is slimmer so it fits beside the style name */
+@media (max-width: 520px) {
+  .pc-head .src-pick button { padding: 2px 6px; }
+  .style-pick h2 { min-width: 8.2em; }
+  .tab-perform .pc-head { flex-wrap: wrap; row-gap: 4px; }
+  .pc-head .src-pick { margin-left: auto; }
+  .tab-perform .pattern-card .perform { padding-top: 16px; }
+  .tab-perform .pattern-card.midi .midi-map { grid-template-columns: auto 1fr; }
+}
+/* ---- tablet (761-1119 wide): the desk doesn't fit side by side, so perform stacks and scrolls: the pattern card
+   across the top, sound beside randomise, then the effects, the master cards and the mixer, each full width ---- */
+@media (min-width: 761px) and (max-width: 1119px) {
+  .tab-perform { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: repeat(5, max-content); align-content: start; overflow: visible; align-items: stretch; }
+  .tab-perform > .bay-a, .tab-perform > .right-col { display: contents; }
+  .tab-perform .pattern-card { grid-column: 1 / -1; grid-row: 1; }
+  .tab-perform .sound-card { grid-column: 1; grid-row: 2; }
+  .tab-perform .rand-card { grid-column: 2; grid-row: 2; }
+  .tab-perform > .fx-card { grid-column: 1 / -1; grid-row: 3; }
+  .tab-perform > .bay-c { grid-column: 1 / -1; grid-row: 4; }
+  .tab-perform .mix-card { grid-column: 1 / -1; grid-row: 5; }
+  .tab-perform .knob .sl { flex: 1 0 auto; height: 84px; min-height: 84px; }
+  .tab-perform .card, .tab-perform .mix-card { grid-template-rows: auto minmax(min-content, 1fr); }
+  .tab-perform .knobs, .tab-perform .pknobs, .tab-perform .perform, .tab-perform .fxg, .tab-perform .strips, .tab-perform .strip, .mbody { min-height: min-content; }
+  .tab-perform .strip .lower { flex: none; }
+  .tab-perform .strip .fader { height: 150px; }
+  .tab-perform .strip { padding: 0 4px; }
+  .strip .lvl { min-width: 3.1em; padding: 1px 4px; }
+  .tab-perform .strip .fader { padding: 0 4px 0 12px; }
+  .strip .fader .tri { left: 4px; }
+  .tab-perform .rand-card .rbtns { grid-template-columns: repeat(5, auto); gap: 4px; }
+  .tab-perform .rand-card .rbtns #new-kit { grid-column: auto; }
+  .tab-perform .rand-card .rbtns .btn { padding: 5px 6px; font-size: var(--fs-s); }
+  .vrand { grid-template-columns: 1fr 1fr; padding-top: 8px; gap: 5px 8px; }
+  .vrow { grid-template-columns: 3.4em minmax(0, 1fr) minmax(0, 1fr); gap: 3px; }
+  .vrow .btn { padding: 3px 2px; font-size: var(--fs-xs); }
+  .bay-c { --vuw: 110px; }
+}
+/* a narrow desk: the pattern card's nine faders get a larger share of the top row */
+@media (min-width: 1120px) and (max-width: 1250px) { .tab-perform > .bay-a { grid-template-columns: minmax(0, 9fr) minmax(0, 4fr); } }
 </style>
 
 <div class="wrap">
@@ -877,8 +935,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
     <div class="col snd-main" aria-label="Voice">
       <div class="snd-bar">
         <div class="voices" id="voices" role="group" aria-label="Voice"></div>
-        <button class="pad" id="pad" type="button" aria-label="Trigger the selected voice"><span>trig</span><kbd>space · 1–7</kbd></button>
-        <div class="rand"><button class="btn" id="rand" type="button">randomise <span id="rand-name" class="sr">DRUM 1</span></button></div>
+        <span class="snd-acts"><button class="pad" id="pad" type="button" aria-label="Trigger the selected voice"><span>trig</span><kbd>space · 1–7</kbd></button>
+        <span class="rand"><button class="btn" id="rand" type="button">randomise <span id="rand-name" class="sr">DRUM 1</span></button></span></span>
       </div>
       <div class="pcards" id="knobs"></div>
     </div>
@@ -917,8 +975,8 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
           <button class="btn" id="up-del" type="button">DELETE</button>
         </span>
         <output class="up-cur" id="up-cur" aria-live="polite"></output>
-        <label class="field" for="groove-type" title="Where each track's hits sit against the grid: swings, triplet, shuffle, push-pull, drunk">groove <select class="pick" id="groove-type"></select></label>
-        <label class="field" for="gdepth" title="How much of the groove plays: 0% is straight">depth <input id="gdepth" type="range" min="0" max="100" value="100"><output id="gdepth-out">100%</output></label>
+        <span class="seq-ctrl groove-ctl"><label class="field" for="groove-type" title="Where each track's hits sit against the grid: swings, triplet, shuffle, push-pull, drunk">groove <select class="pick" id="groove-type"></select></label>
+        <label class="field" for="gdepth" title="How much of the groove plays: 0% is straight">depth <input id="gdepth" type="range" min="0" max="100" value="100"><output id="gdepth-out">100%</output></label></span>
       </div>
       <div class="seq-ctrl trig-row" role="group" aria-label="Trig conditions: pick one, then click steps to set it">
         <span class="trl">trig</span>

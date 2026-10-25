@@ -101,8 +101,8 @@
     <div class="col snd-main" aria-label="Voice">
       <div class="snd-bar">
         <div class="voices" id="voices" role="group" aria-label="Voice"></div>
-        <button class="pad" id="pad" type="button" aria-label="Trigger the selected voice"><span>trig</span><kbd>space · 1–7</kbd></button>
-        <div class="rand"><button class="btn" id="rand" type="button">randomise <span id="rand-name" class="sr">DRUM 1</span></button></div>
+        <span class="snd-acts"><button class="pad" id="pad" type="button" aria-label="Trigger the selected voice"><span>trig</span><kbd>space · 1–7</kbd></button>
+        <span class="rand"><button class="btn" id="rand" type="button">randomise <span id="rand-name" class="sr">DRUM 1</span></button></span></span>
       </div>
       <div class="pcards" id="knobs"></div>
     </div>
@@ -141,8 +141,8 @@
           <button class="btn" id="up-del" type="button">DELETE</button>
         </span>
         <output class="up-cur" id="up-cur" aria-live="polite"></output>
-        <label class="field" for="groove-type" title="Where each track's hits sit against the grid: swings, triplet, shuffle, push-pull, drunk">groove <select class="pick" id="groove-type"></select></label>
-        <label class="field" for="gdepth" title="How much of the groove plays: 0% is straight">depth <input id="gdepth" type="range" min="0" max="100" value="100"><output id="gdepth-out">100%</output></label>
+        <span class="seq-ctrl groove-ctl"><label class="field" for="groove-type" title="Where each track's hits sit against the grid: swings, triplet, shuffle, push-pull, drunk">groove <select class="pick" id="groove-type"></select></label>
+        <label class="field" for="gdepth" title="How much of the groove plays: 0% is straight">depth <input id="gdepth" type="range" min="0" max="100" value="100"><output id="gdepth-out">100%</output></label></span>
       </div>
       <div class="seq-ctrl trig-row" role="group" aria-label="Trig conditions: pick one, then click steps to set it">
         <span class="trl">trig</span>
