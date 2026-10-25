@@ -141,6 +141,10 @@ input[type=checkbox] { accent-color: var(--ink); width: 16px; height: 16px; marg
 .pm-foot .msg { flex-basis: 100%; }
 .pm-foot .msg:empty { display: none; }
 .pm-foot .msg { font-size: .8rem; color: var(--muted); }
+/* TEMP: delete-all-user-presets — remove when factory presets are done */
+.btn.ghost.pm-del-all { color: #d8322b; }
+.btn.ghost.pm-del-all:disabled { opacity: .4; cursor: default; }
+/* END TEMP */
 .bars { display: inline-flex; gap: 5px; }
 .bars i { width: 8px; height: 8px; border-radius: 50%; background: var(--tint-2); }
 .bars i.lit { background: var(--ink); }
@@ -983,6 +987,9 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   <div class="pm-foot">
     <button class="btn" id="pm-export" type="button">export favourites</button>
     <span class="btn ghost file">import<input id="pm-import" type="file" accept=".json,application/json" aria-label="Import presets from a file"></span>
+    <!-- TEMP: delete-all-user-presets — remove when factory presets are done -->
+    <button class="btn ghost pm-del-all" id="pm-del-all" type="button" title="Delete every preset saved in this browser (built-in presets are kept)">delete all user presets</button>
+    <!-- END TEMP -->
     <span class="pm-sep"></span>
     <button class="btn ghost" id="kit-export" type="button" title="Download the current sound as an LXR kit file">export .snd</button>
     <span class="btn ghost file" title="Open an LXR kit file (.SND) as the current sound">open .snd<input id="kit-file" type="file" accept=".snd,.SND" aria-label="Open a kit file (.SND) from an LXR SD card"></span>
@@ -2115,6 +2122,24 @@ function drawManager() {
   kitList.filter((k) => k.builtin).forEach(row);
 }
 $('pm-open').addEventListener('click', () => { drawManager(); $('pm-msg').textContent = ''; pm.showModal(); });
+// TEMP: delete-all-user-presets — remove when factory presets are done
+// (elexir-presets-v2 holds only the presets saved here; the built-in ones are baked into the page)
+{
+  const btn = $('pm-del-all');
+  const sync = () => { btn.disabled = !kitList.some((k) => k.saved); };
+  $('pm-open').addEventListener('click', sync);
+  btn.addEventListener('click', () => {
+    const n = kitList.filter((k) => k.saved).length;
+    if (!n || !confirm(`Delete all ${n} user preset${n > 1 ? 's' : ''}? Built-in presets are kept. This can't be undone.`)) return;
+    const cur = kitList[Number(kitSel.value)];
+    for (let i = kitList.length - 1; i >= 0; i--) if (kitList[i].saved) kitList.splice(i, 1);
+    storePresets(); fillKits();
+    kitSel.value = cur && cur.saved ? 0 : kitList.indexOf(cur);
+    drawManager(); sync();
+    $('pm-msg').textContent = `Deleted ${n} user preset${n > 1 ? 's' : ''}.`;
+  });
+}
+// END TEMP
 
 // ---- recorder: the finished mix, taken at the engine's own rate, written out as a WAV ----
 // A loop starts on the first step of a bar (starting playback if it is stopped) and stops after its bars,
