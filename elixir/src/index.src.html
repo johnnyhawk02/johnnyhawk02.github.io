@@ -678,17 +678,17 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 /* randomise: five buttons in a row, depth and wild under them */
 .tab-perform .rand-card .rbtns { grid-template-columns: repeat(5, auto); justify-content: start; }
 .tab-perform .rand-card .rand-opts { gap: 14px; }
-/* mixer: per strip the name, pan and the three sends as small knobs, the fader, then r and a */
+/* mixer: per strip the name, pan and the three sends as small knobs in one column, the fader, then r and a */
 .tab-perform .mix-card { grid-template-rows: auto minmax(0, 1fr); }
 .tab-perform .strips { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; min-height: 0; }
 .tab-perform .strip { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 0 4px; background: none; border-radius: 0; border-left: 1px solid var(--line); min-height: 0; min-width: 0; }
 .tab-perform .strip:first-child { border-left: 0; }
 .tab-perform .strip .name { font-size: .8rem; }
-.tab-perform .strip .sends { display: grid; grid-template-columns: repeat(2, auto); gap: 4px 6px; justify-content: center; }
+.tab-perform .strip .sends { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: none; }
 .tab-perform .strip .sdial { display: grid; justify-items: center; gap: 1px; }
 .tab-perform .strip .sdial .dial { width: 26px; height: 26px; }
 .tab-perform .strip .sdial span { display: block; font-size: .6rem; margin: 0; order: 0; min-width: 0; }
-.tab-perform .strip .fader { height: 200px; }
+.tab-perform .strip .fader { height: 150px; }
 .tab-perform .sfoot { gap: 4px; }
 .sfoot .vr, .sfoot .va { width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; background: var(--tint-2); color: var(--ink); cursor: pointer;
   font-family: var(--display); font-weight: 600; font-size: .7rem; line-height: 1; flex: none; }
@@ -702,7 +702,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .groove-card .gtable { grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr); min-height: 0; }
   .groove-card .sdial .sl { height: auto; flex: 1 1 0; min-height: 18px; }
   .groove-card .sdial { flex-direction: column; align-items: center; }
-  .tab-perform .strip .fbox { flex: 1 1 0; min-height: 60px; }
+  .tab-perform .strip .fbox { flex: 1 1 0; min-height: 60px; max-height: 300px; }
   .tab-perform .strip .fader { height: auto; }
   /* sound: the cards fill the panel's height and their faders stretch with them */
   .tab-sound { align-items: stretch; }
@@ -719,6 +719,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-perform .knob label, .tab-perform .pknobs .knob label { font-size: .7rem; line-height: 1.15; }
   .tab-perform .knob output, .tab-perform .pknobs .knob output { line-height: 1.1; }
   .tab-perform .strip { gap: 3px; }
+  .tab-perform .strip .sends { gap: 1px; }
   .tab-perform .strip .sdial .dial { width: 22px; height: 22px; }
 }
 @media (min-width: 761px) and (max-width: 1250px) {
@@ -727,7 +728,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-perform .fx-groups, .tab-perform .master-row { gap: 10px; }
   .tab-perform .fxg + .fxg, .tab-perform .mgroup + .mgroup { padding-left: 10px; }
   .tab-perform .rand-card .rbtns .btn { padding: 4px 6px; }
-  .tab-perform .strip .sends { gap: 3px 2px; }
+  .tab-perform .strip .sends { gap: 2px; }
   .tab-perform .strip .sdial .dial { width: 22px; height: 22px; }
   .tab-perform .strip .sdial span { font-size: .56rem; }
 }
@@ -740,7 +741,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
   .tab-perform .rand-card .rbtns { grid-template-columns: 1fr 1fr; }
   .tab-perform .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 16px; }
   .tab-perform .strip:nth-child(4) { border-left: 0; }
-  .tab-perform .strip .fader { height: 140px; }
+  .tab-perform .strip .fader { height: 110px; }
   .tab-perform .knob .sl, .pcard .knob .sl { height: 72px; }
   .tab-perform .perform { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; gap: 10px; }
   .tab-perform #pk-pattern, .tab-perform #pk-feel, .tab-perform .pgh, .tab-perform #pk-macro, .tab-perform .perform > :first-child { grid-column: 1; grid-row: auto; }
