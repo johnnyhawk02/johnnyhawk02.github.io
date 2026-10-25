@@ -816,6 +816,13 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
 .src-pick button:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
 .steps-src { padding: 3px; }
 .steps-src button { padding: 4px 11px; font-size: .8rem; }
+/* steps: the page row; pages past the length are dimmed, the playing page gets a dot */
+.page-row { gap: 6px 14px; }
+.page-row .pages .btn { min-width: 2.2em; font-family: var(--mono); position: relative; }
+.page-row .pages .btn.off { opacity: .45; }
+.page-row .pages .btn.now::after { content: ''; position: absolute; left: 50%; bottom: 2px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--led); }
+.page-row .pick { font-size: .78rem; padding: 3px 6px; border-radius: 6px; }
+@media (min-width: 761px) and (min-height: 480px) { .tab-steps .seq { grid-template-rows: auto auto auto auto minmax(0, 1fr); } .tab-steps .grid { max-height: 340px; } }
 </style>
 
 <div class="wrap">
@@ -971,6 +978,12 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
         <span class="tg"><i>all but the last of</i><span class="seg"><button class="btn" type="button" data-cond="-2" aria-pressed="false" title="Every bar except bar 2 of every 2">≠2</button><button class="btn" type="button" data-cond="-4" aria-pressed="false" title="Every bar except bar 4 of every 4">≠4</button><button class="btn" type="button" data-cond="-8" aria-pressed="false" title="Every bar except bar 8 of every 8">≠8</button></span></span>
         <span class="tg"><i>first bar of</i><span class="seg"><button class="btn" type="button" data-cond="102" aria-pressed="false" title="Only on bar 1 of every 2 (the bar after a fill)">1/2</button><button class="btn" type="button" data-cond="104" aria-pressed="false" title="Only on bar 1 of every 4">1/4</button><button class="btn" type="button" data-cond="108" aria-pressed="false" title="Only on bar 1 of every 8 (where the crash goes)">1/8</button></span></span>
       </div>
+      <div class="seq-ctrl trig-row page-row" role="group" aria-label="Pages: up to eight bars, played in turn">
+        <span class="trl">page</span>
+        <span class="seg pages"><button class="btn" type="button" data-page="0" aria-pressed="true">1</button><button class="btn" type="button" data-page="1" aria-pressed="false">2</button><button class="btn" type="button" data-page="2" aria-pressed="false">3</button><button class="btn" type="button" data-page="3" aria-pressed="false">4</button><button class="btn" type="button" data-page="4" aria-pressed="false">5</button><button class="btn" type="button" data-page="5" aria-pressed="false">6</button><button class="btn" type="button" data-page="6" aria-pressed="false">7</button><button class="btn" type="button" data-page="7" aria-pressed="false">8</button></span>
+        <label class="tg" for="page-len"><i>length</i><select class="pick" id="page-len"><option value="1">1 bar</option><option value="2">2 bars</option><option value="3">3 bars</option><option value="4">4 bars</option><option value="5">5 bars</option><option value="6">6 bars</option><option value="7">7 bars</option><option value="8">8 bars</option></select></label>
+        <button class="btn" id="expand" type="button" title="Bake the trig conditions into eight pages: each step lands on the bars its condition plays, and the conditions are cleared">EXPAND TO 8</button>
+      </div>
       <p class="hint">Perform / steps / off picks what plays (the same switch is on the pattern card). The grid keeps its own pattern; grab from perform copies in what the perform tab plays. Save as user keeps it: the perform tab's user style plays your patterns, beat picks one, energy thins it out and fills adds fills.</p>
       <div class="grid" id="grid" role="group" aria-label="Step sequencer, 7 tracks by 16 steps"></div>
     </div>
@@ -993,7 +1006,7 @@ pre { margin: 0; padding: 14px 18px; overflow: auto; max-width: 100%; background
       <p class="note">The red circle by play opens the recorder: pick free (records until you press stop, up to ten minutes) or a loop of 1 to 16 bars, which starts on the next bar (starting playback from bar 1 if it is stopped) and is cut to exactly that many bars at the tempo, with the echo carried in from before so it loops cleanly. Tick count-in for a bar of beeps first (a high beep then three lower boops, with the music turned down; from bar 1 if stopped), and the take starts on the bar after it. Pressing record closes the recorder; the red circle by play blinks while it waits or counts and pulses while it records. Choose 44.1 or 48 kHz, 16-bit (dithered) or 24-bit, and normalise (peak at −0.3 dB). Each take is listed with a player and a save .wav button; takes are kept until you reload the page.</p>
       <p class="note">The sound knobs on the pattern card are performance macros over all six voices at once: fm depth (the drums' FM amount and the cymbal and hat FM), decay (every amp decay), pitch (every voice's coarse tune, up to two octaves either way) and filter (every filter's cutoff). Each sits in the middle as the kit is; turning it pushes every voice's own value towards the top or the bottom, so the kit's differences stay. They change what the engine plays, not the kit: the sound tab still shows the kit's own values, and double-click sets a macro back to the middle. They are saved with presets.</p>
       <p class="note">Perform builds the pattern from the dials while it plays: Energy goes from empty through a sparse groove up to the full kit, Beat picks one of sixteen grooves in the pattern's style, and Fills sets how often a fill plays (every 8, 4 or 2 bars) and how long and busy it is. The arrows by the pattern card's title switch the style: electro (the original five grooves plus eleven after classic records and styles: Clear, Al-Naafiysh, Egypt Egypt, Numbers, freestyle, ghettotech, Drexciya, Detroit, Hip Hop Be Bop, Pack Jam, Sharevari), techno (four on the floor, off-beat open hats, snare builds), broken beat (syncopated kicks under a snare on 2 and 4, fills in threes), IDM (lopsided kicks, hats in threes, a second bar that answers the first, stutter fills) and user (patterns you save from the steps tab with Save as user; beat picks one, energy thins it out, fills adds electro fills; Save over and Delete change the one beat has picked). Presets save the style, and a preset in user style carries its pattern with it. Off on the pattern card's switch turns the patterns off: the sequencer keeps time but plays nothing, and MIDI note-ons from a keyboard or another sequencer play the voices instead (any channel, General MIDI drum notes, velocity sets the level; the card shows the note map and which MIDI inputs it hears; needs a browser with Web MIDI, such as Chrome or Edge).</p>
-      <p class="note">The steps tab has its own grid, separate from the perform tab's generated pattern. The perform / steps / off switch (on the pattern card and on the steps tab) picks which one plays, or neither: off hands the voices to MIDI in. Grab from perform copies the perform tab's pattern into the grid (only when pressed). Presets save both patterns and the switch.</p>
+      <p class="note">The steps tab has its own grid of up to eight pages (bars) of 16 steps, played in turn: the page buttons pick the page to edit (one past the length adds pages, copied from the last), length sets how many play, and expand to 8 bakes the trig conditions into eight pages, each step landing on the bars its condition plays, with the conditions cleared. User patterns and presets keep all the pages. The grid is separate from the perform tab's generated pattern. The perform / steps / off switch (on the pattern card and on the steps tab) picks which one plays, or neither: off hands the voices to MIDI in. Grab from perform copies the perform tab's pattern into the grid (only when pressed). Presets save both patterns and the switch.</p>
       <p class="note">Drag a slider up or down, click along it, scroll on it, or use the arrow keys. Double-click puts it back to the loaded kit's value; a red readout means it differs from the kit.</p>
       <p class="note">Randomise (sound tab) varies the selected voice around its current sound, up to the depth, and keeps it sounding like a drum; tick Wild to let every parameter use its full range. In the mixer, r by each name gives that voice a random sound from the bundled kits, varied by 10%, and a varies the voice's current sound by 10%; undo takes either back. The randomise card on the perform tab: kit gives each of the six drum voices a sound straight from a random bundled kit, and alter makes small variations of the current drum sounds (5%, so each stays recognisable); both leave the mixer, FX, crossfeed and pattern alone. Press R to randomise the selected voice; Shift-R randomises every voice at once, up to the depth. Everything builds a fresh sound from voices of the bundled kits (Hrtl's LXR-02 kits and twelve generated ones, which aren't listed as presets), varies each by 10%, and rolls new crossfeed, delay time, echo feedback (usually low, now and then high), beat, energy and fills, keeping the mixer levels; save keeps it.</p>
       <p class="note">Swing (on the pattern card, and on the steps tab) delays every second 16th: 50% is straight, 66% a triplet feel, 75% the most. Each track has two dials (under the pattern sliders, and at the end of its row on the steps tab): swing sets how much of the swing that track takes (so the hats can swing while the kick stays straight), and push moves the whole track early (left) or late (right) by up to a quarter of a 16th, centre being on the grid. The groove applies to the perform patterns too and is saved with presets. In the grid, Shift-click toggles an accent (bright step with a bar on top) and The trig buttons under the tools pick a bar condition (every bar; last bar of 2, 4 or 8; all but the last of 2, 4 or 8; first bar of 2, 4 or 8), and a click on a step then sets it (click again to take it off); Cmd-click (Ctrl-click on Windows) cycles through them all. 2, 4 and 8 play the step only on the last bar of every 2, 4 or 8 (where the fills go); ≠2, ≠4 and ≠8 play it on every bar but that one; 1/2, 1/4 and 1/8 only on the first bar of every 2, 4 or 8 (the bar after a fill, where the crash goes). Click a track name to edit that voice on the sound tab. Both hats share one voice, so the open hat chokes the closed one.</p>
@@ -4653,7 +4666,8 @@ class Player {
   }
   // the hits of step s, each due `at` samples from now: the grid time of the step moved by the groove
   schedule(s, bar, at0) {
-    const hits = [], { on, acc, bar: cond } = this.pattern, G = this.groove, len = LXR.REAL_FS * 60 / this.bpm / 4;
+    const P = this.pattern.pages ? this.pattern.pages[bar % this.pattern.pages.length] : this.pattern; // pages: one bar each, in turn
+    const hits = [], { on, acc, bar: cond } = P, G = this.groove, len = LXR.REAL_FS * 60 / this.bpm / 4;
     for (let t = 0; t < 7 && this.patternOn; t++) {
       if (!on[t][s] || !barOk(cond[t][s], bar)) continue;
       const off = (s % 2 ? G.swing * G.share[t] : 0) + G.nudge[t];
@@ -5310,8 +5324,12 @@ document.addEventListener('keydown', (e) => {
 const blank = () => Array.from({ length: 7 }, () => new Array(16).fill(0));
 const pattern = { on: blank(), acc: blank(), bar: blank() }; // the perform tab's pattern, built by the generator
 // the steps tab's own grid: it plays while that tab is open, and only takes the perform pattern in on "grab from perform"
-const grid = { on: blank(), acc: blank(), bar: blank() };
+// It has up to 8 pages of 16 steps, played one bar each in turn; `grid` is the page being edited
+const blankPage = () => ({ on: blank(), acc: blank(), bar: blank() });
+const pages = Array.from({ length: 8 }, blankPage);
+let grid = pages[0], editPage = 0, pageCount = 1;
 const copyInto = (dst, src) => { for (const k of ['on', 'acc', 'bar']) src[k].forEach((r, t) => dst[k][t].splice(0, 16, ...r)); };
+const copyPage = (P) => ({ on: P.on.map((r) => r.slice()), acc: P.acc.map((r) => r.slice()), bar: P.bar.map((r) => r.slice()) });
 // example beat to start from: [track, steps, accented steps, {step: bar}]
 [[0, [0, 7, 10], [0], { 13: 4 }], [1, [14], [], { 14: 2 }], [2, [11, 15], [], { 15: 4 }], [3, [4, 12], [12], {}], [4, [0], [], { 0: 4 }],
   [5, [2, 6, 8, 10, 14], [6, 14], {}], [6, [15], [], { 15: 2 }]]
@@ -5415,8 +5433,9 @@ let playing = false, nowStep = -1;
 let patternOn = true; // off: the sequencer stays quiet and MIDI notes play the voices
 let source = 'perform'; // what plays: the perform pattern, the steps grid, or off (MIDI in); saved with presets
 function sendSeq() {
-  const copy = (a) => a.map((r) => r.slice()), P = source === 'steps' ? grid : pattern;
-  send({ type: 'seq', pattern: { on: copy(P.on), acc: copy(P.acc), bar: copy(P.bar) },
+  const P = source === 'steps' ? { ...copyPage(pages[0]), pages: pageCount > 1 ? pages.slice(0, pageCount).map(copyPage) : undefined }
+    : { ...copyPage(pattern), pages: pattern.pages ? pattern.pages.map(copyPage) : undefined };
+  send({ type: 'seq', pattern: P,
     bpm: Math.max(40, Math.min(300, Number($('tempo').value) || 120)), vel: Number($('level').value), patternOn, groove: grooveMsg(),
     accentDb: Number($('accent').value), playing });
 }
@@ -5437,9 +5456,42 @@ $('play').addEventListener('click', async () => {
 $('tempo').addEventListener('change', sendSeq);
 $('level').addEventListener('change', sendSeq);
 $('grab').addEventListener('click', () => {
-  copyInto(grid, pattern);
-  cells.forEach((row, r) => row.forEach((_, s) => drawCell(r, s)));
-  sendSeq();
+  // a single-page perform pattern lands on the page being edited; a paged one (a user pattern) replaces the pages
+  if (pattern.pages) { pattern.pages.forEach((P, i) => copyInto(pages[i], P)); pageCount = pattern.pages.length; editPage = Math.min(editPage, pageCount - 1); grid = pages[editPage]; }
+  else copyInto(grid, pattern);
+  drawGrid(); sendSeq();
+});
+const drawGrid = () => { cells.forEach((row, r) => row.forEach((_, s) => drawCell(r, s))); drawPages(); };
+function drawPages() {
+  document.querySelectorAll('[data-page]').forEach((b) => {
+    const i = Number(b.dataset.page);
+    b.setAttribute('aria-pressed', i === editPage); b.classList.toggle('off', i >= pageCount);
+  });
+  $('page-len').value = pageCount;
+}
+function setPageCount(n) {
+  // new pages start as copies of the last one
+  for (let i = pageCount; i < n; i++) copyInto(pages[i], pages[pageCount - 1]);
+  pageCount = n; if (editPage >= n) { editPage = n - 1; grid = pages[editPage]; }
+  drawGrid(); sendSeq();
+}
+document.querySelectorAll('[data-page]').forEach((b) => b.addEventListener('click', () => {
+  const i = Number(b.dataset.page);
+  if (i >= pageCount) setPageCount(i + 1);
+  editPage = i; grid = pages[i]; drawGrid();
+}));
+$('page-len').addEventListener('change', () => setPageCount(Number($('page-len').value)));
+// expand: bake the bar conditions into eight pages (page n is bar n), then every step plays on every bar of its page
+$('expand').addEventListener('click', () => {
+  const src = pages.slice(0, pageCount).map(copyPage);
+  for (let p = 0; p < 8; p++) {
+    const S = src[p % src.length], D = pages[p];
+    for (let t = 0; t < 7; t++) for (let s = 0; s < 16; s++) {
+      const on = S.on[t][s] && barOk(S.bar[t][s], p);
+      D.on[t][s] = on ? 1 : 0; D.acc[t][s] = on ? S.acc[t][s] : 0; D.bar[t][s] = 0;
+    }
+  }
+  pageCount = 8; drawGrid(); sendSeq();
 });
 $('clear').addEventListener('click', () => {
   for (const a of [grid.on, grid.acc, grid.bar]) a.forEach((r) => r.fill(0));
@@ -5577,7 +5629,7 @@ function songSnapshot() {
   const copy = (a) => a.map((r) => r.slice());
   return { style: STYLES[styleIdx].name, user: STYLES[styleIdx].user && userPats.length ? structuredClone(userPats[userSlot()]) : undefined, energy: Number($('energy').value), beat: Number($('beat').value), fills: Number($('fills').value),
     tempo: Number($('tempo').value), vel: Number($('level').value), accent: Number($('accent').value), view, patternOn, source, groove: structuredClone(groove), macro: { ...macro },
-    pattern: { on: copy(pattern.on), acc: copy(pattern.acc), bar: copy(pattern.bar) }, steps: { on: copy(grid.on), acc: copy(grid.acc), bar: copy(grid.bar) },
+    pattern: { on: copy(pattern.on), acc: copy(pattern.acc), bar: copy(pattern.bar) }, steps: copyPage(pages[0]), stepPages: pages.slice(0, pageCount).map(copyPage),
     master: { ...master }, mute: mix.mute.slice(), solo: mix.solo.slice() };
 }
 function useSong(g) {
@@ -5593,8 +5645,10 @@ function useSong(g) {
   // the dial readouts come from generate; then the saved pattern, which may have been edited by hand
   generate();
   copyInto(pattern, g.pattern);
-  copyInto(grid, g.steps || g.pattern); // presets from before the steps grid had its own pattern edited the one pattern
-  cells.forEach((row, r) => row.forEach((_, s) => drawCell(r, s)));
+  // presets from before pages have one; from before the steps grid had its own pattern, it edited the one pattern
+  const sp = g.stepPages || [g.steps || g.pattern];
+  sp.forEach((P, i) => copyInto(pages[i], P)); pageCount = sp.length; editPage = 0; grid = pages[0];
+  drawGrid();
   drawMini(); sendSeq();
   if (g.view === 'steps') setTab('steps');
   // presets from before the selector: off if the pattern was off, else whatever tab they were saved on played
@@ -6075,14 +6129,15 @@ STYLES.push({ name: 'user', user: true,
   get grooves() { const gs = userPats.map(userGroove); return new Proxy(gs, { get: (a, k) => (/^\d+$/.test(k) ? (a.length ? a[userSlot()] : EMPTY_GROOVE) : a[k]) }); },
   fill: STYLES[0].fill });
 const userStyle = () => STYLES.findIndex((st) => st.user);
-const copyGrid = () => ({ on: grid.on.map((r) => r.slice()), acc: grid.acc.map((r) => r.slice()), bar: grid.bar.map((r) => r.slice()) });
-const sameGrid = (a, b) => ['on', 'acc', 'bar'].every((k) => JSON.stringify(a[k]) === JSON.stringify(b[k]));
+// a user pattern is page 1 (on, acc, bar) plus, when there are more, all its pages
+const copyGrid = () => ({ ...copyPage(pages[0]), pages: pageCount > 1 ? pages.slice(0, pageCount).map(copyPage) : undefined });
+const sameGrid = (a, b) => ['on', 'acc', 'bar', 'pages'].every((k) => JSON.stringify(a[k]) === JSON.stringify(b[k]));
 // make a pattern (from a preset) one of the user patterns, unless it already is; returns its slot
 function ensureUserPat(u) {
   let i = userPats.findIndex((x) => sameGrid(x, u));
   if (i < 0 && userPats.length < 16) {
     const names = new Set(userPats.map((x) => x.name));
-    userPats.push({ name: names.has(u.name) || !u.name ? nextUserName() : u.name, on: u.on, acc: u.acc, bar: u.bar }); storeUserPats(); i = userPats.length - 1;
+    userPats.push({ name: names.has(u.name) || !u.name ? nextUserName() : u.name, on: u.on, acc: u.acc, bar: u.bar, pages: u.pages }); storeUserPats(); i = userPats.length - 1;
   }
   return i;
 }
@@ -6130,8 +6185,20 @@ function fillShape(fills) {
 function generate() {
   const st = STYLES[styleIdx], energy = Number($('energy').value), g = st.grooves[Number($('beat').value)], fills = Number($('fills').value);
   const T = energy ? 1 + energy / 100 * 8 : 0, fill = T >= 2 ? fillShape(fills) : null; // fills once there is a groove
-  for (const a of [pattern.on, pattern.acc, pattern.bar]) a.forEach((r) => r.fill(0));
   const { on: fillOn, yields } = fill ? st.fill(fill) : { on: blankFill(), yields: [] };
+  const u = st.user && userPats.length ? userPats[userSlot()] : null;
+  if (u && u.pages) {
+    pattern.pages = u.pages.map((pg) => { const P = blankPage(); genPage(userGroove({ name: u.name, ...pg }), P, energy, T, fill, fillOn, yields); return P; });
+    copyInto(pattern, pattern.pages[0]);
+  } else { delete pattern.pages; genPage(g, pattern, energy, T, fill, fillOn, yields); }
+  $('energy-out').innerHTML = `<b>${ENERGY_NAMES.find(([v]) => energy < v)[1]}</b> · ${energy}%`;
+  $('beat-out').innerHTML = `<b>${g.name.toLowerCase()}</b> · ${st.user ? (st.grooves.length ? userSlot() + 1 : 0) : Number($('beat').value) + 1}/${st.grooves.length}`;
+  $('fills-out').innerHTML = fill ? `<b>every ${fill.every}</b> · ${fill.len} steps` : `<b>off</b>`;
+  drawMini();
+  sendSeq();
+}
+function genPage(g, pattern, energy, T, fill, fillOn, yields) {
+  for (const a of [pattern.on, pattern.acc, pattern.bar]) a.forEach((r) => r.fill(0));
   for (let t = 0; t < 7; t++) {
     const lv = g[ROW[t]], alt = (g.alt && g.alt[ROW[t]]) || '';
     for (let s = 0; s < 16; s++) {
@@ -6150,11 +6217,6 @@ function generate() {
       pattern.acc[t][s] = on && ((g.acc ? reg && !!g.acc[t][s] : c === '1' && energy >= 55) || (t === 6 && energy >= 85) || (fil && cond > 0 && (s % 4 === 0 || s === 15))) ? 1 : 0;
     }
   }
-  $('energy-out').innerHTML = `<b>${ENERGY_NAMES.find(([v]) => energy < v)[1]}</b> · ${energy}%`;
-  $('beat-out').innerHTML = `<b>${g.name.toLowerCase()}</b> · ${st.user ? (st.grooves.length ? userSlot() + 1 : 0) : Number($('beat').value) + 1}/${st.grooves.length}`;
-  $('fills-out').innerHTML = fill ? `<b>every ${fill.every}</b> · ${fill.len} steps` : `<b>off</b>`;
-  drawMini();
-  sendSeq();
 }
 const miniEl = $('mini'), miniCells = [];
 for (let t = 0; t < 7; t++) { miniCells[t] = []; for (let s = 0; s < 16; s++) { const i = document.createElement('i'); miniEl.appendChild(i); miniCells[t][s] = i; } }
@@ -6698,7 +6760,11 @@ function markStep(s) {
   if (s >= 0) { cells.forEach((r) => r[s].classList.add('now')); miniCells.forEach((r) => r[s].classList.add('now')); }
 }
 const barLeds = document.querySelectorAll('.bars i');
-function markBar(b) { barLeds.forEach((l, i) => l.classList.toggle('lit', b >= 0 && b % barLeds.length === i)); }
+function markBar(b) {
+  barLeds.forEach((l, i) => l.classList.toggle('lit', b >= 0 && b % barLeds.length === i));
+  const now = b >= 0 && source === 'steps' ? b % pageCount : -1;
+  document.querySelectorAll('[data-page]').forEach((x) => x.classList.toggle('now', Number(x.dataset.page) === now));
+}
 function onEvent(ev) {
   if (ev.type === 'rec' || ev.type === 'recData') return recEvent(ev);
   const delay = ctx && ctx.outputLatency ? ctx.outputLatency * 1000 : 0;
