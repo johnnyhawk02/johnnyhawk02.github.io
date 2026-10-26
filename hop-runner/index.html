@@ -944,7 +944,8 @@
     c.visible = true;
   }
   if (THREE.GLTFLoader) {
-    new THREE.GLTFLoader().load(COTTAGE_URL, (gltf) => {
+    const loader = new THREE.GLTFLoader();
+    const onCottage = (gltf) => {
       const model = gltf.scene;
       model.traverse(m => {
         if (m.isMesh && m.material && m.material.map) { m.material.map.encoding = THREE.LinearEncoding; m.material.needsUpdate = true; }
@@ -971,7 +972,17 @@
         scene.add(c);
         cottages.push(c);
       }
-    }, undefined, () => {});
+    };
+    if (COTTAGE_URL.startsWith('data:')) {
+      // an inlined model: decode it here rather than fetching a data: URL
+      try {
+        const bin = atob(COTTAGE_URL.slice(COTTAGE_URL.indexOf(',') + 1)), buf = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+        loader.parse(buf.buffer, '', onCottage, () => {});
+      } catch (e) {}
+    } else {
+      loader.load(COTTAGE_URL, onCottage, undefined, () => {});
+    }
   }
   function updateCottages(move) {
     for (const c of cottages) {
