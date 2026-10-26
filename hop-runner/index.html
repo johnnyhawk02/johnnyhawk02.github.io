@@ -379,6 +379,7 @@
   // ---------- renderer / scene ----------
   const mount = document.getElementById('game');
   const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.localClippingEnabled = true; // lets the cottage gardens stop at the track fence
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   mount.appendChild(renderer.domElement);
 
@@ -938,9 +939,10 @@
   // "Painterly Cottage" by glenatron on Sketchfab, CC BY-NC 4.0
   const COTTAGE_URL = 'models/cottage.glb';
   const cottages = [];
-  const COTTAGE_GAP = 70;
+  const COTTAGE_GAP = 90;
+  let COTTAGE_HEIGHT = 15; // tall enough that its front door fits her
   function placeCottage(c, z) {
-    c.position.set(c.userData.side * (4.9 + c.userData.halfX), 0, z);
+    c.position.set(c.userData.side * c.userData.offX, 0, z);
     c.visible = true;
   }
   if (THREE.GLTFLoader) {
@@ -955,17 +957,28 @@
       const holder = new THREE.Group();
       holder.add(model);
       let box = new THREE.Box3().setFromObject(holder), size = box.getSize(new THREE.Vector3());
-      const k = 6 / size.y;
+      const k = COTTAGE_HEIGHT / size.y;
       holder.scale.setScalar(k);
       box = new THREE.Box3().setFromObject(holder);
       const centre = box.getCenter(new THREE.Vector3());
       model.position.x -= centre.x / k; model.position.z -= centre.z / k; model.position.y -= box.min.y / k;
       box = new THREE.Box3().setFromObject(holder); size = box.getSize(new THREE.Vector3());
+      // the house sits at the back of a big garden: bring the house up to the fence and trim the
+      // garden off at the fence line so it never spills onto the track
+      const HOUSE_FRONT = 0.3 * k; // house front, measured from the middle of the garden
+      const sideMats = {};
+      for (const side of [1, -1]) {
+        const plane = new THREE.Plane(new THREE.Vector3(side, 0, 0), -4.7);
+        sideMats[side] = new Map();
+        holder.traverse(m => { if (m.isMesh && !sideMats[side].has(m.material)) { const mm = m.material.clone(); mm.clippingPlanes = [plane]; mm.side = THREE.DoubleSide; sideMats[side].set(m.material, mm); } });
+      }
       for (let i = 0; i < 4; i++) {
         const c = new THREE.Group();
-        const inner = i === 0 ? holder : holder.clone();
+        const side = i % 2 === 0 ? 1 : -1;
+        const inner = holder.clone();
+        inner.traverse(m => { if (m.isMesh) m.material = sideMats[side].get(m.material); });
         c.add(inner);
-        c.userData = { side: i % 2 === 0 ? 1 : -1, halfX: size.x / 2, halfZ: size.z / 2 };
+        c.userData = { side, offX: 6.3 + HOUSE_FRONT, halfZ: size.z / 2 };
         // the door faces the track on both sides
         if (c.userData.side < 0) inner.rotation.y = Math.PI;
         placeCottage(c, -50 - i * COTTAGE_GAP / 2);
@@ -2682,6 +2695,7 @@
       if (o.position.z > DESPAWN_Z) placeScenery(o, o.position.z - scenery.length * SCENERY_GAP);
       // trees and bits that would be inside a shop only show in the gaps
       if (!o.userData.far) o.visible = !terraceAt(o.userData.side, o.position.z, 2.6) && !cottageAt(o.userData.side, o.position.z, 1.5);
+      else o.visible = !cottageAt(o.userData.side, o.position.z, 4);
     }
     updateTerraces(dt, move);
     updateCottages(move);
