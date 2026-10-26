@@ -1241,27 +1241,34 @@
   const geoCache = {};
   const tbox = (w, h, d) => geoCache[w + ',' + h + ',' + d] || (geoCache[w + ',' + h + ',' + d] = new THREE.BoxGeometry(w, h, d));
   const trainWheelGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.16, 14);
-  function makeTrainCar(rideable = false) {
+  const coachBodyGeo = new THREE.BoxGeometry(1.9, 2.2, TRAIN_LEN - 0.3);
+  function makeTrainCar(rideable = false, cab = true, last = true, color = null) {
     const g = new THREE.Group();
     const len = TRAIN_LEN, L = len / 2;
     const add = (geo, mat, x, y, z, rx = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.x = rx; g.add(m); return m; };
-    add(trainBodyGeo, trainMats[Math.floor(Math.random() * trainMats.length)], 0, 0, 0);
-    // stripes along the sides and across the nose
+    const bodyMat = color || trainMats[Math.floor(Math.random() * trainMats.length)];
+    // stripes along the sides
     add(tbox(1.96, 0.28, len - 0.2), trainWhite, 0, 1.15, 0);
     add(tbox(1.96, 0.1, len - 0.2), trainYellow, 0, 1.4, 0);
-    // sloped windscreen on the cab, plus a dark frame
-    const sz = 0.95, sy = 0.95, sl = Math.hypot(sz, sy), a = Math.atan2(sy, sz);
-    add(tbox(1.62, 0.06, sl), trainDark, 0, 2.43, L - 0.6, a);
-    add(tbox(1.42, 0.07, sl - 0.2), glassMat, 0, 2.45, L - 0.58, a);
-    // headlights, tail lights and a number board on the nose
-    for (const x of [-0.6, 0.6]) {
-      add(tbox(0.3, 0.18, 0.06), lightMat, x, 1.75, L + 0.05);
-      add(tbox(0.18, 0.12, 0.06), tailMat, x, 0.95, -L - 0.05);
+    if (cab) {
+      add(trainBodyGeo, bodyMat, 0, 0, 0);
+      // sloped windscreen on the cab, plus a dark frame
+      const sz = 0.95, sy = 0.95, sl = Math.hypot(sz, sy), a = Math.atan2(sy, sz);
+      add(tbox(1.62, 0.06, sl), trainDark, 0, 2.43, L - 0.6, a);
+      add(tbox(1.42, 0.07, sl - 0.2), glassMat, 0, 2.45, L - 0.58, a);
+      // headlights and a number board on the nose
+      for (const x of [-0.6, 0.6]) add(tbox(0.3, 0.18, 0.06), lightMat, x, 1.75, L + 0.05);
+      add(tbox(0.6, 0.2, 0.06), trainDark, 0, 1.75, L + 0.05);
+      // bumper and coupler
+      add(tbox(1.7, 0.22, 0.2), trainDark, 0, 0.82, L + 0.08);
+      add(tbox(0.3, 0.2, 0.35), trainDark, 0, 0.62, L + 0.25);
+    } else {
+      // a passenger coach with a flexible gangway to the carriage in front
+      add(coachBodyGeo, bodyMat, 0, 1.85, 0);
+      add(tbox(1.2, 1.9, 0.5), trainDark, 0, 1.9, L);
+      for (const sx of [-1, 1]) add(tbox(0.06, 0.62, 2.2), glassMat, sx * 0.98, 2.2, 1.6);
     }
-    add(tbox(0.6, 0.2, 0.06), trainDark, 0, 1.75, L + 0.05);
-    // bumper and coupler
-    add(tbox(1.7, 0.22, 0.2), trainDark, 0, 0.82, L + 0.08);
-    add(tbox(0.3, 0.2, 0.35), trainDark, 0, 0.62, L + 0.25);
+    if (last) for (const x of [-0.6, 0.6]) add(tbox(0.18, 0.12, 0.06), tailMat, x, 0.95, -L - 0.05);
     // side windows, doors and roof units
     for (const sx of [-1, 1]) {
       add(tbox(0.06, 0.62, 3.1), glassMat, sx * 0.98, 2.2, -0.45);
@@ -2190,8 +2197,10 @@
     // a lane is busy while a platform in it still reaches back past the spawn line
     return platforms.some(p => p.userData.lane === li && p.position.z - p.userData.length < SPAWN_Z + margin);
   }
+  // a train in this lane still reaching back past the spawn line
+  const trainBusy = (li, margin = 30) => obstacles.some(o => o.userData.tall && Math.abs(o.position.x - LANES[li]) < 0.5 && o.position.z - o.userData.halfD < SPAWN_Z + margin);
   // trains need a long run-up after a bridge so she has time to see them and move
-  const tallFree = () => [0, 1, 2].filter(li => !laneBusy(li, 35));
+  const tallFree = () => [0, 1, 2].filter(li => !laneBusy(li, 35) && !trainBusy(li));
   function addObstacle(o, li, z, base = 0) {
     o.position.set(LANES[li], base, z);
     o.userData.base = base;
@@ -2320,7 +2329,7 @@
     s.untilNext = 30;
   }
   function spawnRow() {
-    const free = [0, 1, 2].filter(li => !laneBusy(li));
+    const free = [0, 1, 2].filter(li => !laneBusy(li) && !trainBusy(li, 4));
     const tun = tunnelOverSpawn();
     if (!tun && s.distance > s.nextTunnel && free.length === 3) {
       spawnTunnel();
@@ -2357,20 +2366,25 @@
     if (!tun && free.length && s.distance > 30 && Math.random() < 0.35) {
       spawnStuff(free);
     } else if (s.distance > 20 && !s.lastTall && Math.random() < 0.4 && tallFree().length) {
-      // one or two train carriages; at least one lane always stays open
-      const lanes = tallFree().sort(() => Math.random() - 0.5).slice(0, Math.random() < 0.6 ? 1 : 2);
+      // trains of 2 to 5 carriages; at least one lane always stays clear of trains
+      const maxNew = 2 - [0, 1, 2].filter(li => trainBusy(li)).length;
+      const lanes = tallFree().filter(li => !trainBusy(li)).sort(() => Math.random() - 0.5).slice(0, Math.min(maxNew, Math.random() < 0.6 ? 1 : 2));
+      if (!lanes.length) { s.untilNext = 6; return; }
+      const carLen = TRAIN_LEN * TRAIN_SCALE;
       for (const li of lanes) {
-        if (Math.random() < 0.55) {
-          const ramp = 8, cars = Math.random() < 0.5 ? 1 : 2, carLen = TRAIN_LEN * TRAIN_SCALE;
+        const cars = 2 + Math.floor(Math.random() * 4);
+        const color = trainMats[Math.floor(Math.random() * trainMats.length)];
+        const rideable = Math.random() < 0.55;
+        const ramp = rideable ? 8 : 0;
+        if (rideable) {
           addPlatform(makeTrainRamp(ramp, carLen * cars), li);
-          for (let c = 0; c < cars; c++) addObstacle(makeTrainCar(true), li, SPAWN_Z - ramp - carLen / 2 - c * carLen);
           for (let d = 1; d < ramp + carLen * cars - 0.5; d += 1.8) addCoin(li, SPAWN_Z - d, Math.min(d / ramp, 1) * TRAIN_ROOF + 0.8);
-        } else {
-          addObstacle(makeTrainCar(), li, SPAWN_Z - 3);
         }
+        const z0 = rideable ? SPAWN_Z - ramp - carLen / 2 : SPAWN_Z - 3;
+        for (let c = 0; c < cars; c++) addObstacle(makeTrainCar(rideable, c === 0, c === cars - 1, color), li, z0 - c * carLen);
       }
-      const open = [0, 1, 2].filter(li => !lanes.includes(li));
-      coinLine(open[Math.floor(Math.random() * open.length)], SPAWN_Z, 5, 0.8);
+      const open = [0, 1, 2].filter(li => !lanes.includes(li) && !trainBusy(li, 4) && !laneBusy(li));
+      if (open.length) coinLine(open[Math.floor(Math.random() * open.length)], SPAWN_Z, 5, 0.8);
       s.lastTall = true;
       s.untilNext = s.speed * 2.0 + Math.random() * s.speed * 0.6 + 6;
       return;
