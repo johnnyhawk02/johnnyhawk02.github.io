@@ -70,7 +70,37 @@
   #score { min-width: 4.4em; }
   #coins { min-width: 3.9em; }
   #best { min-width: 4.6em; }
-  #boardPill, #magnetPill { min-width: 3.4em; }
+  #boardPill, #magnetPill, #jetPill, #starPill { min-width: 3.4em; }
+  #jetPill { background: #fff3df; }
+  #starPill { background: linear-gradient(90deg, #ffe3f1, #e3f6ff, #eaffe3); }
+  #jetPill.low, #starPill.low { animation: pop 0.5s ease-out infinite; }
+  .jet-icon {
+    display: inline-block;
+    width: 0.55em; height: 0.8em;
+    margin-right: 8px;
+    vertical-align: -0.05em;
+    border-radius: 0.25em 0.25em 0.1em 0.1em;
+    background: linear-gradient(#c9d3e0 0 58%, #ffb020 58%, #ff4d2e);
+  }
+  .star-icon {
+    display: inline-block;
+    width: 0.95em; height: 0.95em;
+    margin-right: 6px;
+    vertical-align: -0.12em;
+    background: conic-gradient(#ff5d73, #ffd23f, #7dff9a, #5ee7ff, #b388ff, #ff5d73);
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  }
+  #coins { position: relative; }
+  #combo {
+    position: absolute; left: 50%; top: 100%; margin-top: 7px;
+    font-size: 0.62em; padding: 3px 11px 1px; border-radius: 999px;
+    background: var(--coral); color: #fff; box-shadow: 0 3px 0 var(--shadow);
+    opacity: 0; transform: translateX(-50%) scale(0.5);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  #combo.show { opacity: 1; transform: translateX(-50%) scale(1); }
+  #combo.bump { animation: comboBump 0.25s ease-out; }
+  @keyframes comboBump { 0% { transform: translateX(-50%) scale(1.35); } 100% { transform: translateX(-50%) scale(1); } }
   @media (max-width: 700px) { .pill { font-size: 20px; padding: 5px 12px 3px; } }
   .hud-right { justify-content: flex-end; }
   .board-icon {
@@ -221,9 +251,11 @@
 <div class="hud">
   <div class="hud-left">
     <div class="pill" id="score">0<small>m</small></div>
-    <div class="pill" id="coins"><span class="coin-icon"></span>0</div>
+    <div class="pill" id="coins"><span id="combo"></span><span class="coin-icon"></span>0</div>
     <div class="pill" id="boardPill" hidden><span class="board-icon"></span>20</div>
     <div class="pill" id="magnetPill" hidden><span class="magnet-icon"></span>15</div>
+    <div class="pill" id="jetPill" hidden><span class="jet-icon"></span>8</div>
+    <div class="pill" id="starPill" hidden><span class="star-icon"></span>8</div>
   </div>
   <div class="hud-right">
     <button class="sound-btn" id="soundBtn" type="button" aria-pressed="true">Sound on</button>
@@ -243,6 +275,7 @@
       <li>Grab coins, find the portal, and don't let the policeman catch you!</li>
       <li>A hoverboard saves you from one bump</li>
       <li>A magnet pulls coins to you</li>
+      <li>A jetpack flies you up high, a rainbow star smashes everything!</li>
     </ul>
     <div class="go">Tap to run!</div>
     <p class="credit">Cottage model: "Painterly Cottage" by glenatron (Sketchfab), CC BY-NC 4.0</p>
@@ -285,7 +318,7 @@
 
   // ---------- sound effects, synthesised with Web Audio ----------
   const sfx = (() => {
-    let ctx = null, master = null, noiseBuf = null, hum = null;
+    let ctx = null, master = null, noiseBuf = null, hum = null, roar = null;
     let on = true;
     try { on = localStorage.getItem('hopRunnerSound') !== 'off'; } catch (e) {}
     function unlock() {
@@ -303,7 +336,7 @@
       }
       if (ctx.state === 'suspended') ctx.resume();
     }
-    function tone(type, f0, f1, dur, vol = 0.3, delay = 0) {
+    function tone(type, f0, f1, dur, vol = 0.3, delay = 0, dest = null) {
       if (!ctx || !on) return;
       const t = ctx.currentTime + delay;
       const o = ctx.createOscillator(), g = ctx.createGain();
@@ -313,10 +346,10 @@
       g.gain.setValueAtTime(0.0001, t);
       g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
       g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      o.connect(g); g.connect(master);
+      o.connect(g); g.connect(dest || master);
       o.start(t); o.stop(t + dur + 0.05);
     }
-    function noise(dur, freq, vol = 0.3, q = 1, type = 'bandpass', delay = 0) {
+    function noise(dur, freq, vol = 0.3, q = 1, type = 'bandpass', delay = 0, dest = null) {
       if (!ctx || !on) return;
       const t = ctx.currentTime + delay;
       const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
@@ -324,8 +357,29 @@
       f.type = type; f.frequency.value = freq; f.Q.value = q;
       g.gain.setValueAtTime(vol, t);
       g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      src.connect(f); f.connect(g); g.connect(master);
+      src.connect(f); f.connect(g); g.connect(dest || master);
       src.start(t); src.stop(t + dur + 0.05);
+    }
+    // a bouncy little tune (C, A minor, F, G) that speeds up as she runs faster
+    let musicGain = null, musicTimer = null, musicStep = 0, musicNext = 0, musicBpm = 120, musicSparkle = false;
+    const midi = (n) => 440 * Math.pow(2, (n - 69) / 12);
+    const SONG = [72, 0, 76, 79, 76, 0, 72, 74, 76, 0, 72, 69, 72, 0, 76, 0, 77, 0, 76, 74, 72, 0, 69, 72, 74, 0, 71, 74, 79, 0, 77, 74];
+    const ROOTS = [48, 45, 41, 43];
+    function musicTick() {
+      if (!ctx) return;
+      if (musicNext < ctx.currentTime) musicNext = ctx.currentTime + 0.05;
+      const eighth = 30 / musicBpm;
+      while (musicNext < ctx.currentTime + 0.15) {
+        const d = musicNext - ctx.currentTime, k = musicStep % 32;
+        const bass = midi(ROOTS[k >> 3] + (k % 2 ? 12 : 0));
+        tone('triangle', bass, bass, eighth * 0.8, 0.13, d, musicGain);
+        if (SONG[k]) { const f = midi(SONG[k] + (musicSparkle ? 12 : 0)); tone('square', f, f, eighth * 0.75, 0.045, d, musicGain); }
+        if (musicSparkle && k % 2) { const f = midi(SONG[(k + 31) % 32] || 79) * 2; tone('sine', f, f, eighth * 0.5, 0.04, d, musicGain); }
+        if (k % 4 === 0) tone('sine', 150, 45, 0.16, 0.3, d, musicGain);
+        if (k % 4 === 2) noise(0.1, 1800, 0.1, 0.8, 'bandpass', d, musicGain);
+        if (k % 2) noise(0.04, 8000, 0.05, 0.7, 'highpass', d, musicGain);
+        musicNext += eighth; musicStep++;
+      }
     }
     return {
       unlock,
@@ -334,12 +388,34 @@
         on = !on;
         try { localStorage.setItem('hopRunnerSound', on ? 'on' : 'off'); } catch (e) {}
         if (master) master.gain.value = on ? 0.55 : 0;
-        if (!on) this.hum(false);
+        if (!on) { this.hum(false); this.roar(false); }
         return on;
       },
+      music(play) {
+        if (!ctx) return;
+        if (play && !musicTimer) {
+          if (!musicGain) { musicGain = ctx.createGain(); musicGain.gain.value = 0.55; musicGain.connect(master); }
+          musicStep = 0;
+          musicNext = ctx.currentTime + 0.1;
+          musicTimer = setInterval(musicTick, 40);
+        } else if (!play && musicTimer) {
+          clearInterval(musicTimer);
+          musicTimer = null;
+        }
+      },
+      setMusic(bpm, sparkle) { musicBpm = bpm; musicSparkle = sparkle; },
       jump() { tone('square', 330, 660, 0.14, 0.12); },
       lane() { noise(0.12, 1400, 0.12, 0.8); },
-      coin() { tone('sine', 988, 988, 0.08, 0.22); tone('sine', 1319, 1319, 0.22, 0.22, 0.07); },
+      coin(n = 1) {
+        // each coin in a chain rings a note higher
+        const k = Math.pow(2, [0, 2, 4, 5, 7, 9, 11, 12, 14, 16][(n - 1) % 10] / 12);
+        tone('sine', 988 * k, 988 * k, 0.08, 0.2); tone('sine', 1319 * k, 1319 * k, 0.2, 0.2, 0.06);
+      },
+      combo() { [784, 988, 1175, 1568, 1976, 2349].forEach((f, k) => tone('square', f, f, 0.1, 0.07, k * 0.05)); tone('triangle', 523, 1047, 0.4, 0.12); },
+      land(v) { noise(0.09, 260, Math.min(0.3, 0.04 + v * 0.012), 0.7, 'lowpass'); },
+      smash() { noise(0.25, 1200, 0.35, 0.6); tone('square', 900, 200, 0.18, 0.08); tone('sine', 1568, 2637, 0.15, 0.08, 0.05); },
+      jetGo() { noise(0.8, 700, 0.3, 0.5); tone('sawtooth', 110, 440, 0.6, 0.08); tone('sine', 300, 1200, 0.5, 0.1, 0.1); },
+      starGo() { [523, 659, 784, 1047, 1319, 1568, 2093].forEach((f, k) => tone('triangle', f, f, 0.12, 0.12, k * 0.045)); },
       bounce() { tone('sine', 180, 720, 0.35, 0.3); },
       launch() { noise(0.4, 900, 0.18, 0.6); tone('triangle', 300, 900, 0.35, 0.15); },
       stumble() { noise(0.18, 220, 0.5, 0.7, 'lowpass'); tone('triangle', 420, 160, 0.35, 0.2, 0.03); },
@@ -356,6 +432,23 @@
       zoom() { noise(0.9, 600, 0.25, 0.4, 'bandpass'); tone('sawtooth', 120, 900, 0.8, 0.1); tone('sine', 400, 2000, 0.6, 0.12, 0.1); },
       mystery() { [784, 988, 1175, 1568, 1976].forEach((f, k) => tone('sine', f, f, 0.18, 0.15, k * 0.05)); noise(0.3, 6000, 0.08, 0.5, 'highpass'); },
       boardBreak() { noise(0.35, 1800, 0.4, 0.6); tone('square', 600, 120, 0.3, 0.1); },
+      roar(start) {
+        // the jetpack's rumble
+        if (!ctx) return;
+        if (start && on && !roar) {
+          const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+          src.buffer = noiseBuf; src.loop = true;
+          f.type = 'lowpass'; f.frequency.value = 520;
+          g.gain.value = 0.09;
+          src.connect(f); f.connect(g); g.connect(master);
+          src.start();
+          roar = { src, g };
+        } else if (!start && roar) {
+          const r = roar; roar = null;
+          r.g.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.08);
+          r.src.stop(ctx.currentTime + 0.5);
+        }
+      },
       hum(start) {
         if (!ctx) return;
         if (start && on && !hum) {
@@ -390,6 +483,7 @@
 
   const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 240);
   camera.position.set(0, 4.2, 7.5);
+  const shakeOff = new THREE.Vector3();
 
   const hemiLight = new THREE.HemisphereLight(0xffffff, 0x8bd17c, 0.75);
   scene.add(hemiLight);
@@ -1712,6 +1806,77 @@
   riding.visible = false;
   player.add(riding);
 
+  // jetpack: two shiny tanks with flames
+  const jetMetal = new THREE.MeshLambertMaterial({ color: 0xdfe7f0, emissive: 0x222833 });
+  const jetRed = lambert(0xff5d73);
+  const flameMat = new THREE.MeshBasicMaterial({ color: 0xffa13d, transparent: true, opacity: 0.9 });
+  const flameCore = new THREE.MeshBasicMaterial({ color: 0xfff3a0 });
+  const tankGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.55, 12);
+  const nozzleGeo = new THREE.CylinderGeometry(0.07, 0.1, 0.12, 10);
+  const flameGeo = new THREE.ConeGeometry(0.1, 0.6, 10);
+  const coreGeo = new THREE.ConeGeometry(0.05, 0.3, 8);
+  function makeJetModel(flames) {
+    const g = new THREE.Group();
+    g.userData.flames = [];
+    for (const sx of [-0.15, 0.15]) {
+      const tank = new THREE.Mesh(tankGeo, jetMetal);
+      tank.position.x = sx;
+      const nozzle = new THREE.Mesh(nozzleGeo, jetRed);
+      nozzle.position.set(sx, -0.33, 0);
+      g.add(tank, ball(0.12, jetRed, sx, 0.28, 0), nozzle);
+      if (flames) {
+        const f = new THREE.Mesh(flameGeo, flameMat);
+        f.rotation.x = Math.PI;
+        f.position.set(sx, -0.68, 0);
+        const c = new THREE.Mesh(coreGeo, flameCore);
+        c.rotation.x = Math.PI;
+        c.position.set(sx, -0.52, 0);
+        g.add(f, c);
+        g.userData.flames.push(f, c);
+      }
+    }
+    g.add(box(0.12, 0.3, 0.06, jetRed, 0, 0.02, -0.08));
+    return g;
+  }
+  const backJet = makeJetModel(true);
+  backJet.position.set(0, 1.2, 0.5);
+  backJet.visible = false;
+  upperBody.add(backJet);
+  function makeJetPickup() {
+    const g = new THREE.Group();
+    const m = makeJetModel(false);
+    m.position.y = 1.15;
+    m.scale.setScalar(1.7);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.05, 6, 28), new THREE.MeshBasicMaterial({ color: 0xffa13d, transparent: true, opacity: 0.7 }));
+    ring.position.y = 1.15;
+    g.add(m, ring);
+    g.userData = { jetPickup: true, halfW: 0.7, halfD: 0.7, height: 0, base: 0, spin: m, ring };
+    return g;
+  }
+  // rainbow star: a few seconds of smashing through everything
+  const starShape = new THREE.Shape();
+  for (let k = 0; k < 10; k++) {
+    const r = k % 2 ? 0.27 : 0.62, a = (k / 10) * Math.PI * 2 + Math.PI / 2;
+    if (k) starShape.lineTo(Math.cos(a) * r, Math.sin(a) * r); else starShape.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+  }
+  const starPickGeo = new THREE.ExtrudeGeometry(starShape, { depth: 0.2, bevelEnabled: true, bevelThickness: 0.06, bevelSize: 0.05, bevelSegments: 2 });
+  starPickGeo.center();
+  function makeStarPickup() {
+    const g = new THREE.Group();
+    const st = new THREE.Mesh(starPickGeo, new THREE.MeshLambertMaterial({ color: 0xffd23f, emissive: 0x806000 }));
+    st.position.y = 1.2;
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.95, 0.06, 6, 28), new THREE.MeshBasicMaterial({ color: 0xff5dc8, transparent: true, opacity: 0.75 }));
+    ring.position.y = 1.2;
+    g.add(st, ring);
+    g.userData = { starPickup: true, halfW: 0.7, halfD: 0.7, height: 0, base: 0, spin: st, ring };
+    return g;
+  }
+  const aura = new THREE.Mesh(new THREE.SphereGeometry(1.0, 18, 14), new THREE.MeshBasicMaterial({ color: 0xff5dc8, transparent: true, opacity: 0.3, depthWrite: false, side: THREE.BackSide }));
+  aura.position.y = 1.0;
+  aura.scale.set(0.85, 1.2, 0.85);
+  aura.visible = false;
+  player.add(aura);
+
   function makeBoardPickup() {
     const g = new THREE.Group();
     const b = makeBoardModel();
@@ -1866,7 +2031,7 @@
   // sparkle particles (a shared pool)
   const sparkColors = [0xffd23f, 0xff5dc8, 0x5ee7ff, 0xffffff, 0x7dff9a];
   const sparks = [];
-  for (let i = 0; i < 70; i++) {
+  for (let i = 0; i < 120; i++) {
     const m = new THREE.Mesh(starGeo, new THREE.MeshBasicMaterial({ color: sparkColors[i % sparkColors.length], transparent: true, opacity: 0 }));
     m.visible = false;
     m.userData = { v: new THREE.Vector3(), life: 0 };
@@ -1898,6 +2063,46 @@
       m.rotation.x += dt * 8; m.rotation.y += dt * 6;
       m.material.opacity = Math.min(1, u.life * 1.5);
       m.scale.setScalar(0.6 + u.life);
+    }
+  }
+
+  // little puffs of dust (landing, lane changes) and jetpack smoke
+  const puffGeo = new THREE.SphereGeometry(0.22, 7, 5);
+  const puffs = [];
+  for (let i = 0; i < 80; i++) {
+    const m = new THREE.Mesh(puffGeo, new THREE.MeshBasicMaterial({ color: 0xf4ead8, transparent: true, opacity: 0, depthWrite: false }));
+    m.visible = false;
+    m.userData = { v: new THREE.Vector3(), life: 0, max: 1 };
+    scene.add(m);
+    puffs.push(m);
+  }
+  let puffIdx = 0;
+  function puff(x, y, z, vx, vy, vz, color, life) {
+    const m = puffs[puffIdx++ % puffs.length];
+    m.position.set(x, y, z);
+    m.userData.v.set(vx, vy, vz);
+    m.userData.life = m.userData.max = life;
+    m.material.color.setHex(color);
+    m.visible = true;
+  }
+  function dust(x, y, z, n, spread = 3) {
+    for (let k = 0; k < n; k++) {
+      const a = Math.random() * Math.PI * 2, sp = spread * (0.4 + Math.random() * 0.6);
+      puff(x + (Math.random() - 0.5) * 0.6, y + 0.12, z + (Math.random() - 0.5) * 0.4, Math.cos(a) * sp, 0.6 + Math.random() * 1.4, Math.sin(a) * sp * 0.5, 0xf4ead8, 0.45 + Math.random() * 0.3);
+    }
+  }
+  function updateDust(dt, move) {
+    for (const m of puffs) {
+      if (!m.visible) continue;
+      const u = m.userData;
+      u.life -= dt;
+      if (u.life <= 0) { m.visible = false; continue; }
+      u.v.multiplyScalar(Math.max(0, 1 - dt * 3));
+      m.position.addScaledVector(u.v, dt);
+      m.position.z += move;
+      const t = u.life / u.max;
+      m.material.opacity = 0.7 * t;
+      m.scale.setScalar(1 + (1 - t) * 1.8);
     }
   }
 
@@ -2097,6 +2302,7 @@
   const crashScore = document.getElementById('crashScore');
   const crashTitle = document.getElementById('crashTitle');
   const coinsEl = document.getElementById('coins');
+  const comboEl = document.getElementById('combo');
   const flashEl = document.getElementById('flash');
   const toastEl = document.getElementById('toast');
 
@@ -2116,6 +2322,7 @@
     jumpBuffer: 0,
     crashT: 0,
     prevLane: 1,
+    jet: 0, star: 0, jetF: 0, jetFall: false, combo: 0, comboT: 0, shake: 0, lean: 0, squash: 0, skyLane: 1,
     lastTall: false,
     ground: 0,          // height of whatever is under her feet
     groundPlat: null,
@@ -2203,7 +2410,8 @@
   function reset() {
     clearWorld();
     applyTheme(0);
-    Object.assign(s, { coins: 0, nextPortal: 150, copZ: 3.2, copX: 0, copY: 0, copVy: 0, copClose: 3.5, bumpCool: 0, stumbleT: 0, caught: false, lookT: 0, nextLook: 1.5, board: 0, nextBoard: 60, nextClimb: 70, zoom: 0, zoomF: 0, nextZoom: 110, nextBox: 35, magnet: 0, nextMagnet: 90, nextTunnel: 45, twirl: 0, milestone: 0, invuln: 0, lane: 1, prevLane: 1, lastTall: false, x: 0, y: 0, vy: 0, speed: START_SPEED, distance: 0, untilNext: 35, jumpBuffer: 0, crashT: 0, ground: 0, groundPlat: null });
+    Object.assign(s, { coins: 0, nextPortal: 150, copZ: 3.2, copX: 0, copY: 0, copVy: 0, copClose: 3.5, bumpCool: 0, stumbleT: 0, caught: false, lookT: 0, nextLook: 1.5, board: 0, nextBoard: 60, nextClimb: 70, zoom: 0, zoomF: 0, nextZoom: 110, nextBox: 35, magnet: 0, nextMagnet: 90, nextTunnel: 45, twirl: 0, milestone: 0, invuln: 0, lane: 1, prevLane: 1, lastTall: false, x: 0, y: 0, vy: 0, speed: START_SPEED, distance: 0, untilNext: 35, jumpBuffer: 0, crashT: 0, ground: 0, groundPlat: null, jet: 0, star: 0, jetF: 0, jetFall: false, nextJet: 140, nextStar: 210, combo: 0, comboT: 0, shake: 0, lean: 0, squash: 0, skyLane: 1 });
+    comboEl.classList.remove('show');
     player.rotation.set(0, 0, 0);
     renderHud();
   }
@@ -2211,6 +2419,7 @@
   function start() {
     reset();
     s.mode = 'running';
+    sfx.music(true);
     startScreen.hidden = true;
     crashScreen.hidden = true;
   }
@@ -2228,6 +2437,10 @@
     renderHud();
     setBoard(0);
     setMagnet(0);
+    setJet(0);
+    setStar(0);
+    s.jetFall = false;
+    sfx.music(false);
     if (caught) sfx.caught(); else sfx.bonk();
     crashTitle.textContent = caught ? 'Caught!' : 'Bonk!';
     crashScore.textContent = (caught ? 'The policeman caught you! ' : '') + 'You ran ' + Math.floor(s.distance) + ' metres and got ' + s.coins + ' coins!';
@@ -2235,6 +2448,57 @@
 
   const boardPill = document.getElementById('boardPill');
   const magnetPill = document.getElementById('magnetPill');
+  const jetPill = document.getElementById('jetPill');
+  const starPill = document.getElementById('starPill');
+  const JET_Y = 9, JET_TIME = 8, STAR_TIME = 8;
+  function setJet(secs) {
+    s.jet = secs;
+    backJet.visible = secs > 0;
+    jetPill.hidden = secs <= 0;
+    sfx.roar(secs > 0);
+  }
+  // a wavy trail of coins up in the sky
+  function skyCoins(zFrom, zTo) {
+    let n = 0;
+    for (let z = zFrom; z > zTo; z -= 2.2) {
+      if (++n % 8 === 0) s.skyLane = Math.max(0, Math.min(2, s.skyLane + (s.skyLane === 0 ? 1 : s.skyLane === 2 ? -1 : Math.random() < 0.5 ? -1 : 1)));
+      addCoin(s.skyLane, z, JET_Y + 0.9);
+    }
+  }
+  function startJet() {
+    setJet(JET_TIME);
+    s.vy = 0; s.jumpBuffer = 0; s.jetFall = false;
+    s.copZ = 30; s.copClose = 0;
+    s.skyLane = s.lane;
+    sfx.jetGo();
+    toast('Jetpack!');
+    skyCoins(-12, SPAWN_Z);
+    s.untilNext = 2;
+  }
+  function setStar(secs) {
+    s.star = secs;
+    aura.visible = secs > 0;
+    starPill.hidden = secs <= 0;
+    if (secs <= 0) shirt.color.setHex(0xff5d73);
+  }
+  function startStar() {
+    setStar(STAR_TIME);
+    s.copZ = 30; s.copClose = 0;
+    sfx.starGo();
+    toast('Super star!');
+    burst(s.x, 1.5, -0.5, 30);
+  }
+  // with the rainbow star she smashes things into confetti
+  function smash(o) {
+    const tall = !!o.userData.tall;
+    scene.remove(o);
+    burst(o.position.x, tall ? 2.2 : 0.8, Math.min(o.position.z, -0.5), tall ? 40 : 22);
+    dust(o.position.x, 0, Math.min(o.position.z, -0.5), 6, 4);
+    sfx.smash();
+    s.shake = Math.max(s.shake, tall ? 0.45 : 0.22);
+    s.coins += tall ? 3 : 1;
+    popCoins();
+  }
   function setMagnet(secs) {
     s.magnet = secs;
     headMagnet.visible = secs > 0;
@@ -2260,15 +2524,22 @@
     o.userData.popT = 0.55;
     popping.push(o);
     const r = Math.random();
-    if (r < 0.35 || (r < 0.55 && s.board > 0) || (r >= 0.55 && r < 0.75 && s.magnet > 0)) {
+    const tunnelNear = tunnels.some(t => t.position.z > -30 && t.position.z - t.userData.length < 2);
+    let prize = r < 0.24 ? 'coins' : r < 0.4 ? 'board' : r < 0.54 ? 'magnet' : r < 0.67 ? 'jet' : r < 0.8 ? 'star' : r < 0.9 ? 'zoom' : 'super';
+    if ((prize === 'board' && s.board > 0) || (prize === 'magnet' && s.magnet > 0) || (prize === 'jet' && (s.jet > 0 || tunnelNear)) || (prize === 'star' && s.star > 0)) prize = 'coins';
+    if (prize === 'coins') {
       s.coins += 10; popCoins();
       burst(s.x, 1.5, -1, 16, true);
       toast('+10 coins!');
-    } else if (r < 0.55) {
+    } else if (prize === 'board') {
       setBoard(20); sfx.boardGet(); toast('Hoverboard!');
-    } else if (r < 0.75) {
+    } else if (prize === 'magnet') {
       grabMagnet();
-    } else if (r < 0.9) {
+    } else if (prize === 'jet') {
+      setTimeout(() => s.mode === 'running' && startJet(), 300);
+    } else if (prize === 'star') {
+      startStar();
+    } else if (prize === 'zoom') {
       setTimeout(() => s.mode === 'running' && startZoom(4), 350);
     } else {
       s.vy = 15; sfx.bounce(); toast('Super jump!');
@@ -2283,6 +2554,7 @@
   }
   function breakBoard() {
     setBoard(0);
+    s.shake = Math.max(s.shake, 0.4);
     s.invuln = 1.2; // a moment to get clear after the board takes the hit
     sfx.boardBreak();
     flashEl.style.background = 'radial-gradient(circle at center, #ffffff00 30%, #5ee7ff 100%)';
@@ -2292,11 +2564,13 @@
 
   // first stumble: she trips and the policeman nearly catches her; a second one while he's close: caught!
   function stumble() {
-    if (s.bumpCool > 0 || s.mode !== 'running' || s.invuln > 0 || s.zoomF > 0.15) return;
+    if (s.bumpCool > 0 || s.mode !== 'running' || s.invuln > 0 || s.zoomF > 0.15 || s.star > 0 || s.jet > 0) return;
     s.bumpCool = 0.8;
+    s.comboT = 0;
     if (s.board > 0) { breakBoard(); return; } // the hoverboard takes the bump instead
     if (s.copClose > 0) { crash(true); return; }
     sfx.stumble();
+    s.shake = Math.max(s.shake, 0.5);
     setTimeout(() => s.mode === 'running' && sfx.whistle(), 250);
     s.copClose = 6;
     s.stumbleT = 0.5;
@@ -2308,7 +2582,10 @@
     if (s.mode !== 'running') return;
     s.prevLane = s.lane;
     s.lane = Math.max(0, Math.min(2, s.lane + dir));
-    if (s.lane !== s.prevLane) sfx.lane();
+    if (s.lane !== s.prevLane) {
+      sfx.lane();
+      if (s.y <= s.ground + 0.05) dust(s.x, s.ground, 0.3, 3, 1.5);
+    }
   }
   function jump() {
     if (s.mode !== 'running') return;
@@ -2337,6 +2614,7 @@
     sfx.unlock();
     sfx.toggle();
     if (sfx.on && s.board > 0) sfx.hum(true);
+    if (sfx.on && s.jet > 0) sfx.roar(true);
     renderSoundBtn();
   });
   soundBtn.addEventListener('click', (e) => e.preventDefault());
@@ -2515,6 +2793,13 @@
     s.untilNext = 30;
   }
   function spawnRow() {
+    if (s.jet > 0) {
+      // up in the sky: more coins while there's still time to reach them, nothing on the ground
+      if (s.jet - 120 / Math.max(1, s.speed) > 0.4) skyCoins(SPAWN_Z, SPAWN_Z - 20);
+      s.untilNext = 20;
+      s.lastTall = false;
+      return;
+    }
     const free = [0, 1, 2].filter(li => !laneBusy(li) && !trainBusy(li, 4));
     const tun = tunnelOverSpawn();
     if (!tun && s.distance > s.nextTunnel && free.length === 3) {
@@ -2592,6 +2877,12 @@
       } else if (s.distance > s.nextMagnet && s.magnet <= 0 && open.length) {
         addObstacle(makeMagnetPickup(), open[0], SPAWN_Z - 4);
         s.nextMagnet = s.distance + 160 + Math.random() * 120;
+      } else if (s.distance > s.nextJet && s.jet <= 0 && !tunnels.length && open.length) {
+        addObstacle(makeJetPickup(), open[0], SPAWN_Z - 4);
+        s.nextJet = s.distance + 300 + Math.random() * 200;
+      } else if (s.distance > s.nextStar && s.star <= 0 && open.length) {
+        addObstacle(makeStarPickup(), open[open.length - 1], SPAWN_Z - 4);
+        s.nextStar = s.distance + 280 + Math.random() * 200;
       } else if (s.distance > s.nextBox && open.length) {
         addObstacle(makeMysteryBox(), open[open.length - 1], SPAWN_Z - 5);
         s.nextBox = s.distance + 60 + Math.random() * 70;
@@ -2603,7 +2894,7 @@
   }
 
   // while zooming she steers and jumps by herself
-  const isHazard = (u) => !(u.portal || u.zoomPortal || u.boardPickup || u.magnetPickup || u.pad || u.mystery);
+  const isHazard = (u) => !(u.portal || u.zoomPortal || u.boardPickup || u.magnetPickup || u.jetPickup || u.starPickup || u.pad || u.mystery);
   function hazardIn(li, from, to) {
     let near = Infinity, tall = false;
     for (const o of obstacles) {
@@ -2673,10 +2964,11 @@
     }
     s.zoomF += ((running && s.zoom > 0 ? 1 : 0) - s.zoomF) * Math.min(1, dt * 3);
     s.boardF = (s.boardF || 0) + ((running && s.board > 0 ? 1 : 0) - (s.boardF || 0)) * Math.min(1, dt * 2);
-    const boost = (1 + 1.8 * s.zoomF) * (1 + (BOARD_BOOST - 1) * s.boardF);
+    s.jetF += ((running && s.jet > 0 ? 1 : 0) - s.jetF) * Math.min(1, dt * 2);
+    const boost = (1 + 1.8 * s.zoomF) * (1 + (BOARD_BOOST - 1) * s.boardF) * (1 + 0.25 * s.jetF);
     if (running) s.distance += s.speed * dt * 0.5 * (boost - 1);
     const move = s.speed * dt * boost;
-    if (running && s.zoomF > 0.15) autoPilot();
+    if (running && s.zoomF > 0.15 && s.jet <= 0) autoPilot();
 
     // lanes: smooth slide
     s.x += (LANES[s.lane] - s.x) * Math.min(1, dt * 14);
@@ -2724,6 +3016,7 @@
     for (const h of spinners) h.rotation.z += dt * 1.5;
     updateSky(dt);
     updateSparks(dt, move);
+    updateDust(dt, move);
     let inside = false;
     for (let i = tunnels.length - 1; i >= 0; i--) {
       const t = tunnels[i];
@@ -2747,17 +3040,20 @@
       if (u.popT <= 0) { scene.remove(o); popping.splice(i, 1); }
     }
     // speed streaks and a wider view while zooming
+    // and faint ones whenever she's going really fast
     const zf = s.zoomF;
-    streakMat.opacity = zf * 0.7;
+    const fast = running ? Math.max(0, Math.min(1, (s.speed * boost - 15) / 8)) : 0;
+    const streakA = Math.max(zf * 0.7, s.jetF * 0.5, fast * 0.3);
+    streakMat.opacity = streakA;
     for (const m of streaks) {
-      m.visible = zf > 0.03;
+      m.visible = streakA > 0.02;
       if (!m.visible) continue;
       m.position.z += dt * 90;
       if (m.position.z > 8) m.position.z -= 68;
       m.position.x = camera.position.x + m.userData.ox;
       m.position.y = camera.position.y - 2 + m.userData.oy;
     }
-    const wantFov = baseFov + 16 * zf;
+    const wantFov = baseFov + 16 * zf + 6 * s.jetF + 4 * fast;
     if (Math.abs(camera.fov - wantFov) > 0.05) { camera.fov = wantFov; camera.updateProjectionMatrix(); }
     for (let i = obstacles.length - 1; i >= 0; i--) {
       const o = obstacles[i];
@@ -2780,6 +3076,10 @@
             grabMagnet();
             continue;
           }
+        } else if (d.jetPickup) {
+          if (hitX && Math.abs(o.position.z) < 0.8 && feet < 2.2) { scene.remove(o); obstacles.splice(i, 1); startJet(); continue; }
+        } else if (d.starPickup) {
+          if (hitX && Math.abs(o.position.z) < 0.8 && feet < 2.2) { scene.remove(o); obstacles.splice(i, 1); startStar(); continue; }
         } else if (d.boardPickup) {
           if (hitX && Math.abs(o.position.z) < 0.8 && feet < 2.2) {
             scene.remove(o); obstacles.splice(i, 1);
@@ -2792,13 +3092,15 @@
           if (hitX && hitZ && feet < 0.4 && feet > -0.3 && s.vy <= 0) { s.vy = 15; d.top.position.y = 0.32; sfx.bounce(); s.twirl = 1; }
         } else if (d.tall) {
           if (hitX && hitZ && Math.abs(o.position.z) < d.halfD - 0.4 && !(d.roof && feet > d.roof - 0.6)) {
+            if (s.star > 0) { smash(o); obstacles.splice(i, 1); continue; }
             if (s.zoomF <= 0.15) s.lane = s.prevLane; // swiped into the side of a train: bump back instead of crashing
             stumble();
           }
         } else if (hitX && hitZ && feet < d.height - 0.12 && feet > -0.5) {
           // tripped over something jumpable: knock it flying and stumble
-          scene.remove(o); obstacles.splice(i, 1);
-          stumble();
+          obstacles.splice(i, 1);
+          if (s.star > 0) smash(o);
+          else { scene.remove(o); stumble(); }
           continue;
         }
       }
@@ -2813,6 +3115,12 @@
       }
       if (o.userData.magnetPickup) { o.userData.spin.rotation.y += dt * 2.5; o.userData.ring.rotation.y += dt * 2; }
       if (o.userData.boardPickup) { o.userData.spin.rotation.y += dt * 2; o.userData.ring.rotation.y += dt * 2; }
+      if (o.userData.jetPickup || o.userData.starPickup) {
+        const u = o.userData;
+        u.spin.rotation.y += dt * 2.5; u.ring.rotation.y += dt * 2;
+        u.spin.position.y = 1.2 + Math.sin(performance.now() / 300) * 0.1;
+        if (u.starPickup) u.ring.material.color.setHSL((performance.now() / 1500) % 1, 1, 0.6);
+      }
       if (o.userData.pad) o.userData.top.position.y += (0.2 - o.userData.top.position.y) * Math.min(1, dt * 8);
     }
     for (let i = coins.length - 1; i >= 0; i--) {
@@ -2829,8 +3137,23 @@
       if (running && Math.abs(c.position.x - s.x) < 0.9 && Math.abs(c.position.z) < 0.8 && Math.abs(c.position.y - (s.y + 0.9)) < 1.2) {
         scene.remove(c); coins.splice(i, 1);
         s.coins++;
+        s.combo++;
+        s.comboT = 2.5;
         popCoins();
-        sfx.coin();
+        sfx.coin(s.combo);
+        if (s.combo >= 3) {
+          comboEl.textContent = 'x' + s.combo;
+          comboEl.classList.add('show');
+          comboEl.classList.remove('bump'); void comboEl.offsetWidth; comboEl.classList.add('bump');
+        }
+        if (s.combo % 10 === 0) {
+          // a long chain of coins earns a bonus
+          const bonus = Math.min(25, s.combo / 2);
+          s.coins += bonus;
+          toast('Combo x' + s.combo + '! +' + bonus);
+          sfx.combo();
+          burst(s.x, s.y + 2, -1.5, 24);
+        }
         burst(c.position.x, c.position.y, c.position.z, 3, true);
       }
     }
@@ -2849,6 +3172,7 @@
     }
 
     // jumping, falling, and riding up ramps
+    const vyBefore = s.vy;
     if (wasGrounded && s.ground < prevGround - 0.05 && prevPlat && prevPlat.userData.launch && running) {
       s.vy = 8.5; // whoosh off the launch ramp
       s.twirl = 1; sfx.twirl();
@@ -2861,14 +3185,28 @@
     if (wasGrounded && s.vy <= 0 && s.ground < s.y && s.y - s.ground < 0.35 && !(prevPlat && prevPlat.userData.launch)) {
       s.y = s.ground; // walk down a ramp instead of floating off it
     }
-    if (s.y > s.ground || s.vy > 0) {
+    if (s.jet > 0 && running) {
+      // the jetpack lifts her high over everything
+      s.y += (Math.max(JET_Y, s.ground + 2) - s.y) * Math.min(1, dt * 4);
+      s.vy = 0;
+    } else if (s.y > s.ground || s.vy > 0) {
       s.vy -= GRAVITY * dt;
+      if (s.jetFall) s.vy = Math.max(s.vy, -7); // floats gently back down
       s.y += s.vy * dt;
     }
     if (s.y <= s.ground) {
       // ramps push her up; stepping sideways onto a bridge lifts her quickly but gently
       s.y = s.ground - s.y > 0.3 ? s.y + (s.ground - s.y) * Math.min(1, dt * 18) : s.ground;
       if (s.vy < 0) s.vy = 0;
+      if (!wasGrounded && vyBefore < -4 && s.mode !== 'ready') {
+        // a squashy landing with a puff of dust
+        const v = s.jetFall ? 14 : -vyBefore;
+        s.squash = Math.min(1, v / 12);
+        dust(s.x, s.ground, 0.3, Math.round(4 + v * 0.5), 1.5 + v * 0.15);
+        if (v > 12) s.shake = Math.max(s.shake, 0.25);
+        sfx.land(v);
+      }
+      s.jetFall = false;
     }
 
     if (running) {
@@ -2876,8 +3214,37 @@
       if (s.untilNext <= 0) spawnRow();
     }
 
-    // hoverboard timer
+    // power-up timers
     if (s.invuln > 0) s.invuln -= dt;
+    if (s.comboT > 0) {
+      s.comboT -= dt;
+      if (s.comboT <= 0) { s.combo = 0; comboEl.classList.remove('show'); }
+    }
+    if (s.jet > 0 && running) {
+      s.jet -= dt;
+      jetPill.lastChild.nodeValue = Math.ceil(Math.max(0, s.jet));
+      jetPill.classList.toggle('low', s.jet < 3);
+      for (const f of backJet.userData.flames) f.scale.set(1, 0.7 + Math.random() * 0.6, 1);
+      const sx = Math.random() < 0.5 ? -0.15 : 0.15;
+      if (Math.random() < 0.5) puff(s.x + sx, s.y + 0.5, 0.5, (Math.random() - 0.5) * 0.6, -3, 0, 0xffffff, 0.25);
+      if (s.jet <= 0) { setJet(0); s.jetFall = true; s.invuln = 2.2; }
+    }
+    if (s.star > 0 && running) {
+      s.star -= dt;
+      starPill.lastChild.nodeValue = Math.ceil(Math.max(0, s.star));
+      starPill.classList.toggle('low', s.star < 3);
+      const hue = (performance.now() / 600) % 1;
+      aura.material.color.setHSL(hue, 1, 0.6);
+      shirt.color.setHSL(hue, 0.85, 0.62);
+      const pulse = 1 + Math.sin(performance.now() / 90) * 0.06;
+      aura.scale.set(0.85 * pulse, 1.2 * pulse, 0.85 * pulse);
+      if (Math.random() < dt * 25) {
+        burst(s.x + (Math.random() - 0.5) * 0.8, s.y + 0.4 + Math.random() * 1.2, 0.6, 1);
+        sparks[(sparkIdx - 1) % sparks.length].material.color.setHSL(Math.random(), 1, 0.6); // rainbow sparkles
+      }
+      if (s.star <= 0) { setStar(0); s.invuln = Math.max(s.invuln, 1.0); }
+    }
+    sfx.setMusic(116 + Math.min(28, Math.max(0, (s.speed - 12) * 3.5)) + 16 * Math.max(s.zoomF, s.jetF), s.star > 0);
     if (s.magnet > 0 && running) {
       s.magnet -= dt;
       magnetPill.lastChild.nodeValue = Math.ceil(s.magnet);
@@ -2910,7 +3277,20 @@
     const wob = Math.sin(tNow * 6.3) * 0.09 + Math.sin(tNow * 2.1) * 0.05; // a little wobble on the board
     riding.rotation.z = onBoard ? (LANES[s.lane] - s.x) * 0.25 + wob : 0;
     riding.rotation.x = onBoard ? Math.sin(tNow * 4.7) * 0.05 : 0;
+    if (s.jet > 0) {
+      // flying pose: arms out, legs dangling
+      legL.rotation.x = 0.35 + Math.sin(tNow * 5) * 0.12;
+      legR.rotation.x = 0.1 - Math.sin(tNow * 5) * 0.12;
+      armL.rotation.x = armR.rotation.x = 0.5;
+      armL.rotation.z = -1.15; armR.rotation.z = 1.15;
+    }
     player.position.set(s.x, s.y + hover + (air || onBoard ? 0 : Math.abs(Math.sin(s.runPhase)) * 0.08), 0);
+    // squash and stretch
+    s.squash = Math.max(0, s.squash - dt * 5);
+    let sy = onBoard || s.jet > 0 || !air ? 1 : 1 + Math.max(-0.06, Math.min(0.15, s.vy * 0.015));
+    sy -= s.squash * 0.3;
+    const sxz = 1 / Math.sqrt(sy);
+    player.scale.set(sxz, sy, sxz);
     player.rotation.y = (LANES[s.lane] - s.x) * -0.15;
     if (s.twirl > 0) {
       s.twirl = Math.max(0, s.twirl - dt * 1.4);
@@ -2929,6 +3309,10 @@
     if (onBoard && !crashed && s.stumbleT <= 0) {
       player.rotation.z = wob * 0.7; // she sways to keep her balance
       player.rotation.x = Math.sin(tNow * 4.7) * 0.03;
+    }
+    if (s.jet > 0 && !crashed) {
+      player.rotation.x = -0.25;
+      player.rotation.z = Math.sin(tNow * 2.3) * 0.08 + (LANES[s.lane] - s.x) * -0.12;
     }
     // every so often she glances back over her shoulder at the policeman, so we see her face
     const canLook = !air && s.stumbleT <= 0 && s.mode !== 'crashed';
@@ -2984,10 +3368,16 @@
     cop.position.set(s.copX, s.copY, s.copZ);
     cop.visible = s.copZ < 12;
 
-    // camera follows lane a little
+    // camera follows lane a little, leans into lane changes and shakes on bumps
+    camera.position.sub(shakeOff);
     camera.position.x += (s.x * 0.55 - camera.position.x) * Math.min(1, dt * 6);
-    camera.position.y += (4.2 + s.y * 0.7 - camera.position.y) * Math.min(1, dt * 5);
-    camera.lookAt(s.x * 0.4, 1.2 + s.y * 0.6, -6);
+    camera.position.y += (4.2 + s.y * (0.7 + 0.3 * s.jetF) - camera.position.y) * Math.min(1, dt * 5); // stays above her when she flies
+    s.shake = Math.max(0, s.shake - dt * 2.2);
+    shakeOff.set((Math.random() - 0.5) * s.shake, (Math.random() - 0.5) * s.shake, 0);
+    camera.position.add(shakeOff);
+    camera.lookAt(s.x * 0.4, 1.2 + s.y * (0.6 + 0.35 * s.jetF), -6);
+    s.lean += ((s.x - LANES[s.lane]) * 0.035 - s.lean) * Math.min(1, dt * 8);
+    camera.rotateZ(s.lean);
 
     if (running) renderHud();
   }
@@ -3008,5 +3398,6 @@
   window.__hop = s;
   window.__hopWorld = () => ({ obstacles, platforms, LANES, ducks });
   window.__cottages = cottages;
+  window.__hopPower = { jet: startJet, star: startStar };
 })();
 </script>
