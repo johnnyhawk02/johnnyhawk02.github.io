@@ -139,6 +139,7 @@
     transition: opacity 0.3s, transform 0.3s;
   }
   #toast.show { opacity: 1; transform: scale(1); }
+  .credit { margin: 14px 0 0; font-size: 11px; opacity: 0.55; }
   .pill small { font-family: var(--body); font-weight: 900; font-size: 0.5em; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.6; margin-left: 4px; }
 
   .overlay {
@@ -244,6 +245,7 @@
       <li>A magnet pulls coins to you</li>
     </ul>
     <div class="go">Tap to run!</div>
+    <p class="credit">Cottage model: "Painterly Cottage" by glenatron (Sketchfab), CC BY-NC 4.0</p>
   </div>
 </div>
 
@@ -256,6 +258,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
 (() => {
   // ---------- tuning ----------
@@ -930,6 +933,69 @@
     scene.add(b);
     billboards.push(b);
   }
+
+  // cottages from a 3D model, standing in the gaps between the shops
+  // "Painterly Cottage" by glenatron on Sketchfab, CC BY-NC 4.0
+  const COTTAGE_URL = 'models/cottage.glb';
+  const cottages = [];
+  const COTTAGE_GAP = 70;
+  function placeCottage(c, z) {
+    c.position.set(c.userData.side * (4.9 + c.userData.halfX), 0, z);
+    c.visible = true;
+  }
+  if (THREE.GLTFLoader) {
+    new THREE.GLTFLoader().load(COTTAGE_URL, (gltf) => {
+      const model = gltf.scene;
+      model.traverse(m => {
+        if (m.isMesh && m.material && m.material.map) { m.material.map.encoding = THREE.LinearEncoding; m.material.needsUpdate = true; }
+      });
+      // turn its front door towards the track, and make it about two storeys tall
+      model.rotation.y = -Math.PI / 2;
+      const holder = new THREE.Group();
+      holder.add(model);
+      let box = new THREE.Box3().setFromObject(holder), size = box.getSize(new THREE.Vector3());
+      const k = 6 / size.y;
+      holder.scale.setScalar(k);
+      box = new THREE.Box3().setFromObject(holder);
+      const centre = box.getCenter(new THREE.Vector3());
+      model.position.x -= centre.x / k; model.position.z -= centre.z / k; model.position.y -= box.min.y / k;
+      box = new THREE.Box3().setFromObject(holder); size = box.getSize(new THREE.Vector3());
+      for (let i = 0; i < 4; i++) {
+        const c = new THREE.Group();
+        const inner = i === 0 ? holder : holder.clone();
+        c.add(inner);
+        c.userData = { side: i % 2 === 0 ? 1 : -1, halfX: size.x / 2, halfZ: size.z / 2 };
+        // the door faces the track on both sides
+        if (c.userData.side < 0) inner.rotation.y = Math.PI;
+        placeCottage(c, -50 - i * COTTAGE_GAP / 2);
+        scene.add(c);
+        cottages.push(c);
+      }
+    }, undefined, () => {});
+  }
+  function updateCottages(move) {
+    for (const c of cottages) {
+      c.position.z += move;
+      const u = c.userData;
+      // slide it back into the next gap that's big enough
+      for (let k = 0; k < 8 && c.position.z < -40; k++) {
+        const t = terraceAt(u.side, c.position.z, u.halfZ + 1);
+        const b = billboards.find(o => o.userData.side === u.side && Math.abs(o.position.z - c.position.z) < u.halfZ + 4);
+        if (t) {
+          // stand at the far end of the gap, so she can see it over the near shops
+          const next = terraces.filter(o => o.userData.side === u.side && o.position.z + o.userData.len / 2 < t.userData.far)
+            .sort((a, b) => b.position.z - a.position.z)[0];
+          const nextNear = next ? next.position.z + next.userData.len / 2 : -1e9;
+          if (t.userData.far - nextNear >= u.halfZ * 2 + 4) c.position.z = nextNear + u.halfZ + 1.3;
+          else c.position.z = nextNear - 1; // too tight: try the gap after that one
+        }
+        else if (b) c.position.z = b.position.z - u.halfZ - 4.5;
+        else break;
+      }
+      if (c.position.z - u.halfZ > DESPAWN_Z) placeCottage(c, c.position.z - cottages.length * COTTAGE_GAP / 2 - Math.random() * 30);
+    }
+  }
+  const cottageAt = (side, z, m) => cottages.some(c => c.userData.side === side && Math.abs(c.position.z - z) < c.userData.halfZ + m);
 
   // far away: rolling hills, the sun, drifting clouds (these ignore the fog)
   const hillMats = [lambert(0x5cc46e), lambert(0x4bb36a), lambert(0x6fd07a)];
@@ -2604,9 +2670,10 @@
       o.position.z += move;
       if (o.position.z > DESPAWN_Z) placeScenery(o, o.position.z - scenery.length * SCENERY_GAP);
       // trees and bits that would be inside a shop only show in the gaps
-      if (!o.userData.far) o.visible = !terraceAt(o.userData.side, o.position.z, 2.6);
+      if (!o.userData.far) o.visible = !terraceAt(o.userData.side, o.position.z, 2.6) && !cottageAt(o.userData.side, o.position.z, 1.5);
     }
     updateTerraces(dt, move);
+    updateCottages(move);
     updateFireworks(dt);
     updateDucks(dt, move, running);
     for (const b of billboards) {
@@ -2915,5 +2982,6 @@
   // test hook
   window.__hop = s;
   window.__hopWorld = () => ({ obstacles, platforms, LANES, ducks });
+  window.__cottages = cottages;
 })();
 </script>
