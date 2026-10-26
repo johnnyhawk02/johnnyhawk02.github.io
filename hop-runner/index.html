@@ -732,7 +732,7 @@
     return g;
   }
   const terraces = [];
-  const TERRACE_X = 13;
+  const TERRACE_X = 5.4; // right up against the track fences
   function placeTerrace(t, nearZ) {
     const side = t.userData.side;
     t.position.set(side * TERRACE_X, 0, nearZ - t.userData.len / 2);
@@ -745,10 +745,17 @@
       const t = makeTerrace();
       t.userData.side = side;
       placeTerrace(t, z);
-      z = t.userData.far - (8 + Math.random() * 22);
+      z = t.userData.far - (12 + Math.random() * 16);
       scene.add(t);
       terraces.push(t);
     }
+  }
+  // the terrace on this side covering z (give or take m), if any
+  function terraceAt(side, z, m) {
+    for (const t of terraces) {
+      if (t.userData.side === side && z - m < t.position.z + t.userData.len / 2 && z + m > t.userData.far) return t;
+    }
+    return null;
   }
   function updateTerraces(dt, move) {
     for (const t of terraces) {
@@ -758,7 +765,7 @@
     for (const t of terraces) {
       if (t.position.z - t.userData.len / 2 > DESPAWN_Z + 4) {
         const farthest = Math.min(...terraces.filter(o => o.userData.side === t.userData.side).map(o => o.userData.far));
-        placeTerrace(t, farthest - (8 + Math.random() * 22));
+        placeTerrace(t, farthest - (12 + Math.random() * 16));
       }
     }
     const tt = performance.now() / 1000;
@@ -897,8 +904,8 @@
   let cheerIdx = 0;
   function placeBillboard(b, z) {
     const side = b.userData.side;
-    b.position.set(side * 9.5, 0, z);
-    b.rotation.y = side * -0.45; // angled towards her so she can read it
+    b.position.set(side * 7.6, 0, z);
+    b.rotation.y = side * -0.8; // angled towards her so she can read it, poking out of a gap
     b.userData.face.material.map = boardTextures[cheerIdx++ % boardTextures.length].t;
   }
   for (let i = 0; i < 4; i++) {
@@ -2435,11 +2442,19 @@
     for (const o of scenery) {
       o.position.z += move;
       if (o.position.z > DESPAWN_Z) placeScenery(o, o.position.z - scenery.length * SCENERY_GAP);
+      // trees and bits that would be inside a shop only show in the gaps
+      if (!o.userData.far) o.visible = !terraceAt(o.userData.side, o.position.z, 2.6);
     }
     updateTerraces(dt, move);
     updateFireworks(dt);
     for (const b of billboards) {
       b.position.z += move;
+      // billboards stand in the gaps between the shops
+      for (let k = 0; k < 6 && b.position.z < -40; k++) {
+        const t = terraceAt(b.userData.side, b.position.z, 4);
+        if (!t) break;
+        b.position.z = t.userData.far - 5;
+      }
       if (b.position.z > DESPAWN_Z + 6) placeBillboard(b, b.position.z - billboards.length * BILLBOARD_GAP);
     }
     for (const f of fences) {
