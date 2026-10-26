@@ -120,6 +120,15 @@ export const work = [
     link: "https://johnnyhawk02.github.io/slow-signal/",
     cta: "Play it in your browser",
   },
+  {
+    kind: "App",
+    title: "Hop Hop Runner",
+    year: 2026,
+    blurb: "A 3D endless runner for little kids who only want to jump: hop over barriers and crates, swerve round trains, collect coins and dive through portals to new worlds, with a policeman on your heels. No ducking, made for iPad.",
+    image: "img/hop-runner.jpg",
+    link: "https://johnnyhawk02.github.io/hop-runner/",
+    cta: "Play it in your browser",
+  },
 ];
 
 export const links = {
