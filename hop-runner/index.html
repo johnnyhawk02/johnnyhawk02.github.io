@@ -326,6 +326,9 @@
       bonk() { noise(0.3, 160, 0.6, 0.8, 'lowpass'); tone('sine', 300, 70, 0.5, 0.35); },
       caught() { this.whistle(); tone('sawtooth', 500, 200, 0.6, 0.08, 0.5); },
       portal() { tone('sine', 300, 1600, 0.7, 0.2); tone('triangle', 450, 2400, 0.7, 0.12, 0.08); noise(0.7, 3000, 0.08, 0.5, 'highpass'); },
+      cheer() { [523, 659, 784, 1047, 1319].forEach((f, k) => tone('square', f, f, 0.12, 0.07, k * 0.08)); },
+      twirl() { tone('triangle', 500, 1400, 0.45, 0.12); },
+      tunnel() { noise(1.2, 300, 0.2, 0.5, 'lowpass'); },
       magnet() { tone('sine', 220, 440, 0.25, 0.2); tone('sine', 440, 880, 0.25, 0.15, 0.12); tone('square', 880, 880, 0.08, 0.06, 0.3); },
       boardGet() { [523, 659, 784, 1047].forEach((f, k) => tone('triangle', f, f, 0.14, 0.18, k * 0.07)); },
       zoom() { noise(0.9, 600, 0.25, 0.4, 'bandpass'); tone('sawtooth', 120, 900, 0.8, 0.1); tone('sine', 400, 2000, 0.6, 0.12, 0.1); },
@@ -365,7 +368,8 @@
   const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 240);
   camera.position.set(0, 4.2, 7.5);
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x8bd17c, 0.75));
+  const hemiLight = new THREE.HemisphereLight(0xffffff, 0x8bd17c, 0.75);
+  scene.add(hemiLight);
   const sunLight = new THREE.DirectionalLight(0xfff1d0, 0.65);
   sunLight.position.set(-5, 10, 6);
   scene.add(sunLight);
@@ -621,6 +625,26 @@
   sunGlow.position.set(-45, 38, -150.5);
   scene.add(sunGlow);
   const cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false });
+  // stars for Starry Night: one cheap point cloud
+  const starPos = [];
+  for (let i = 0; i < 260; i++) {
+    const a = Math.random() * Math.PI * 2, el = 0.15 + Math.random() * 1.2;
+    starPos.push(Math.cos(a) * Math.cos(el) * 180, 20 + Math.sin(el) * 120, -Math.abs(Math.sin(a)) * Math.cos(el) * 180 - 20);
+  }
+  const starGeoPts = new THREE.BufferGeometry();
+  starGeoPts.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+  const stars = new THREE.Points(starGeoPts, new THREE.PointsMaterial({ color: 0xffffff, size: 2.2, sizeAttenuation: false, fog: false }));
+  stars.visible = false;
+  scene.add(stars);
+  // a rainbow far away for the sunny lands
+  const rainbow = new THREE.Group();
+  [0xff5d73, 0xffa45c, 0xffd23f, 0x7dff9a, 0x5ec8e5, 0x9b8cff].forEach((c, k) => {
+    const band = new THREE.Mesh(new THREE.TorusGeometry(70 - k * 2.2, 1.1, 6, 40, Math.PI), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.45, fog: false, depthWrite: false }));
+    rainbow.add(band);
+  });
+  rainbow.position.set(40, -8, -185);
+  scene.add(rainbow);
+
   const clouds = [];
   for (let i = 0; i < 12; i++) {
     const c = new THREE.Group();
@@ -1410,6 +1434,8 @@
     grass.material.color.setHex(t.grass);
     track.material.color.setHex(t.track);
     hillMats.forEach((m, k) => m.color.setHex(t.hills[k]));
+    stars.visible = i === 3;
+    rainbow.visible = i === 0 || i === 1;
   }
 
   const blob = new THREE.Mesh(new THREE.CircleGeometry(0.45, 20), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22 }));
@@ -1468,6 +1494,10 @@
     nextBox: 35,
     magnet: 0,          // seconds of coin magnet left
     nextMagnet: 90,
+    nextTunnel: 45,
+    twirl: 0,           // > 0 while she spins on a big jump
+    milestone: 0,
+    dark: 0,            // 0..1 how far inside a tunnel
     invuln: 0,
     blinkT: 3,
   };
@@ -1501,6 +1531,8 @@
     obstacles = [];
     for (const p of platforms) scene.remove(p);
     platforms = [];
+    for (const t of tunnels) scene.remove(t);
+    tunnels = [];
     for (const c of coins) scene.remove(c);
     coins = [];
     for (const o of popping) scene.remove(o);
@@ -1523,7 +1555,7 @@
   function reset() {
     clearWorld();
     applyTheme(0);
-    Object.assign(s, { coins: 0, nextPortal: 150, copZ: 3.2, copX: 0, copY: 0, copVy: 0, copClose: 3.5, bumpCool: 0, stumbleT: 0, caught: false, lookT: 0, nextLook: 1.5, board: 0, nextBoard: 60, nextClimb: 70, zoom: 0, zoomF: 0, nextZoom: 110, nextBox: 35, magnet: 0, nextMagnet: 90, invuln: 0, lane: 1, prevLane: 1, lastTall: false, x: 0, y: 0, vy: 0, speed: START_SPEED, distance: 0, untilNext: 35, jumpBuffer: 0, crashT: 0, ground: 0, groundPlat: null });
+    Object.assign(s, { coins: 0, nextPortal: 150, copZ: 3.2, copX: 0, copY: 0, copVy: 0, copClose: 3.5, bumpCool: 0, stumbleT: 0, caught: false, lookT: 0, nextLook: 1.5, board: 0, nextBoard: 60, nextClimb: 70, zoom: 0, zoomF: 0, nextZoom: 110, nextBox: 35, magnet: 0, nextMagnet: 90, nextTunnel: 45, twirl: 0, milestone: 0, invuln: 0, lane: 1, prevLane: 1, lastTall: false, x: 0, y: 0, vy: 0, speed: START_SPEED, distance: 0, untilNext: 35, jumpBuffer: 0, crashT: 0, ground: 0, groundPlat: null });
     player.rotation.set(0, 0, 0);
     renderHud();
   }
@@ -1755,6 +1787,62 @@
       }
     }
   }
+  // a tunnel over all three lanes, with lights along the ceiling
+  const tunnelMat = new THREE.MeshLambertMaterial({ color: 0x8f86b8, side: THREE.DoubleSide });
+  const tunnelFace = lambert(0xc96a4a);
+  const tunnelRim = lambert(0xffd23f);
+  const tunnelLampMat = new THREE.MeshBasicMaterial({ color: 0xfff3b0 });
+  const stripMats = [new THREE.MeshBasicMaterial({ color: 0xff5dc8 }), new THREE.MeshBasicMaterial({ color: 0x5ee7ff })];
+  let tunnels = [];
+  function tunnelFaceAt(z) {
+    const f = new THREE.Group();
+    for (const x of [-5.5, 5.5]) {
+      const pillar = new THREE.Mesh(new THREE.BoxGeometry(1.6, 10.4, 1.2), tunnelFace);
+      pillar.position.set(x, 5.2, 0);
+      f.add(pillar);
+    }
+    const top = new THREE.Mesh(new THREE.BoxGeometry(12.6, 2.6, 1.2), tunnelFace);
+    top.position.y = 9.2;
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(4.75, 0.45, 8, 24, Math.PI), tunnelRim);
+    rim.position.y = 3;
+    f.add(top, rim);
+    f.position.z = z;
+    return f;
+  }
+  function makeTunnel(len) {
+    const g = new THREE.Group();
+    const roof = new THREE.Mesh(new THREE.CylinderGeometry(4.7, 4.7, len, 18, 1, true, Math.PI / 2, Math.PI), tunnelMat);
+    roof.rotation.x = Math.PI / 2;
+    roof.position.set(0, 3, -len / 2);
+    g.add(roof);
+    for (const side of [-1, 1]) {
+      const wall = new THREE.Mesh(new THREE.BoxGeometry(0.4, 3, len), tunnelMat);
+      wall.position.set(side * 4.7, 1.5, -len / 2);
+      const strip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.25, len), stripMats[side < 0 ? 0 : 1]);
+      strip.position.set(side * 4.45, 2.3, -len / 2);
+      g.add(wall, strip);
+    }
+    for (let z = -3; z > -len; z -= 5) {
+      const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.15, 0.7), tunnelLampMat);
+      lamp.position.set(0, 7.55, z);
+      g.add(lamp);
+    }
+    g.add(tunnelFaceAt(0.6), tunnelFaceAt(-len - 0.6));
+    g.userData = { length: len };
+    return g;
+  }
+  function spawnTunnel() {
+    const len = 40 + Math.random() * 25;
+    const t = makeTunnel(len);
+    t.position.z = SPAWN_Z;
+    scene.add(t);
+    tunnels.push(t);
+    coinLine(Math.floor(Math.random() * 3), SPAWN_Z - 4, Math.floor(len / 3), 0.8, 2.6);
+    s.untilNext = 14;
+  }
+  // while a tunnel covers the spawn line, only low things and trains go in it (no bridges, pads or climbs)
+  const tunnelOverSpawn = () => tunnels.some(t => t.position.z - t.userData.length < SPAWN_Z + 12);
+
   function spawnClimb() {
     // all three lanes climb together, two to four steps up, higher the further she has run
     const steps = Math.min(4, 2 + Math.floor(s.distance / 250) + (Math.random() < 0.5 ? 1 : 0));
@@ -1777,25 +1865,31 @@
   }
   function spawnRow() {
     const free = [0, 1, 2].filter(li => !laneBusy(li));
-    if (s.distance > s.nextClimb && free.length === 3) {
+    const tun = tunnelOverSpawn();
+    if (!tun && s.distance > s.nextTunnel && free.length === 3) {
+      spawnTunnel();
+      s.nextTunnel = s.distance + 160 + Math.random() * 160;
+      return;
+    }
+    if (!tun && s.distance > s.nextClimb && free.length === 3) {
       spawnClimb();
       s.nextClimb = s.distance + 200 + Math.random() * 180;
       return;
     }
-    if (s.distance > s.nextZoom && tallFree().length === 3 && s.zoom <= 0) {
+    if (!tun && s.distance > s.nextZoom && tallFree().length === 3 && s.zoom <= 0) {
       addObstacle(makeZoomPortal(), Math.floor(Math.random() * 3), SPAWN_Z);
       s.nextZoom = s.distance + 250 + Math.random() * 150;
       s.untilNext = 30;
       return;
     }
-    if (s.distance > s.nextPortal && tallFree().length === 3) {
+    if (!tun && s.distance > s.nextPortal && tallFree().length === 3) {
       // the portal gets a row all to itself, in a random lane
       addObstacle(makePortal(), Math.floor(Math.random() * 3), SPAWN_Z);
       s.nextPortal = Infinity;
       s.untilNext = 40;
       return;
     }
-    if (free.length && s.distance > 30 && Math.random() < 0.35) {
+    if (!tun && free.length && s.distance > 30 && Math.random() < 0.35) {
       spawnStuff(free);
     } else if (s.distance > 20 && !s.lastTall && Math.random() < 0.4 && tallFree().length) {
       // one or two train carriages; at least one lane always stays open
@@ -1884,6 +1978,13 @@
     if (running) {
       s.speed = Math.min(MAX_SPEED, s.speed + SPEED_RAMP * dt);
       s.distance += s.speed * dt * 0.5;
+      if (Math.floor(s.distance / 100) > s.milestone) {
+        s.milestone = Math.floor(s.distance / 100);
+        const cheers = ['Great running!', 'Super!', 'Amazing!', 'Keep going!', 'Wow!'];
+        toast(s.milestone * 100 + ' m! ' + cheers[s.milestone % cheers.length]);
+        burst(s.x, 2.5, -2, 30);
+        sfx.cheer();
+      }
     } else if (crashed) {
       s.speed = Math.max(0, s.speed - 40 * dt);
       s.crashT += dt;
@@ -1931,6 +2032,18 @@
     for (const h of spinners) h.rotation.z += dt * 1.5;
     updateSky(dt);
     updateSparks(dt, move);
+    let inside = false;
+    for (let i = tunnels.length - 1; i >= 0; i--) {
+      const t = tunnels[i];
+      const wasOutside = !(t.position.z > 0 && t.position.z - t.userData.length < 0);
+      t.position.z += move;
+      if (t.position.z - t.userData.length > DESPAWN_Z + 2) { scene.remove(t); tunnels.splice(i, 1); continue; }
+      const inNow = t.position.z > -1 && t.position.z - t.userData.length < 1;
+      if (inNow) { inside = true; if (wasOutside && running) sfx.tunnel(); }
+    }
+    s.dark += ((inside ? 1 : 0) - s.dark) * Math.min(1, dt * 4);
+    hemiLight.intensity = 0.75 - 0.35 * s.dark;
+    sunLight.intensity = 0.65 - 0.5 * s.dark;
     for (let i = popping.length - 1; i >= 0; i--) {
       const o = popping[i], u = o.userData;
       o.position.z += move;
@@ -1984,7 +2097,7 @@
             continue;
           }
         } else if (d.pad) {
-          if (hitX && hitZ && feet < 0.4 && feet > -0.3 && s.vy <= 0) { s.vy = 15; d.top.position.y = 0.32; sfx.bounce(); }
+          if (hitX && hitZ && feet < 0.4 && feet > -0.3 && s.vy <= 0) { s.vy = 15; d.top.position.y = 0.32; sfx.bounce(); s.twirl = 1; }
         } else if (d.tall && hitX && hitZ && Math.abs(o.position.z) < d.halfD - 0.4) {
           if (s.zoomF <= 0.15) s.lane = s.prevLane; // swiped into the side of a train: bump back instead of crashing
           stumble();
@@ -2024,6 +2137,7 @@
         s.coins++;
         popCoins();
         sfx.coin();
+        burst(c.position.x, c.position.y, c.position.z, 3, true);
       }
     }
     let copGround = 0;
@@ -2042,6 +2156,7 @@
     // jumping, falling, and riding up ramps
     if (wasGrounded && s.ground < prevGround - 0.05 && prevPlat && prevPlat.userData.launch && running) {
       s.vy = 8.5; // whoosh off the launch ramp
+      s.twirl = 1; sfx.twirl();
       sfx.launch();
     }
     if (s.jumpBuffer > 0) {
@@ -2102,6 +2217,10 @@
     riding.rotation.x = onBoard ? Math.sin(tNow * 4.7) * 0.05 : 0;
     player.position.set(s.x, s.y + hover + (air || onBoard ? 0 : Math.abs(Math.sin(s.runPhase)) * 0.08), 0);
     player.rotation.y = (LANES[s.lane] - s.x) * -0.15;
+    if (s.twirl > 0) {
+      s.twirl = Math.max(0, s.twirl - dt * 1.4);
+      player.rotation.y += (1 - s.twirl) * Math.PI * 2; // a happy spin in the air
+    }
     if (crashed) {
       player.rotation.x = Math.min(1.4, s.crashT * 4);
     } else if (s.stumbleT > 0) {
