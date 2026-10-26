@@ -77,6 +77,20 @@
     box-shadow: 0 3px 0 #5ee7ff88;
   }
   #boardPill { background: #e9fbff; }
+  #magnetPill { background: #fff0f0; }
+  #magnetPill.low { animation: pop 0.5s ease-out infinite; }
+  .magnet-icon {
+    display: inline-block;
+    width: 0.7em; height: 0.75em;
+    margin-right: 8px;
+    vertical-align: -0.05em;
+    box-sizing: border-box;
+    border: 0.2em solid #ff3b3b;
+    border-top: 0;
+    border-radius: 0 0 0.4em 0.4em;
+    box-shadow: inset 0 -0.02em 0 #ff3b3b;
+    position: relative;
+  }
   #boardPill.low { animation: pop 0.5s ease-out infinite; }
   .sound-btn {
     pointer-events: auto;
@@ -202,6 +216,7 @@
     <div class="pill" id="score">0<small>m</small></div>
     <div class="pill" id="coins"><span class="coin-icon"></span>0</div>
     <div class="pill" id="boardPill" hidden><span class="board-icon"></span>20</div>
+    <div class="pill" id="magnetPill" hidden><span class="magnet-icon"></span>15</div>
   </div>
   <div class="hud-right">
     <button class="sound-btn" id="soundBtn" type="button" aria-pressed="true">Sound on</button>
@@ -220,6 +235,7 @@
       <li>Tap or swipe ↑ to jump</li>
       <li>Grab coins, find the portal, and don't let the policeman catch you!</li>
       <li>A hoverboard saves you from one bump</li>
+      <li>A magnet pulls coins to you</li>
     </ul>
     <div class="go">Tap to run!</div>
   </div>
@@ -310,6 +326,7 @@
       bonk() { noise(0.3, 160, 0.6, 0.8, 'lowpass'); tone('sine', 300, 70, 0.5, 0.35); },
       caught() { this.whistle(); tone('sawtooth', 500, 200, 0.6, 0.08, 0.5); },
       portal() { tone('sine', 300, 1600, 0.7, 0.2); tone('triangle', 450, 2400, 0.7, 0.12, 0.08); noise(0.7, 3000, 0.08, 0.5, 'highpass'); },
+      magnet() { tone('sine', 220, 440, 0.25, 0.2); tone('sine', 440, 880, 0.25, 0.15, 0.12); tone('square', 880, 880, 0.08, 0.06, 0.3); },
       boardGet() { [523, 659, 784, 1047].forEach((f, k) => tone('triangle', f, f, 0.14, 0.18, k * 0.07)); },
       zoom() { noise(0.9, 600, 0.25, 0.4, 'bandpass'); tone('sawtooth', 120, 900, 0.8, 0.1); tone('sine', 400, 2000, 0.6, 0.12, 0.1); },
       mystery() { [784, 988, 1175, 1568, 1976].forEach((f, k) => tone('sine', f, f, 0.18, 0.15, k * 0.05)); noise(0.3, 6000, 0.08, 0.5, 'highpass'); },
@@ -401,13 +418,33 @@
   const trunkMat = lambert(0x8a5a36);
   const leafMats = [lambert(0x3fae5a), lambert(0x58c46e)];
   const scenery = [];
+  const pineMats = [lambert(0x2f8f4e), lambert(0x3aa35a)];
   function makeTree() {
     const g = new THREE.Group();
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 1.4, 8), trunkMat);
-    trunk.position.y = 0.7;
-    const top = new THREE.Mesh(new THREE.SphereGeometry(1.2, 10, 8), leafMats[Math.random() < 0.5 ? 0 : 1]);
-    top.position.y = 2.2;
-    g.add(trunk, top);
+    if (Math.random() < 0.4) {
+      // a tall pine made of stacked cones
+      const h = 6 + Math.random() * 4;
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.35, 1.6, 8), trunkMat);
+      trunk.position.y = 0.8;
+      g.add(trunk);
+      for (let k = 0; k < 3; k++) {
+        const r = 1.9 - k * 0.5, ch = h * 0.42;
+        const cone = new THREE.Mesh(new THREE.ConeGeometry(r, ch, 9), pineMats[k % 2]);
+        cone.position.y = 1.4 + k * h * 0.26 + ch / 2;
+        g.add(cone);
+      }
+      return g;
+    }
+    // a big round tree on a tall trunk
+    const th = 2.6 + Math.random() * 2;
+    const r = 1.6 + Math.random() * 0.9;
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.42, th, 8), trunkMat);
+    trunk.position.y = th / 2;
+    const top = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 9), leafMats[Math.random() < 0.5 ? 0 : 1]);
+    top.position.y = th + r * 0.75;
+    const top2 = new THREE.Mesh(new THREE.SphereGeometry(r * 0.7, 10, 8), leafMats[1]);
+    top2.position.set(r * 0.4, th + r * 1.4, 0.2);
+    g.add(trunk, top, top2);
     return g;
   }
   // rows of windows, tinted by each building's colour
@@ -421,7 +458,7 @@
   windowTex.wrapS = windowTex.wrapT = THREE.RepeatWrapping;
   function makeTower() {
     const g = new THREE.Group();
-    const w = 3.5 + Math.random() * 2, h = 8 + Math.random() * 10, d = 3.5;
+    const w = 4 + Math.random() * 3, h = 14 + Math.random() * 18, d = 4;
     const tex = windowTex.clone();
     tex.needsUpdate = true;
     tex.repeat.set(Math.round(w / 1.4), Math.round(h / 1.6));
@@ -450,9 +487,9 @@
     return g;
   }
   function makeHouse() {
-    if (Math.random() < 0.5) return makeTower();
+    if (Math.random() < 0.65) return makeTower();
     const g = new THREE.Group();
-    const w = 3 + Math.random() * 2, h = 3.5 + Math.random() * 4;
+    const w = 3.5 + Math.random() * 2.5, h = 5 + Math.random() * 5;
     const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, 3), lambert(houseColors[Math.floor(Math.random() * houseColors.length)]));
     body.position.y = h / 2;
     const roof = new THREE.Mesh(new THREE.ConeGeometry(w * 0.8, 1.6, 4), roofMat);
@@ -622,12 +659,21 @@
     return b;
   }
   const flock = new THREE.Group();
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 11; i++) {
     const b = makeBird();
-    b.position.set(i * 1.4 - 2.8 + Math.random() * 0.5, Math.abs(i - 2) * 0.6, Math.abs(i - 2) * 1.2);
     b.userData.phase = Math.random() * 6;
     flock.add(b);
     birds.push(b);
+  }
+  function arrangeFlock() {
+    // a random number of birds in a loose V, each a little different
+    const n = 2 + Math.floor(Math.random() * 10);
+    birds.forEach((b, i) => {
+      b.visible = i < n;
+      const row = Math.ceil(i / 2), side = i % 2 ? 1 : -1;
+      b.position.set(side * row * (1.1 + Math.random() * 0.6), Math.random() * 1.5 - row * 0.2, row * (1.2 + Math.random() * 0.8));
+      b.scale.setScalar(0.8 + Math.random() * 0.5);
+    });
   }
   flock.visible = false;
   scene.add(flock);
@@ -652,23 +698,40 @@
   plane.add(fuselage, nose, mainWing, tailFin, tailWing, planeStripe);
   plane.visible = false;
   scene.add(plane);
-  const trailGeo = new THREE.SphereGeometry(0.6, 6, 4);
-  const trail = [];
-  for (let i = 0; i < 70; i++) {
-    const puff = new THREE.Mesh(trailGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, fog: false, depthWrite: false }));
-    puff.visible = false;
-    puff.userData.age = 99;
-    scene.add(puff);
-    trail.push(puff);
+  const trailGeo = new THREE.CylinderGeometry(0.3, 0.3, 1, 8, 1, true);
+  trailGeo.rotateZ(Math.PI / 2); // lie along x
+  // two sets so an old contrail can linger while the next plane draws a new one
+  const trailSets = [0, 1].map(() => {
+    const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, fog: false, depthWrite: false });
+    const lines = [-1.8, 1.8].map(dz => {
+      const m = new THREE.Mesh(trailGeo, mat);
+      m.visible = false;
+      m.userData.dz = dz;
+      scene.add(m);
+      return m;
+    });
+    return { mat, lines, startX: 0, endX: 0, y: 0, z: 0, age: -1, live: false };
+  });
+  let trailNow = 0;
+  let planeT = 9, planeDir = 1;
+  function drawTrail(t) {
+    const len = Math.abs(t.endX - t.startX);
+    const spread = t.live ? 1 : 1 + t.age * 0.12;
+    for (const m of t.lines) {
+      m.visible = len > 0.5 && t.mat.opacity > 0.01;
+      m.scale.set(Math.max(0.01, len), spread, spread);
+      m.position.set((t.startX + t.endX) / 2, t.y - 0.1, t.z + m.userData.dz);
+    }
   }
-  let planeT = 9, planeDir = 1, trailIdx = 0, trailTick = 0;
 
   function updateSky(dt) {
     // birds
     flockT -= dt;
     if (!flock.visible && flockT <= 0) {
       flockDir = Math.random() < 0.5 ? 1 : -1;
-      flock.position.set(-flockDir * 40, 8 + Math.random() * 6, -25 - Math.random() * 25);
+      arrangeFlock();
+      const far = Math.random();
+      flock.position.set(-flockDir * (45 + far * 30), 14 + Math.random() * 16, -35 - far * 50);
       flock.rotation.y = flockDir > 0 ? -Math.PI / 2 : Math.PI / 2;
       flock.visible = true;
     }
@@ -679,7 +742,7 @@
         b.userData.phase += dt * 10;
         for (const w of b.userData.wings) w.pivot.rotation.z = w.side * Math.sin(b.userData.phase) * 0.7;
       }
-      if (Math.abs(flock.position.x) > 42) { flock.visible = false; flockT = 10 + Math.random() * 12; }
+      if (Math.abs(flock.position.x) > 80) { flock.visible = false; flockT = 6 + Math.random() * 12; }
     }
     // plane and contrails
     planeT -= dt;
@@ -688,28 +751,29 @@
       plane.position.set(-planeDir * 110, 34 + Math.random() * 10, -110 - Math.random() * 25);
       plane.rotation.y = planeDir > 0 ? 0 : Math.PI;
       plane.visible = true;
+      const t = trailSets[trailNow = (trailNow + 1) % 2];
+      t.startX = t.endX = plane.position.x - planeDir * 3;
+      t.y = plane.position.y; t.z = plane.position.z;
+      t.live = true; t.age = 0; t.mat.opacity = 0.8;
     }
     if (plane.visible) {
       plane.position.x += planeDir * dt * 12;
-      trailTick -= dt;
-      if (trailTick <= 0) {
-        trailTick = 0.12;
-        for (const side of [-1.8, 1.8]) {
-          const puff = trail[trailIdx++ % trail.length];
-          puff.position.set(plane.position.x - planeDir * 2.5, plane.position.y - 0.1, plane.position.z + side);
-          puff.userData.age = 0;
-          puff.visible = true;
-        }
+      trailSets[trailNow].endX = plane.position.x - planeDir * 3.5;
+      if (Math.abs(plane.position.x) > 115) {
+        plane.visible = false;
+        trailSets[trailNow].live = false;
+        planeT = 14 + Math.random() * 16;
       }
-      if (Math.abs(plane.position.x) > 115) { plane.visible = false; planeT = 18 + Math.random() * 20; }
     }
-    for (const puff of trail) {
-      if (!puff.visible) continue;
-      puff.userData.age += dt;
-      const a = puff.userData.age;
-      puff.material.opacity = Math.max(0, 0.8 - a / 5);
-      puff.scale.setScalar(1 + a * 0.6);
-      if (a > 4) puff.visible = false;
+    for (const t of trailSets) {
+      if (t.age < 0) continue;
+      if (!t.live) {
+        // after the plane has gone, the contrail lingers for about half a minute, spreading out as it fades
+        t.age += dt;
+        t.mat.opacity = Math.max(0, 0.8 - t.age / 35);
+        if (t.mat.opacity <= 0) t.age = -1;
+      }
+      drawTrail(t);
     }
   }
 
@@ -1089,6 +1153,40 @@
     g.add(deck, stripeB, glow);
     return g;
   }
+  // a red horseshoe magnet with silver tips
+  const magnetRed = lambert(0xff3b3b);
+  const magnetTip = lambert(0xe8ecf5);
+  function makeMagnetModel() {
+    const g = new THREE.Group();
+    const arc = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.11, 8, 16, Math.PI), magnetRed);
+    arc.rotation.z = Math.PI; // the U opens upwards
+    g.add(arc);
+    for (const x of [-0.3, 0.3]) {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.3, 0.22), magnetRed);
+      leg.position.set(x, 0.15, 0);
+      const tip = new THREE.Mesh(new THREE.BoxGeometry(0.23, 0.14, 0.23), magnetTip);
+      tip.position.set(x, 0.37, 0);
+      g.add(leg, tip);
+    }
+    return g;
+  }
+  function makeMagnetPickup() {
+    const g = new THREE.Group();
+    const m = makeMagnetModel();
+    m.position.y = 1.1;
+    m.scale.setScalar(1.4);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.85, 0.05, 6, 28), new THREE.MeshBasicMaterial({ color: 0xff7a7a, transparent: true, opacity: 0.6 }));
+    ring.position.y = 1.2;
+    g.add(m, ring);
+    g.userData = { magnetPickup: true, halfW: 0.7, halfD: 0.7, height: 0, base: 0, spin: m, ring };
+    return g;
+  }
+  // a little magnet floats above her head while it's working
+  const headMagnet = makeMagnetModel();
+  headMagnet.position.y = 2.55;
+  headMagnet.scale.setScalar(0.8);
+  headMagnet.visible = false;
+
   const riding = makeBoardModel();
   riding.position.y = -0.02;
   riding.visible = false;
@@ -1110,6 +1208,7 @@
   const legR = makeLeg(0.16);
   const armL = makeArm(-0.42);
   const armR = makeArm(0.42);
+  player.add(headMagnet);
   scene.add(player);
 
   // ---------- the policeman ----------
@@ -1367,6 +1466,8 @@
     zoomF: 0,           // 0..1 how fast we're zooming right now
     nextZoom: 110,
     nextBox: 35,
+    magnet: 0,          // seconds of coin magnet left
+    nextMagnet: 90,
     invuln: 0,
     blinkT: 3,
   };
@@ -1422,7 +1523,7 @@
   function reset() {
     clearWorld();
     applyTheme(0);
-    Object.assign(s, { coins: 0, nextPortal: 150, copZ: 3.2, copX: 0, copY: 0, copVy: 0, copClose: 3.5, bumpCool: 0, stumbleT: 0, caught: false, lookT: 0, nextLook: 1.5, board: 0, nextBoard: 60, nextClimb: 70, zoom: 0, zoomF: 0, nextZoom: 110, nextBox: 35, invuln: 0, lane: 1, prevLane: 1, lastTall: false, x: 0, y: 0, vy: 0, speed: START_SPEED, distance: 0, untilNext: 35, jumpBuffer: 0, crashT: 0, ground: 0, groundPlat: null });
+    Object.assign(s, { coins: 0, nextPortal: 150, copZ: 3.2, copX: 0, copY: 0, copVy: 0, copClose: 3.5, bumpCool: 0, stumbleT: 0, caught: false, lookT: 0, nextLook: 1.5, board: 0, nextBoard: 60, nextClimb: 70, zoom: 0, zoomF: 0, nextZoom: 110, nextBox: 35, magnet: 0, nextMagnet: 90, invuln: 0, lane: 1, prevLane: 1, lastTall: false, x: 0, y: 0, vy: 0, speed: START_SPEED, distance: 0, untilNext: 35, jumpBuffer: 0, crashT: 0, ground: 0, groundPlat: null });
     player.rotation.set(0, 0, 0);
     renderHud();
   }
@@ -1445,12 +1546,24 @@
     }
     renderHud();
     setBoard(0);
+    setMagnet(0);
     if (caught) sfx.caught(); else sfx.bonk();
     crashTitle.textContent = caught ? 'Caught!' : 'Bonk!';
     crashScore.textContent = (caught ? 'The policeman caught you! ' : '') + 'You ran ' + Math.floor(s.distance) + ' metres and got ' + s.coins + ' coins!';
   }
 
   const boardPill = document.getElementById('boardPill');
+  const magnetPill = document.getElementById('magnetPill');
+  function setMagnet(secs) {
+    s.magnet = secs;
+    headMagnet.visible = secs > 0;
+    magnetPill.hidden = secs <= 0;
+  }
+  function grabMagnet() {
+    setMagnet(15);
+    sfx.magnet();
+    toast('Magnet!');
+  }
   function startZoom(secs) {
     s.zoom = Math.max(s.zoom, secs);
     s.copZ = 30; s.copClose = 0;
@@ -1466,12 +1579,14 @@
     o.userData.popT = 0.55;
     popping.push(o);
     const r = Math.random();
-    if (r < 0.45 || (r < 0.7 && s.board > 0)) {
+    if (r < 0.35 || (r < 0.55 && s.board > 0) || (r >= 0.55 && r < 0.75 && s.magnet > 0)) {
       s.coins += 10; popCoins();
       burst(s.x, 1.5, -1, 16, true);
       toast('+10 coins!');
-    } else if (r < 0.7) {
+    } else if (r < 0.55) {
       setBoard(20); sfx.boardGet(); toast('Hoverboard!');
+    } else if (r < 0.75) {
+      grabMagnet();
     } else if (r < 0.9) {
       setTimeout(() => s.mode === 'running' && startZoom(4), 350);
     } else {
@@ -1706,6 +1821,9 @@
       if (s.distance > s.nextBoard && s.board <= 0 && open.length) {
         addObstacle(makeBoardPickup(), open[0], SPAWN_Z - 4);
         s.nextBoard = s.distance + 150 + Math.random() * 120;
+      } else if (s.distance > s.nextMagnet && s.magnet <= 0 && open.length) {
+        addObstacle(makeMagnetPickup(), open[0], SPAWN_Z - 4);
+        s.nextMagnet = s.distance + 160 + Math.random() * 120;
       } else if (s.distance > s.nextBox && open.length) {
         addObstacle(makeMysteryBox(), open[open.length - 1], SPAWN_Z - 5);
         s.nextBox = s.distance + 60 + Math.random() * 70;
@@ -1717,7 +1835,7 @@
   }
 
   // while zooming she steers and jumps by herself
-  const isHazard = (u) => !(u.portal || u.zoomPortal || u.boardPickup || u.pad || u.mystery);
+  const isHazard = (u) => !(u.portal || u.zoomPortal || u.boardPickup || u.magnetPickup || u.pad || u.mystery);
   function hazardIn(li, from, to) {
     let near = Infinity, tall = false;
     for (const o of obstacles) {
@@ -1851,6 +1969,12 @@
           if (hitX && Math.abs(o.position.z) < 0.6) { scene.remove(o); obstacles.splice(i, 1); startZoom(6); continue; }
         } else if (d.mystery) {
           if (hitX && Math.abs(o.position.z) < 0.8 && feet < 2.4 && feet > -1.2) { obstacles.splice(i, 1); openBox(o); continue; }
+        } else if (d.magnetPickup) {
+          if (hitX && Math.abs(o.position.z) < 0.8 && feet < 2.2) {
+            scene.remove(o); obstacles.splice(i, 1);
+            grabMagnet();
+            continue;
+          }
         } else if (d.boardPickup) {
           if (hitX && Math.abs(o.position.z) < 0.8 && feet < 2.2) {
             scene.remove(o); obstacles.splice(i, 1);
@@ -1880,6 +2004,7 @@
         u.cube.position.y = u.orbit.position.y = 1.25 + Math.sin(u.t * 2.5) * 0.12;
         u.orbit.rotation.y -= dt * 3;
       }
+      if (o.userData.magnetPickup) { o.userData.spin.rotation.y += dt * 2.5; o.userData.ring.rotation.y += dt * 2; }
       if (o.userData.boardPickup) { o.userData.spin.rotation.y += dt * 2; o.userData.ring.rotation.y += dt * 2; }
       if (o.userData.pad) o.userData.top.position.y += (0.2 - o.userData.top.position.y) * Math.min(1, dt * 8);
     }
@@ -1888,6 +2013,12 @@
       c.position.z += move;
       c.rotation.y += dt * 4;
       if (c.position.z > DESPAWN_Z) { scene.remove(c); coins.splice(i, 1); continue; }
+      if (running && s.magnet > 0 && c.position.z > -28 && c.position.z < 3) {
+        const pull = Math.min(1, dt * (6 + (28 + c.position.z) * 0.25));
+        c.position.x += (s.x - c.position.x) * pull;
+        c.position.y += (s.y + 0.9 - c.position.y) * pull;
+        c.position.z += (0 - c.position.z) * pull * 0.6;
+      }
       if (running && Math.abs(c.position.x - s.x) < 0.9 && Math.abs(c.position.z) < 0.8 && Math.abs(c.position.y - (s.y + 0.9)) < 1.2) {
         scene.remove(c); coins.splice(i, 1);
         s.coins++;
@@ -1937,6 +2068,14 @@
 
     // hoverboard timer
     if (s.invuln > 0) s.invuln -= dt;
+    if (s.magnet > 0 && running) {
+      s.magnet -= dt;
+      magnetPill.lastChild.nodeValue = Math.ceil(s.magnet);
+      magnetPill.classList.toggle('low', s.magnet < 4);
+      headMagnet.rotation.y += dt * 3;
+      headMagnet.position.y = 2.55 + Math.sin(performance.now() / 250) * 0.06;
+      if (s.magnet <= 0) setMagnet(0);
+    }
     if (s.board > 0 && running) {
       s.board -= dt;
       boardPill.lastChild.nodeValue = Math.ceil(s.board);
