@@ -65,7 +65,34 @@
     box-shadow: 0 4px 0 var(--shadow);
     font-variant-numeric: tabular-nums;
   }
-  .hud-left { display: flex; gap: 10px; flex-wrap: wrap; }
+  .hud-left, .hud-right { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
+  .hud-right { justify-content: flex-end; }
+  .board-icon {
+    display: inline-block;
+    width: 1.1em; height: 0.38em;
+    margin-right: 8px;
+    vertical-align: 0.12em;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #ff5dc8, #5ee7ff);
+    box-shadow: 0 3px 0 #5ee7ff88;
+  }
+  #boardPill { background: #e9fbff; }
+  #boardPill.low { animation: pop 0.5s ease-out infinite; }
+  .sound-btn {
+    pointer-events: auto;
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+    font-family: var(--display);
+    font-size: clamp(16px, 2.6vw, 22px);
+    background: var(--cream);
+    color: var(--ink);
+    padding: 9px 16px 7px;
+    border-radius: 999px;
+    box-shadow: 0 4px 0 var(--shadow);
+    touch-action: manipulation;
+  }
+  .sound-btn:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
   .coin-icon {
     display: inline-block;
     width: 0.8em; height: 0.8em;
@@ -174,8 +201,12 @@
   <div class="hud-left">
     <div class="pill" id="score">0<small>m</small></div>
     <div class="pill" id="coins"><span class="coin-icon"></span>0</div>
+    <div class="pill" id="boardPill" hidden><span class="board-icon"></span>20</div>
   </div>
-  <div class="pill" id="best">0<small>best</small></div>
+  <div class="hud-right">
+    <button class="sound-btn" id="soundBtn" type="button" aria-pressed="true">Sound on</button>
+    <div class="pill" id="best">0<small>best</small></div>
+  </div>
 </div>
 
 <div id="flash"></div>
@@ -188,6 +219,7 @@
       <li>Swipe ← → to change lanes</li>
       <li>Tap or swipe ↑ to jump</li>
       <li>Grab coins, find the portal, and don't let the policeman catch you!</li>
+      <li>A hoverboard saves you from one bump</li>
     </ul>
     <div class="go">Tap to run!</div>
   </div>
@@ -213,6 +245,92 @@
   const JUMP_V = 10;           // peak ≈ 1.9 units, every obstacle is ≤ 1.0 tall
   const SPAWN_Z = -110;
   const DESPAWN_Z = 12;
+
+  // ---------- sound effects, synthesised with Web Audio ----------
+  const sfx = (() => {
+    let ctx = null, master = null, noiseBuf = null, hum = null;
+    let on = true;
+    try { on = localStorage.getItem('hopRunnerSound') !== 'off'; } catch (e) {}
+    function unlock() {
+      // iPad Safari only lets sound start inside a tap
+      if (!ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        ctx = new AC();
+        master = ctx.createGain();
+        master.gain.value = on ? 0.55 : 0;
+        master.connect(ctx.destination);
+        noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.5, ctx.sampleRate);
+        const d = noiseBuf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      }
+      if (ctx.state === 'suspended') ctx.resume();
+    }
+    function tone(type, f0, f1, dur, vol = 0.3, delay = 0) {
+      if (!ctx || !on) return;
+      const t = ctx.currentTime + delay;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(f0, t);
+      if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(master);
+      o.start(t); o.stop(t + dur + 0.05);
+    }
+    function noise(dur, freq, vol = 0.3, q = 1, type = 'bandpass', delay = 0) {
+      if (!ctx || !on) return;
+      const t = ctx.currentTime + delay;
+      const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      src.buffer = noiseBuf;
+      f.type = type; f.frequency.value = freq; f.Q.value = q;
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      src.connect(f); f.connect(g); g.connect(master);
+      src.start(t); src.stop(t + dur + 0.05);
+    }
+    return {
+      unlock,
+      get on() { return on; },
+      toggle() {
+        on = !on;
+        try { localStorage.setItem('hopRunnerSound', on ? 'on' : 'off'); } catch (e) {}
+        if (master) master.gain.value = on ? 0.55 : 0;
+        if (!on) this.hum(false);
+        return on;
+      },
+      jump() { tone('square', 330, 660, 0.14, 0.12); },
+      lane() { noise(0.12, 1400, 0.12, 0.8); },
+      coin() { tone('sine', 988, 988, 0.08, 0.22); tone('sine', 1319, 1319, 0.22, 0.22, 0.07); },
+      bounce() { tone('sine', 180, 720, 0.35, 0.3); },
+      launch() { noise(0.4, 900, 0.18, 0.6); tone('triangle', 300, 900, 0.35, 0.15); },
+      stumble() { noise(0.18, 220, 0.5, 0.7, 'lowpass'); tone('triangle', 420, 160, 0.35, 0.2, 0.03); },
+      whistle() { for (let k = 0; k < 4; k++) tone('square', k % 2 ? 2100 : 2500, k % 2 ? 2100 : 2500, 0.11, 0.07, k * 0.11); },
+      bonk() { noise(0.3, 160, 0.6, 0.8, 'lowpass'); tone('sine', 300, 70, 0.5, 0.35); },
+      caught() { this.whistle(); tone('sawtooth', 500, 200, 0.6, 0.08, 0.5); },
+      portal() { tone('sine', 300, 1600, 0.7, 0.2); tone('triangle', 450, 2400, 0.7, 0.12, 0.08); noise(0.7, 3000, 0.08, 0.5, 'highpass'); },
+      boardGet() { [523, 659, 784, 1047].forEach((f, k) => tone('triangle', f, f, 0.14, 0.18, k * 0.07)); },
+      boardBreak() { noise(0.35, 1800, 0.4, 0.6); tone('square', 600, 120, 0.3, 0.1); },
+      hum(start) {
+        if (!ctx) return;
+        if (start && on && !hum) {
+          const o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain();
+          o.type = 'sawtooth'; o.frequency.value = 70;
+          o2.type = 'sine'; o2.frequency.value = 140;
+          const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 400;
+          g.gain.value = 0.05;
+          o.connect(f); o2.connect(f); f.connect(g); g.connect(master);
+          o.start(); o2.start();
+          hum = { o, o2, g };
+        } else if (!start && hum) {
+          const h = hum; hum = null;
+          h.g.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.05);
+          h.o.stop(ctx.currentTime + 0.3); h.o2.stop(ctx.currentTime + 0.3);
+        }
+      },
+    };
+  })();
 
   // ---------- renderer / scene ----------
   const mount = document.getElementById('game');
@@ -747,6 +865,45 @@
     player.add(pivot);
     return pivot;
   }
+  // the hoverboard she rides on when she has one
+  const boardGlowMat = new THREE.MeshBasicMaterial({ color: 0x5ee7ff, transparent: true, opacity: 0.7 });
+  function makeBoardModel() {
+    const g = new THREE.Group();
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.08, 1.4), lambert(0xff5dc8));
+    const stripeB = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.085, 1.3), lambert(0xffffff));
+    for (const z of [-0.7, 0.7]) {
+      const tip = new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.31, 0.08, 16, 1, false, 0, Math.PI), lambert(0xff5dc8));
+      tip.position.z = z;
+      tip.rotation.y = z < 0 ? Math.PI / 2 : -Math.PI / 2;
+      g.add(tip);
+    }
+    const glow = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.04, 1.2), boardGlowMat);
+    glow.position.y = -0.07;
+    for (const z of [-0.45, 0.45]) {
+      const jet = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.08, 0.1, 10), boardGlowMat);
+      jet.position.set(0, -0.1, z);
+      g.add(jet);
+    }
+    g.add(deck, stripeB, glow);
+    return g;
+  }
+  const riding = makeBoardModel();
+  riding.position.y = -0.02;
+  riding.visible = false;
+  player.add(riding);
+
+  function makeBoardPickup() {
+    const g = new THREE.Group();
+    const b = makeBoardModel();
+    b.rotation.x = -0.5;
+    b.position.y = 1.1;
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.95, 0.05, 6, 28), new THREE.MeshBasicMaterial({ color: 0x5ee7ff, transparent: true, opacity: 0.6 }));
+    ring.position.y = 1.1;
+    g.add(b, ring);
+    g.userData = { boardPickup: true, halfW: 0.7, halfD: 0.7, height: 0, base: 0, spin: b, ring };
+    return g;
+  }
+
   const legL = makeLeg(-0.16);
   const legR = makeLeg(0.16);
   const armL = makeArm(-0.42);
@@ -897,6 +1054,9 @@
     caught: false,
     lookT: 0,           // > 0 while she's glancing back at the policeman
     nextLook: 2.5,
+    board: 0,           // seconds of hoverboard left
+    nextBoard: 60,
+    invuln: 0,
     blinkT: 3,
   };
 
@@ -933,6 +1093,7 @@
     coins = [];
   }
   function teleport() {
+    sfx.portal();
     flash();
     clearWorld();
     applyTheme((themeIndex + 1) % themes.length);
@@ -948,7 +1109,7 @@
   function reset() {
     clearWorld();
     applyTheme(0);
-    Object.assign(s, { coins: 0, nextPortal: 150, copZ: 3.2, copX: 0, copY: 0, copVy: 0, copClose: 3.5, bumpCool: 0, stumbleT: 0, caught: false, lookT: 0, nextLook: 1.5, lane: 1, prevLane: 1, lastTall: false, x: 0, y: 0, vy: 0, speed: START_SPEED, distance: 0, untilNext: 35, jumpBuffer: 0, crashT: 0, ground: 0, groundPlat: null });
+    Object.assign(s, { coins: 0, nextPortal: 150, copZ: 3.2, copX: 0, copY: 0, copVy: 0, copClose: 3.5, bumpCool: 0, stumbleT: 0, caught: false, lookT: 0, nextLook: 1.5, board: 0, nextBoard: 60, invuln: 0, lane: 1, prevLane: 1, lastTall: false, x: 0, y: 0, vy: 0, speed: START_SPEED, distance: 0, untilNext: 35, jumpBuffer: 0, crashT: 0, ground: 0, groundPlat: null });
     player.rotation.set(0, 0, 0);
     renderHud();
   }
@@ -970,15 +1131,36 @@
       try { localStorage.setItem('hopRunnerBest', String(Math.floor(best))); } catch (e) {}
     }
     renderHud();
+    setBoard(0);
+    if (caught) sfx.caught(); else sfx.bonk();
     crashTitle.textContent = caught ? 'Caught!' : 'Bonk!';
     crashScore.textContent = (caught ? 'The policeman caught you! ' : '') + 'You ran ' + Math.floor(s.distance) + ' metres and got ' + s.coins + ' coins!';
   }
 
+  const boardPill = document.getElementById('boardPill');
+  function setBoard(secs) {
+    s.board = secs;
+    riding.visible = secs > 0;
+    boardPill.hidden = secs <= 0;
+    sfx.hum(secs > 0);
+  }
+  function breakBoard() {
+    setBoard(0);
+    s.invuln = 1.2; // a moment to get clear after the board takes the hit
+    sfx.boardBreak();
+    flashEl.style.background = 'radial-gradient(circle at center, #ffffff00 30%, #5ee7ff 100%)';
+    flash();
+    setTimeout(() => { flashEl.style.background = ''; }, 900);
+  }
+
   // first stumble: she trips and the policeman nearly catches her; a second one while he's close: caught!
   function stumble() {
-    if (s.bumpCool > 0 || s.mode !== 'running') return;
+    if (s.bumpCool > 0 || s.mode !== 'running' || s.invuln > 0) return;
     s.bumpCool = 0.8;
+    if (s.board > 0) { breakBoard(); return; } // the hoverboard takes the bump instead
     if (s.copClose > 0) { crash(true); return; }
+    sfx.stumble();
+    setTimeout(() => s.mode === 'running' && sfx.whistle(), 250);
     s.copClose = 6;
     s.stumbleT = 0.5;
     s.speed = Math.max(START_SPEED * 0.8, s.speed * 0.7);
@@ -989,6 +1171,7 @@
     if (s.mode !== 'running') return;
     s.prevLane = s.lane;
     s.lane = Math.max(0, Math.min(2, s.lane + dir));
+    if (s.lane !== s.prevLane) sfx.lane();
   }
   function jump() {
     if (s.mode !== 'running') return;
@@ -1005,8 +1188,24 @@
 
   let touch = null;
   const SWIPE_PX = 28;
+  const soundBtn = document.getElementById('soundBtn');
+  function renderSoundBtn() {
+    soundBtn.textContent = sfx.on ? 'Sound on' : 'Sound off';
+    soundBtn.setAttribute('aria-pressed', String(sfx.on));
+  }
+  renderSoundBtn();
+  soundBtn.addEventListener('pointerdown', (e) => {
+    e.stopPropagation(); // don't jump or start a run
+    e.preventDefault();
+    sfx.unlock();
+    sfx.toggle();
+    if (sfx.on && s.board > 0) sfx.hum(true);
+    renderSoundBtn();
+  });
+  soundBtn.addEventListener('click', (e) => e.preventDefault());
   window.addEventListener('pointerdown', (e) => {
     e.preventDefault();
+    sfx.unlock();
     if (primaryAction()) { touch = null; return; }
     touch = { id: e.pointerId, x: e.clientX, y: e.clientY, used: false };
   }, { passive: false });
@@ -1033,6 +1232,7 @@
   document.addEventListener('dblclick', (e) => e.preventDefault());
 
   window.addEventListener('keydown', (e) => {
+    sfx.unlock();
     const k = e.key;
     if (k === ' ' || k === 'ArrowUp' || k === 'w' || k === 'Enter') {
       e.preventDefault();
@@ -1130,6 +1330,11 @@
         if (lanes.includes(li)) coinArc(li, SPAWN_Z);
         else coinLine(li, SPAWN_Z + 3, 5, 0.8);
       }
+      const open = free.filter(li => !lanes.includes(li));
+      if (s.distance > s.nextBoard && s.board <= 0 && open.length) {
+        addObstacle(makeBoardPickup(), open[0], SPAWN_Z - 4);
+        s.nextBoard = s.distance + 150 + Math.random() * 120;
+      }
     }
     s.lastTall = false;
     // always leave room to land and jump again
@@ -1202,8 +1407,16 @@
         const feet = s.y - d.base;
         if (d.portal) {
           if (hitX && Math.abs(o.position.z) < 0.6) { teleport(); break; }
+        } else if (d.boardPickup) {
+          if (hitX && Math.abs(o.position.z) < 0.8 && feet < 2.2) {
+            scene.remove(o); obstacles.splice(i, 1);
+            setBoard(20);
+            sfx.boardGet();
+            toast('Hoverboard!');
+            continue;
+          }
         } else if (d.pad) {
-          if (hitX && hitZ && feet < 0.4 && feet > -0.3 && s.vy <= 0) { s.vy = 15; d.top.position.y = 0.32; }
+          if (hitX && hitZ && feet < 0.4 && feet > -0.3 && s.vy <= 0) { s.vy = 15; d.top.position.y = 0.32; sfx.bounce(); }
         } else if (d.tall && hitX && hitZ && Math.abs(o.position.z) < d.halfD - 0.4) {
           s.lane = s.prevLane; // swiped into the side of a train: bump back instead of crashing
           stumble();
@@ -1215,6 +1428,7 @@
         }
       }
       if (o.userData.portal) { o.userData.swirl.rotation.z -= dt * 4; }
+      if (o.userData.boardPickup) { o.userData.spin.rotation.y += dt * 2; o.userData.ring.rotation.y += dt * 2; }
       if (o.userData.pad) o.userData.top.position.y += (0.2 - o.userData.top.position.y) * Math.min(1, dt * 8);
     }
     for (let i = coins.length - 1; i >= 0; i--) {
@@ -1226,6 +1440,7 @@
         scene.remove(c); coins.splice(i, 1);
         s.coins++;
         popCoins();
+        sfx.coin();
       }
     }
     let copGround = 0;
@@ -1244,10 +1459,11 @@
     // jumping, falling, and riding up ramps
     if (wasGrounded && s.ground < prevGround - 0.05 && prevPlat && prevPlat.userData.launch && running) {
       s.vy = 8.5; // whoosh off the launch ramp
+      sfx.launch();
     }
     if (s.jumpBuffer > 0) {
       s.jumpBuffer -= dt;
-      if (s.y <= s.ground + 0.02 && s.vy <= 0 && running) { s.vy = JUMP_V; s.jumpBuffer = 0; }
+      if (s.y <= s.ground + 0.02 && s.vy <= 0 && running) { s.vy = JUMP_V; s.jumpBuffer = 0; sfx.jump(); }
     }
     if (wasGrounded && s.vy <= 0 && s.ground < s.y && s.y - s.ground < 0.35 && !(prevPlat && prevPlat.userData.launch)) {
       s.y = s.ground; // walk down a ramp instead of floating off it
@@ -1267,15 +1483,30 @@
       if (s.untilNext <= 0) spawnRow();
     }
 
+    // hoverboard timer
+    if (s.invuln > 0) s.invuln -= dt;
+    if (s.board > 0 && running) {
+      s.board -= dt;
+      boardPill.lastChild.nodeValue = Math.ceil(s.board);
+      boardPill.classList.toggle('low', s.board < 4);
+      if (s.board <= 0) setBoard(0);
+    }
+    const onBoard = s.board > 0;
+    player.visible = s.invuln <= 0 || Math.floor(s.invuln * 10) % 2 === 0; // blink while safe
+
     // runner pose
     s.runPhase += dt * (6 + s.speed * 0.6);
     const air = s.y > s.ground + 0.05;
-    const swing = air ? 0.9 : Math.sin(s.runPhase) * 0.9;
-    legL.rotation.x = air ? -0.9 : swing;
-    legR.rotation.x = air ? 0.5 : -swing;
-    armL.rotation.x = air ? 2.4 : -swing;
-    armR.rotation.x = air ? 2.4 : swing;
-    player.position.set(s.x, s.y + (air ? 0 : Math.abs(Math.sin(s.runPhase)) * 0.08), 0);
+    const swing = onBoard ? Math.sin(s.runPhase * 0.3) * 0.15 : air ? 0.9 : Math.sin(s.runPhase) * 0.9;
+    legL.rotation.x = onBoard ? 0.15 : air ? -0.9 : swing;
+    legR.rotation.x = onBoard ? -0.15 : air ? 0.5 : -swing;
+    armL.rotation.x = onBoard ? 0.3 + swing : air ? 2.4 : -swing;
+    armR.rotation.x = onBoard ? 0.3 - swing : air ? 2.4 : swing;
+    armL.rotation.z = onBoard ? -0.9 : 0; // arms out for balance on the board
+    armR.rotation.z = onBoard ? 0.9 : 0;
+    const hover = onBoard ? 0.32 + Math.sin(performance.now() / 180) * 0.05 : 0;
+    riding.rotation.z = onBoard ? (LANES[s.lane] - s.x) * 0.25 : 0;
+    player.position.set(s.x, s.y + hover + (air || onBoard ? 0 : Math.abs(Math.sin(s.runPhase)) * 0.08), 0);
     player.rotation.y = (LANES[s.lane] - s.x) * -0.15;
     if (crashed) {
       player.rotation.x = Math.min(1.4, s.crashT * 4);
