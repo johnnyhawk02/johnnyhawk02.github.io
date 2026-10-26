@@ -464,20 +464,25 @@
     return g;
   }
   // rows of windows, tinted by each building's colour
-  const windowTex = canvasTexture(64, 64, (ctx, w, h) => {
+  const windowTex = canvasTexture(128, 128, (ctx, w, h) => {
+    // two floors of two windows each, with a frame and a sill
     ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = '#7fb2ff';
-    for (const x of [10, 38]) for (const y of [10, 38]) ctx.fillRect(x, y, 16, 18);
-    ctx.fillStyle = '#ffffff';
-    for (const x of [10, 38]) for (const y of [10, 38]) ctx.fillRect(x + 7, y, 2, 18);
+    for (const x of [12, 76]) for (const y of [14, 78]) {
+      ctx.fillStyle = '#d9d9e8'; ctx.fillRect(x - 3, y - 3, 46, 40);
+      ctx.fillStyle = '#7fb2ff'; ctx.fillRect(x, y, 40, 34);
+      ctx.fillStyle = '#b8d6ff'; ctx.fillRect(x + 4, y + 4, 10, 12);
+      ctx.fillStyle = '#d9d9e8'; ctx.fillRect(x, y + 15, 40, 3); ctx.fillRect(x + 19, y, 3, 34);
+      ctx.fillStyle = '#c4c4d6'; ctx.fillRect(x - 5, y + 36, 50, 5);
+    }
   });
+  windowTex.anisotropy = 4;
   windowTex.wrapS = windowTex.wrapT = THREE.RepeatWrapping;
   function makeTower() {
     const g = new THREE.Group();
     const w = 4 + Math.random() * 3, h = 14 + Math.random() * 18, d = 4;
     const tex = windowTex.clone();
     tex.needsUpdate = true;
-    tex.repeat.set(Math.round(w / 1.4), Math.round(h / 1.6));
+    tex.repeat.set(Math.max(1, Math.round(w / 3.2)), Math.max(1, Math.round(h / 5.6)));
     const color = houseColors[Math.floor(Math.random() * houseColors.length)];
     const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshLambertMaterial({ color, map: tex }));
     body.position.y = h / 2;
@@ -550,6 +555,7 @@
     bulb.position.y = 3.1;
     g.add(pole, bulb);
     g.userData.near = true;
+    g.scale.setScalar(1.45);
     return g;
   }
   const spinners = [];
@@ -572,6 +578,7 @@
     }
     g.add(tower, cap, hub);
     spinners.push(hub);
+    g.scale.setScalar(1.6);
     return g;
   }
   const balloonColors = [0xff5d73, 0xffd23f, 0x5ec8e5, 0x9b5de5];
@@ -584,6 +591,7 @@
     basket.position.y = ball.position.y - 1.8;
     g.add(ball, basket);
     g.userData.far = true;
+    g.scale.setScalar(2.4);
     return g;
   }
   const kinds = [makeTree, makeTree, makeHouse, makeTree, makeBush, makeFlowers, makeLamp, makeHouse, makeFlowers, makeBush, makeTree, makeWindmill, makeTree, makeFlowers, makeHouse, makeBalloon];
@@ -696,18 +704,18 @@
     for (let i = 0; i < n; i++) { const L = 4 + Math.random() * 2.5; segs.push(L); len += L; }
     let z = -len / 2;
     for (const L of segs) {
-      const h = 6 + Math.random() * 7, cz = z + L / 2;
+      const h = 8.8 + Math.random() * 6, cz = z + L / 2;
       const tex = windowTex.clone();
       tex.needsUpdate = true;
-      tex.repeat.set(Math.round(L / 1.4), Math.max(1, Math.round((h - 3.4) / 1.6)));
+      tex.repeat.set(Math.max(1, Math.round(L / 3.2)), Math.max(1, Math.round((h - 3.4) / 5.6)));
       const body = new THREE.Mesh(new THREE.BoxGeometry(5, h - 3.4, L), new THREE.MeshLambertMaterial({ color: houseColors[Math.floor(Math.random() * houseColors.length)], map: tex }));
       body.position.set(2.5, 3.4 + (h - 3.4) / 2, cz);
       const ground = new THREE.Mesh(new THREE.BoxGeometry(5, 3.4, L), corniceMat);
       ground.position.set(2.55, 1.7, cz);
       const glass = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.0, L - 0.8), shopGlass);
       glass.position.set(0, 1.4, cz - 0.3);
-      const door = new THREE.Mesh(new THREE.BoxGeometry(0.14, 2.1, 0.8), shopDoor);
-      door.position.set(-0.02, 1.05, cz + L / 2 - 0.7);
+      const door = new THREE.Mesh(new THREE.BoxGeometry(0.14, 2.6, 1.1), shopDoor);
+      door.position.set(-0.02, 1.3, cz + L / 2 - 0.8);
       const awning = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.12, L - 0.2), awningMats[Math.floor(Math.random() * awningMats.length)]);
       awning.position.set(-0.6, 2.75, cz);
       awning.rotation.z = -0.35;
@@ -1173,6 +1181,7 @@
   const wheelMat = lambert(0x2b2350);
   // a commuter train: rounded roof, sloped cab nose, bogies with wheels
   const TRAIN_LEN = 6;
+  const TRAIN_SCALE = 1.25;
   const trainBodyGeo = (() => {
     const L = TRAIN_LEN / 2, y0 = 0.75, top = 2.95, r = 0.35;
     const sh = new THREE.Shape();
@@ -1246,7 +1255,8 @@
         }
       }
     }
-    g.userData = { halfW: 0.95, halfD: L, height: 99, tall: true };
+    g.scale.setScalar(TRAIN_SCALE);
+    g.userData = { halfW: 0.95, halfD: L * TRAIN_SCALE, height: 99, tall: true };
     return g;
   }
   let obstacles = [];
