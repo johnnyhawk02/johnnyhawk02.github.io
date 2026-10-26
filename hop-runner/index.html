@@ -503,7 +503,7 @@
     return g;
   }
   function makeHouse() {
-    if (Math.random() < 0.65) return makeTower();
+    if (Math.random() < 0.85) return makeTower(); // the shop terraces line the track now
     const g = new THREE.Group();
     const w = 3.5 + Math.random() * 2.5, h = 5 + Math.random() * 5;
     const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, 3), lambert(houseColors[Math.floor(Math.random() * houseColors.length)]));
@@ -512,6 +512,7 @@
     roof.position.y = h + 0.8;
     roof.rotation.y = Math.PI / 4;
     g.add(body, roof);
+    g.userData.far = true;
     return g;
   }
   const sceneryMat = (c) => lambert(c);
@@ -589,7 +590,7 @@
   function placeScenery(obj, z) {
     const side = obj.userData.side;
     const u = obj.userData;
-    const dist = u.near ? 5 + Math.random() * 1.8 : u.far ? 10 + Math.random() * 14 : 7.5 + Math.random() * 6;
+    const dist = u.near ? 5 + Math.random() * 1.8 : u.far ? 20 + Math.random() * 12 : 7 + Math.random() * 4;
     obj.position.set(side * dist, 0, z);
   }
   const SCENERY_GAP = 2.2;
@@ -618,6 +619,150 @@
       scene.add(f);
       fences.push(f);
     }
+  }
+
+  // long terraces of shops lining the track, with bunting and waving fans
+  const SHOPS = ['SWEETS', 'TOYS', 'PIZZA', 'CAFE', 'BAKERY', 'ICE CREAM', 'PETS', 'BOOKS', "ROBYN'S CAFE", 'TOY SHOP', 'CUPCAKES', 'GAMES'];
+  const signTex = {};
+  function shopSign(name) {
+    if (!signTex[name]) {
+      signTex[name] = canvasTexture(256, 64, (ctx, w, h) => {
+        ctx.fillStyle = '#2b2350'; ctx.fillRect(0, 0, w, h);
+        ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 6; ctx.strokeRect(4, 4, w - 8, h - 8);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '400 38px "Lilita One", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(name, w / 2, h / 2 + 2, w - 24);
+      });
+    }
+    return signTex[name];
+  }
+  const awningMats = [['#ff5d73', '#ffffff'], ['#3d9bff', '#ffffff'], ['#3fae5a', '#fff3b0'], ['#9b5de5', '#ffffff']].map(([a, b]) => {
+    const t = canvasTexture(64, 16, (ctx, w, h) => {
+      for (let x = 0; x < w; x += 16) { ctx.fillStyle = a; ctx.fillRect(x, 0, 8, h); ctx.fillStyle = b; ctx.fillRect(x + 8, 0, 8, h); }
+    });
+    t.wrapS = THREE.RepeatWrapping;
+    return new THREE.MeshLambertMaterial({ map: t });
+  });
+  const shopGlass = lambert(0x9fdcff);
+  const shopDoor = lambert(0x6b3e26);
+  const corniceMat = lambert(0xf7f7ff);
+  const fanSkin = [lambert(0xf3c39b), lambert(0xc68a5e), lambert(0x8d5a3b)];
+  const fanShirts = [0xff5d73, 0x3d9bff, 0xffd23f, 0x3fae5a, 0x9b5de5].map(c => lambert(c));
+  const fanArms = [];
+  function makeFan() {
+    // someone leaning on a little balcony, waving at her
+    const g = new THREE.Group();
+    const skin = fanSkin[Math.floor(Math.random() * fanSkin.length)];
+    const shirt = fanShirts[Math.floor(Math.random() * fanShirts.length)];
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.65, 0.5), shirt);
+    body.position.y = 0.45;
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.26, 10, 8), skin);
+    head.position.y = 1.02;
+    const arm = new THREE.Group();
+    const limbM = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.6, 0.14), shirt);
+    limbM.position.y = 0.3;
+    arm.add(limbM);
+    arm.position.set(-0.05, 0.7, 0.3);
+    arm.userData.phase = Math.random() * 6;
+    fanArms.push(arm);
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.5, 1.6), corniceMat);
+    rail.position.set(-0.45, 0.1, 0);
+    g.add(body, head, arm, rail);
+    return g;
+  }
+  function makeBunting(len) {
+    // one strip of little flags in a single mesh, drooping between hooks
+    const pos = [], col = [];
+    const cols = [0xff5d73, 0xffd23f, 0x3d9bff, 0x3fae5a, 0x9b5de5, 0xffffff].map(c => new THREE.Color(c));
+    let k = 0;
+    for (let z = -len / 2; z < len / 2 - 0.6; z += 0.75, k++) {
+      const t = ((z + len / 2) % 6) / 6, sag = Math.sin(t * Math.PI) * 0.6;
+      const y = -sag, c = cols[k % cols.length];
+      pos.push(0, y, z, 0, y, z + 0.6, 0, y - 0.6, z + 0.3);
+      for (let v = 0; v < 3; v++) col.push(c.r, c.g, c.b);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    return new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }));
+  }
+  function makeTerrace() {
+    // a long row of joined-up shops; local front faces -x, the group is centred on its length
+    const g = new THREE.Group();
+    const segs = [];
+    let len = 0;
+    const n = 5 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < n; i++) { const L = 4 + Math.random() * 2.5; segs.push(L); len += L; }
+    let z = -len / 2;
+    for (const L of segs) {
+      const h = 6 + Math.random() * 7, cz = z + L / 2;
+      const tex = windowTex.clone();
+      tex.needsUpdate = true;
+      tex.repeat.set(Math.round(L / 1.4), Math.max(1, Math.round((h - 3.4) / 1.6)));
+      const body = new THREE.Mesh(new THREE.BoxGeometry(5, h - 3.4, L), new THREE.MeshLambertMaterial({ color: houseColors[Math.floor(Math.random() * houseColors.length)], map: tex }));
+      body.position.set(2.5, 3.4 + (h - 3.4) / 2, cz);
+      const ground = new THREE.Mesh(new THREE.BoxGeometry(5, 3.4, L), corniceMat);
+      ground.position.set(2.55, 1.7, cz);
+      const glass = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.0, L - 0.8), shopGlass);
+      glass.position.set(0, 1.4, cz - 0.3);
+      const door = new THREE.Mesh(new THREE.BoxGeometry(0.14, 2.1, 0.8), shopDoor);
+      door.position.set(-0.02, 1.05, cz + L / 2 - 0.7);
+      const awning = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.12, L - 0.2), awningMats[Math.floor(Math.random() * awningMats.length)]);
+      awning.position.set(-0.6, 2.75, cz);
+      awning.rotation.z = -0.35;
+      awning.material.map.repeat.set(Math.round(L), 1);
+      const sign = new THREE.Mesh(new THREE.PlaneGeometry(Math.min(L - 0.6, 4), 0.75), new THREE.MeshBasicMaterial({ map: shopSign(SHOPS[Math.floor(Math.random() * SHOPS.length)]) }));
+      sign.position.set(-0.06, 3.15, cz);
+      sign.rotation.y = -Math.PI / 2;
+      const cornice = new THREE.Mesh(new THREE.BoxGeometry(5.4, 0.4, L), corniceMat);
+      cornice.position.set(2.5, h + 0.2, cz);
+      g.add(body, ground, glass, door, awning, sign, cornice);
+      if (Math.random() < 0.35) {
+        const fan = makeFan();
+        fan.position.set(-0.2, 4.6 + Math.floor(Math.random() * 2) * 1.6, cz);
+        g.add(fan);
+      }
+      z += L;
+    }
+    const bunting = makeBunting(len);
+    bunting.position.set(-1.3, 5.0, 0);
+    g.add(bunting);
+    g.userData.len = len;
+    return g;
+  }
+  const terraces = [];
+  const TERRACE_X = 13;
+  function placeTerrace(t, nearZ) {
+    const side = t.userData.side;
+    t.position.set(side * TERRACE_X, 0, nearZ - t.userData.len / 2);
+    t.rotation.y = side > 0 ? 0 : Math.PI;
+    t.userData.far = nearZ - t.userData.len;
+  }
+  for (const side of [-1, 1]) {
+    let z = side > 0 ? -4 : -20;
+    for (let i = 0; i < 4; i++) {
+      const t = makeTerrace();
+      t.userData.side = side;
+      placeTerrace(t, z);
+      z = t.userData.far - (8 + Math.random() * 22);
+      scene.add(t);
+      terraces.push(t);
+    }
+  }
+  function updateTerraces(dt, move) {
+    for (const t of terraces) {
+      t.position.z += move;
+      t.userData.far += move;
+    }
+    for (const t of terraces) {
+      if (t.position.z - t.userData.len / 2 > DESPAWN_Z + 4) {
+        const farthest = Math.min(...terraces.filter(o => o.userData.side === t.userData.side).map(o => o.userData.far));
+        placeTerrace(t, farthest - (8 + Math.random() * 22));
+      }
+    }
+    const tt = performance.now() / 1000;
+    for (const a of fanArms) a.rotation.x = 0.4 + Math.sin(tt * 9 + a.userData.phase) * 0.6;
   }
 
   // billboards beside the track: Dad cheering Robyn on
@@ -1609,6 +1754,63 @@
     }
   }
 
+  // fireworks bursting in the sky now and then
+  const fwMats = [0xff5d73, 0xffd23f, 0x5ee7ff, 0x7dff9a, 0xff8fd8, 0xffffff].map(c => new THREE.MeshBasicMaterial({ color: c, fog: false, transparent: true }));
+  const fwGeo = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+  const fwBits = [];
+  for (let i = 0; i < 90; i++) {
+    const m = new THREE.Mesh(fwGeo, fwMats[0]);
+    m.visible = false;
+    m.userData = { v: new THREE.Vector3(), life: 0 };
+    scene.add(m);
+    fwBits.push(m);
+  }
+  const fwRockets = [];
+  let fwBit = 0, nextFirework = 6;
+  function launchFirework() {
+    const m = new THREE.Mesh(fwGeo, fwMats[5]);
+    m.position.set((Math.random() < 0.5 ? -1 : 1) * (8 + Math.random() * 18), 4, -55 - Math.random() * 25);
+    m.userData = { vy: 22 + Math.random() * 6, life: 1.1 + Math.random() * 0.4, mat: fwMats[Math.floor(Math.random() * 5)] };
+    scene.add(m);
+    fwRockets.push(m);
+  }
+  function updateFireworks(dt) {
+    nextFirework -= dt;
+    if (nextFirework <= 0) {
+      const n = 1 + Math.floor(Math.random() * 3);
+      for (let k = 0; k < n; k++) setTimeout(launchFirework, k * 350);
+      nextFirework = 14 + Math.random() * 18;
+    }
+    for (let i = fwRockets.length - 1; i >= 0; i--) {
+      const r = fwRockets[i], u = r.userData;
+      r.position.y += u.vy * dt;
+      u.life -= dt;
+      if (u.life <= 0) {
+        for (let k = 0; k < 30; k++) {
+          const b = fwBits[fwBit++ % fwBits.length];
+          b.material = Math.random() < 0.7 ? u.mat : fwMats[5];
+          b.position.copy(r.position);
+          const a = Math.random() * Math.PI * 2, e = Math.random() * Math.PI - Math.PI / 2, sp = 8 + Math.random() * 3;
+          b.userData.v.set(Math.cos(a) * Math.cos(e) * sp, Math.sin(e) * sp, Math.sin(a) * Math.cos(e) * sp);
+          b.userData.life = 1.4 + Math.random() * 0.5;
+          b.visible = true;
+        }
+        scene.remove(r);
+        fwRockets.splice(i, 1);
+      }
+    }
+    for (const b of fwBits) {
+      if (!b.visible) continue;
+      const u = b.userData;
+      u.life -= dt;
+      if (u.life <= 0) { b.visible = false; continue; }
+      u.v.multiplyScalar(1 - dt * 1.5);
+      u.v.y -= 3 * dt;
+      b.position.addScaledVector(u.v, dt);
+      b.scale.setScalar(Math.min(1, u.life));
+    }
+  }
+
   // white speed streaks rushing past while zooming
   const streakMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, fog: false, depthWrite: false });
   const streaks = [];
@@ -2094,6 +2296,15 @@
       s.untilNext = 40;
       return;
     }
+    if (free.length === 3 && s.distance > 40 && Math.random() < 0.07) {
+      // a wiggly trail of coins that weaves across the lanes
+      const order = Math.random() < 0.5 ? [0, 1, 2, 1, 0, 1, 2] : [2, 1, 0, 1, 2, 1, 0];
+      let z = SPAWN_Z;
+      for (const li of order) { coinLine(li, z, 4, 0.8, 1.7); z -= 4 * 1.7 + 1.5; }
+      s.lastTall = false;
+      s.untilNext = SPAWN_Z - z + 8;
+      return;
+    }
     if (!tun && free.length && s.distance > 30 && Math.random() < 0.35) {
       spawnStuff(free);
     } else if (s.distance > 20 && !s.lastTall && Math.random() < 0.4 && tallFree().length) {
@@ -2225,6 +2436,8 @@
       o.position.z += move;
       if (o.position.z > DESPAWN_Z) placeScenery(o, o.position.z - scenery.length * SCENERY_GAP);
     }
+    updateTerraces(dt, move);
+    updateFireworks(dt);
     for (const b of billboards) {
       b.position.z += move;
       if (b.position.z > DESPAWN_Z + 6) placeBillboard(b, b.position.z - billboards.length * BILLBOARD_GAP);
