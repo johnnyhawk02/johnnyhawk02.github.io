@@ -653,7 +653,7 @@
 
   // a little round planet: everything bends down and away with distance, like Subway Surfers.
   // It's only how things are drawn, so jumping and bumping work just the same.
-  const CURVE = 0.0022;
+  const CURVE = 0.0036;
   const bend = '\n#ifndef NO_CURVE\nmvPosition.y -= ' + CURVE.toFixed(4) + ' * mvPosition.z * mvPosition.z;\n#endif\ngl_Position = projectionMatrix * mvPosition;';
   THREE.ShaderChunk.project_vertex = THREE.ShaderChunk.project_vertex.replace('gl_Position = projectionMatrix * mvPosition;', bend);
   THREE.ShaderLib.sprite.vertexShader = THREE.ShaderLib.sprite.vertexShader.replace('gl_Position = projectionMatrix * mvPosition;', bend);
@@ -2885,7 +2885,7 @@
     const cap = new THREE.Mesh(new THREE.ConeGeometry(r * 0.3, h * 0.3, m.geometry.parameters.radialSegments, 1), peakMat);
     cap.position.y = h * 0.35 + 0.05;
     m.add(cap);
-    const mz = -50 - Math.random() * 50, dz = (mz - 7.5) * 0.976;
+    const mz = -42 - Math.random() * 40, dz = (mz - 7.5) * 0.976;
     m.position.set(side * (30 + Math.random() * 38), h / 2 - 1 - CURVE * dz * dz, mz); // sunk to sit on the curved horizon (they're drawn without the bend)
     m.rotation.y = Math.random() * Math.PI;
     mountains.add(m);
