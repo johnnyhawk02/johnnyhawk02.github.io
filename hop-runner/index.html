@@ -2324,16 +2324,29 @@
     g.userData = { kind: 'cat', head, legs, tail, h: 0.5 };
     return g;
   }
-  const pets = [makeCollie(), makeCollie(), makeCat(), makeCat(), makeCat()];
-  for (const p of pets) { p.visible = false; p.userData.t = 1 + Math.random() * 4; scene.add(p); }
+  // just the two of them: Izzi the border collie and Pixel the cat, each with a little name tag
+  function nameTag(text, y) {
+    const tex = canvasTexture(256, 96, (ctx, w, h) => {
+      ctx.fillStyle = 'rgba(255,255,255,0.92)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(8, 14, w - 16, h - 28, 30) : ctx.rect(8, 14, w - 16, h - 28); ctx.fill();
+      ctx.fillStyle = '#2b2350'; ctx.font = 'bold 48px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, w / 2, h / 2 + 2);
+    });
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthWrite: false }));
+    sp.scale.set(1.2, 0.45, 1); sp.position.y = y;
+    return sp;
+  }
+  const izzi = makeCollie(), pixel = makeCat();
+  izzi.add(nameTag('Izzi', 1.65)); pixel.add(nameTag('Pixel', 1.05));
+  izzi.userData.name = 'Izzi'; pixel.userData.name = 'Pixel';
+  const pets = [izzi, pixel];
+  for (const p of pets) { p.visible = false; p.userData.t = 2 + Math.random() * 4; scene.add(p); }
   function startPet(p) {
     const u = p.userData, copSide = Math.random() < 0.5 ? -1 : 1;
     u.copSide = copSide; u.phase = Math.random() * 6; u.speed = 0;
     const r = Math.random();
     if (u.kind === 'dog') u.mode = r < 0.6 ? 'buddy' : 'stroll';
     else u.mode = r < 0.5 ? 'perch' : r < 0.8 ? 'dash' : 'stroll';
-    if (u.mode === 'buddy') { p.position.set(copSide * 3.95, 0, 8); u.life = 6 + Math.random() * 6; } // runs up from behind to keep her company
-    else if (u.mode === 'perch') { p.position.set(copSide * 4.45, 0.7, SPAWN_Z + 20 + Math.random() * 30); } // sitting on the fence
+    if (u.mode === 'buddy') { toast('Izzi is running with you! 🐕', true); p.position.set(copSide * 3.95, 0, 8); u.life = 6 + Math.random() * 6; } // runs up from behind to keep her company
+    else if (u.mode === 'perch') { toast('Pixel is watching you! 🐈‍⬛', true); p.position.set(copSide * 4.45, 0.7, SPAWN_Z + 20 + Math.random() * 30); } // sitting on the fence
     else if (u.mode === 'dash') { p.position.set(-copSide * 6, 0, -32 - Math.random() * 15); u.dir = copSide; } // scampers across the track up ahead
     else { p.position.set(copSide * (3.95 + Math.random() * 0.3), 0, SPAWN_Z + 30 + Math.random() * 30); u.dir = Math.random() < 0.5 ? -1 : 1; }
     p.rotation.set(0, u.mode === 'dash' ? -copSide * Math.PI / 2 : u.mode === 'stroll' && u.dir > 0 ? Math.PI : 0, 0);
