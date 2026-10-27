@@ -273,7 +273,7 @@
       <li>Swipe ← → to change lanes</li>
       <li>Tap or swipe ↑ to jump</li>
       <li>Grab coins, find the portal, and don't let the policeman catch you!</li>
-      <li>Jump through portals to visit other worlds: Space, under the sea, Spooky World and more! Sometimes you get to pick one.</li>
+      <li>Jump through portals to visit other worlds: Space, under the sea, Spooky World, the Fun Fair and more! Sometimes you get to pick one.</li>
       <li>A hoverboard saves you from a bump, a magnet pulls in coins</li>
       <li>A jetpack flies you up high, a rainbow star smashes everything!</li>
     </ul>
@@ -596,6 +596,7 @@
       twirl() { tone('triangle', 500, 1400, 0.45, 0.12); },
       quack(delay = 0) { tone('sawtooth', 620, 330, 0.16, 0.09, delay); tone('square', 900, 500, 0.12, 0.04, delay); },
       huff() { noise(0.35, 700, 0.12, 0.8, 'lowpass'); tone('triangle', 300, 220, 0.25, 0.04, 0.05); }, // a cross 'hmph!'
+      jingle() { [523, 659, 784, 659, 784, 1047, 988, 1047].forEach((f, k) => tone('triangle', f, f, 0.14, 0.06, k * 0.12)); }, // a fairground organ tune
       woof() { tone('square', 440, 250, 0.07, 0.05); tone('square', 400, 230, 0.09, 0.05, 0.13); },
       meow() { tone('triangle', 650, 1050, 0.14, 0.05); tone('triangle', 1050, 560, 0.3, 0.05, 0.13); },
       boo() { tone('sine', 320, 520, 0.5, 0.07); tone('sine', 520, 300, 0.7, 0.06, 0.45); tone('triangle', 640, 1040, 0.5, 0.025); },
@@ -2728,7 +2729,7 @@
 
   // ---------- Space World: through the golden gate once she has collected enough coins ----------
   const SPACE = 4;
-  let inSpace = false, inSea = false, inSpooky = false, awayFromTown = false;
+  let inSpace = false, inSea = false, inSpooky = false, inFair = false, awayFromTown = false;
   let halloween = false; // now and then the towns put on their Halloween colours
   const glowMats = [0xff5dc8, 0x5ee7ff, 0xb388ff, 0x7dff9a, 0xffd23f].map(c => new THREE.MeshBasicMaterial({ color: c }));
   const moonRock = lambert(0x8a8fb0), moonDark = lambert(0x5d6285), alienGreen = lambert(0x7dff6a), rocketWhite = lambert(0xf4f6ff);
@@ -3591,6 +3592,240 @@
     return g;
   }
 
+  // ---------- the Fun Fair: big rides either side, through the fairground portal ----------
+  const FAIR = 7;
+  const fairWorld = new THREE.Group();
+  fairWorld.visible = false;
+  scene.add(fairWorld);
+  const fairStripes = (a, b, n, vertical = true) => canvasTexture(256, 256, (ctx, w, h) => {
+    for (let k = 0; k < n; k++) { ctx.fillStyle = k % 2 ? b : a; if (vertical) ctx.fillRect(k * w / n, 0, w / n + 1, h); else ctx.fillRect(0, k * h / n, w, h / n + 1); }
+  });
+  const redWhite = fairStripes('#ff4d6d', '#ffffff', 12), yellowRed = fairStripes('#ffd23f', '#ff4d6d', 10), blueWhite = fairStripes('#3fa9ff', '#ffffff', 12), purpleYellow = fairStripes('#9b5de5', '#ffd23f', 12);
+  const bulbMats = [0xffe45c, 0xff6fb5, 0x6fe8ff, 0xffffff].map(c => new THREE.MeshBasicMaterial({ color: c }));
+  const bulbGeo = new THREE.SphereGeometry(0.13, 6, 4);
+  const fairBulb = (k, x, y, z) => { const m = new THREE.Mesh(bulbGeo, bulbMats[k % 4]); m.position.set(x, y, z); return m; };
+  const steel = lambert(0xf2f2f7), fairGold = new THREE.MeshLambertMaterial({ color: 0xffd23f, emissive: 0x6a4a00 });
+  const rideCols = [0xff4d6d, 0xffd23f, 0x3fa9ff, 0x7dff9a, 0xc77dff, 0xff9f1c].map(c => lambert(c));
+  function makeFerris() {
+    const g = new THREE.Group(), R = 8, hub = R + 1.6;
+    const wheel = new THREE.Group(); wheel.position.y = hub;
+    for (const z of [-0.6, 0.6]) {
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(R, 0.14, 6, 48), steel); rim.position.z = z; wheel.add(rim);
+      const inner = new THREE.Mesh(new THREE.TorusGeometry(R * 0.55, 0.1, 6, 36), steel); inner.position.z = z; wheel.add(inner);
+    }
+    for (let k = 0; k < 12; k++) {
+      const a = (k / 12) * Math.PI * 2;
+      const sp = box(0.12, R, 0.12, steel, Math.cos(a) * R / 2, Math.sin(a) * R / 2, 0); sp.rotation.z = a - Math.PI / 2; wheel.add(sp);
+    }
+    for (let k = 0; k < 36; k++) { const a = (k / 36) * Math.PI * 2; wheel.add(fairBulb(k, Math.cos(a) * R, Math.sin(a) * R, -0.75)); }
+    wheel.add(ball(0.6, fairGold, 0, 0, 0, 12));
+    const gondolas = [];
+    for (let k = 0; k < 10; k++) {
+      const a = (k / 10) * Math.PI * 2, gp = new THREE.Group();
+      gp.position.set(Math.cos(a) * R, Math.sin(a) * R, 0);
+      const cab = box(1.2, 1.0, 1.0, rideCols[k % rideCols.length], 0, -1.0, 0);
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(0.85, 0.5, 4), rideCols[(k + 2) % rideCols.length]); roof.rotation.y = Math.PI / 4; roof.position.y = -0.3;
+      gp.add(box(0.06, 0.6, 0.06, steel, 0, -0.3, 0), cab, roof);
+      wheel.add(gp); gondolas.push(gp);
+    }
+    for (const z of [-1.3, 1.3]) for (const sx of [-1, 1]) {
+      const leg = box(0.3, hub + 0.6, 0.3, steel, sx * 2.6, hub / 2, z); leg.rotation.z = sx * 0.27; g.add(leg);
+    }
+    g.add(wheel);
+    g.userData = { ride: 'ferris', wheel, gondolas, big: true };
+    return g;
+  }
+  function makeHorse(mat) {
+    const h = new THREE.Group();
+    h.add(box(0.35, 0.4, 1.0, lambert(0xffffff), 0, 0, 0), box(0.37, 0.12, 0.4, mat, 0, 0.22, 0.05));
+    const neck = box(0.25, 0.55, 0.28, lambert(0xffffff), 0, 0.3, -0.45); neck.rotation.x = 0.4; h.add(neck);
+    h.add(box(0.24, 0.24, 0.45, lambert(0xffffff), 0, 0.55, -0.65), box(0.08, 0.3, 0.3, mat, 0, 0.55, -0.4)); // head and mane
+    for (const [x, z] of [[-0.12, -0.38], [0.12, -0.38], [-0.12, 0.38], [0.12, 0.38]]) { const l = box(0.08, 0.4, 0.08, lambert(0xffffff), x, -0.35, z); l.rotation.x = z < 0 ? -0.5 : 0.5; h.add(l); }
+    return h;
+  }
+  function makeCarousel() {
+    const g = new THREE.Group();
+    const spin = new THREE.Group();
+    spin.add(new THREE.Mesh(new THREE.CylinderGeometry(4.2, 4.4, 0.5, 24), lambert(0xc77dff)));
+    spin.children[0].position.y = 0.4;
+    const canopy = new THREE.Mesh(new THREE.ConeGeometry(4.8, 2.2, 24, 1, true), new THREE.MeshLambertMaterial({ map: redWhite, side: THREE.DoubleSide }));
+    canopy.position.y = 5.3;
+    const valance = new THREE.Mesh(new THREE.CylinderGeometry(4.8, 4.8, 0.6, 24, 1, true), new THREE.MeshLambertMaterial({ map: yellowRed, side: THREE.DoubleSide }));
+    valance.position.y = 3.9;
+    spin.add(canopy, valance, new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 4, 12), new THREE.MeshLambertMaterial({ map: purpleYellow })), ball(0.35, fairGold, 0, 6.5, 0, 10));
+    spin.children[spin.children.length - 2].position.y = 2.6;
+    for (let k = 0; k < 24; k++) { const a = (k / 24) * Math.PI * 2; spin.add(fairBulb(k, Math.cos(a) * 4.85, 3.6, Math.sin(a) * 4.85)); }
+    const horses = [];
+    for (let k = 0; k < 8; k++) {
+      const a = (k / 8) * Math.PI * 2;
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 3.4, 6), fairGold);
+      pole.position.set(Math.cos(a) * 3.1, 2.4, Math.sin(a) * 3.1);
+      const hs = makeHorse(rideCols[k % rideCols.length]);
+      hs.position.set(Math.cos(a) * 3.1, 1.8, Math.sin(a) * 3.1); hs.rotation.y = -a;
+      hs.userData.phase = k * 0.8;
+      spin.add(pole, hs); horses.push(hs);
+    }
+    g.add(spin);
+    g.userData = { ride: 'carousel', spin, horses };
+    return g;
+  }
+  function makeHelter() {
+    const g = new THREE.Group(), H = 11;
+    const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.6, H, 16), new THREE.MeshLambertMaterial({ map: redWhite }));
+    tower.position.y = H / 2;
+    const top = new THREE.Mesh(new THREE.ConeGeometry(2.0, 2.6, 16), new THREE.MeshLambertMaterial({ map: yellowRed }));
+    top.position.y = H + 1.3;
+    const flag = box(0.9, 0.5, 0.04, rideCols[2], 0.45, H + 3.4, 0);
+    g.add(tower, top, box(0.06, 1.2, 0.06, steel, 0, H + 3.1, 0), flag);
+    const turns = 3, pts = [];
+    for (let k = 0; k <= 90; k++) { const u = k / 90, a = u * turns * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(a) * 2.3, H - 0.8 - u * (H - 1.4), Math.sin(a) * 2.3)); }
+    const curve = new THREE.CatmullRomCurve3(pts);
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 160, 0.4, 8, false), new THREE.MeshLambertMaterial({ color: 0xffd23f, side: THREE.DoubleSide })));
+    const rider = new THREE.Group(); // someone whizzing down on a mat
+    rider.add(box(0.5, 0.08, 0.8, rideCols[4], 0, 0, 0), ball(0.2, lambert(0xf3c39b), 0, 0.45, 0, 8), box(0.3, 0.35, 0.25, rideCols[0], 0, 0.2, 0));
+    g.add(rider);
+    for (let k = 0; k < 14; k++) g.add(fairBulb(k, Math.cos(k * 0.45) * 2.05, H + 0.05, Math.sin(k * 0.45) * 2.05));
+    g.userData = { ride: 'helter', curve, rider, phase: Math.random() };
+    return g;
+  }
+  function makeCoaster() {
+    const g = new THREE.Group(), pts = [];
+    for (let k = 0; k < 40; k++) {
+      const a = (k / 40) * Math.PI * 2;
+      pts.push(new THREE.Vector3(Math.cos(a) * 6, 3.5 + Math.max(0, Math.sin(a)) * 7 + Math.sin(a * 3) * 1.6 + 1.6, Math.sin(a) * 13));
+    }
+    const curve = new THREE.CatmullRomCurve3(pts, true);
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 200, 0.22, 6, true), lambert(0xff4d6d)));
+    const inner = new THREE.CatmullRomCurve3(pts.map(v => new THREE.Vector3(v.x * 0.88, v.y, v.z * 0.94)), true);
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(inner, 200, 0.22, 6, true), lambert(0xff4d6d)));
+    for (let k = 0; k < 40; k += 2) {
+      const v = pts[k], h = v.y;
+      g.add(box(0.2, h, 0.2, steel, v.x * 0.94, h / 2, v.z * 0.97));
+      g.add(fairBulb(k, v.x * 0.94, h + 0.25, v.z * 0.97));
+    }
+    const cars = [];
+    for (let k = 0; k < 4; k++) {
+      const c = new THREE.Group();
+      c.add(box(1.0, 0.55, 1.3, rideCols[(k + 1) % rideCols.length], 0, 0.5, 0), ball(0.18, lambert(0xf3c39b), -0.2, 1.05, 0, 8), ball(0.18, lambert(0xf3c39b), 0.2, 1.05, 0, 8));
+      g.add(c); cars.push(c);
+    }
+    g.userData = { ride: 'coaster', curve: new THREE.CatmullRomCurve3(pts.map(v => new THREE.Vector3(v.x * 0.94, v.y, v.z * 0.97)), true), cars, u: Math.random(), big: true };
+    return g;
+  }
+  function makeSwings() {
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.6, 9, 12), new THREE.MeshLambertMaterial({ map: blueWhite })));
+    g.children[0].position.y = 4.5;
+    const spin = new THREE.Group(); spin.position.y = 9;
+    const top = new THREE.Mesh(new THREE.ConeGeometry(3.6, 1.6, 20), new THREE.MeshLambertMaterial({ map: purpleYellow }));
+    top.position.y = 0.6;
+    spin.add(top);
+    const seats = [];
+    for (let k = 0; k < 12; k++) {
+      const a = (k / 12) * Math.PI * 2, arm = new THREE.Group();
+      arm.position.set(Math.cos(a) * 3.2, 0, Math.sin(a) * 3.2); arm.rotation.y = -a;
+      const hang = new THREE.Group();
+      hang.add(box(0.04, 3.2, 0.04, steel, 0, -1.6, 0), box(0.6, 0.12, 0.5, rideCols[k % rideCols.length], 0, -3.2, 0), ball(0.16, lambert(0xf3c39b), 0, -2.7, 0, 6));
+      arm.add(hang); spin.add(arm); seats.push(hang);
+      spin.add(fairBulb(k, Math.cos(a) * 3.55, 0, Math.sin(a) * 3.55));
+    }
+    g.add(spin);
+    g.userData = { ride: 'swings', spin, seats };
+    return g;
+  }
+  function makeStall() {
+    const g = new THREE.Group();
+    const tex = [redWhite, blueWhite, yellowRed, purpleYellow][Math.floor(Math.random() * 4)];
+    g.add(box(2.4, 1.1, 1.6, lambert(0xfff3d6), 0, 0.55, 0), box(2.5, 0.12, 1.7, rideCols[Math.floor(Math.random() * 6)], 0, 1.15, 0));
+    for (const sx of [-1, 1]) g.add(box(0.1, 2.0, 0.1, steel, sx * 1.15, 1.6, -0.75));
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(1.9, 1.2, 4), new THREE.MeshLambertMaterial({ map: tex }));
+    roof.rotation.y = Math.PI / 4; roof.scale.z = 0.75; roof.position.y = 3.1;
+    g.add(roof);
+    if (Math.random() < 0.5) { // candy floss on sticks
+      for (let k = 0; k < 3; k++) g.add(ball(0.25, lambert([0xff9ed8, 0x9fe8ff, 0xfff1a8][k]), -0.6 + k * 0.6, 1.6, -0.3, 10));
+    } else { // balloons
+      for (let k = 0; k < 4; k++) { const b = ball(0.3, rideCols[k], -0.8 + k * 0.5, 3.6 + (k % 2) * 0.4, -0.75, 10); b.scale.y = 1.2; g.add(b, box(0.02, 1.4, 0.02, steel, -0.8 + k * 0.5, 2.9, -0.75)); }
+    }
+    g.userData = { stall: true };
+    return g;
+  }
+  const rideMakers = [makeFerris, makeCarousel, makeHelter, makeCoaster, makeSwings];
+  const RIDE_GAP = 30, RIDES_PER_SIDE = 5;
+  const rides = [], stalls = [];
+  function placeRide(o, z) {
+    const side = o.userData.side;
+    o.position.set(side * (o.userData.big ? 19 + Math.random() * 3 : 15 + Math.random() * 2), 0, z);
+    o.rotation.y = o.userData.ride === 'ferris' ? side * 0.7 : o.userData.ride === 'coaster' ? 0 : Math.random() * Math.PI * 2; // the coaster runs alongside, well clear of the track
+  }
+  let rideK = 0;
+  for (let i = 0; i < RIDES_PER_SIDE * 2; i++) {
+    const o = rideMakers[rideK++ % rideMakers.length]();
+    o.userData.side = i % 2 ? 1 : -1;
+    o.scale.setScalar(1.45); // big rides!
+    placeRide(o, 0 - Math.floor(i / 2) * RIDE_GAP - (i % 2) * RIDE_GAP / 2);
+    fairWorld.add(o); rides.push(o);
+  }
+  for (let i = 0; i < 16; i++) {
+    const o = makeStall();
+    o.userData.side = i % 2 ? 1 : -1;
+    o.position.set(o.userData.side * (6.4 + Math.random() * 1.5), 0, 10 - Math.floor(i / 2) * 14 - (i % 2) * 7);
+    o.rotation.y = -o.userData.side * Math.PI / 2; // facing the track
+    fairWorld.add(o); stalls.push(o);
+  }
+  let bulbT = 0;
+  const tmpV = new THREE.Vector3();
+  function updateFair(dt, move) {
+    if (!inFair) return;
+    const t = performance.now() / 1000;
+    bulbT += dt;
+    if (bulbT > 0.3) { bulbT = 0; const c = bulbMats.map(m => m.color.getHex()); bulbMats.forEach((m, k) => m.color.setHex(c[(k + 1) % 4])); } // chasing lights
+    for (const o of rides) {
+      o.position.z += move;
+      if (o.position.z > DESPAWN_Z + 25) placeRide(o, o.position.z - RIDES_PER_SIDE * RIDE_GAP);
+      const u = o.userData;
+      if (u.ride === 'ferris') { u.wheel.rotation.z += dt * 0.25; for (const gp of u.gondolas) gp.rotation.z = -u.wheel.rotation.z; }
+      else if (u.ride === 'carousel') { u.spin.rotation.y += dt * 0.7; for (const h of u.horses) h.position.y = 1.8 + Math.sin(t * 2.5 + h.userData.phase) * 0.45; }
+      else if (u.ride === 'helter') {
+        u.phase = (u.phase + dt * 0.18) % 1;
+        u.curve.getPointAt(u.phase, u.rider.position); u.rider.position.y += 0.45;
+        u.curve.getTangentAt(u.phase, tmpV); u.rider.rotation.y = Math.atan2(tmpV.x, tmpV.z);
+      } else if (u.ride === 'coaster') {
+        u.u = (u.u + dt * 0.07) % 1;
+        u.cars.forEach((c, k) => {
+          const q = (u.u + k * 0.018) % 1;
+          u.curve.getPointAt(q, c.position);
+          u.curve.getTangentAt(q, tmpV);
+          c.lookAt(c.position.x + tmpV.x, c.position.y + tmpV.y, c.position.z + tmpV.z);
+        });
+      } else if (u.ride === 'swings') {
+        u.spin.rotation.y += dt * 1.4;
+        for (const h of u.seats) h.rotation.z = -0.75 - Math.sin(t * 0.8) * 0.08; // swung out by the spin
+      }
+    }
+    for (const o of stalls) {
+      o.position.z += move;
+      if (o.position.z > DESPAWN_Z + 3) o.position.set(o.userData.side * (6.4 + Math.random() * 1.5), 0, o.position.z - 112);
+    }
+  }
+  // the fairground portal: a red and white striped ring with little lights going round
+  const fairSwirlTex = canvasTexture(256, 256, (ctx, w, h) => {
+    const cols = ['#ff4d6d', '#ffd23f', '#3fa9ff', '#7dff9a', '#c77dff', '#ff9f1c'];
+    for (let k = 0; k < 12; k++) { ctx.fillStyle = cols[k % 6]; ctx.beginPath(); ctx.moveTo(w / 2, h / 2); ctx.arc(w / 2, h / 2, w, (k / 12) * Math.PI * 2, ((k + 1) / 12) * Math.PI * 2); ctx.fill(); }
+    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(w / 2, h / 2, 24, 0, Math.PI * 2); ctx.fill();
+  });
+  function makeFairPortal() {
+    const g = new THREE.Group();
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.3, 0.22, 12, 36), new THREE.MeshLambertMaterial({ map: redWhite, emissive: 0x401018 }));
+    ring.position.y = 1.5;
+    const swirl = new THREE.Mesh(new THREE.CircleGeometry(1.15, 32), new THREE.MeshBasicMaterial({ map: fairSwirlTex, side: THREE.DoubleSide }));
+    swirl.position.y = 1.5;
+    const orbit = new THREE.Group(); orbit.position.y = 1.5;
+    for (let k = 0; k < 12; k++) { const a = (k / 12) * Math.PI * 2; orbit.add(fairBulb(k, Math.cos(a) * 1.62, Math.sin(a) * 1.62, 0)); }
+    g.add(ring, swirl, orbit, portalSign('🎡', '#ff4d6d'));
+    g.userData = { fairPortal: true, halfW: 0.9, halfD: 0.5, height: 0, base: 0, swirl, orbit };
+    return g;
+  }
+
   // ---------- lands the portal can take her to ----------
   const themes = [
     { name: 'Sunny Town', sky: 0x8fd8ff, grass: 0x7fd36b, track: 0xe8c48f, hills: [0x5cc46e, 0x4bb36a, 0x6fd07a] },
@@ -3600,6 +3835,7 @@
     { name: 'Space', sky: 0x140f3a, grass: 0x6d7299, track: 0xb7bad6, hills: [0x4d5280, 0x5d6290, 0x3f4470] }, // only through the golden gate
     { name: 'Under the Sea', sky: 0x1f86c0, grass: 0xe6d29c, track: 0xf2e2b2, hills: [0xff7f9e, 0xff9f5c, 0x6fd6c8] }, // only through the bubble portal
     { name: 'Spooky World', sky: 0x2b1a4a, grass: 0x3d3352, track: 0x9a8aa8, hills: [0x4a2f6b, 0x2b2238, 0x5a3a7a] }, // only through the ghost portal
+    { name: 'Fun Fair', sky: 0xffc6e4, grass: 0x8ee07a, track: 0xf2d29b, hills: [0xff9ed8, 0xffd23f, 0x9fe8ff] }, // only through the fairground portal
   ];
   let themeIndex = 0;
   function applyTheme(i) {
@@ -3614,7 +3850,9 @@
     inSpace = i === SPACE;
     inSea = i === UNDER;
     inSpooky = i === SPOOKY;
-    awayFromTown = inSpace || inSea || inSpooky;
+    inFair = i === FAIR;
+    awayFromTown = inSpace || inSea || inSpooky || inFair;
+    fairWorld.visible = inFair;
     stars.visible = i === 3 || inSpace || inSpooky || hallow;
     rainbow.visible = (i === 0 || i === 1) && !hallow;
     sun.visible = sunGlow.visible = !awayFromTown && !hallow;
@@ -3797,6 +4035,24 @@
     s.copZ = 30; s.copClose = 0;
     coinLine(s.lane, -8, 20, 0.8, 1.8);
     blowBubbles(s.x, 1, -1, 20);
+    s.untilNext = 45;
+    s.nextPortal = s.distance + 200 + Math.random() * 100;
+    s.nextCross = s.distance + 250 + Math.random() * 100;
+    s.nextSea = s.distance + 250 + Math.random() * 150;
+  }
+
+  function enterFair() {
+    sfx.portal(); sfx.jingle();
+    flashEl.style.background = 'radial-gradient(circle at center, #ffffff00 15%, #ffd23f 100%)';
+    flash();
+    setTimeout(() => { flashEl.style.background = ''; }, 900);
+    clearWorld();
+    applyTheme(FAIR);
+    toast('Welcome to the Fun Fair! 🎡');
+    s.distance += 50;
+    s.y = s.ground = 0; s.vy = 0; s.groundPlat = null;
+    s.copZ = 30; s.copClose = 0;
+    coinLine(s.lane, -8, 20, 0.8, 1.8);
     s.untilNext = 45;
     s.nextPortal = s.distance + 200 + Math.random() * 100;
     s.nextCross = s.distance + 250 + Math.random() * 100;
@@ -4249,6 +4505,7 @@
       if (!inSea) makers.push(makeSeaPortal);
       if (!inSpace) makers.push(makeStarPortal);
       if (!inSpooky) makers.push(makeGhostPortal);
+      if (!inFair) makers.push(makeFairPortal);
       makers.sort(() => Math.random() - 0.5).splice(3);
       const lanes = [0, 1, 2].sort(() => Math.random() - 0.5);
       makers.forEach((mk, k) => { coinLine(lanes[k], SPAWN_Z + 12, 4, 0.8, 2.2); addObstacle(mk(), lanes[k], SPAWN_Z); });
@@ -4264,8 +4521,8 @@
       // the bubble portal sits in one lane at the end of a trail of coins: find it to dive under the sea
       const li = Math.floor(Math.random() * 3);
       coinLine(li, SPAWN_Z + 16, 7, 0.8, 2.2);
-      const ghostly = inSea || (!inSpooky && Math.random() < 0.5); // a bubble portal or a ghost portal
-      addObstacle(ghostly ? makeGhostPortal() : makeSeaPortal(), li, SPAWN_Z);
+      const choices = [!inSea && makeSeaPortal, !inSpooky && makeGhostPortal, !inFair && makeFairPortal].filter(Boolean); // a bubble, ghost or fairground portal
+      addObstacle(choices[Math.floor(Math.random() * choices.length)](), li, SPAWN_Z);
       s.nextSea = s.distance + 220 + Math.random() * 150; // missed it? another comes along
       s.untilNext = 40;
       return;
@@ -4346,7 +4603,7 @@
   }
 
   // while zooming she steers and jumps by herself
-  const isHazard = (u) => !(u.portal || u.zoomPortal || u.boardPickup || u.magnetPickup || u.jetPickup || u.starPickup || u.spaceGate || u.seaPortal || u.starPortal || u.ghostPortal || u.pad || u.mystery);
+  const isHazard = (u) => !(u.portal || u.zoomPortal || u.boardPickup || u.magnetPickup || u.jetPickup || u.starPickup || u.spaceGate || u.seaPortal || u.starPortal || u.ghostPortal || u.fairPortal || u.pad || u.mystery);
   function hazardIn(li, from, to) {
     let near = Infinity, tall = false;
     for (const o of obstacles) {
@@ -4449,6 +4706,7 @@
     updateSea(dt, move);
     updateSpooky(dt, move);
     updatePets(dt, move);
+    updateFair(dt, move);
     updateFireworks(dt);
     updateDucks(dt, move, running);
     for (const b of billboards) {
@@ -4522,8 +4780,8 @@
         const hitX = Math.abs(o.position.x - s.x) < d.halfW + 0.22;
         const hitZ = Math.abs(o.position.z) < d.halfD + 0.18;
         const feet = s.y - d.base;
-        if (d.seaPortal || d.starPortal || d.ghostPortal) {
-          if (hitX && o.position.z > -0.6 && o.position.z - move < 0.6) { d.seaPortal ? enterSea() : d.starPortal ? enterSpace() : enterSpooky(); break; }
+        if (d.seaPortal || d.starPortal || d.ghostPortal || d.fairPortal) {
+          if (hitX && o.position.z > -0.6 && o.position.z - move < 0.6) { d.seaPortal ? enterSea() : d.starPortal ? enterSpace() : d.fairPortal ? enterFair() : enterSpooky(); break; }
         } else if (d.spaceGate) {
           if (o.position.z > -0.6 && o.position.z - move < 0.6) { enterSpace(); break; } // can't be skipped over on a slow frame
         } else if (d.portal) {
@@ -4567,7 +4825,7 @@
         }
       }
       if (o.userData.portal) { o.userData.swirl.rotation.z -= dt * 4; }
-      if (o.userData.seaPortal || o.userData.starPortal || o.userData.ghostPortal) { o.userData.swirl.rotation.z += dt * 2; o.userData.orbit.rotation.z -= dt * 1.5; }
+      if (o.userData.seaPortal || o.userData.starPortal || o.userData.ghostPortal || o.userData.fairPortal) { o.userData.swirl.rotation.z += dt * 2; o.userData.orbit.rotation.z -= dt * 1.5; }
       if (o.userData.zoomPortal) { o.userData.ring.rotation.z += dt * 3; }
       if (o.userData.mystery) {
         const u = o.userData;
@@ -4828,7 +5086,7 @@
     // he runs just off her shoulder so he never hides her from view
     const copSide = s.x > 0.5 ? -1.5 : 1.5;
     s.copX += (s.x + copSide - s.copX) * Math.min(1, dt * 5);
-    const copNear = obstacles.some(o => !o.userData.tall && !o.userData.portal && !o.userData.spaceGate && !o.userData.seaPortal && !o.userData.starPortal && !o.userData.ghostPortal && Math.abs(o.position.x - s.copX) < 1.2 && o.position.z - s.copZ > -2.5 && o.position.z - s.copZ < 0);
+    const copNear = obstacles.some(o => !o.userData.tall && !o.userData.portal && !o.userData.spaceGate && !o.userData.seaPortal && !o.userData.starPortal && !o.userData.ghostPortal && !o.userData.fairPortal && Math.abs(o.position.x - s.copX) < 1.2 && o.position.z - s.copZ > -2.5 && o.position.z - s.copZ < 0);
     if (copNear && s.copY <= copGround + 0.02) s.copVy = JUMP_V;
     s.copVy -= GRAVITY * (inSpace ? 0.6 : inSea ? 0.45 : 1) * dt;
     s.copY = Math.max(copGround, s.copY + s.copVy * dt);
@@ -4897,6 +5155,6 @@
   window.__hop = s;
   window.__hopWorld = () => ({ obstacles, platforms, LANES, ducks });
   window.__cottages = cottages;
-  window.__hopPower = { jet: startJet, star: startStar, space: enterSpace, sea: enterSea, spooky: enterSpooky, stare: () => { nextStare = 0; }, halloween: () => { s.nextHallow = 0; }, sfx };
+  window.__hopPower = { jet: startJet, star: startStar, space: enterSpace, sea: enterSea, spooky: enterSpooky, fair: enterFair, stare: () => { nextStare = 0; }, halloween: () => { s.nextHallow = 0; }, sfx };
 })();
 </script>
