@@ -273,7 +273,7 @@
       <li>Swipe ← → to change lanes</li>
       <li>Tap or swipe ↑ to jump</li>
       <li>Grab coins, find the portal, and don't let the policeman catch you!</li>
-      <li>Collect 100 coins to open the gate to Space!</li>
+      <li>Collect 100 coins for the gate to Space, or find the bubble portal to go under the sea!</li>
       <li>A hoverboard saves you from a bump, a magnet pulls in coins</li>
       <li>A jetpack flies you up high, a rainbow star smashes everything!</li>
     </ul>
@@ -365,6 +365,7 @@
     let musicGain = null, musicTimer = null, musicStep = 0, musicNext = 0, musicBpm = 120, musicSparkle = false;
     // the faster she runs, the more the music goes wobbly: a 64-bar pitch sweep of up to an octave,
     // and a stereo ping-pong delay (dotted 1/8) fed through a wandering frequency shifter
+    let muffler = null, muffled = false; // the music sounds muffled under the sea
     let musicFx = 0, fxAmt = 0, fxSend = null, delayL = null, delayR = null;
     // Dad's drum loops (4 bars at 148 bpm), locked to the music's bars and played at its tempo.
     // role 'zoom' comes in while she zooms; 'extra' loops drift in now and then (sometimes quiet, sometimes full)
@@ -556,7 +557,7 @@
       music(play) {
         if (!ctx) return;
         if (play && !musicTimer) {
-          if (!musicGain) { musicGain = ctx.createGain(); musicGain.gain.value = 0.55; musicGain.connect(master); buildFx(); }
+          if (!musicGain) { musicGain = ctx.createGain(); musicGain.gain.value = 0.55; muffler = ctx.createBiquadFilter(); muffler.type = 'lowpass'; muffler.frequency.value = muffled ? 900 : 20000; musicGain.connect(muffler); muffler.connect(master); buildFx(); }
           musicStep = 0;
           musicNext = ctx.currentTime + 0.1;
           musicTimer = setInterval(musicTick, 40);
@@ -568,6 +569,9 @@
         }
       },
       get loops() { return { zoom: layers.zoom.cur && layers.zoom.cur.vol, extra: layers.extra.cur && [layers.extra.cur.idx, layers.extra.cur.vol], magnet: layers.magnet.cur && [layers.magnet.cur.idx, layers.magnet.cur.vol], decoded: loopBufs.filter(Boolean).length }; }, // for testing
+      muffle(on) { muffled = on; if (muffler) muffler.frequency.setTargetAtTime(on ? 900 : 20000, ctx.currentTime, 0.3); },
+      splash() { noise(0.6, 900, 0.35, 0.6); [600, 800, 1000, 1300, 900, 1500].forEach((f, k) => tone('sine', f, f * 1.6, 0.09, 0.08, 0.1 + k * 0.07)); },
+      blub(delay = 0) { tone('sine', 500 + Math.random() * 500, 1400, 0.08, 0.05, delay); },
       setMusic(bpm, sparkle, fx = 0, zoom = false, power = false, magnet = false) { musicBpm = bpm; musicSparkle = sparkle; musicFx = fx; loopZoom = zoom; loopPower = power; loopMagnet = magnet; },
       jump() { tone('square', 330, 660, 0.14, 0.12); },
       lane() { noise(0.12, 1400, 0.12, 0.8); },
@@ -1415,7 +1419,7 @@
     const len = Math.abs(t.endX - t.startX);
     const spread = t.live ? 1 : 1 + t.age * 0.12;
     for (const m of t.lines) {
-      m.visible = !inSpace && len > 0.5 && t.mat.opacity > 0.01;
+      m.visible = !awayFromTown && len > 0.5 && t.mat.opacity > 0.01;
       m.scale.set(Math.max(0.01, len), spread, spread);
       m.position.set((t.startX + t.endX) / 2, t.y - 0.1, t.z + m.userData.dz);
     }
@@ -1424,7 +1428,7 @@
   function updateSky(dt) {
     // birds
     flockT -= dt;
-    if (!inSpace && !flock.visible && flockT <= 0) {
+    if (!awayFromTown && !flock.visible && flockT <= 0) {
       flockDir = Math.random() < 0.5 ? 1 : -1;
       arrangeFlock();
       const far = Math.random();
@@ -1443,7 +1447,7 @@
     }
     // plane and contrails
     planeT -= dt;
-    if (!inSpace && !plane.visible && planeT <= 0) {
+    if (!awayFromTown && !plane.visible && planeT <= 0) {
       planeDir = Math.random() < 0.5 ? 1 : -1;
       plane.position.set(-planeDir * 110, 34 + Math.random() * 10, -110 - Math.random() * 25);
       plane.rotation.y = planeDir > 0 ? 0 : Math.PI;
@@ -1851,20 +1855,26 @@
       const ex = cx + sx * 30, ey = cy;
       if (closed) {
         ctx.strokeStyle = '#2b1a12'; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.arc(ex, ey - 4, 12, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(ex - sx * 16, ey + 2); ctx.quadraticCurveTo(ex, ey + 9, ex + sx * 16, ey - 3); ctx.stroke();
         continue;
       }
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath(); ctx.ellipse(ex, ey, 13, 15, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#5a3420'; ctx.beginPath(); ctx.arc(ex, ey + 2, 10, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#1a0f0a'; ctx.beginPath(); ctx.arc(ex, ey + 2, 5.5, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(ex - 3.5, ey - 3, 3.2, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(ex + 3, ey + 5, 1.5, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = '#2b1a12'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.ellipse(ex, ey, 13, 15, 0, 1.1 * Math.PI, 1.9 * Math.PI); ctx.stroke();
-      // eyelashes on the outer corners
-      const ox = ex + sx * 10;
-      for (let k = 0; k < 2; k++) { ctx.beginPath(); ctx.moveTo(ox - sx * k * 5, ey - 10 - k * 2); ctx.lineTo(ox + sx * (5 - k * 2), ey - 15 - k * 3); ctx.stroke(); }
+      // almond shaped: pointed corners, the outer corner tipped up a little
+      const ix = ex - sx * 16, iy = ey + 3, ox = ex + sx * 16, oy = ey - 3;
+      const almond = () => { ctx.beginPath(); ctx.moveTo(ix, iy); ctx.quadraticCurveTo(ex, ey - 19, ox, oy); ctx.quadraticCurveTo(ex, ey + 16, ix, iy); ctx.closePath(); };
+      ctx.save();
+      almond(); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.clip();
+      ctx.fillStyle = '#5a3420'; ctx.beginPath(); ctx.arc(ex, ey + 1, 9.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#1a0f0a'; ctx.beginPath(); ctx.arc(ex, ey + 1, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(ex - 3.5, ey - 3, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(ex + 3, ey + 4, 1.4, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+      ctx.strokeStyle = '#2b1a12'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(ix, iy); ctx.quadraticCurveTo(ex, ey - 19, ox + sx * 2, oy - 1); ctx.stroke(); // upper lid
+      ctx.lineWidth = 1.2; ctx.strokeStyle = 'rgba(43,26,18,0.6)';
+      ctx.beginPath(); ctx.moveTo(ix, iy); ctx.quadraticCurveTo(ex, ey + 16, ox, oy); ctx.stroke();
+      // eyelashes flicking out from the outer corner
+      ctx.strokeStyle = '#2b1a12'; ctx.lineWidth = 2.2;
+      for (let k = 0; k < 2; k++) { ctx.beginPath(); ctx.moveTo(ox - sx * k * 5, oy - 1 - k * 3); ctx.lineTo(ox + sx * (6 - k * 2), oy - 6 - k * 4); ctx.stroke(); }
     }
     // little nose
     ctx.strokeStyle = '#cf8f6c'; ctx.lineWidth = 2.5;
@@ -2393,7 +2403,7 @@
   function updateDucks(dt, move, running) {
     if (running) {
       nextDucks -= dt;
-      if (nextDucks <= 0) { if (!inSpace) spawnDucks(); if (nextDucks <= 0) nextDucks = 9 + Math.random() * 12; }
+      if (nextDucks <= 0) { if (!awayFromTown) spawnDucks(); if (nextDucks <= 0) nextDucks = 9 + Math.random() * 12; }
     }
     const t = performance.now() / 1000;
     let quacked = false;
@@ -2499,7 +2509,7 @@
 
   // ---------- Space World: through the golden gate once she has collected enough coins ----------
   const SPACE = 4;
-  let inSpace = false;
+  let inSpace = false, inSea = false, awayFromTown = false;
   const glowMats = [0xff5dc8, 0x5ee7ff, 0xb388ff, 0x7dff9a, 0xffd23f].map(c => new THREE.MeshBasicMaterial({ color: c }));
   const moonRock = lambert(0x8a8fb0), moonDark = lambert(0x5d6285), alienGreen = lambert(0x7dff6a), rocketWhite = lambert(0xf4f6ff);
   const alienEye = new THREE.MeshBasicMaterial({ color: 0xffffff }), alienPupil = new THREE.MeshBasicMaterial({ color: 0x2b2350 });
@@ -2765,6 +2775,296 @@
     return g;
   }
 
+  // ---------- Under the Sea: through the bubble portal (or a mystery box splash) ----------
+  const UNDER = 5;
+  const seaWorld = new THREE.Group(); // rays, bubbles, fish, jellyfish, dolphin, whale
+  seaWorld.visible = false;
+  scene.add(seaWorld);
+  const coralMats = [0xff6f91, 0xff9f5c, 0xb388ff, 0xffd23f, 0x5ee7d6].map(c => lambert(c));
+  const weedMat = lambert(0x2fbf71), weedMat2 = lambert(0x7ddf64), sandRock = lambert(0xc9b48a);
+  const pearlMat = new THREE.MeshBasicMaterial({ color: 0xfff8f0 }), chestMat = lambert(0x8a5a2b), goldMat2 = new THREE.MeshLambertMaterial({ color: 0xffd23f, emissive: 0x6a4a00 });
+  function makeCoral() {
+    const g = new THREE.Group(), mat = coralMats[Math.floor(Math.random() * coralMats.length)];
+    const n = 4 + Math.floor(Math.random() * 4);
+    for (let k = 0; k < n; k++) {
+      const h = 1.2 + Math.random() * 2.2;
+      const br = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.2, h, 7), mat);
+      const a = (k / n) * Math.PI * 2, lean = 0.2 + Math.random() * 0.5;
+      br.position.set(Math.cos(a) * Math.sin(lean) * h / 2, Math.cos(lean) * h / 2, Math.sin(a) * Math.sin(lean) * h / 2);
+      br.rotation.set(Math.sin(a) * lean, 0, -Math.cos(a) * lean);
+      const tip = ball(0.22, mat, br.position.x * 2, Math.cos(lean) * h, br.position.z * 2, 8);
+      g.add(br, tip);
+    }
+    g.scale.setScalar(1.3 + Math.random() * 0.8);
+    return g;
+  }
+  function makeSeaweed() {
+    const g = new THREE.Group();
+    g.userData.stalks = [];
+    for (let k = 0; k < 4 + Math.floor(Math.random() * 3); k++) {
+      const st = new THREE.Group();
+      st.position.set((Math.random() - 0.5) * 1.6, 0, (Math.random() - 0.5) * 1.6);
+      let parent = st;
+      for (let j = 0; j < 5; j++) { // a wobbly chain of segments
+        const seg = new THREE.Group();
+        seg.position.y = j ? 0.9 : 0;
+        const leaf = new THREE.Mesh(new THREE.BoxGeometry(0.22 - j * 0.03, 0.95, 0.06), k % 2 ? weedMat : weedMat2);
+        leaf.position.y = 0.45;
+        seg.add(leaf);
+        parent.add(seg);
+        st.userData.segs = (st.userData.segs || []).concat(seg);
+        parent = seg;
+      }
+      st.userData.phase = Math.random() * 6;
+      g.add(st);
+      g.userData.stalks.push(st);
+    }
+    g.scale.setScalar(1.2 + Math.random() * 0.6);
+    return g;
+  }
+  function makeClam() {
+    const g = new THREE.Group(), mat = coralMats[Math.floor(Math.random() * 3)];
+    const bottom = new THREE.Mesh(new THREE.SphereGeometry(0.9, 14, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), mat);
+    bottom.scale.y = 0.45; bottom.position.y = 0.42;
+    const lid = new THREE.Group(); lid.position.set(0, 0.42, 0.85);
+    const top = new THREE.Mesh(new THREE.SphereGeometry(0.9, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat);
+    top.scale.y = 0.45; top.position.z = -0.85;
+    lid.add(top);
+    const pearl = ball(0.3, pearlMat, 0, 0.6, 0, 12);
+    g.add(bottom, lid, pearl);
+    g.userData.lid = lid;
+    g.scale.setScalar(1.4);
+    return g;
+  }
+  function makeChest() {
+    const g = new THREE.Group();
+    g.add(box(1.8, 1.0, 1.1, chestMat, 0, 0.5, 0), box(1.86, 0.12, 1.16, goldMat2, 0, 0.95, 0), box(0.2, 0.3, 0.1, goldMat2, 0, 0.8, -0.58));
+    const lid = new THREE.Group(); lid.position.set(0, 1.0, 0.55);
+    const lidBox = box(1.8, 0.5, 1.1, chestMat, 0, 0.25, -0.55);
+    lid.add(lidBox); lid.rotation.x = -0.7; // open, full of treasure
+    for (let k = 0; k < 7; k++) g.add(ball(0.18, goldMat2, (Math.random() - 0.5) * 1.3, 1.0 + Math.random() * 0.2, (Math.random() - 0.5) * 0.6, 8));
+    g.add(lid, ball(0.16, pearlMat, 0.3, 1.2, 0, 8));
+    g.scale.setScalar(1.3);
+    return g;
+  }
+  function makeStarRock() {
+    const g = new THREE.Group();
+    const rock = new THREE.Mesh(rockGeo, sandRock);
+    rock.scale.set(1.4, 0.7, 1.2); rock.position.y = 0.35;
+    const st = new THREE.Mesh(starPickGeo, coralMats[Math.random() < 0.5 ? 0 : 1]);
+    st.rotation.x = -Math.PI / 2 + 0.3; st.position.set(0.2, 0.95, 0); st.scale.setScalar(0.9);
+    g.add(rock, st);
+    g.scale.setScalar(1.3);
+    return g;
+  }
+  const seaMakers = [makeCoral, makeCoral, makeSeaweed, makeSeaweed, makeClam, makeChest, makeStarRock];
+  const SEA_GAP = 8, SEA_PER_SIDE = 16;
+  const seaProps = [];
+  function placeSeaProp(o, z) {
+    o.position.set(o.userData.side * (5.6 + Math.random() * 5), 0, z);
+    o.rotation.y = Math.random() * Math.PI * 2;
+    if (o.userData.lid || o.userData.stalks) o.rotation.y = -o.userData.side * Math.PI / 2 * 0.7;
+  }
+  for (let i = 0; i < SEA_PER_SIDE * 2; i++) {
+    const o = seaMakers[Math.floor(Math.random() * seaMakers.length)]();
+    o.userData.side = i % 2 ? 1 : -1;
+    o.userData.phase = Math.random() * 6;
+    placeSeaProp(o, 10 - Math.floor(i / 2) * SEA_GAP - (i % 2) * SEA_GAP / 2);
+    o.visible = false;
+    scene.add(o);
+    seaProps.push(o);
+  }
+  // sunbeams slanting down through the water
+  const rayMat = new THREE.MeshBasicMaterial({ color: 0xdffaff, transparent: true, opacity: 0.08, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: false });
+  const rays = [];
+  for (let i = 0; i < 9; i++) {
+    const r = new THREE.Mesh(new THREE.PlaneGeometry(3 + Math.random() * 3, 70), rayMat);
+    r.position.set((Math.random() - 0.5) * 40, 25, -10 - i * 12);
+    r.rotation.set(0, Math.random() * Math.PI, 0.35);
+    r.userData.phase = Math.random() * 6;
+    seaWorld.add(r);
+    rays.push(r);
+  }
+  // bubbles rising everywhere
+  const bubbleMat = new THREE.MeshBasicMaterial({ color: 0xe8fbff, transparent: true, opacity: 0.55, depthWrite: false });
+  const bubbleGeo = new THREE.SphereGeometry(0.12, 8, 6);
+  const bubbles = [];
+  function resetBubble(b, z) { b.position.set((Math.random() - 0.5) * 30, Math.random() * 2, z); b.userData.v = 1.2 + Math.random() * 1.6; b.scale.setScalar(0.5 + Math.random() * 1.4); }
+  for (let i = 0; i < 70; i++) {
+    const b = new THREE.Mesh(bubbleGeo, bubbleMat);
+    resetBubble(b, 5 - Math.random() * 100);
+    b.position.y = Math.random() * 14;
+    seaWorld.add(b);
+    bubbles.push(b);
+  }
+  let bubbleIdx = 0;
+  function blowBubbles(x, y, z, n) {
+    for (let k = 0; k < n; k++) {
+      const b = bubbles[bubbleIdx++ % bubbles.length];
+      b.position.set(x + (Math.random() - 0.5) * 0.4, y + Math.random() * 0.3, z + (Math.random() - 0.5) * 0.4);
+      b.userData.v = 2 + Math.random();
+      b.scale.setScalar(0.4 + Math.random() * 0.6);
+    }
+  }
+  // schools of little fish darting across
+  const fishMats = [0xff9f1c, 0xffd23f, 0x5ec8e5, 0xff5dc8, 0x7dff9a].map(c => lambert(c));
+  const fishBody = new THREE.SphereGeometry(0.35, 10, 8), fishTail = new THREE.ConeGeometry(0.22, 0.4, 6);
+  function makeFish(mat) {
+    const f = new THREE.Group();
+    const b = new THREE.Mesh(fishBody, mat); b.scale.set(1.2, 0.75, 0.45);
+    const t = new THREE.Mesh(fishTail, mat); t.rotation.z = Math.PI / 2; t.position.x = -0.55; t.scale.z = 0.4;
+    const e = ball(0.06, alienPupil, 0.25, 0.08, 0.14, 6), e2 = ball(0.06, alienPupil, 0.25, 0.08, -0.14, 6);
+    f.add(b, t, e, e2);
+    f.userData.tail = t;
+    return f;
+  }
+  const schools = [];
+  for (let k = 0; k < 3; k++) {
+    const sc = new THREE.Group();
+    const mat = fishMats[k % fishMats.length];
+    for (let j = 0; j < 9; j++) {
+      const f = makeFish(Math.random() < 0.8 ? mat : fishMats[(k + 2) % fishMats.length]);
+      f.position.set((Math.random() - 0.5) * 4, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 3);
+      f.userData.phase = Math.random() * 6;
+      sc.add(f);
+    }
+    sc.visible = false;
+    sc.userData.t = 1 + k * 3;
+    seaWorld.add(sc);
+    schools.push(sc);
+  }
+  // jellyfish bobbing about, glowing
+  const jellies = [];
+  for (let k = 0; k < 7; k++) {
+    const j = new THREE.Group();
+    const mat = new THREE.MeshBasicMaterial({ color: [0xff9ee8, 0xb7a3ff, 0x9ff3ff][k % 3], transparent: true, opacity: 0.75 });
+    const bell = new THREE.Mesh(new THREE.SphereGeometry(0.7, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat);
+    j.add(bell);
+    for (let t = 0; t < 6; t++) {
+      const a = (t / 6) * Math.PI * 2;
+      const ten = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.02, 1.4, 4), mat);
+      ten.position.set(Math.cos(a) * 0.4, -0.7, Math.sin(a) * 0.4);
+      j.add(ten);
+    }
+    j.userData = { bell, phase: Math.random() * 6 };
+    j.position.set((Math.random() < 0.5 ? -1 : 1) * (4 + Math.random() * 6), 4 + Math.random() * 6, -20 - k * 14);
+    seaWorld.add(j);
+    jellies.push(j);
+  }
+  // a dolphin that leaps right over the track
+  const dolphinMat = lambert(0x6f9fd0), bellyMat = lambert(0xdcecf7);
+  const dolphin = new THREE.Group();
+  const dBody = ball(1, dolphinMat, 0, 0, 0, 16); dBody.scale.set(2.2, 0.7, 0.7);
+  const dBelly = ball(0.9, bellyMat, 0.2, -0.18, 0, 12); dBelly.scale.set(1.8, 0.5, 0.6);
+  const snout = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.9, 10), dolphinMat); snout.rotation.z = -Math.PI / 2; snout.position.x = 2.4;
+  const fin = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.8, 6), dolphinMat); fin.position.set(-0.2, 0.75, 0); fin.rotation.z = 0.4; fin.scale.z = 0.3;
+  const fluke = box(0.5, 0.12, 1.4, dolphinMat, -2.3, 0, 0);
+  const dEye = ball(0.09, alienPupil, 1.6, 0.18, 0.42, 6), dEye2 = ball(0.09, alienPupil, 1.6, 0.18, -0.42, 6);
+  dolphin.add(dBody, dBelly, snout, fin, fluke, dEye, dEye2);
+  dolphin.visible = false;
+  seaWorld.add(dolphin);
+  let dolphinT = 3, dolphinP = -1, dolphinDir = 1, dolphinZ = -30;
+  // and a big friendly whale far off in the blue
+  const whale = new THREE.Group();
+  const wMat = lambert(0x3d6fa8);
+  const wBody = ball(6, wMat, 0, 0, 0, 18); wBody.scale.set(2.4, 0.9, 1);
+  const wTail = box(2, 0.5, 7, wMat, -15, 1, 0);
+  const wEye = ball(0.5, alienPupil, 9, 0.5, 4.6, 8);
+  whale.add(wBody, wTail, wEye);
+  whale.position.set(-90, 26, -95);
+  seaWorld.add(whale);
+  let blubT = 1;
+  function updateSea(dt, move) {
+    if (!inSea) return;
+    const t = performance.now() / 1000;
+    for (const o of seaProps) {
+      o.position.z += move;
+      if (o.position.z > DESPAWN_Z + 4) placeSeaProp(o, o.position.z - SEA_PER_SIDE * SEA_GAP);
+      const u = o.userData;
+      if (u.stalks) for (const st of u.stalks) st.userData.segs.forEach((seg, j) => { seg.rotation.z = Math.sin(t * 1.6 + st.userData.phase + j * 0.6) * 0.18; seg.rotation.x = Math.cos(t * 1.2 + st.userData.phase) * 0.08; });
+      if (u.lid && !u.lid.children[0].isGroup && u.lid.children.length === 1 && u.lid.children[0].geometry && u.lid.children[0].geometry.type === 'SphereGeometry') u.lid.rotation.x = -0.25 - (Math.sin(t * 1.5 + u.phase) * 0.5 + 0.5) * 0.7; // clams open and shut
+    }
+    for (const r of rays) {
+      r.position.z += move * 0.3;
+      if (r.position.z > 10) r.position.z -= 110;
+      r.material.opacity = 0.06 + Math.sin(t * 0.7 + r.userData.phase) * 0.03;
+    }
+    for (const b of bubbles) {
+      b.position.y += b.userData.v * dt;
+      b.position.x += Math.sin(t * 3 + b.position.z) * dt * 0.3;
+      b.position.z += move;
+      if (b.position.y > 16 || b.position.z > DESPAWN_Z) resetBubble(b, b.position.z > DESPAWN_Z ? -95 + Math.random() * 10 : b.position.z);
+    }
+    // a little stream of bubbles from her helmet, with a blub now and then
+    blubT -= dt;
+    if (blubT <= 0) { blowBubbles(s.x, s.y + 2.1, 0.2, 2); blubT = 0.35 + Math.random() * 0.4; if (Math.random() < 0.3) sfx.blub(); }
+    for (const sc of schools) {
+      sc.userData.t -= dt;
+      if (!sc.visible && sc.userData.t <= 0) {
+        sc.userData.dir = Math.random() < 0.5 ? 1 : -1;
+        sc.position.set(-sc.userData.dir * 30, 2.5 + Math.random() * 7, -12 - Math.random() * 45);
+        sc.rotation.y = sc.userData.dir > 0 ? 0 : Math.PI;
+        sc.visible = true;
+      }
+      if (sc.visible) {
+        sc.position.x += sc.userData.dir * dt * 7;
+        sc.position.z += move * 0.5;
+        for (const f of sc.children) { f.userData.tail.rotation.y = Math.sin(t * 14 + f.userData.phase) * 0.6; f.position.y += Math.sin(t * 3 + f.userData.phase) * dt * 0.4; }
+        if (Math.abs(sc.position.x) > 32 || sc.position.z > 8) { sc.visible = false; sc.userData.t = 2 + Math.random() * 5; }
+      }
+    }
+    for (const j of jellies) {
+      const u = j.userData;
+      j.position.z += move * 0.85;
+      j.position.y += Math.sin(t * 1.3 + u.phase) * dt * 0.8;
+      const pulse = 1 + Math.sin(t * 3 + u.phase) * 0.12;
+      u.bell.scale.set(pulse, 1 / pulse, pulse);
+      if (j.position.z > DESPAWN_Z) j.position.set((Math.random() < 0.5 ? -1 : 1) * (4 + Math.random() * 6), 4 + Math.random() * 6, -95);
+    }
+    // the dolphin leaps across the track up ahead every few seconds
+    dolphinT -= dt;
+    if (dolphinP < 0 && dolphinT <= 0) { dolphinP = 0; dolphinDir = Math.random() < 0.5 ? 1 : -1; dolphinZ = -28 - Math.random() * 15; dolphin.visible = true; blowBubbles(-dolphinDir * 12, 0.5, dolphinZ, 8); }
+    if (dolphinP >= 0) {
+      dolphinP += dt / 2.2;
+      dolphinZ += move;
+      const x = -dolphinDir * 13 + dolphinDir * 26 * dolphinP, y = -1 + 11 * Math.sin(Math.PI * dolphinP);
+      dolphin.position.set(x, y, dolphinZ);
+      dolphin.rotation.set(0, dolphinDir > 0 ? 0 : Math.PI, Math.atan2(11 * Math.PI * Math.cos(Math.PI * dolphinP), 26));
+      if (dolphinP >= 1) { dolphinP = -1; dolphin.visible = false; dolphinT = 4 + Math.random() * 5; blowBubbles(dolphinDir * 12, 0.5, dolphinZ, 8); }
+    }
+    whale.position.x += dt * 2.5;
+    whale.position.y = 26 + Math.sin(t * 0.3) * 2;
+    if (whale.position.x > 110) whale.position.x = -110;
+  }
+  // the bubble portal: an aqua ring full of swirling sea, with fish swimming round it
+  const seaTex = canvasTexture(256, 256, (ctx, w, h) => {
+    const g = ctx.createRadialGradient(w / 2, h / 2, 6, w / 2, h / 2, w / 2);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(0.3, '#9ff3ff'); g.addColorStop(0.75, '#1f8fd1'); g.addColorStop(1, '#0b4f8a');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 3;
+    for (let k = 0; k < 18; k++) { ctx.beginPath(); ctx.arc(Math.random() * w, Math.random() * h, 4 + Math.random() * 12, 0, Math.PI * 2); ctx.stroke(); }
+  });
+  function makeSeaPortal() {
+    const g = new THREE.Group();
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.3, 0.22, 12, 36), new THREE.MeshLambertMaterial({ color: 0x5ee7ff, emissive: 0x1a6a80 }));
+    ring.position.y = 1.5;
+    const swirl = new THREE.Mesh(new THREE.CircleGeometry(1.15, 32), new THREE.MeshBasicMaterial({ map: seaTex, transparent: true, opacity: 0.9, side: THREE.DoubleSide }));
+    swirl.position.y = 1.5;
+    const orbit = new THREE.Group(); orbit.position.y = 1.5;
+    for (let k = 0; k < 4; k++) {
+      const f = makeFish(fishMats[k]);
+      const a = (k / 4) * Math.PI * 2;
+      f.position.set(Math.cos(a) * 1.75, Math.sin(a) * 1.75, 0);
+      f.rotation.z = a + Math.PI / 2;
+      f.scale.setScalar(0.8);
+      orbit.add(f);
+    }
+    g.add(ring, swirl, orbit);
+    for (let k = 0; k < 6; k++) g.add(ball(0.08 + Math.random() * 0.08, bubbleMat, (Math.random() - 0.5) * 2.4, 0.4 + Math.random() * 2.6, 0.2, 6));
+    g.userData = { seaPortal: true, halfW: 0.9, halfD: 0.5, height: 0, base: 0, swirl, orbit };
+    return g;
+  }
+
   // ---------- lands the portal can take her to ----------
   const themes = [
     { name: 'Sunny Town', sky: 0x8fd8ff, grass: 0x7fd36b, track: 0xe8c48f, hills: [0x5cc46e, 0x4bb36a, 0x6fd07a] },
@@ -2772,6 +3072,7 @@
     { name: 'Sunset Valley', sky: 0xffb38a, grass: 0xa8c86a, track: 0xf0c9a0, hills: [0x8fb85a, 0xd98a5a, 0x9cc46a] },
     { name: 'Starry Night', sky: 0x4b4fae, grass: 0x3f9e6e, track: 0xc9ae8a, hills: [0x2f7d5a, 0x368d62, 0x4aa877] },
     { name: 'Space', sky: 0x140f3a, grass: 0x6d7299, track: 0xb7bad6, hills: [0x4d5280, 0x5d6290, 0x3f4470] }, // only through the golden gate
+    { name: 'Under the Sea', sky: 0x1f86c0, grass: 0xe6d29c, track: 0xf2e2b2, hills: [0xff7f9e, 0xff9f5c, 0x6fd6c8] }, // only through the bubble portal
   ];
   let themeIndex = 0;
   function applyTheme(i) {
@@ -2783,18 +3084,25 @@
     track.material.color.setHex(t.track);
     hillMats.forEach((m, k) => m.color.setHex(t.hills[k]));
     inSpace = i === SPACE;
+    inSea = i === UNDER;
+    awayFromTown = inSpace || inSea;
     stars.visible = i === 3 || inSpace;
     rainbow.visible = i === 0 || i === 1;
-    sun.visible = sunGlow.visible = !inSpace;
+    sun.visible = sunGlow.visible = !awayFromTown;
     planets.visible = inSpace;
     mountains.visible = inSpace;
-    helmet.visible = inSpace;
-    for (const c of clouds) c.visible = !inSpace;
-    for (const f of fences) f.visible = !inSpace;
-    for (const t of terraces) t.visible = !inSpace;
-    for (const c of cottages) c.visible = !inSpace;
+    helmet.visible = awayFromTown;
+    for (const c of clouds) c.visible = !awayFromTown;
+    for (const f of fences) f.visible = !awayFromTown;
+    for (const t of terraces) t.visible = !awayFromTown;
+    for (const c of cottages) c.visible = !awayFromTown;
     for (const o of spaceProps) o.visible = inSpace;
-    if (inSpace) { flock.visible = false; plane.visible = false; }
+    for (const o of seaProps) o.visible = inSea;
+    seaWorld.visible = inSea;
+    scene.fog.near = inSea ? 22 : 50;
+    scene.fog.far = inSea ? 115 : 140;
+    sfx.muffle(inSea);
+    if (awayFromTown) { flock.visible = false; plane.visible = false; }
     ufo.visible = false;
   }
 
@@ -2937,10 +3245,28 @@
     s.nextPortal = s.distance + 300 + Math.random() * 100;
   }
 
+  function enterSea() {
+    sfx.splash();
+    flashEl.style.background = 'radial-gradient(circle at center, #ffffff00 15%, #3fb6ff 100%)';
+    flash();
+    setTimeout(() => { flashEl.style.background = ''; }, 900);
+    clearWorld();
+    applyTheme(UNDER);
+    toast('Splash! Under the sea!');
+    s.distance += 50;
+    s.y = s.ground = 0; s.vy = 0; s.groundPlat = null;
+    s.copZ = 30; s.copClose = 0;
+    coinLine(s.lane, -8, 20, 0.8, 1.8);
+    blowBubbles(s.x, 1, -1, 20);
+    s.untilNext = 45;
+    s.nextPortal = s.distance + 280 + Math.random() * 100;
+    s.nextSea = s.distance + 400 + Math.random() * 250;
+  }
+
   function reset() {
     clearWorld();
     applyTheme(0);
-    Object.assign(s, { coins: 0, nextPortal: 150, copZ: 3.2, copX: 0, copY: 0, copVy: 0, copClose: 3.5, bumpCool: 0, stumbleT: 0, caught: false, lookT: 0, nextLook: 1.5, board: 0, nextBoard: 60, nextClimb: 70, zoom: 0, zoomF: 0, nextZoom: 110, nextBox: 35, magnet: 0, nextMagnet: 90, nextTunnel: 45, twirl: 0, milestone: 0, invuln: 0, lane: 1, prevLane: 1, lastTall: false, x: 0, y: 0, vy: 0, speed: START_SPEED, distance: 0, untilNext: 35, jumpBuffer: 0, crashT: 0, ground: 0, groundPlat: null, jet: 0, star: 0, jetF: 0, jetFall: false, nextJet: 140, nextStar: 210, combo: 0, comboT: 0, shake: 0, lean: 0, squash: 0, skyLane: 1, gateAt: 100, gateReady: false, gateHalf: false });
+    Object.assign(s, { coins: 0, nextPortal: 150, copZ: 3.2, copX: 0, copY: 0, copVy: 0, copClose: 3.5, bumpCool: 0, stumbleT: 0, caught: false, lookT: 0, nextLook: 1.5, board: 0, nextBoard: 60, nextClimb: 70, zoom: 0, zoomF: 0, nextZoom: 110, nextBox: 35, magnet: 0, nextMagnet: 90, nextTunnel: 45, twirl: 0, milestone: 0, invuln: 0, lane: 1, prevLane: 1, lastTall: false, x: 0, y: 0, vy: 0, speed: START_SPEED, distance: 0, untilNext: 35, jumpBuffer: 0, crashT: 0, ground: 0, groundPlat: null, jet: 0, star: 0, jetF: 0, jetFall: false, nextJet: 140, nextStar: 210, combo: 0, comboT: 0, shake: 0, lean: 0, squash: 0, skyLane: 1, gateAt: 100, gateReady: false, gateHalf: false, nextSea: 170 });
     comboEl.classList.remove('show');
     player.rotation.set(0, 0, 0);
     renderHud();
@@ -3055,8 +3381,8 @@
     popping.push(o);
     const r = Math.random();
     const tunnelNear = tunnels.some(t => t.position.z > -30 && t.position.z - t.userData.length < 2);
-    let prize = r < 0.24 ? 'coins' : r < 0.4 ? 'board' : r < 0.54 ? 'magnet' : r < 0.67 ? 'jet' : r < 0.8 ? 'star' : r < 0.9 ? 'zoom' : 'super';
-    if ((prize === 'board' && s.board > 0) || (prize === 'magnet' && s.magnet > 0) || (prize === 'jet' && (s.jet > 0 || tunnelNear)) || (prize === 'star' && s.star > 0)) prize = 'coins';
+    let prize = r < 0.24 ? 'coins' : r < 0.4 ? 'board' : r < 0.54 ? 'magnet' : r < 0.67 ? 'jet' : r < 0.8 ? 'star' : r < 0.88 ? 'zoom' : r < 0.95 ? 'sea' : 'super';
+    if ((prize === 'board' && s.board > 0) || (prize === 'magnet' && s.magnet > 0) || (prize === 'jet' && (s.jet > 0 || tunnelNear)) || (prize === 'star' && s.star > 0) || (prize === 'sea' && (awayFromTown || tunnelNear || s.jet > 0))) prize = 'coins';
     if (prize === 'coins') {
       s.coins += 10; popCoins();
       burst(s.x, 1.5, -1, 16, true);
@@ -3069,6 +3395,9 @@
       setTimeout(() => s.mode === 'running' && startJet(), 300);
     } else if (prize === 'star') {
       startStar();
+    } else if (prize === 'sea') {
+      toast('Splash!');
+      setTimeout(() => s.mode === 'running' && !awayFromTown && enterSea(), 400);
     } else if (prize === 'zoom') {
       setTimeout(() => s.mode === 'running' && startZoom(4), 350);
     } else {
@@ -3354,6 +3683,15 @@
       s.untilNext = 30;
       return;
     }
+    if (!tun && !s.gateReady && !awayFromTown && s.distance > s.nextSea && tallFree().length === 3) {
+      // the bubble portal sits in one lane at the end of a trail of coins: find it to dive under the sea
+      const li = Math.floor(Math.random() * 3);
+      coinLine(li, SPAWN_Z + 16, 7, 0.8, 2.2);
+      addObstacle(makeSeaPortal(), li, SPAWN_Z);
+      s.nextSea = s.distance + 300 + Math.random() * 200; // missed it? another comes along
+      s.untilNext = 40;
+      return;
+    }
     if (!tun && !s.gateReady && s.distance > s.nextPortal && tallFree().length === 3) {
       // the portal gets a row all to itself, in a random lane
       addObstacle(makePortal(), Math.floor(Math.random() * 3), SPAWN_Z);
@@ -3430,7 +3768,7 @@
   }
 
   // while zooming she steers and jumps by herself
-  const isHazard = (u) => !(u.portal || u.zoomPortal || u.boardPickup || u.magnetPickup || u.jetPickup || u.starPickup || u.spaceGate || u.pad || u.mystery);
+  const isHazard = (u) => !(u.portal || u.zoomPortal || u.boardPickup || u.magnetPickup || u.jetPickup || u.starPickup || u.spaceGate || u.seaPortal || u.pad || u.mystery);
   function hazardIn(li, from, to) {
     let near = Infinity, tall = false;
     for (const o of obstacles) {
@@ -3455,7 +3793,7 @@
       }
       if (bestLane !== s.lane) { s.prevLane = s.lane; s.lane = bestLane; sfx.lane(); return; }
     }
-    if (!here.tall && here.near < 4.5 && s.y <= s.ground + 0.02 && s.vy <= 0) { s.vy = JUMP_V * (inSpace ? 0.85 : 1); sfx.jump(); }
+    if (!here.tall && here.near < 4.5 && s.y <= s.ground + 0.02 && s.vy <= 0) { s.vy = JUMP_V * (inSpace ? 0.85 : inSea ? 0.8 : 1); sfx.jump(); }
   }
 
   // ---------- loop ----------
@@ -3522,14 +3860,15 @@
       o.position.z += move;
       if (o.position.z > DESPAWN_Z) placeScenery(o, o.position.z - scenery.length * SCENERY_GAP);
       // trees and bits that would be inside a shop only show in the gaps
-      if (inSpace) o.visible = false;
+      if (awayFromTown) o.visible = false;
       else if (!o.userData.far) o.visible = !terraceAt(o.userData.side, o.position.z, 2.6) && !cottageAt(o.userData.side, o.position.z, 1.5);
       else o.visible = !cottageAt(o.userData.side, o.position.z, 4);
     }
     updateTerraces(dt, move);
     updateCottages(move);
-    if (inSpace) for (const c of cottages) c.visible = false;
+    if (awayFromTown) for (const c of cottages) c.visible = false;
     updateSpace(dt, move);
+    updateSea(dt, move);
     updateFireworks(dt);
     updateDucks(dt, move, running);
     for (const b of billboards) {
@@ -3603,7 +3942,9 @@
         const hitX = Math.abs(o.position.x - s.x) < d.halfW + 0.22;
         const hitZ = Math.abs(o.position.z) < d.halfD + 0.18;
         const feet = s.y - d.base;
-        if (d.spaceGate) {
+        if (d.seaPortal) {
+          if (hitX && o.position.z > -0.6 && o.position.z - move < 0.6) { enterSea(); break; }
+        } else if (d.spaceGate) {
           if (o.position.z > -0.6 && o.position.z - move < 0.6) { enterSpace(); break; } // can't be skipped over on a slow frame
         } else if (d.portal) {
           if (hitX && Math.abs(o.position.z) < 0.6) { teleport(); break; }
@@ -3630,7 +3971,7 @@
             continue;
           }
         } else if (d.pad) {
-          if (hitX && hitZ && feet < 0.4 && feet > -0.3 && s.vy <= 0) { s.vy = inSpace ? 12 : 15; d.top.position.y = 0.32; sfx.bounce(); s.twirl = 1; }
+          if (hitX && hitZ && feet < 0.4 && feet > -0.3 && s.vy <= 0) { s.vy = awayFromTown ? 11 : 15; d.top.position.y = 0.32; sfx.bounce(); s.twirl = 1; }
         } else if (d.tall) {
           if (hitX && hitZ && Math.abs(o.position.z) < d.halfD - 0.4 && !(d.roof && feet > d.roof - 0.6)) {
             if (s.star > 0) { smash(o); obstacles.splice(i, 1); continue; }
@@ -3646,6 +3987,7 @@
         }
       }
       if (o.userData.portal) { o.userData.swirl.rotation.z -= dt * 4; }
+      if (o.userData.seaPortal) { o.userData.swirl.rotation.z += dt * 2; o.userData.orbit.rotation.z -= dt * 1.5; }
       if (o.userData.zoomPortal) { o.userData.ring.rotation.z += dt * 3; }
       if (o.userData.mystery) {
         const u = o.userData;
@@ -3677,7 +4019,7 @@
       }
       if (running && Math.abs(c.position.x - s.x) < 0.9 && Math.abs(c.position.z) < 0.8 && Math.abs(c.position.y - (s.y + 0.9)) < 1.2) {
         scene.remove(c); coins.splice(i, 1);
-        s.coins += inSpace ? 2 : 1; // space coins are worth double
+        s.coins += awayFromTown ? 2 : 1; // coins are worth double in Space and under the sea
         s.combo++;
         s.comboT = 2.5;
         popCoins();
@@ -3721,7 +4063,7 @@
     }
     if (s.jumpBuffer > 0) {
       s.jumpBuffer -= dt;
-      if (s.y <= s.ground + 0.02 && s.vy <= 0 && running) { s.vy = JUMP_V * (inSpace ? 0.85 : 1); s.jumpBuffer = 0; sfx.jump(); }
+      if (s.y <= s.ground + 0.02 && s.vy <= 0 && running) { s.vy = JUMP_V * (inSpace ? 0.85 : inSea ? 0.8 : 1); s.jumpBuffer = 0; sfx.jump(); }
     }
     if (wasGrounded && s.vy <= 0 && s.ground < s.y && s.y - s.ground < 0.35 && !(prevPlat && prevPlat.userData.launch)) {
       s.y = s.ground; // walk down a ramp instead of floating off it
@@ -3731,7 +4073,7 @@
       s.y += (Math.max(JET_Y, s.ground + 2) - s.y) * Math.min(1, dt * 4);
       s.vy = 0;
     } else if (s.y > s.ground || s.vy > 0) {
-      s.vy -= GRAVITY * (inSpace ? 0.6 : 1) * dt; // floaty moon jumps in Space
+      s.vy -= GRAVITY * (inSpace ? 0.6 : inSea ? 0.45 : 1) * dt; // floaty moon jumps in Space, slow swimmy ones under the sea
       if (s.jetFall) s.vy = Math.max(s.vy, -7); // floats gently back down
       s.y += s.vy * dt;
     }
@@ -3785,7 +4127,7 @@
       }
       if (s.star <= 0) { setStar(0); s.invuln = Math.max(s.invuln, 1.0); }
     }
-    sfx.setMusic(116 + Math.min(28, Math.max(0, (s.speed - 12) * 3.5)) + 16 * Math.max(s.zoomF, s.jetF), s.star > 0 || inSpace, running ? Math.max(0, Math.min(1, (s.speed * boost - 14) / 6)) : 0, running && s.zoom > 0, running && (s.jet > 0 || s.star > 0), running && s.magnet > 0);
+    sfx.setMusic(116 + Math.min(28, Math.max(0, (s.speed - 12) * 3.5)) + 16 * Math.max(s.zoomF, s.jetF), s.star > 0 || awayFromTown, running ? Math.max(0, Math.min(1, (s.speed * boost - 14) / 6)) : 0, running && s.zoom > 0, running && (s.jet > 0 || s.star > 0), running && s.magnet > 0);
     if (running && !inSpace) {
       if (!s.gateHalf && s.coins >= s.gateAt / 2 && s.coins < s.gateAt) { s.gateHalf = true; toast('Halfway to Space!'); }
       if (!s.gateReady && s.coins >= s.gateAt) { s.gateReady = true; s.gateHalf = true; toast(s.gateAt + ' coins! Find the gate!'); sfx.cheer(); }
@@ -3822,6 +4164,13 @@
     const wob = Math.sin(tNow * 6.3) * 0.09 + Math.sin(tNow * 2.1) * 0.05; // a little wobble on the board
     riding.rotation.z = onBoard ? (LANES[s.lane] - s.x) * 0.25 + wob : 0;
     riding.rotation.x = onBoard ? Math.sin(tNow * 4.7) * 0.05 : 0;
+    if (inSea && air && s.jet <= 0 && !onBoard) {
+      // swimming: a little breaststroke
+      const st = Math.sin(tNow * 6);
+      armL.rotation.x = armR.rotation.x = 2.2 + st * 0.5;
+      armL.rotation.z = -0.4 - st * 0.4; armR.rotation.z = 0.4 + st * 0.4;
+      legL.rotation.x = 0.3 + st * 0.3; legR.rotation.x = 0.3 - st * 0.3;
+    }
     if (s.jet > 0) {
       // flying pose: arms out, legs dangling
       legL.rotation.x = 0.35 + Math.sin(tNow * 5) * 0.12;
@@ -3899,9 +4248,9 @@
     // he runs just off her shoulder so he never hides her from view
     const copSide = s.x > 0.5 ? -1.5 : 1.5;
     s.copX += (s.x + copSide - s.copX) * Math.min(1, dt * 5);
-    const copNear = obstacles.some(o => !o.userData.tall && !o.userData.portal && !o.userData.spaceGate && Math.abs(o.position.x - s.copX) < 1.2 && o.position.z - s.copZ > -2.5 && o.position.z - s.copZ < 0);
+    const copNear = obstacles.some(o => !o.userData.tall && !o.userData.portal && !o.userData.spaceGate && !o.userData.seaPortal && Math.abs(o.position.x - s.copX) < 1.2 && o.position.z - s.copZ > -2.5 && o.position.z - s.copZ < 0);
     if (copNear && s.copY <= copGround + 0.02) s.copVy = JUMP_V;
-    s.copVy -= GRAVITY * (inSpace ? 0.6 : 1) * dt;
+    s.copVy -= GRAVITY * (inSpace ? 0.6 : inSea ? 0.45 : 1) * dt;
     s.copY = Math.max(copGround, s.copY + s.copVy * dt);
     if (s.copY <= copGround) s.copVy = 0;
     const copAir = s.copY > copGround + 0.05;
@@ -3944,6 +4293,6 @@
   window.__hop = s;
   window.__hopWorld = () => ({ obstacles, platforms, LANES, ducks });
   window.__cottages = cottages;
-  window.__hopPower = { jet: startJet, star: startStar, space: enterSpace, sfx };
+  window.__hopPower = { jet: startJet, star: startStar, space: enterSpace, sea: enterSea, sfx };
 })();
 </script>
