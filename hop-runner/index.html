@@ -595,7 +595,7 @@
       cheer() { [523, 659, 784, 1047, 1319].forEach((f, k) => tone('square', f, f, 0.12, 0.07, k * 0.08)); },
       twirl() { tone('triangle', 500, 1400, 0.45, 0.12); },
       quack(delay = 0) { tone('sawtooth', 620, 330, 0.16, 0.09, delay); tone('square', 900, 500, 0.12, 0.04, delay); },
-      growl() { tone('sawtooth', 120, 65, 0.9, 0.07); tone('square', 90, 60, 0.9, 0.04); noise(0.9, 380, 0.18, 1, 'lowpass'); },
+      huff() { noise(0.35, 700, 0.12, 0.8, 'lowpass'); tone('triangle', 300, 220, 0.25, 0.04, 0.05); }, // a cross 'hmph!'
       woof() { tone('square', 440, 250, 0.07, 0.05); tone('square', 400, 230, 0.09, 0.05, 0.13); },
       meow() { tone('triangle', 650, 1050, 0.14, 0.05); tone('triangle', 1050, 560, 0.3, 0.05, 0.13); },
       boo() { tone('sine', 320, 520, 0.5, 0.07); tone('sine', 520, 300, 0.7, 0.06, 0.45); tone('triangle', 640, 1040, 0.5, 0.025); },
@@ -2186,51 +2186,42 @@
   const buckle = box(0.12, 0.08, 0.03, silver, 0, 0.86, -0.25);
   const copNeck = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.13, 0.14, 10), copSkin);
   copNeck.position.y = 1.66;
-  // his face, painted on like Robyn's: a cross, scary-funny face, and a roar for when he turns round
-  function paintCopFace(ctx, w, h, roar) {
+  // his face, painted on like Robyn's: a bit cross, and crosser still when he turns round to glare
+  function paintCopFace(ctx, w, h, glare) {
     ctx.fillStyle = '#f0c09a'; ctx.fillRect(0, 0, w, h);
     const cx = 384, cy = 136;
-    ctx.fillStyle = 'rgba(120,40,90,0.25)'; // dark rings under his eyes
-    for (const sx of [-1, 1]) { ctx.beginPath(); ctx.ellipse(cx + sx * 27, cy + 2, 16, 13, 0, 0, Math.PI * 2); ctx.fill(); }
+    ctx.fillStyle = 'rgba(255,120,120,0.3)';
+    for (const sx of [-1, 1]) { ctx.beginPath(); ctx.arc(cx + sx * 48, cy + 20, 14, 0, Math.PI * 2); ctx.fill(); }
     for (const sx of [-1, 1]) {
-      const ex = cx + sx * 27, ey = cy - 2;
-      ctx.fillStyle = roar ? '#fff3a0' : '#ffffff';
-      ctx.beginPath(); ctx.ellipse(ex, ey, 11, roar ? 11 : 8, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = roar ? '#ff1a1a' : '#b3121f'; ctx.beginPath(); ctx.arc(ex + sx * -1, ey + 1, roar ? 5.5 : 4.5, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(ex + sx * -1, ey + 1, 2.2, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#3a2416'; // thick angry eyebrows sloping down to the middle
-      ctx.beginPath(); ctx.moveTo(ex + sx * 16, ey - 18); ctx.lineTo(ex - sx * 12, ey - 8); ctx.lineTo(ex - sx * 13, ey - 2); ctx.lineTo(ex + sx * 16, ey - 11); ctx.fill();
+      const ex = cx + sx * 27, ey = cy;
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.ellipse(ex, ey, 9, glare ? 7 : 9, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#2a3b6a'; ctx.beginPath(); ctx.arc(ex - sx * 1.5, ey + 1, 5.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(ex - sx * 1.5, ey + 1, 2.8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex - sx * 1.5 - 2, ey - 2, 1.6, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#4a2e1c'; ctx.lineWidth = 6; ctx.lineCap = 'round'; // eyebrows tipped down in a frown
+      const tilt = glare ? 9 : 5;
+      ctx.beginPath(); ctx.moveTo(ex + sx * 13, ey - 17 - tilt); ctx.lineTo(ex - sx * 11, ey - 14 + tilt * 0.4); ctx.stroke();
     }
     ctx.fillStyle = '#e39a78'; ctx.beginPath(); ctx.ellipse(cx, cy + 14, 9, 8, 0, 0, Math.PI * 2); ctx.fill();
-    if (roar) {
-      // a huge roaring mouth with pointy teeth
-      ctx.fillStyle = '#5a0d1c'; ctx.beginPath(); ctx.ellipse(cx, cy + 46, 30, 22, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#ff6f8a'; ctx.beginPath(); ctx.ellipse(cx, cy + 58, 14, 7, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      for (let k = -3; k <= 3; k++) { ctx.beginPath(); ctx.moveTo(cx + k * 8 - 4, cy + 28); ctx.lineTo(cx + k * 8 + 4, cy + 28); ctx.lineTo(cx + k * 8, cy + 38 + (Math.abs(k) === 2 ? 6 : 0)); ctx.fill(); }
-      for (let k = -2; k <= 2; k++) { ctx.beginPath(); ctx.moveTo(cx + k * 9 - 4, cy + 66); ctx.lineTo(cx + k * 9 + 4, cy + 66); ctx.lineTo(cx + k * 9, cy + 57); ctx.fill(); }
-    } else {
-      // gritted teeth in a cross grimace
-      ctx.fillStyle = '#5a0d1c'; ctx.beginPath(); ctx.moveTo(cx - 24, cy + 40); ctx.quadraticCurveTo(cx, cy + 28, cx + 24, cy + 40); ctx.quadraticCurveTo(cx, cy + 50, cx - 24, cy + 40); ctx.fill();
-      ctx.fillStyle = '#ffffff'; ctx.fillRect(cx - 18, cy + 36, 36, 6);
-      ctx.strokeStyle = '#5a0d1c'; ctx.lineWidth = 1.5;
-      for (let k = -2; k <= 2; k++) { ctx.beginPath(); ctx.moveTo(cx + k * 7, cy + 35); ctx.lineTo(cx + k * 7, cy + 43); ctx.stroke(); }
-    }
-    ctx.fillStyle = '#3a2416'; // a big droopy moustache
-    ctx.beginPath(); ctx.moveTo(cx, cy + 20);
-    ctx.bezierCurveTo(cx - 14, cy + 16, cx - 34, cy + 22, cx - 40, cy + 34); ctx.bezierCurveTo(cx - 30, cy + 34, cx - 16, cy + 30, cx, cy + 27);
-    ctx.bezierCurveTo(cx + 16, cy + 30, cx + 30, cy + 34, cx + 40, cy + 34); ctx.bezierCurveTo(cx + 34, cy + 22, cx + 14, cy + 16, cx, cy + 20); ctx.fill();
+    ctx.fillStyle = '#4a2e1c'; // a bushy moustache
+    ctx.beginPath(); ctx.moveTo(cx, cy + 21);
+    ctx.bezierCurveTo(cx - 14, cy + 16, cx - 32, cy + 20, cx - 38, cy + 30); ctx.bezierCurveTo(cx - 28, cy + 31, cx - 15, cy + 29, cx, cy + 27);
+    ctx.bezierCurveTo(cx + 15, cy + 29, cx + 28, cy + 31, cx + 38, cy + 30); ctx.bezierCurveTo(cx + 32, cy + 20, cx + 14, cy + 16, cx, cy + 21); ctx.fill();
+    ctx.strokeStyle = '#a3324a'; ctx.lineWidth = 3; ctx.lineCap = 'round'; // a grumpy little mouth
+    ctx.beginPath(); ctx.arc(cx, cy + 44, glare ? 9 : 8, 1.15 * Math.PI, 1.85 * Math.PI); ctx.stroke();
   }
   const copFaceTex = canvasTexture(512, 256, (ctx, w, h) => paintCopFace(ctx, w, h, false));
-  const copRoarTex = canvasTexture(512, 256, (ctx, w, h) => paintCopFace(ctx, w, h, true));
+  const copGlareTex = canvasTexture(512, 256, (ctx, w, h) => paintCopFace(ctx, w, h, true));
   const copHead = new THREE.Mesh(new THREE.SphereGeometry(0.31, 28, 20), new THREE.MeshLambertMaterial({ map: copFaceTex, emissive: 0xffffff, emissiveMap: copFaceTex, emissiveIntensity: 0.3 }));
   copHead.position.y = 1.9;
   const copEarL = ball(0.07, copSkin, -0.31, 1.88, 0), copEarR = ball(0.07, copSkin, 0.31, 1.88, 0);
-  const copHair = new THREE.Mesh(new THREE.SphereGeometry(0.325, 20, 12, 0, Math.PI, 0, 0.72 * Math.PI), hairMat); // round the back, under the helmet
+  const copHair = new THREE.Mesh(new THREE.SphereGeometry(0.322, 24, 12, -0.2 * Math.PI, 1.4 * Math.PI, 0.3 * Math.PI, 0.3 * Math.PI), hairMat); // round the sides, under the helmet
   copHair.position.y = 1.9;
+  const copNape = new THREE.Mesh(new THREE.SphereGeometry(0.32, 20, 10, 0, Math.PI, 0.3 * Math.PI, 0.45 * Math.PI), hairMat); // and down the back to his neck
+  copNape.position.y = 1.9;
   // the custodian helmet
   const helmetPts = [[0.0001, 0.64], [0.06, 0.64], [0.07, 0.58], [0.17, 0.53], [0.27, 0.43], [0.32, 0.28], [0.34, 0.1], [0.345, 0.02], [0.37, 0]].map(([x, y]) => new THREE.Vector2(x, y));
-  const copHelmet = new THREE.Mesh(new THREE.LatheGeometry(helmetPts, 20), new THREE.MeshLambertMaterial({ color: 0x141c3a, copSide: THREE.DoubleSide }));
+  const copHelmet = new THREE.Mesh(new THREE.LatheGeometry(helmetPts, 20), new THREE.MeshLambertMaterial({ color: 0x141c3a, side: THREE.DoubleSide }));
   copHelmet.position.y = 1.97;
   const peak = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.44, 0.025, 20, 1, false, Math.PI / 2, Math.PI), copHelmet.material);
   peak.position.set(0, 1.975, -0.02); peak.rotation.x = 0.12; // the little peak over his eyes
@@ -2239,7 +2230,7 @@
   const knob = ball(0.05, silver, 0, 2.63, 0, 8);
   const chin = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.015, 6, 20, Math.PI), bootMat);
   chin.position.set(0, 1.95, -0.06); chin.rotation.set(0.35, 0, Math.PI); // the strap runs under his chin, ear to ear
-  cop.add(copTorso, vest, ...stripes, backPatch, badge, radio, belt, buckle, copNeck, copHead, copEarL, copEarR, copHair, copHelmet, peak, helmetStar, knob, chin);
+  cop.add(copTorso, vest, ...stripes, backPatch, badge, radio, belt, buckle, copNeck, copHead, copEarL, copEarR, copHair, copNape, copHelmet, peak, helmetStar, knob);
   const boot = () => { const b = ball(0.16, bootMat, 0, -0.72, -0.06, 10); b.scale.set(0.95, 0.6, 1.35); return b; };
   const hand = () => ball(0.1, copSkin, 0, -0.62, 0, 10);
   const copLegL = roundLimb(uniform, 0.7, 0.12, -0.16, 0.8, boot());
@@ -4875,21 +4866,21 @@
     const canStare = s.mode === 'running' && s.jet <= 0 && s.star <= 0 && s.zoom <= 0 && s.y - s.ground < 0.3;
     if (s.mode !== 'running') stare = 0;
     else if (stare <= 0 && canStare && (nextStare -= dt) <= 0) {
-      stare = 2.2; nextStare = 25 + Math.random() * 25;
+      stare = 1.6; nextStare = 25 + Math.random() * 25;
       s.copClose = Math.max(s.copClose, 3); s.copZ = Math.min(s.copZ, 3);
-      copHead.material.map = copHead.material.emissiveMap = copRoarTex; copHead.material.needsUpdate = true;
-      sfx.growl();
+      copHead.material.map = copHead.material.emissiveMap = copGlareTex; copHead.material.needsUpdate = true;
+      sfx.huff();
     }
     if (stare > 0) { stare -= dt; if (stare <= 0) { copHead.material.map = copHead.material.emissiveMap = copFaceTex; copHead.material.needsUpdate = true; } }
     stareF += ((stare > 0 ? 1 : 0) - stareF) * Math.min(1, dt * 6);
-    update(dt * (1 - 0.75 * stareF)); // the world slows right down while he glares
+    update(dt * (1 - 0.5 * stareF)); // the world slows down while he glares
     cop.rotation.y = Math.PI * Math.min(1, stareF * 1.3); // he turns round to face us
     if (stareF > 0.01) {
       savedCam.copy(camera.position); savedQuat.copy(camera.quaternion);
       const e = stareF * stareF * (3 - 2 * stareF);
       cop.updateMatrixWorld();
       stareLook.set(cop.position.x, cop.position.y + 1.95, cop.position.z);
-      stareCam.set(cop.position.x + 0.15, cop.position.y + 2.05, cop.position.z + 1.3); // just in front of his face
+      stareCam.set(cop.position.x + 0.15, cop.position.y + 2.0, cop.position.z + 2.0); // a little way in front of his face
       normalLook.set(s.x * 0.4, 1.2 + s.y * 0.6, -6);
       camera.position.lerpVectors(savedCam, stareCam, e);
       camera.lookAt(normalLook.lerp(stareLook, e));
