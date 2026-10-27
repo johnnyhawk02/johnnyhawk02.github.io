@@ -273,8 +273,8 @@
       <li>Swipe ← → to change lanes</li>
       <li>Tap or swipe ↑ to jump</li>
       <li>Grab coins, find the portal, and don't let the policeman catch you!</li>
-      <li>A hoverboard saves you from one bump</li>
-      <li>A magnet pulls coins to you</li>
+      <li>Collect 100 coins to open the gate to Space!</li>
+      <li>A hoverboard saves you from a bump, a magnet pulls in coins</li>
       <li>A jetpack flies you up high, a rainbow star smashes everything!</li>
     </ul>
     <div class="go">Tap to run!</div>
@@ -1249,7 +1249,7 @@
     const len = Math.abs(t.endX - t.startX);
     const spread = t.live ? 1 : 1 + t.age * 0.12;
     for (const m of t.lines) {
-      m.visible = len > 0.5 && t.mat.opacity > 0.01;
+      m.visible = !inSpace && len > 0.5 && t.mat.opacity > 0.01;
       m.scale.set(Math.max(0.01, len), spread, spread);
       m.position.set((t.startX + t.endX) / 2, t.y - 0.1, t.z + m.userData.dz);
     }
@@ -1258,7 +1258,7 @@
   function updateSky(dt) {
     // birds
     flockT -= dt;
-    if (!flock.visible && flockT <= 0) {
+    if (!inSpace && !flock.visible && flockT <= 0) {
       flockDir = Math.random() < 0.5 ? 1 : -1;
       arrangeFlock();
       const far = Math.random();
@@ -1277,7 +1277,7 @@
     }
     // plane and contrails
     planeT -= dt;
-    if (!plane.visible && planeT <= 0) {
+    if (!inSpace && !plane.visible && planeT <= 0) {
       planeDir = Math.random() < 0.5 ? 1 : -1;
       plane.position.set(-planeDir * 110, 34 + Math.random() * 10, -110 - Math.random() * 25);
       plane.rotation.y = planeDir > 0 ? 0 : Math.PI;
@@ -1678,6 +1678,16 @@
   const earL = ball(0.07, skin, -0.33, 0.22, 0);
   const earR = ball(0.07, skin, 0.33, 0.22, 0);
   headPivot.add(head, hair, fringe, sideL, sideR, earL, earR);
+  // a bubble helmet for Space
+  const helmet = new THREE.Group();
+  const bubble = new THREE.Mesh(new THREE.SphereGeometry(0.55, 20, 14), new THREE.MeshBasicMaterial({ color: 0xcff4ff, transparent: true, opacity: 0.28, depthWrite: false }));
+  bubble.position.y = 0.28;
+  const collar = new THREE.Mesh(new THREE.TorusGeometry(0.36, 0.07, 8, 20), lambert(0xffffff));
+  collar.rotation.x = Math.PI / 2;
+  collar.position.y = -0.05;
+  helmet.add(bubble, collar);
+  helmet.visible = false;
+  headPivot.add(helmet);
 
   // face (on the front, so we only see it when she turns round)
   const eyes = [];
@@ -2165,7 +2175,7 @@
   function updateDucks(dt, move, running) {
     if (running) {
       nextDucks -= dt;
-      if (nextDucks <= 0) { spawnDucks(); if (nextDucks <= 0) nextDucks = 9 + Math.random() * 12; }
+      if (nextDucks <= 0) { if (!inSpace) spawnDucks(); if (nextDucks <= 0) nextDucks = 9 + Math.random() * 12; }
     }
     const t = performance.now() / 1000;
     let quacked = false;
@@ -2269,12 +2279,223 @@
     streaks.push(m);
   }
 
+  // ---------- Space World: through the golden gate once she has collected enough coins ----------
+  const SPACE = 4;
+  let inSpace = false;
+  const glowMats = [0xff5dc8, 0x5ee7ff, 0xb388ff, 0x7dff9a, 0xffd23f].map(c => new THREE.MeshBasicMaterial({ color: c }));
+  const moonRock = lambert(0x8a8fb0), moonDark = lambert(0x5d6285), alienGreen = lambert(0x7dff6a), rocketWhite = lambert(0xf4f6ff);
+  const alienEye = new THREE.MeshBasicMaterial({ color: 0xffffff }), alienPupil = new THREE.MeshBasicMaterial({ color: 0x2b2350 });
+  const rockGeo = new THREE.DodecahedronGeometry(1, 0);
+  function makeCrystals() {
+    const g = new THREE.Group();
+    const n = 3 + Math.floor(Math.random() * 3);
+    for (let k = 0; k < n; k++) {
+      const r = 0.5 + Math.random() * 0.5, sy = 2 + Math.random() * 2;
+      const m = new THREE.Mesh(new THREE.OctahedronGeometry(r, 0), glowMats[Math.floor(Math.random() * 4)]);
+      m.scale.set(0.6, sy, 0.6);
+      m.position.set((Math.random() - 0.5) * 2, r * sy * 0.7, (Math.random() - 0.5) * 2);
+      m.rotation.z = (Math.random() - 0.5) * 0.7;
+      g.add(m);
+    }
+    const base = new THREE.Mesh(rockGeo, moonDark);
+    base.scale.set(1.6, 0.5, 1.6);
+    g.add(base);
+    return g;
+  }
+  function makeRocket() {
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 5, 16), rocketWhite);
+    body.position.y = 3.3;
+    const nose = new THREE.Mesh(new THREE.ConeGeometry(0.9, 1.9, 16), glowMats[0]);
+    nose.position.y = 6.75;
+    const win = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.2, 16), glowMats[1]);
+    win.rotation.x = Math.PI / 2;
+    win.position.set(0, 4.4, 0.85);
+    const pad = new THREE.Mesh(new THREE.CylinderGeometry(2, 2.2, 0.4, 18), moonDark);
+    pad.position.y = 0.2;
+    g.add(body, nose, win, pad);
+    for (let k = 0; k < 3; k++) {
+      const a = (k / 3) * Math.PI * 2;
+      const fin = box(0.15, 1.6, 0.9, jetRed, Math.sin(a) * 1.05, 1.5, Math.cos(a) * 1.05);
+      fin.rotation.y = a;
+      g.add(fin);
+    }
+    g.scale.setScalar(1.25);
+    return g;
+  }
+  function makeAlien() {
+    const g = new THREE.Group();
+    const body = ball(0.55, alienGreen, 0, 0.95, 0, 14);
+    body.scale.set(1, 1.2, 0.9);
+    const headA = ball(0.5, alienGreen, 0, 1.95, 0, 14);
+    const eye = ball(0.24, alienEye, 0, 2.0, 0.38, 12);
+    const pupil = ball(0.11, alienPupil, 0, 2.0, 0.6, 8);
+    g.add(body, headA, eye, pupil);
+    for (const sx of [-1, 1]) {
+      const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.6, 6), alienGreen);
+      stalk.position.set(sx * 0.22, 2.6, 0);
+      stalk.rotation.z = -sx * 0.35;
+      g.add(stalk, ball(0.1, glowMats[sx < 0 ? 0 : 4], sx * 0.33, 2.9, 0, 8));
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.5, 8), alienGreen);
+      leg.position.set(sx * 0.25, 0.25, 0);
+      g.add(leg);
+    }
+    const armL = box(0.14, 0.7, 0.14, alienGreen, 0, -0.3, 0);
+    const pivL = new THREE.Group(); pivL.position.set(-0.55, 1.25, 0); pivL.rotation.z = -0.4; pivL.add(armL);
+    const armR = box(0.14, 0.7, 0.14, alienGreen, 0, 0.3, 0);
+    const pivR = new THREE.Group(); pivR.position.set(0.55, 1.25, 0); pivR.add(armR);
+    g.add(pivL, pivR);
+    g.scale.setScalar(1.6);
+    g.userData.arm = pivR;
+    return g;
+  }
+  function makeMoonRocks() {
+    const g = new THREE.Group();
+    const crater = new THREE.Mesh(new THREE.TorusGeometry(1.6, 0.35, 6, 18), moonDark);
+    crater.rotation.x = Math.PI / 2;
+    crater.scale.z = 0.6;
+    crater.position.y = 0.05;
+    g.add(crater);
+    for (let k = 0; k < 3; k++) {
+      const r = new THREE.Mesh(rockGeo, moonRock);
+      r.scale.setScalar(0.5 + Math.random() * 0.8);
+      r.position.set(2 + Math.random() * 1.5, 0.3, (Math.random() - 0.5) * 3);
+      r.rotation.set(Math.random() * 3, Math.random() * 3, 0);
+      g.add(r);
+    }
+    return g;
+  }
+  const spaceMakers = [makeCrystals, makeCrystals, makeRocket, makeAlien, makeAlien, makeMoonRocks];
+  const SPACE_GAP = 9, SPACE_PER_SIDE = 14;
+  const spaceProps = [];
+  function placeSpaceProp(o, z) {
+    o.position.set(o.userData.side * (6.6 + Math.random() * 4), 0, z);
+    o.rotation.y = -o.userData.side * Math.PI / 2 * 0.7; // face the track (and the camera a little)
+  }
+  for (let i = 0; i < SPACE_PER_SIDE * 2; i++) {
+    const o = spaceMakers[Math.floor(Math.random() * spaceMakers.length)]();
+    o.userData.side = i % 2 ? 1 : -1;
+    o.userData.phase = Math.random() * 6;
+    placeSpaceProp(o, 10 - Math.floor(i / 2) * SPACE_GAP - (i % 2) * SPACE_GAP / 2);
+    o.visible = false;
+    scene.add(o);
+    spaceProps.push(o);
+  }
+  // planets far away in the sky
+  const planets = new THREE.Group();
+  const earthTex = canvasTexture(256, 128, (ctx, w, h) => {
+    ctx.fillStyle = '#3b82f6'; ctx.fillRect(0, 0, w, h);
+    for (let k = 0; k < 14; k++) { ctx.fillStyle = k % 3 ? '#4cc96a' : '#ffffff'; ctx.beginPath(); ctx.ellipse(Math.random() * w, Math.random() * h, 10 + Math.random() * 26, 6 + Math.random() * 12, Math.random() * 3, 0, Math.PI * 2); ctx.fill(); }
+  });
+  const earth = new THREE.Mesh(new THREE.SphereGeometry(9, 24, 16), new THREE.MeshBasicMaterial({ map: earthTex, fog: false }));
+  earth.position.set(-48, 36, -165);
+  const ringTex = canvasTexture(256, 32, (ctx, w, h) => {
+    ['#ffb36b', '#ff9e5c', '#ffd08a', '#ffb36b', '#ffc98a'].forEach((c, k) => { ctx.fillStyle = c; ctx.fillRect(0, k * h / 5, w, h / 5); });
+  });
+  const ringed = new THREE.Mesh(new THREE.SphereGeometry(12, 24, 16), new THREE.MeshBasicMaterial({ map: ringTex, fog: false }));
+  const ring = new THREE.Mesh(new THREE.RingGeometry(16, 23, 48), new THREE.MeshBasicMaterial({ color: 0xffe0b0, transparent: true, opacity: 0.7, side: THREE.DoubleSide, fog: false }));
+  ring.rotation.x = -Math.PI / 2.4;
+  ringed.add(ring);
+  ringed.rotation.z = 0.25;
+  ringed.position.set(58, 44, -180);
+  const moon = new THREE.Mesh(new THREE.SphereGeometry(3.5, 16, 12), new THREE.MeshBasicMaterial({ color: 0xdcdcf0, fog: false }));
+  moon.position.set(-18, 58, -170);
+  planets.add(earth, ringed, moon);
+  planets.visible = false;
+  scene.add(planets);
+  // a UFO zooms across the sky now and then
+  const ufo = new THREE.Group();
+  const disc = new THREE.Mesh(new THREE.SphereGeometry(3, 24, 10), lambert(0xc9d3e8));
+  disc.scale.y = 0.28;
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(1.4, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x9ff3ff, transparent: true, opacity: 0.75 }));
+  dome.position.y = 0.4;
+  ufo.add(disc, dome);
+  const ufoLights = [];
+  for (let k = 0; k < 8; k++) {
+    const a = (k / 8) * Math.PI * 2;
+    const l = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+    l.position.set(Math.cos(a) * 2.8, 0, Math.sin(a) * 2.8);
+    ufo.add(l);
+    ufoLights.push(l);
+  }
+  ufo.visible = false;
+  scene.add(ufo);
+  let ufoT = 3, ufoDir = 1;
+  function updateSpace(dt, move) {
+    if (!inSpace) return;
+    const t = performance.now() / 1000;
+    for (const o of spaceProps) {
+      o.position.z += move;
+      if (o.position.z > DESPAWN_Z + 4) placeSpaceProp(o, o.position.z - SPACE_PER_SIDE * SPACE_GAP);
+      const u = o.userData;
+      if (u.arm) { u.arm.rotation.z = -2.4 + Math.sin(t * 7 + u.phase) * 0.5; o.position.y = Math.abs(Math.sin(t * 3 + u.phase)) * 0.3; } // aliens wave and hop
+    }
+    ufoT -= dt;
+    if (!ufo.visible && ufoT <= 0) {
+      ufoDir = Math.random() < 0.5 ? 1 : -1;
+      ufo.position.set(-ufoDir * 80, 16 + Math.random() * 10, -45 - Math.random() * 35);
+      ufo.visible = true;
+    }
+    if (ufo.visible) {
+      ufo.position.x += ufoDir * dt * 16;
+      ufo.position.y += Math.sin(t * 2) * dt * 2;
+      ufo.rotation.y += dt * 2;
+      ufo.rotation.z = Math.sin(t * 1.5) * 0.15;
+      ufoLights.forEach((l, k) => l.material.color.setHSL(((t * 0.8) + k / 8) % 1, 1, 0.6));
+      if (Math.abs(ufo.position.x) > 85) { ufo.visible = false; ufoT = 7 + Math.random() * 10; }
+    }
+    planets.rotation.y = 0;
+    earth.rotation.y += dt * 0.1;
+  }
+  // the golden gate to Space: an arch over all three lanes, so she can't miss it
+  const gateTex = canvasTexture(256, 256, (ctx, w, h) => {
+    const g = ctx.createRadialGradient(w / 2, h * 0.55, 8, w / 2, h * 0.55, w * 0.7);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(0.25, '#d9b8ff'); g.addColorStop(0.6, '#5a3fc0'); g.addColorStop(1, '#140f3a');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#ffffff';
+    for (let k = 0; k < 70; k++) { ctx.globalAlpha = 0.4 + Math.random() * 0.6; ctx.fillRect(Math.random() * w, Math.random() * h, 2 + Math.random() * 3, 2 + Math.random() * 3); }
+    ctx.globalAlpha = 1;
+  });
+  const gateSignTex = canvasTexture(512, 128, (ctx, w, h) => {
+    ctx.fillStyle = '#2b2350'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(4, 4, w - 8, h - 8, 40) : ctx.rect(4, 4, w - 8, h - 8); ctx.fill();
+    ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 8; ctx.stroke();
+    ctx.fillStyle = '#ffd23f'; ctx.font = 'bold 78px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('TO SPACE!', w / 2, h / 2 + 4);
+  });
+  const goldMat = new THREE.MeshLambertMaterial({ color: 0xffd23f, emissive: 0x806000 });
+  function makeSpaceGate() {
+    const g = new THREE.Group();
+    const W = 4.3, H = 4.6;
+    for (const sx of [-1, 1]) {
+      const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.7, H, 0.7), goldMat);
+      pillar.position.set(sx * (W + 0.35), H / 2, 0);
+      const st = new THREE.Mesh(starPickGeo, goldMat);
+      st.position.set(sx * (W + 0.35), H + W + 0.6, 0);
+      st.scale.setScalar(1.3);
+      g.add(pillar, st);
+    }
+    const arch = new THREE.Mesh(new THREE.TorusGeometry(W + 0.35, 0.35, 10, 40, Math.PI), goldMat);
+    arch.position.y = H;
+    const shape = new THREE.Shape();
+    shape.moveTo(-W, 0); shape.lineTo(-W, H); shape.absarc(0, H, W, Math.PI, 0, true); shape.lineTo(W, 0);
+    const geo = new THREE.ShapeGeometry(shape, 24);
+    const pos = geo.attributes.position, uv = geo.attributes.uv;
+    for (let k = 0; k < pos.count; k++) uv.setXY(k, (pos.getX(k) + W) / (2 * W), pos.getY(k) / (H + W));
+    const swirl = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: gateTex, transparent: true, opacity: 0.85, side: THREE.DoubleSide }));
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(5, 1.25), new THREE.MeshBasicMaterial({ map: gateSignTex, transparent: true }));
+    sign.position.set(0, H + W + 0.9, 0.1);
+    g.add(swirl, arch, sign);
+    g.userData = { spaceGate: true, halfW: 5, halfD: 0.5, height: 0, base: 0, swirl };
+    return g;
+  }
+
   // ---------- lands the portal can take her to ----------
   const themes = [
     { name: 'Sunny Town', sky: 0x8fd8ff, grass: 0x7fd36b, track: 0xe8c48f, hills: [0x5cc46e, 0x4bb36a, 0x6fd07a] },
     { name: 'Candy Land', sky: 0xffc8ef, grass: 0x9df0c8, track: 0xfff0b3, hills: [0x7fe3b8, 0xff9ed8, 0x8ff0c4] },
     { name: 'Sunset Valley', sky: 0xffb38a, grass: 0xa8c86a, track: 0xf0c9a0, hills: [0x8fb85a, 0xd98a5a, 0x9cc46a] },
     { name: 'Starry Night', sky: 0x4b4fae, grass: 0x3f9e6e, track: 0xc9ae8a, hills: [0x2f7d5a, 0x368d62, 0x4aa877] },
+    { name: 'Space', sky: 0x140f3a, grass: 0x6d7299, track: 0xb7bad6, hills: [0x4d5280, 0x5d6290, 0x3f4470] }, // only through the golden gate
   ];
   let themeIndex = 0;
   function applyTheme(i) {
@@ -2285,8 +2506,19 @@
     grass.material.color.setHex(t.grass);
     track.material.color.setHex(t.track);
     hillMats.forEach((m, k) => m.color.setHex(t.hills[k]));
-    stars.visible = i === 3;
+    inSpace = i === SPACE;
+    stars.visible = i === 3 || inSpace;
     rainbow.visible = i === 0 || i === 1;
+    sun.visible = sunGlow.visible = !inSpace;
+    planets.visible = inSpace;
+    helmet.visible = inSpace;
+    for (const c of clouds) c.visible = !inSpace;
+    for (const f of fences) f.visible = !inSpace;
+    for (const t of terraces) t.visible = !inSpace;
+    for (const c of cottages) c.visible = !inSpace;
+    for (const o of spaceProps) o.visible = inSpace;
+    if (inSpace) { flock.visible = false; plane.visible = false; }
+    ufo.visible = false;
   }
 
   const blob = new THREE.Mesh(new THREE.CircleGeometry(0.45, 20), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22 }));
@@ -2365,8 +2597,11 @@
     void coinsEl.offsetWidth;
     coinsEl.classList.add('pop');
   }
-  let toastTimer = 0;
-  function toast(text) {
+  let toastTimer = 0, toastHold = 0;
+  function toast(text, minor = false) {
+    // minor toasts (combos) never cover up a big one like "Welcome to Space!"
+    if (minor && performance.now() < toastHold) return;
+    if (!minor) toastHold = performance.now() + 1400;
     toastEl.textContent = text;
     toastEl.classList.add('show');
     clearTimeout(toastTimer);
@@ -2397,7 +2632,7 @@
     sfx.portal();
     flash();
     clearWorld();
-    applyTheme((themeIndex + 1) % themes.length);
+    applyTheme(themeIndex >= SPACE ? 0 : (themeIndex + 1) % SPACE);
     toast(themes[themeIndex].name + '!');
     s.distance += 50;
     s.y = s.ground = 0; s.vy = 0; s.groundPlat = null;
@@ -2407,10 +2642,28 @@
     s.nextPortal = s.distance + 220 + Math.random() * 120;
   }
 
+  function enterSpace() {
+    sfx.portal(); sfx.starGo();
+    flashEl.style.background = 'radial-gradient(circle at center, #ffffff00 20%, #b388ff 100%)';
+    flash();
+    setTimeout(() => { flashEl.style.background = ''; }, 900);
+    clearWorld();
+    applyTheme(SPACE);
+    toast('Welcome to Space!');
+    s.gateReady = false;
+    s.gateAt = s.coins + 150; // the next trip needs 150 more
+    s.distance += 50;
+    s.y = s.ground = 0; s.vy = 0; s.groundPlat = null;
+    s.copZ = 30; s.copClose = 0;
+    coinLine(s.lane, -8, 20, 0.8, 1.8);
+    s.untilNext = 45;
+    s.nextPortal = s.distance + 300 + Math.random() * 100;
+  }
+
   function reset() {
     clearWorld();
     applyTheme(0);
-    Object.assign(s, { coins: 0, nextPortal: 150, copZ: 3.2, copX: 0, copY: 0, copVy: 0, copClose: 3.5, bumpCool: 0, stumbleT: 0, caught: false, lookT: 0, nextLook: 1.5, board: 0, nextBoard: 60, nextClimb: 70, zoom: 0, zoomF: 0, nextZoom: 110, nextBox: 35, magnet: 0, nextMagnet: 90, nextTunnel: 45, twirl: 0, milestone: 0, invuln: 0, lane: 1, prevLane: 1, lastTall: false, x: 0, y: 0, vy: 0, speed: START_SPEED, distance: 0, untilNext: 35, jumpBuffer: 0, crashT: 0, ground: 0, groundPlat: null, jet: 0, star: 0, jetF: 0, jetFall: false, nextJet: 140, nextStar: 210, combo: 0, comboT: 0, shake: 0, lean: 0, squash: 0, skyLane: 1 });
+    Object.assign(s, { coins: 0, nextPortal: 150, copZ: 3.2, copX: 0, copY: 0, copVy: 0, copClose: 3.5, bumpCool: 0, stumbleT: 0, caught: false, lookT: 0, nextLook: 1.5, board: 0, nextBoard: 60, nextClimb: 70, zoom: 0, zoomF: 0, nextZoom: 110, nextBox: 35, magnet: 0, nextMagnet: 90, nextTunnel: 45, twirl: 0, milestone: 0, invuln: 0, lane: 1, prevLane: 1, lastTall: false, x: 0, y: 0, vy: 0, speed: START_SPEED, distance: 0, untilNext: 35, jumpBuffer: 0, crashT: 0, ground: 0, groundPlat: null, jet: 0, star: 0, jetF: 0, jetFall: false, nextJet: 140, nextStar: 210, combo: 0, comboT: 0, shake: 0, lean: 0, squash: 0, skyLane: 1, gateAt: 100, gateReady: false, gateHalf: false });
     comboEl.classList.remove('show');
     player.rotation.set(0, 0, 0);
     renderHud();
@@ -2802,6 +3055,12 @@
     }
     const free = [0, 1, 2].filter(li => !laneBusy(li) && !trainBusy(li, 4));
     const tun = tunnelOverSpawn();
+    if (s.gateReady && !tun && tallFree().length === 3 && !obstacles.some(o => o.userData.spaceGate)) {
+      addObstacle(makeSpaceGate(), 1, SPAWN_Z);
+      coinLine(s.lane, SPAWN_Z + 24, 10, 0.8, 2.2);
+      s.untilNext = 40;
+      return;
+    }
     if (!tun && s.distance > s.nextTunnel && free.length === 3) {
       spawnTunnel();
       s.nextTunnel = s.distance + 160 + Math.random() * 160;
@@ -2818,7 +3077,7 @@
       s.untilNext = 30;
       return;
     }
-    if (!tun && s.distance > s.nextPortal && tallFree().length === 3) {
+    if (!tun && !s.gateReady && s.distance > s.nextPortal && tallFree().length === 3) {
       // the portal gets a row all to itself, in a random lane
       addObstacle(makePortal(), Math.floor(Math.random() * 3), SPAWN_Z);
       s.nextPortal = Infinity;
@@ -2894,7 +3153,7 @@
   }
 
   // while zooming she steers and jumps by herself
-  const isHazard = (u) => !(u.portal || u.zoomPortal || u.boardPickup || u.magnetPickup || u.jetPickup || u.starPickup || u.pad || u.mystery);
+  const isHazard = (u) => !(u.portal || u.zoomPortal || u.boardPickup || u.magnetPickup || u.jetPickup || u.starPickup || u.spaceGate || u.pad || u.mystery);
   function hazardIn(li, from, to) {
     let near = Infinity, tall = false;
     for (const o of obstacles) {
@@ -2919,7 +3178,7 @@
       }
       if (bestLane !== s.lane) { s.prevLane = s.lane; s.lane = bestLane; sfx.lane(); return; }
     }
-    if (!here.tall && here.near < 4.5 && s.y <= s.ground + 0.02 && s.vy <= 0) { s.vy = JUMP_V; sfx.jump(); }
+    if (!here.tall && here.near < 4.5 && s.y <= s.ground + 0.02 && s.vy <= 0) { s.vy = JUMP_V * (inSpace ? 0.85 : 1); sfx.jump(); }
   }
 
   // ---------- loop ----------
@@ -2986,11 +3245,14 @@
       o.position.z += move;
       if (o.position.z > DESPAWN_Z) placeScenery(o, o.position.z - scenery.length * SCENERY_GAP);
       // trees and bits that would be inside a shop only show in the gaps
-      if (!o.userData.far) o.visible = !terraceAt(o.userData.side, o.position.z, 2.6) && !cottageAt(o.userData.side, o.position.z, 1.5);
+      if (inSpace) o.visible = false;
+      else if (!o.userData.far) o.visible = !terraceAt(o.userData.side, o.position.z, 2.6) && !cottageAt(o.userData.side, o.position.z, 1.5);
       else o.visible = !cottageAt(o.userData.side, o.position.z, 4);
     }
     updateTerraces(dt, move);
     updateCottages(move);
+    if (inSpace) for (const c of cottages) c.visible = false;
+    updateSpace(dt, move);
     updateFireworks(dt);
     updateDucks(dt, move, running);
     for (const b of billboards) {
@@ -3064,7 +3326,9 @@
         const hitX = Math.abs(o.position.x - s.x) < d.halfW + 0.22;
         const hitZ = Math.abs(o.position.z) < d.halfD + 0.18;
         const feet = s.y - d.base;
-        if (d.portal) {
+        if (d.spaceGate) {
+          if (o.position.z > -0.6 && o.position.z - move < 0.6) { enterSpace(); break; } // can't be skipped over on a slow frame
+        } else if (d.portal) {
           if (hitX && Math.abs(o.position.z) < 0.6) { teleport(); break; }
         } else if (d.zoomPortal) {
           if (hitX && Math.abs(o.position.z) < 0.6) { scene.remove(o); obstacles.splice(i, 1); startZoom(6); continue; }
@@ -3089,7 +3353,7 @@
             continue;
           }
         } else if (d.pad) {
-          if (hitX && hitZ && feet < 0.4 && feet > -0.3 && s.vy <= 0) { s.vy = 15; d.top.position.y = 0.32; sfx.bounce(); s.twirl = 1; }
+          if (hitX && hitZ && feet < 0.4 && feet > -0.3 && s.vy <= 0) { s.vy = inSpace ? 12 : 15; d.top.position.y = 0.32; sfx.bounce(); s.twirl = 1; }
         } else if (d.tall) {
           if (hitX && hitZ && Math.abs(o.position.z) < d.halfD - 0.4 && !(d.roof && feet > d.roof - 0.6)) {
             if (s.star > 0) { smash(o); obstacles.splice(i, 1); continue; }
@@ -3136,7 +3400,7 @@
       }
       if (running && Math.abs(c.position.x - s.x) < 0.9 && Math.abs(c.position.z) < 0.8 && Math.abs(c.position.y - (s.y + 0.9)) < 1.2) {
         scene.remove(c); coins.splice(i, 1);
-        s.coins++;
+        s.coins += inSpace ? 2 : 1; // space coins are worth double
         s.combo++;
         s.comboT = 2.5;
         popCoins();
@@ -3150,7 +3414,7 @@
           // a long chain of coins earns a bonus
           const bonus = Math.min(25, s.combo / 2);
           s.coins += bonus;
-          toast('Combo x' + s.combo + '! +' + bonus);
+          toast('Combo x' + s.combo + '! +' + bonus, true);
           sfx.combo();
           burst(s.x, s.y + 2, -1.5, 24);
         }
@@ -3180,7 +3444,7 @@
     }
     if (s.jumpBuffer > 0) {
       s.jumpBuffer -= dt;
-      if (s.y <= s.ground + 0.02 && s.vy <= 0 && running) { s.vy = JUMP_V; s.jumpBuffer = 0; sfx.jump(); }
+      if (s.y <= s.ground + 0.02 && s.vy <= 0 && running) { s.vy = JUMP_V * (inSpace ? 0.85 : 1); s.jumpBuffer = 0; sfx.jump(); }
     }
     if (wasGrounded && s.vy <= 0 && s.ground < s.y && s.y - s.ground < 0.35 && !(prevPlat && prevPlat.userData.launch)) {
       s.y = s.ground; // walk down a ramp instead of floating off it
@@ -3190,7 +3454,7 @@
       s.y += (Math.max(JET_Y, s.ground + 2) - s.y) * Math.min(1, dt * 4);
       s.vy = 0;
     } else if (s.y > s.ground || s.vy > 0) {
-      s.vy -= GRAVITY * dt;
+      s.vy -= GRAVITY * (inSpace ? 0.6 : 1) * dt; // floaty moon jumps in Space
       if (s.jetFall) s.vy = Math.max(s.vy, -7); // floats gently back down
       s.y += s.vy * dt;
     }
@@ -3244,7 +3508,11 @@
       }
       if (s.star <= 0) { setStar(0); s.invuln = Math.max(s.invuln, 1.0); }
     }
-    sfx.setMusic(116 + Math.min(28, Math.max(0, (s.speed - 12) * 3.5)) + 16 * Math.max(s.zoomF, s.jetF), s.star > 0);
+    sfx.setMusic(116 + Math.min(28, Math.max(0, (s.speed - 12) * 3.5)) + 16 * Math.max(s.zoomF, s.jetF), s.star > 0 || inSpace);
+    if (running && !inSpace) {
+      if (!s.gateHalf && s.coins >= s.gateAt / 2 && s.coins < s.gateAt) { s.gateHalf = true; toast('Halfway to Space!'); }
+      if (!s.gateReady && s.coins >= s.gateAt) { s.gateReady = true; s.gateHalf = true; toast(s.gateAt + ' coins! Find the gate!'); sfx.cheer(); }
+    }
     if (s.magnet > 0 && running) {
       s.magnet -= dt;
       magnetPill.lastChild.nodeValue = Math.ceil(s.magnet);
@@ -3353,9 +3621,9 @@
     // he runs just off her shoulder so he never hides her from view
     const copSide = s.x > 0.5 ? -1.5 : 1.5;
     s.copX += (s.x + copSide - s.copX) * Math.min(1, dt * 5);
-    const copNear = obstacles.some(o => !o.userData.tall && !o.userData.portal && Math.abs(o.position.x - s.copX) < 1.2 && o.position.z - s.copZ > -2.5 && o.position.z - s.copZ < 0);
+    const copNear = obstacles.some(o => !o.userData.tall && !o.userData.portal && !o.userData.spaceGate && Math.abs(o.position.x - s.copX) < 1.2 && o.position.z - s.copZ > -2.5 && o.position.z - s.copZ < 0);
     if (copNear && s.copY <= copGround + 0.02) s.copVy = JUMP_V;
-    s.copVy -= GRAVITY * dt;
+    s.copVy -= GRAVITY * (inSpace ? 0.6 : 1) * dt;
     s.copY = Math.max(copGround, s.copY + s.copVy * dt);
     if (s.copY <= copGround) s.copVy = 0;
     const copAir = s.copY > copGround + 0.05;
@@ -3398,6 +3666,6 @@
   window.__hop = s;
   window.__hopWorld = () => ({ obstacles, platforms, LANES, ducks });
   window.__cottages = cottages;
-  window.__hopPower = { jet: startJet, star: startStar };
+  window.__hopPower = { jet: startJet, star: startStar, space: enterSpace };
 })();
 </script>
