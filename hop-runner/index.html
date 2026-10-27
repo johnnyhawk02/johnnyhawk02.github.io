@@ -651,6 +651,17 @@
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   mount.appendChild(renderer.domElement);
 
+  // a little round planet: everything bends down and away with distance, like Subway Surfers.
+  // It's only how things are drawn, so jumping and bumping work just the same.
+  const CURVE = 0.0022;
+  const bend = '\n#ifndef NO_CURVE\nmvPosition.y -= ' + CURVE.toFixed(4) + ' * mvPosition.z * mvPosition.z;\n#endif\ngl_Position = projectionMatrix * mvPosition;';
+  THREE.ShaderChunk.project_vertex = THREE.ShaderChunk.project_vertex.replace('gl_Position = projectionMatrix * mvPosition;', bend);
+  THREE.ShaderLib.sprite.vertexShader = THREE.ShaderLib.sprite.vertexShader.replace('gl_Position = projectionMatrix * mvPosition;', bend);
+  // the bend happens at the corners of shapes, so long things (the ground, rails, tunnels) get cut into short pieces to curve smoothly
+  const BaseBox = THREE.BoxGeometry, BasePlane = THREE.PlaneGeometry, BaseCyl = THREE.CylinderGeometry;
+  THREE.BoxGeometry = class extends BaseBox { constructor(w = 1, h = 1, d = 1, ws = 1, hs = 1, ds = 1) { super(w, h, d, ws, Math.max(hs, Math.ceil(h / 4)), Math.max(ds, Math.ceil(d / 4))); } };
+  THREE.PlaneGeometry = class extends BasePlane { constructor(w = 1, h = 1, ws = 1, hs = 1) { super(w, h, Math.max(ws, Math.ceil(w / 8)), Math.max(hs, Math.ceil(h / 4))); } };
+  THREE.CylinderGeometry = class extends BaseCyl { constructor(rt = 1, rb = 1, h = 1, rs = 8, hs = 1, open = false, ts = 0, tl = Math.PI * 2) { super(rt, rb, h, rs, Math.max(hs, Math.ceil(h / 4)), open, ts, tl); } };
   const scene = new THREE.Scene();
   const SKY = 0x8fd8ff;
   scene.background = new THREE.Color(SKY);
@@ -5149,6 +5160,8 @@
   }
   document.addEventListener('visibilitychange', () => { last = performance.now(); });
   renderHud();
+  // the sky (sun, moon, clouds, planets, rainbow) stays put; only the ground and what's on it curves away
+  scene.traverse(o => { for (const m of [].concat(o.material || [])) if (m.fog === false) m.defines = Object.assign({}, m.defines, { NO_CURVE: '' }); });
   requestAnimationFrame(frame);
 
   // test hook
