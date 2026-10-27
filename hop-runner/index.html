@@ -595,6 +595,8 @@
       cheer() { [523, 659, 784, 1047, 1319].forEach((f, k) => tone('square', f, f, 0.12, 0.07, k * 0.08)); },
       twirl() { tone('triangle', 500, 1400, 0.45, 0.12); },
       quack(delay = 0) { tone('sawtooth', 620, 330, 0.16, 0.09, delay); tone('square', 900, 500, 0.12, 0.04, delay); },
+      woof() { tone('square', 440, 250, 0.07, 0.05); tone('square', 400, 230, 0.09, 0.05, 0.13); },
+      meow() { tone('triangle', 650, 1050, 0.14, 0.05); tone('triangle', 1050, 560, 0.3, 0.05, 0.13); },
       boo() { tone('sine', 320, 520, 0.5, 0.07); tone('sine', 520, 300, 0.7, 0.06, 0.45); tone('triangle', 640, 1040, 0.5, 0.025); },
       liftoff() { noise(2.2, 260, 0.22, 0.5, 'lowpass'); tone('sawtooth', 70, 160, 2, 0.05); },
       tunnel() { noise(1.2, 300, 0.2, 0.5, 'lowpass'); },
@@ -2149,35 +2151,217 @@
 
   // ---------- the policeman ----------
   const cop = new THREE.Group();
-  const uniform = lambert(0x1f3a93);
-  const copTorso = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.8, 0.42), uniform);
-  copTorso.position.y = 1.2;
-  const badge = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, 0.04), lambert(0xffd23f));
-  badge.position.set(0.18, 1.38, -0.22);
-  const copHead = new THREE.Mesh(new THREE.SphereGeometry(0.33, 16, 12), skin);
-  copHead.position.y = 1.86;
-  const hatTop = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.34, 0.3, 14), uniform);
-  hatTop.position.y = 2.22;
-  const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.05, 14), lambert(0x111a44));
-  brim.position.set(0, 2.08, -0.06);
-  const hatBadge = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.04), lambert(0xffd23f));
-  hatBadge.position.set(0, 2.24, -0.33);
-  const mustache = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.06, 0.05), hairMat);
-  mustache.position.set(0, 1.78, -0.32);
-  const belt = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.12, 0.44), lambert(0x111111));
-  belt.position.y = 0.82;
-  cop.add(copTorso, badge, copHead, hatTop, brim, hatBadge, mustache, belt);
-  const copLegL = limb(uniform, 0.7, 0.24, -0.17, 0.78, cop);
-  const copLegR = limb(uniform, 0.7, 0.24, 0.17, 0.78, cop);
-  for (const leg of [copLegL, copLegR]) {
-    const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.14, 0.38), lambert(0x111111));
-    shoe.position.set(0, -0.7, -0.05);
-    leg.add(shoe);
+  // a friendly British bobby: tall helmet, hi-vis vest and a big bushy moustache
+  const uniform = lambert(0x1c2a5e), bootMat = lambert(0x15151a), copSkin = lambert(0xf0c09a);
+  const hiVis = new THREE.MeshLambertMaterial({ color: 0xd9ff3d, emissive: 0x3a4a00 });
+  const silver = new THREE.MeshLambertMaterial({ color: 0xe8ecf5, emissive: 0x3a3e48 });
+  function roundLimb(mat, len, r, x, y, end) {
+    const pivot = new THREE.Group();
+    pivot.position.set(x, y, 0);
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.9, len, 10), mat);
+    m.position.y = -len / 2;
+    pivot.add(m, ball(r, mat, 0, 0, 0, 10));
+    if (end) pivot.add(end);
+    cop.add(pivot);
+    return pivot;
   }
-  const copArmL = limb(uniform, 0.6, 0.18, -0.46, 1.55, cop);
-  const copArmR = limb(uniform, 0.6, 0.18, 0.46, 1.55, cop);
+  const copTorso = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.33, 0.82, 16), uniform);
+  copTorso.scale.z = 0.68; copTorso.position.y = 1.2;
+  const vest = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.35, 0.58, 16), hiVis);
+  vest.scale.z = 0.7; vest.position.y = 1.3;
+  const stripes = [1.18, 1.38].map(y => { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.385, 0.375, 0.05, 16), silver); m.scale.z = 0.71; m.position.y = y; return m; });
+  // POLICE across his back, where we see it
+  const policeTex = canvasTexture(256, 64, (ctx, w, h) => {
+    ctx.fillStyle = '#1c2a5e'; ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 44px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('POLICE', w / 2, h / 2 + 2);
+  });
+  const backPatch = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.13), new THREE.MeshBasicMaterial({ map: policeTex }));
+  backPatch.position.set(0, 1.5, 0.268);
+  const badge = new THREE.Mesh(starPickGeo, silver);
+  badge.scale.setScalar(0.12); badge.position.set(0.16, 1.48, -0.27); badge.rotation.y = Math.PI;
+  const radio = box(0.1, 0.16, 0.06, bootMat, -0.2, 1.52, -0.27);
+  const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.345, 0.345, 0.1, 16), bootMat);
+  belt.scale.z = 0.7; belt.position.y = 0.86;
+  const buckle = box(0.12, 0.08, 0.03, silver, 0, 0.86, -0.25);
+  const copNeck = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.13, 0.14, 10), copSkin);
+  copNeck.position.y = 1.66;
+  // his face, painted on like Robyn's
+  const copFaceTex = canvasTexture(512, 256, (ctx, w, h) => {
+    ctx.fillStyle = '#f0c09a'; ctx.fillRect(0, 0, w, h);
+    const cx = 384, copCy = 132;
+    ctx.fillStyle = 'rgba(255,130,130,0.35)';
+    for (const sx of [-1, 1]) { ctx.beginPath(); ctx.arc(cx + sx * 48, copCy + 18, 15, 0, Math.PI * 2); ctx.fill(); }
+    for (const sx of [-1, 1]) {
+      const ex = cx + sx * 27;
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.ellipse(ex, copCy - 4, 9, 10, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#2a3b6a'; ctx.beginPath(); ctx.arc(ex, copCy - 2, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(ex, copCy - 2, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex - 2, copCy - 5, 1.8, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#5a3825'; ctx.lineWidth = 6; ctx.lineCap = 'round'; // bushy eyebrows
+      ctx.beginPath(); ctx.moveTo(ex - sx * 12, copCy - 18); ctx.quadraticCurveTo(ex, copCy - 26, ex + sx * 13, copCy - 20); ctx.stroke();
+    }
+    ctx.fillStyle = '#e8a07c'; ctx.beginPath(); ctx.ellipse(cx, copCy + 12, 9, 8, 0, 0, Math.PI * 2); ctx.fill(); // a round nose
+    ctx.fillStyle = '#5a3825'; // a big handlebar moustache
+    ctx.beginPath(); ctx.moveTo(cx, copCy + 20);
+    ctx.bezierCurveTo(cx - 14, copCy + 14, cx - 34, copCy + 18, cx - 42, copCy + 12); ctx.bezierCurveTo(cx - 38, copCy + 30, cx - 16, copCy + 34, cx, copCy + 26);
+    ctx.bezierCurveTo(cx + 16, copCy + 34, cx + 38, copCy + 30, cx + 42, copCy + 12); ctx.bezierCurveTo(cx + 34, copCy + 18, cx + 14, copCy + 14, cx, copCy + 20); ctx.fill();
+    ctx.strokeStyle = '#a3324a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, copCy + 30, 10, 0.2 * Math.PI, 0.8 * Math.PI); ctx.stroke(); // smile
+  });
+  const copHead = new THREE.Mesh(new THREE.SphereGeometry(0.31, 28, 20), new THREE.MeshLambertMaterial({ map: copFaceTex, emissive: 0xffffff, emissiveMap: copFaceTex, emissiveIntensity: 0.3 }));
+  copHead.position.y = 1.9;
+  const copEarL = ball(0.07, copSkin, -0.31, 1.88, 0), copEarR = ball(0.07, copSkin, 0.31, 1.88, 0);
+  const copHair = new THREE.Mesh(new THREE.SphereGeometry(0.325, 20, 12, 0, Math.PI, 0, 0.72 * Math.PI), hairMat); // round the back, under the helmet
+  copHair.position.y = 1.9;
+  // the custodian helmet
+  const helmetPts = [new THREE.Vector2(0.0001, 0.62), new THREE.Vector2(0.06, 0.62), new THREE.Vector2(0.07, 0.56), new THREE.Vector2(0.17, 0.52), new THREE.Vector2(0.26, 0.42), new THREE.Vector2(0.3, 0.26), new THREE.Vector2(0.32, 0.08), new THREE.Vector2(0.35, 0.02), new THREE.Vector2(0.4, 0)];
+  const copHelmet = new THREE.Mesh(new THREE.LatheGeometry(helmetPts, 20), new THREE.MeshLambertMaterial({ color: 0x141c3a, copSide: THREE.DoubleSide }));
+  copHelmet.position.y = 1.98;
+  const helmetStar = new THREE.Mesh(starPickGeo, silver);
+  helmetStar.scale.setScalar(0.17); helmetStar.position.set(0, 2.24, -0.3); helmetStar.rotation.set(-0.25, Math.PI, 0);
+  const knob = ball(0.05, silver, 0, 2.62, 0, 8);
+  const chin = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.015, 6, 20, Math.PI), bootMat);
+  chin.position.set(0, 1.98, 0); chin.rotation.set(0, Math.PI / 2, Math.PI);
+  cop.add(copTorso, vest, ...stripes, backPatch, badge, radio, belt, buckle, copNeck, copHead, copEarL, copEarR, copHair, copHelmet, helmetStar, knob, chin);
+  const boot = () => { const b = ball(0.16, bootMat, 0, -0.72, -0.06, 10); b.scale.set(0.95, 0.6, 1.35); return b; };
+  const hand = () => ball(0.1, copSkin, 0, -0.62, 0, 10);
+  const copLegL = roundLimb(uniform, 0.7, 0.12, -0.16, 0.8, boot());
+  const copLegR = roundLimb(uniform, 0.7, 0.12, 0.16, 0.8, boot());
+  const copArmL = roundLimb(uniform, 0.58, 0.09, -0.44, 1.56, hand());
+  const copArmR = roundLimb(uniform, 0.58, 0.09, 0.44, 1.56, hand());
+  copArmL.rotation.z = -0.12; copArmR.rotation.z = 0.12;
   cop.position.set(0, 0, 16);
   scene.add(cop);
+
+  // ---------- pets: border collies and black-and-white cats ----------
+  const petBlack = lambert(0x1c1a1e), petWhite = lambert(0xf7f4ee), petNose = lambert(0x111111), petPink = lambert(0xff9fb0);
+  function petLeg(g, mat, sock, len, r, x, y, z) {
+    const pv = new THREE.Group(); pv.position.set(x, y, z);
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.85, len, 8), mat); m.position.y = -len / 2;
+    const s2 = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.9, r * 0.95, len * 0.3, 8), sock); s2.position.y = -len * 0.85;
+    pv.add(m, s2);
+    g.add(pv);
+    return pv;
+  }
+  function tailChain(g, n, len, r, mat, tipMat, x, y, z) {
+    const root = new THREE.Group(); root.position.set(x, y, z);
+    let parent = root; const segs = [];
+    for (let k = 0; k < n; k++) {
+      const seg = new THREE.Group(); seg.position.z = k ? len : 0;
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(r * (1 - k * 0.08), r * (1 - k * 0.08), len, 7), k === n - 1 && tipMat ? tipMat : mat);
+      m.rotation.x = Math.PI / 2; m.position.z = len / 2;
+      seg.add(m); parent.add(seg); segs.push(seg); parent = seg;
+    }
+    if (tipMat) parent.add(ball(r * 1.1, tipMat, 0, 0, len, 7));
+    g.add(root);
+    return segs;
+  }
+  function makeCollie() {
+    const g = new THREE.Group();
+    const body = ball(1, petBlack, 0, 0.72, 0, 14); body.scale.set(0.3, 0.28, 0.58);
+    const chest = ball(1, petWhite, 0, 0.74, -0.42, 12); chest.scale.set(0.25, 0.27, 0.2); // a white ruff
+    const collar = ball(1, petWhite, 0, 0.92, -0.5, 12); collar.scale.set(0.24, 0.16, 0.16);
+    const fluff = ball(1, petBlack, 0, 0.82, 0.1, 12); fluff.scale.set(0.33, 0.24, 0.42); // a fluffy coat
+    const head = new THREE.Group(); head.position.set(0, 1.02, -0.6);
+    const skull = ball(0.23, petBlack, 0, 0, 0, 14);
+    const blaze = ball(1, petWhite, 0, 0.06, -0.17, 10); blaze.scale.set(0.05, 0.14, 0.07);
+    const snout = ball(1, petWhite, 0, -0.07, -0.24, 12); snout.scale.set(0.12, 0.1, 0.17);
+    const nose = ball(0.045, petNose, 0, -0.04, -0.41, 8);
+    const tongue = box(0.06, 0.02, 0.08, petPink, 0, -0.15, -0.3);
+    head.add(skull, blaze, snout, nose, tongue);
+    for (const sx of [-1, 1]) {
+      head.add(ball(0.035, petNose, sx * 0.09, 0.06, -0.19, 8), ball(0.012, petWhite, sx * 0.09 - 0.01, 0.075, -0.225, 6));
+      const ear = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.16, 6), petBlack);
+      ear.scale.set(0.8, 0.8, 0.5); ear.position.set(sx * 0.12, 0.2, 0.02); ear.rotation.set(-0.35, 0, -sx * 0.4); // half-up collie ears
+      head.add(ear);
+    }
+    g.add(body, chest, collar, fluff, head);
+    const legs = [[-0.16, -0.38], [0.16, -0.38], [-0.16, 0.36], [0.16, 0.36]].map(([x, z]) => petLeg(g, petBlack, petWhite, 0.55, 0.07, x, 0.6, z));
+    const tail = tailChain(g, 4, 0.16, 0.06, petBlack, petWhite, 0, 0.8, 0.52);
+    g.userData = { kind: 'dog', head, legs, tail, h: 1 };
+    return g;
+  }
+  function makeCat() {
+    const g = new THREE.Group();
+    const body = ball(1, petBlack, 0, 0.36, 0, 12); body.scale.set(0.16, 0.16, 0.34);
+    const chest = ball(1, petWhite, 0, 0.36, -0.24, 10); chest.scale.set(0.12, 0.13, 0.12);
+    const head = new THREE.Group(); head.position.set(0, 0.56, -0.36);
+    const skull = ball(0.15, petBlack, 0, 0, 0, 12);
+    const muzzle = ball(1, petWhite, 0, -0.04, -0.11, 10); muzzle.scale.set(0.09, 0.065, 0.06);
+    head.add(skull, muzzle, ball(0.02, petPink, 0, -0.01, -0.165, 6));
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0x9dff5a });
+    for (const sx of [-1, 1]) {
+      const e = ball(0.032, eyeMat, sx * 0.06, 0.035, -0.125, 8);
+      const pu = box(0.01, 0.04, 0.01, petNose, sx * 0.06, 0.035, -0.155);
+      const ear = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.12, 4), petBlack);
+      ear.position.set(sx * 0.085, 0.14, 0); ear.rotation.z = -sx * 0.25;
+      const whisk = box(0.14, 0.005, 0.005, petWhite, sx * 0.1, -0.04, -0.14); whisk.rotation.z = sx * 0.15;
+      head.add(e, pu, ear, whisk);
+    }
+    g.add(body, chest, head);
+    const legs = [[-0.08, -0.22], [0.08, -0.22], [-0.08, 0.22], [0.08, 0.22]].map(([x, z]) => petLeg(g, petBlack, petWhite, 0.3, 0.04, x, 0.32, z));
+    const tail = tailChain(g, 5, 0.1, 0.03, petBlack, null, 0, 0.42, 0.32);
+    g.userData = { kind: 'cat', head, legs, tail, h: 0.5 };
+    return g;
+  }
+  const pets = [makeCollie(), makeCollie(), makeCat(), makeCat(), makeCat()];
+  for (const p of pets) { p.visible = false; p.userData.t = 1 + Math.random() * 4; scene.add(p); }
+  function startPet(p) {
+    const u = p.userData, copSide = Math.random() < 0.5 ? -1 : 1;
+    u.copSide = copSide; u.phase = Math.random() * 6; u.speed = 0;
+    const r = Math.random();
+    if (u.kind === 'dog') u.mode = r < 0.6 ? 'buddy' : 'stroll';
+    else u.mode = r < 0.5 ? 'perch' : r < 0.8 ? 'dash' : 'stroll';
+    if (u.mode === 'buddy') { p.position.set(copSide * 3.95, 0, 8); u.life = 6 + Math.random() * 6; } // runs up from behind to keep her company
+    else if (u.mode === 'perch') { p.position.set(copSide * 4.45, 0.7, SPAWN_Z + 20 + Math.random() * 30); } // sitting on the fence
+    else if (u.mode === 'dash') { p.position.set(-copSide * 6, 0, -32 - Math.random() * 15); u.dir = copSide; } // scampers across the track up ahead
+    else { p.position.set(copSide * (3.95 + Math.random() * 0.3), 0, SPAWN_Z + 30 + Math.random() * 30); u.dir = Math.random() < 0.5 ? -1 : 1; }
+    p.rotation.set(0, u.mode === 'dash' ? -copSide * Math.PI / 2 : u.mode === 'stroll' && u.dir > 0 ? Math.PI : 0, 0);
+    p.visible = true;
+  }
+  function updatePets(dt, move) {
+    const allowed = !inSpace && !inSea && s.mode === 'running';
+    const t = performance.now() / 1000;
+    const tunnelClose = tunnels.some(tn => tn.position.z > -40 && tn.position.z - tn.userData.length < 6);
+    for (const p of pets) {
+      const u = p.userData;
+      if (!p.visible) {
+        u.t -= dt;
+        if (u.t <= 0 && allowed && !tunnelClose) startPet(p);
+        continue;
+      }
+      if (!allowed) { p.visible = false; u.t = 2 + Math.random() * 4; continue; }
+      let gait = 0; // how fast the legs go
+      if (u.mode === 'buddy') {
+        u.life -= dt;
+        if (u.life > 0 && !tunnelClose) {
+          const target = -2.6 + Math.sin(t * 0.6 + u.phase) * 1.0; // just ahead of her, where we can see
+          p.position.z += (target - p.position.z) * Math.min(1, dt * 1.5);
+          p.position.y = Math.max(0, (s.y - s.ground) * 0.5); // hops when she hops
+          gait = 1.6;
+          if (Math.random() < dt * 0.25) sfx.woof();
+        } else { p.position.z += move * 0.6; p.position.y = 0; gait = 0.8; } // tired out, drops back
+      } else if (u.mode === 'perch') {
+        p.position.z += move;
+        const look = Math.atan2(s.x - p.position.x, p.position.z) ; // watches her go by
+        u.head.rotation.y = Math.max(-1.4, Math.min(1.4, -look * 0.8));
+        p.rotation.y = 0;
+        if (Math.abs(p.position.z) < 0.5 && Math.random() < 0.5 && !u.mewed) { u.mewed = true; sfx.meow(); }
+      } else if (u.mode === 'dash') {
+        p.position.z += move;
+        p.position.x += u.dir * dt * 7;
+        gait = 2.2;
+        if (Math.abs(p.position.x) > 7) p.position.z = 99;
+      } else {
+        p.position.z += move + u.dir * dt * 1.2;
+        gait = 0.6;
+      }
+      const ph = t * 10 * gait + u.phase;
+      u.legs.forEach((lg, k) => { lg.rotation.x = gait ? Math.sin(ph + (k === 1 || k === 2 ? Math.PI : 0)) * 0.6 : 0; });
+      u.tail.forEach((sg, k) => { sg.rotation.y = Math.sin(t * (u.kind === 'dog' ? 12 : 3) + u.phase + k * 0.5) * (u.kind === 'dog' ? 0.35 : 0.25); sg.rotation.x = u.kind === 'cat' ? -0.35 : 0.2 - k * 0.05; });
+      if (u.kind === 'dog' && gait) u.head.position.y = 1.02 + Math.abs(Math.sin(ph)) * 0.04;
+      if (p.position.z > DESPAWN_Z + 2 || p.position.z < SPAWN_Z - 10) { p.visible = false; u.mewed = false; u.t = 3 + Math.random() * 8; }
+    }
+  }
 
   // ---------- coins ----------
   const coinGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.09, 18);
@@ -4255,6 +4439,7 @@
     updateSpace(dt, move);
     updateSea(dt, move);
     updateSpooky(dt, move);
+    updatePets(dt, move);
     updateFireworks(dt);
     updateDucks(dt, move, running);
     for (const b of billboards) {
