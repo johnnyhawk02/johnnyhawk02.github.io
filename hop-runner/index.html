@@ -1834,16 +1834,81 @@
   const headPivot = new THREE.Group();
   headPivot.position.y = 1.55;
   player.add(headPivot);
-  const head = ball(0.33, skin, 0, 0.25, 0, 18);
-  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.35, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.55), hairMat);
-  hair.position.y = 0.29;
-  const fringe = ball(0.2, hairMat, 0, 0.47, -0.22);
-  fringe.scale.set(1.5, 0.45, 0.8);
-  const sideL = ball(0.14, hairMat, -0.29, 0.24, 0.06);
-  const sideR = ball(0.14, hairMat, 0.29, 0.24, 0.06);
+  // Robyn: dark brown hair in a ponytail, a fringe down to her eyes, and a face drawn on.
+  // The face is painted onto the head's texture; the front of the head faces -z (u = 0.75).
+  const robynHair = lambert(0x3b2416);
+  function paintFace(ctx, w, h, closed) {
+    ctx.fillStyle = '#f3c39b'; ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#3b2416'; ctx.fillRect(0, 0, w, 70); // hair on top, under the 3D hair
+    const cx = 384, cy = 128;
+    // rosy cheeks
+    for (const sx of [-1, 1]) {
+      const g = ctx.createRadialGradient(cx + sx * 50, cy + 22, 2, cx + sx * 50, cy + 22, 18);
+      g.addColorStop(0, 'rgba(255,120,140,0.55)'); g.addColorStop(1, 'rgba(255,120,140,0)');
+      ctx.fillStyle = g; ctx.fillRect(cx + sx * 50 - 20, cy + 2, 40, 40);
+    }
+    for (const sx of [-1, 1]) {
+      const ex = cx + sx * 30, ey = cy;
+      if (closed) {
+        ctx.strokeStyle = '#2b1a12'; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.arc(ex, ey - 4, 12, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
+        continue;
+      }
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.ellipse(ex, ey, 13, 15, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#5a3420'; ctx.beginPath(); ctx.arc(ex, ey + 2, 10, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#1a0f0a'; ctx.beginPath(); ctx.arc(ex, ey + 2, 5.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(ex - 3.5, ey - 3, 3.2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(ex + 3, ey + 5, 1.5, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#2b1a12'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.ellipse(ex, ey, 13, 15, 0, 1.1 * Math.PI, 1.9 * Math.PI); ctx.stroke();
+      // eyelashes on the outer corners
+      const ox = ex + sx * 10;
+      for (let k = 0; k < 2; k++) { ctx.beginPath(); ctx.moveTo(ox - sx * k * 5, ey - 10 - k * 2); ctx.lineTo(ox + sx * (5 - k * 2), ey - 15 - k * 3); ctx.stroke(); }
+    }
+    // little nose
+    ctx.strokeStyle = '#cf8f6c'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(cx, cy + 14, 5, 0.1 * Math.PI, 0.9 * Math.PI); ctx.stroke();
+    // big happy smile
+    ctx.fillStyle = '#b8174f';
+    ctx.beginPath(); ctx.moveTo(cx - 15, cy + 27); ctx.quadraticCurveTo(cx, cy + 30, cx + 15, cy + 27); ctx.arc(cx, cy + 27, 15, 0, Math.PI); ctx.fill();
+    ctx.fillStyle = '#ff8fa6'; ctx.beginPath(); ctx.ellipse(cx, cy + 37, 7, 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(cx - 9, cy + 28, 18, 3); // teeth
+  }
+  const faceTex = canvasTexture(512, 256, (ctx, w, h) => paintFace(ctx, w, h, false));
+  const faceBlinkTex = canvasTexture(512, 256, (ctx, w, h) => paintFace(ctx, w, h, true));
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.33, 36, 24), new THREE.MeshLambertMaterial({ map: faceTex, emissive: 0xffffff, emissiveMap: faceTex, emissiveIntensity: 0.4 })); // a little glow so her face stays bright
+  head.position.y = 0.25;
+  // a shell of hair over the top, cut into a fringe that comes down to her eyes
+  const hairTex = canvasTexture(512, 128, (ctx, w, h) => {
+    ctx.fillStyle = '#3b2416'; ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = '#5b3a25'; ctx.lineWidth = 2;
+    for (let x = 0; x < w; x += 7) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + (Math.random() - 0.5) * 6, h); ctx.stroke(); }
+    ctx.strokeStyle = '#2a170d'; ctx.lineWidth = 1.5;
+    for (let x = 3; x < w; x += 11) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + (Math.random() - 0.5) * 6, h); ctx.stroke(); }
+    // cut the fringe: jagged over the face, curving down to the sides by the ears
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    const x0 = 296, x1 = 472;
+    ctx.moveTo(x0, h + 2);
+    for (let x = x0; x <= x1; x += 6) {
+      const edge = Math.min(1, Math.min(x - x0, x1 - x) / 34); // 0 at the sides, 1 over the face
+      const tip = (Math.floor((x - x0) / 6) % 2) ? 104 : 111;
+      ctx.lineTo(x, h + 2 - edge * (h + 2 - tip));
+    }
+    ctx.lineTo(x1, h + 2);
+    ctx.closePath(); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+  });
+  const hairShellMat = new THREE.MeshLambertMaterial({ map: hairTex, alphaTest: 0.5, side: THREE.DoubleSide });
+  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.355, 36, 14, 0, Math.PI * 2, 0, Math.PI * 0.5), hairShellMat);
+  hair.position.y = 0.25;
+  // hair down the back of her head to the nape
+  const backHair = new THREE.Mesh(new THREE.SphereGeometry(0.35, 24, 14, 0, Math.PI, 0, Math.PI * 0.72), robynHair);
+  backHair.position.y = 0.25;
   const earL = ball(0.07, skin, -0.33, 0.22, 0);
   const earR = ball(0.07, skin, 0.33, 0.22, 0);
-  headPivot.add(head, hair, fringe, sideL, sideR, earL, earR);
+  headPivot.add(head, hair, backHair, earL, earR);
   // a bubble helmet for Space
   const helmet = new THREE.Group();
   const bubble = new THREE.Mesh(new THREE.SphereGeometry(0.55, 20, 14), new THREE.MeshBasicMaterial({ color: 0xcff4ff, transparent: true, opacity: 0.28, depthWrite: false }));
@@ -1855,36 +1920,23 @@
   helmet.visible = false;
   headPivot.add(helmet);
 
-  // face (on the front, so we only see it when she turns round)
-  const eyes = [];
-  for (const ex of [-0.12, 0.12]) {
-    const eye = new THREE.Group();
-    eye.position.set(ex, 0.28, -0.29);
-    eye.add(ball(0.07, eyeWhite, 0, 0, 0, 10), ball(0.042, eyeDark, 0, 0, -0.05, 8), ball(0.014, eyeWhite, 0.015, 0.015, -0.09, 6));
-    headPivot.add(eye);
-    eyes.push(eye);
-    const brow = box(0.11, 0.025, 0.03, hairMat, ex, 0.39, -0.3);
-    brow.rotation.z = ex < 0 ? 0.15 : -0.15;
-    headPivot.add(brow);
-    const cheek = ball(0.055, cheekMat, ex * 1.7, 0.17, -0.26, 8);
-    cheek.scale.set(1, 0.6, 0.4);
-    headPivot.add(cheek);
-  }
-  headPivot.add(ball(0.04, skin, 0, 0.2, -0.33, 8)); // nose
-  const smile = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.018, 6, 14, Math.PI), mouthMat);
-  smile.rotation.z = Math.PI;
-  smile.position.set(0, 0.13, -0.3);
-  headPivot.add(smile);
-
-  // ponytail with a yellow hair tie; it swings while she runs
-  const tie = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.03, 6, 12), hairTieMat);
-  tie.position.set(0, 0.34, 0.34);
-  headPivot.add(tie);
+  // a high ponytail with a yellow hair tie; it swings while she runs
   const pony = new THREE.Group();
-  pony.position.set(0, 0.34, 0.36);
-  const ponyTop = ball(0.15, hairMat, 0, -0.08, 0.1);
-  const ponyEnd = ball(0.11, hairMat, 0, -0.26, 0.16);
-  pony.add(ponyTop, ponyEnd);
+  pony.position.set(0, 0.5, 0.3);
+  const tie = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.032, 8, 14), hairTieMat);
+  tie.rotation.x = 1.0;
+  // one smooth, swishy tail with hair strands drawn on
+  const strandTex = canvasTexture(128, 128, (ctx, w, h) => {
+    ctx.fillStyle = '#3b2416'; ctx.fillRect(0, 0, w, h);
+    ctx.lineWidth = 2;
+    for (let x = 0; x < w; x += 5) { ctx.strokeStyle = x % 10 ? '#5b3a25' : '#2a170d'; ctx.beginPath(); ctx.moveTo(x, 0); ctx.quadraticCurveTo(x + 4, h / 2, x - 2, h); ctx.stroke(); }
+  });
+  const tailShape = [[0, 0.02], [0.07, -0.01], [0.12, -0.08], [0.135, -0.18], [0.12, -0.3], [0.09, -0.42], [0.05, -0.52], [0.015, -0.6], [0, -0.62]].map(([r, y]) => new THREE.Vector2(r, y));
+  const ponyTail = new THREE.Mesh(new THREE.LatheGeometry(tailShape, 16), new THREE.MeshLambertMaterial({ map: strandTex }));
+  ponyTail.position.set(0, 0, 0.02);
+  ponyTail.rotation.x = -0.8; // sticks out behind so it swishes
+  ponyTail.scale.set(1, 1, 0.85);
+  pony.add(tie, ponyTail);
   headPivot.add(pony);
 
   // simple box limb on a pivot (used by the policeman)
@@ -3829,7 +3881,8 @@
     s.blinkT -= dt;
     if (s.blinkT <= 0) s.blinkT = 2.5 + Math.random() * 3;
     const eyeY = s.blinkT < 0.12 ? 0.15 : 1;
-    eyes[0].scale.y = eyes[1].scale.y = eyeY;
+    const blinkMap = eyeY < 1 ? faceBlinkTex : faceTex;
+    if (head.material.map !== blinkMap) { head.material.map = head.material.emissiveMap = blinkMap; head.material.needsUpdate = true; }
     // ponytail bounces with each step and flies up in the air
     pony.rotation.x = air ? -0.7 : 0.25 + Math.sin(s.runPhase * 2) * 0.25;
     pony.rotation.z = Math.sin(s.runPhase) * 0.2;
