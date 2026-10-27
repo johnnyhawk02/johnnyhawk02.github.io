@@ -426,6 +426,7 @@
       cheer() { [523, 659, 784, 1047, 1319].forEach((f, k) => tone('square', f, f, 0.12, 0.07, k * 0.08)); },
       twirl() { tone('triangle', 500, 1400, 0.45, 0.12); },
       quack(delay = 0) { tone('sawtooth', 620, 330, 0.16, 0.09, delay); tone('square', 900, 500, 0.12, 0.04, delay); },
+      liftoff() { noise(2.2, 260, 0.22, 0.5, 'lowpass'); tone('sawtooth', 70, 160, 2, 0.05); },
       tunnel() { noise(1.2, 300, 0.2, 0.5, 'lowpass'); },
       magnet() { tone('sine', 220, 440, 0.25, 0.2); tone('sine', 440, 880, 0.25, 0.15, 0.12); tone('square', 880, 880, 0.08, 0.06, 0.3); },
       boardGet() { [523, 659, 784, 1047].forEach((f, k) => tone('triangle', f, f, 0.14, 0.18, k * 0.07)); },
@@ -2304,6 +2305,7 @@
   }
   function makeRocket() {
     const g = new THREE.Group();
+    const ship = new THREE.Group(); // lifts off the pad now and then
     const body = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 5, 16), rocketWhite);
     body.position.y = 3.3;
     const nose = new THREE.Mesh(new THREE.ConeGeometry(0.9, 1.9, 16), glowMats[0]);
@@ -2313,14 +2315,27 @@
     win.position.set(0, 4.4, 0.85);
     const pad = new THREE.Mesh(new THREE.CylinderGeometry(2, 2.2, 0.4, 18), moonDark);
     pad.position.y = 0.2;
-    g.add(body, nose, win, pad);
+    ship.add(body, nose, win);
     for (let k = 0; k < 3; k++) {
       const a = (k / 3) * Math.PI * 2;
       const fin = box(0.15, 1.6, 0.9, jetRed, Math.sin(a) * 1.05, 1.5, Math.cos(a) * 1.05);
       fin.rotation.y = a;
-      g.add(fin);
+      ship.add(fin);
     }
+    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.75, 3, 12), flameMat);
+    flame.rotation.x = Math.PI;
+    flame.position.y = -0.7;
+    const core = new THREE.Mesh(new THREE.ConeGeometry(0.4, 1.6, 10), flameCore);
+    core.rotation.x = Math.PI;
+    core.position.y = 0.1;
+    flame.visible = core.visible = false;
+    ship.add(flame, core);
+    g.add(ship, pad);
     g.scale.setScalar(1.25);
+    g.userData.ship = ship;
+    g.userData.flames = [flame, core];
+    g.userData.vy = 0;
+    g.userData.launching = false;
     return g;
   }
   function makeAlien() {
@@ -2369,6 +2384,12 @@
   const SPACE_GAP = 9, SPACE_PER_SIDE = 14;
   const spaceProps = [];
   function placeSpaceProp(o, z) {
+    if (o.userData.ship) { // a new rocket back on its pad
+      o.userData.ship.position.y = 0;
+      o.userData.launching = false;
+      o.userData.vy = 0;
+      for (const f of o.userData.flames) f.visible = false;
+    }
     o.position.set(o.userData.side * (6.6 + Math.random() * 4), 0, z);
     o.rotation.y = -o.userData.side * Math.PI / 2 * 0.7; // face the track (and the camera a little)
   }
@@ -2381,6 +2402,24 @@
     scene.add(o);
     spaceProps.push(o);
   }
+  // craggy grey moon mountains with frosty tops
+  const mountains = new THREE.Group();
+  const mountainMat = new THREE.MeshLambertMaterial({ color: 0x9ca1c8, fog: false });
+  const peakMat = new THREE.MeshLambertMaterial({ color: 0xeef0ff, fog: false });
+  for (let i = 0; i < 18; i++) {
+    const side = i % 2 ? 1 : -1;
+    const h = 16 + Math.random() * 26, r = h * (0.5 + Math.random() * 0.25);
+    const m = new THREE.Mesh(new THREE.ConeGeometry(r, h, 6 + Math.floor(Math.random() * 3), 1), mountainMat);
+    const cap = new THREE.Mesh(new THREE.ConeGeometry(r * 0.3, h * 0.3, m.geometry.parameters.radialSegments, 1), peakMat);
+    cap.position.y = h * 0.35 + 0.05;
+    m.add(cap);
+    m.position.set(side * (30 + Math.random() * 38), h / 2 - 1, -55 - Math.random() * 85);
+    m.rotation.y = Math.random() * Math.PI;
+    mountains.add(m);
+  }
+  mountains.visible = false;
+  scene.add(mountains);
+  let nextLiftoff = 2;
   // planets far away in the sky
   const planets = new THREE.Group();
   const earthTex = canvasTexture(256, 128, (ctx, w, h) => {
@@ -2424,6 +2463,26 @@
   function updateSpace(dt, move) {
     if (!inSpace) return;
     const t = performance.now() / 1000;
+    // every few seconds a rocket up ahead blasts off
+    nextLiftoff -= dt;
+    if (nextLiftoff <= 0) {
+      const r = spaceProps.find(o => o.userData.ship && !o.userData.launching && o.position.z < -25 && o.position.z > -75);
+      if (r) { r.userData.launching = true; for (const f of r.userData.flames) f.visible = true; sfx.liftoff(); }
+      nextLiftoff = r ? 3 + Math.random() * 4 : 0.5;
+    }
+    for (const o of spaceProps) {
+      const u = o.userData;
+      if (!u.launching) continue;
+      u.vy += dt * (1.5 + u.ship.position.y * 0.4); // slow at first, then whoosh
+      u.ship.position.y += u.vy * dt;
+      u.ship.rotation.y += dt * 0.5;
+      for (const f of u.flames) f.scale.set(1, 0.8 + Math.random() * 0.5, 1);
+      if (u.ship.position.y < 40) {
+        const y = (u.ship.position.y + 0.3) * 1.25;
+        puff(o.position.x + (Math.random() - 0.5) * 1.5, y, o.position.z + (Math.random() - 0.5) * 1.5, (Math.random() - 0.5) * 3, -1.5, (Math.random() - 0.5) * 3, 0xffffff, 0.9);
+      }
+      if (u.ship.position.y > 120) { u.launching = false; for (const f of u.flames) f.visible = false; }
+    }
     for (const o of spaceProps) {
       o.position.z += move;
       if (o.position.z > DESPAWN_Z + 4) placeSpaceProp(o, o.position.z - SPACE_PER_SIDE * SPACE_GAP);
@@ -2511,6 +2570,7 @@
     rainbow.visible = i === 0 || i === 1;
     sun.visible = sunGlow.visible = !inSpace;
     planets.visible = inSpace;
+    mountains.visible = inSpace;
     helmet.visible = inSpace;
     for (const c of clouds) c.visible = !inSpace;
     for (const f of fences) f.visible = !inSpace;
