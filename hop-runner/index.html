@@ -273,7 +273,7 @@
       <li>Swipe ← → to change lanes</li>
       <li>Tap or swipe ↑ to jump</li>
       <li>Grab coins, find the portal, and don't let the policeman catch you!</li>
-      <li>Collect 100 coins for the gate to Space, or find the bubble portal to go under the sea!</li>
+      <li>Jump through portals to visit other worlds: Space, under the sea, Spooky World and more! Sometimes you get to pick one.</li>
       <li>A hoverboard saves you from a bump, a magnet pulls in coins</li>
       <li>A jetpack flies you up high, a rainbow star smashes everything!</li>
     </ul>
@@ -595,6 +595,7 @@
       cheer() { [523, 659, 784, 1047, 1319].forEach((f, k) => tone('square', f, f, 0.12, 0.07, k * 0.08)); },
       twirl() { tone('triangle', 500, 1400, 0.45, 0.12); },
       quack(delay = 0) { tone('sawtooth', 620, 330, 0.16, 0.09, delay); tone('square', 900, 500, 0.12, 0.04, delay); },
+      boo() { tone('sine', 320, 520, 0.5, 0.07); tone('sine', 520, 300, 0.7, 0.06, 0.45); tone('triangle', 640, 1040, 0.5, 0.025); },
       liftoff() { noise(2.2, 260, 0.22, 0.5, 'lowpass'); tone('sawtooth', 70, 160, 2, 0.05); },
       tunnel() { noise(1.2, 300, 0.2, 0.5, 'lowpass'); },
       magnet() { tone('sine', 220, 440, 0.25, 0.2); tone('sine', 440, 880, 0.25, 0.15, 0.12); tone('square', 880, 880, 0.08, 0.06, 0.3); },
@@ -1929,6 +1930,18 @@
   helmet.add(bubble, collar);
   helmet.visible = false;
   headPivot.add(helmet);
+  // a witch hat for Halloween and Spooky World
+  const witchHat = new THREE.Group();
+  const hatMat = lambert(0x6a2fb0);
+  const hatBrim = new THREE.Mesh(new THREE.CylinderGeometry(0.52, 0.52, 0.03, 24), hatMat);
+  const hatCone = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.75, 16), hatMat);
+  hatCone.position.set(0, 0.37, 0.04); hatCone.rotation.x = 0.25;
+  const hatBand = new THREE.Mesh(new THREE.CylinderGeometry(0.285, 0.29, 0.08, 16), lambert(0xff8c1a));
+  hatBand.position.y = 0.05;
+  witchHat.add(hatBrim, hatCone, hatBand);
+  witchHat.position.y = 0.6; witchHat.rotation.set(0.12, 0, 0.12);
+  witchHat.visible = false;
+  headPivot.add(witchHat);
 
   // a high ponytail with a yellow hair tie; it swings while she runs
   const pony = new THREE.Group();
@@ -2200,6 +2213,19 @@
       ctx.stroke();
     }
   });
+  const signCache = {};
+  function portalSign(emoji, ring) {
+    const tex = signCache[emoji] || (signCache[emoji] = canvasTexture(128, 128, (ctx, w, h) => {
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(64, 64, 58, 0, Math.PI * 2); ctx.fill();
+      ctx.lineWidth = 8; ctx.strokeStyle = ring; ctx.stroke();
+      ctx.font = '72px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(emoji, 64, 70);
+    }));
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthWrite: false }));
+    sp.scale.setScalar(1.1);
+    sp.position.y = 3.4;
+    return sp;
+  }
   function makePortal() {
     const g = new THREE.Group();
     const ring = new THREE.Mesh(new THREE.TorusGeometry(1.15, 0.18, 10, 32), new THREE.MeshBasicMaterial({ color: 0xc77dff }));
@@ -2208,7 +2234,7 @@
     swirl.position.y = 1.35;
     const glow = new THREE.Mesh(new THREE.CircleGeometry(1.7, 32), new THREE.MeshBasicMaterial({ color: 0xe6c8ff, transparent: true, opacity: 0.35, side: THREE.DoubleSide }));
     glow.position.set(0, 1.35, -0.05);
-    g.add(glow, ring, swirl);
+    g.add(glow, ring, swirl, portalSign('🌈', '#c77dff'));
     g.userData = { portal: true, halfW: 0.9, halfD: 0.5, height: 0, base: 0, swirl };
     return g;
   }
@@ -2509,7 +2535,8 @@
 
   // ---------- Space World: through the golden gate once she has collected enough coins ----------
   const SPACE = 4;
-  let inSpace = false, inSea = false, awayFromTown = false;
+  let inSpace = false, inSea = false, inSpooky = false, awayFromTown = false;
+  let halloween = false; // now and then the towns put on their Halloween colours
   const glowMats = [0xff5dc8, 0x5ee7ff, 0xb388ff, 0x7dff9a, 0xffd23f].map(c => new THREE.MeshBasicMaterial({ color: c }));
   const moonRock = lambert(0x8a8fb0), moonDark = lambert(0x5d6285), alienGreen = lambert(0x7dff6a), rocketWhite = lambert(0xf4f6ff);
   const alienEye = new THREE.MeshBasicMaterial({ color: 0xffffff }), alienPupil = new THREE.MeshBasicMaterial({ color: 0x2b2350 });
@@ -3059,9 +3086,315 @@
       f.scale.setScalar(0.8);
       orbit.add(f);
     }
-    g.add(ring, swirl, orbit);
+    g.add(ring, swirl, orbit, portalSign('🐠', '#3fb6ff'));
     for (let k = 0; k < 6; k++) g.add(ball(0.08 + Math.random() * 0.08, bubbleMat, (Math.random() - 0.5) * 2.4, 0.4 + Math.random() * 2.6, 0.2, 6));
     g.userData = { seaPortal: true, halfW: 0.9, halfD: 0.5, height: 0, base: 0, swirl, orbit };
+    return g;
+  }
+  // the rocket portal: a starry ring with little planets going round, straight to Space
+  const starSwirlTex = canvasTexture(256, 256, (ctx, w, h) => {
+    const g = ctx.createRadialGradient(w / 2, h / 2, 4, w / 2, h / 2, w / 2);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(0.25, '#c9a8ff'); g.addColorStop(0.7, '#2a1a6e'); g.addColorStop(1, '#140f3a');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#ffffff';
+    for (let k = 0; k < 40; k++) { ctx.beginPath(); ctx.arc(Math.random() * w, Math.random() * h, 1 + Math.random() * 2.5, 0, Math.PI * 2); ctx.fill(); }
+  });
+  function makeStarPortal() {
+    const g = new THREE.Group();
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.3, 0.22, 12, 36), new THREE.MeshLambertMaterial({ color: 0xff7ad9, emissive: 0x6a1a5a }));
+    ring.position.y = 1.5;
+    const swirl = new THREE.Mesh(new THREE.CircleGeometry(1.15, 32), new THREE.MeshBasicMaterial({ map: starSwirlTex, side: THREE.DoubleSide }));
+    swirl.position.y = 1.5;
+    const orbit = new THREE.Group(); orbit.position.y = 1.5;
+    [0xffd23f, 0x5ec8e5, 0xff9f5c].forEach((c, k) => {
+      const a = (k / 3) * Math.PI * 2;
+      orbit.add(ball(0.2 + k * 0.05, new THREE.MeshBasicMaterial({ color: c }), Math.cos(a) * 1.8, Math.sin(a) * 1.8, 0, 10));
+    });
+    for (const sx of [-1, 1]) {
+      const st = new THREE.Mesh(starPickGeo, goldMat2);
+      st.scale.setScalar(0.35); st.position.set(sx * 1.25, 2.85, 0);
+      g.add(st);
+    }
+    g.add(ring, swirl, orbit, portalSign('🚀', '#ff7ad9'));
+    g.userData = { starPortal: true, halfW: 0.9, halfD: 0.5, height: 0, base: 0, swirl, orbit };
+    return g;
+  }
+
+  // ---------- Spooky World: friendly ghosts, through the ghost portal ----------
+  const SPOOKY = 6;
+  const spookyWorld = new THREE.Group(); // floating ghosts
+  const hallowGroup = new THREE.Group(); // bats, bigMoon, witch and fireflies: Spooky World and Halloween towns
+  spookyWorld.visible = hallowGroup.visible = false;
+  scene.add(spookyWorld, hallowGroup);
+  const ghostMat = new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0xc8d0ff, emissiveIntensity: 0.5, transparent: true, opacity: 0.93, side: THREE.DoubleSide });
+  const ghostEye = new THREE.MeshBasicMaterial({ color: 0x1a1030 }), ghostCheek = new THREE.MeshBasicMaterial({ color: 0xffa3c4 });
+  const ghostPts = [new THREE.Vector2(0.72, -0.15), new THREE.Vector2(0.64, 0.2), new THREE.Vector2(0.6, 0.6)];
+  for (let k = 1; k <= 12; k++) { const a = (k / 12) * Math.PI / 2; ghostPts.push(new THREE.Vector2(Math.cos(a) * 0.6 + 0.0001, 0.6 + Math.sin(a) * 0.62)); }
+  const ghostGeo = new THREE.LatheGeometry(ghostPts, 20);
+  function makeGhost() {
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(ghostGeo, ghostMat);
+    g.add(body);
+    for (let k = 0; k < 8; k++) { const a = (k / 8) * Math.PI * 2; g.add(ball(0.17, ghostMat, Math.cos(a) * 0.62, -0.16, Math.sin(a) * 0.62, 8)); } // a wavy hem
+    for (const sx of [-1, 1]) {
+      const e = ball(0.11, ghostEye, sx * 0.2, 0.78, 0.53, 10); e.scale.set(0.8, 1.2, 0.5);
+      const gl = ball(0.035, pearlMat, sx * 0.2 - 0.03, 0.83, 0.585, 6);
+      const ch = ball(0.07, ghostCheek, sx * 0.34, 0.6, 0.47, 8); ch.scale.z = 0.4;
+      g.add(e, gl, ch);
+    }
+    const mouth = ball(0.07, ghostEye, 0, 0.52, 0.56, 8); mouth.scale.set(0.8, 1.1, 0.4);
+    const armL = ball(0.15, ghostMat, -0.66, 0.45, 0.05, 8), armR = ball(0.15, ghostMat, 0.66, 0.45, 0.05, 8);
+    g.add(mouth, armL, armR);
+    g.userData.arms = [armL, armR];
+    return g;
+  }
+  const graveMat = lambert(0x8f8aa3), dirtMat = lambert(0x4a3b4f), barkMat = lambert(0x2b1f33), houseMat = lambert(0x4a2f6b), spookRoofMat = lambert(0x231a30);
+  const winMat = new THREE.MeshBasicMaterial({ color: 0xffb347 });
+  const booTex = canvasTexture(128, 64, (ctx, w, h) => { ctx.fillStyle = '#5d5870'; ctx.font = 'bold 40px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('BOO', w / 2, h / 2 + 2); });
+  function makeGrave() {
+    const g = new THREE.Group();
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.25, 16), graveMat);
+    top.rotation.x = Math.PI / 2; top.position.y = 1.0;
+    const mound = ball(0.6, dirtMat, 0, 0, 0.5, 8); mound.scale.set(1, 0.3, 1.2);
+    const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.3), new THREE.MeshBasicMaterial({ map: booTex, transparent: true }));
+    plate.position.set(0, 0.8, 0.13);
+    g.add(box(0.9, 1.0, 0.25, graveMat, 0, 0.5, 0), top, mound, plate);
+    if (Math.random() < 0.6) { const gh = makeGhost(); gh.scale.setScalar(0.6); gh.position.set(0, 0, -0.45); g.add(gh); g.userData.peek = gh; } // a ghost that peeks out
+    g.userData.faces = true;
+    g.scale.setScalar(1.3);
+    return g;
+  }
+  function makeSpookyTree() {
+    const g = new THREE.Group();
+    const h = 3 + Math.random() * 2;
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.35, h, 6), barkMat);
+    trunk.position.y = h / 2;
+    g.add(trunk);
+    for (let k = 0; k < 5; k++) {
+      const L = 0.8 + Math.random() * 1.2, a = Math.random() * Math.PI * 2, y = h * (0.5 + Math.random() * 0.45), tilt = 0.6 + Math.random() * 0.6;
+      const br = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.1, L, 5), barkMat);
+      br.position.set(Math.cos(a) * Math.sin(tilt) * L / 2, y + Math.cos(tilt) * L / 2, Math.sin(a) * Math.sin(tilt) * L / 2);
+      br.rotation.set(Math.sin(a) * tilt, 0, -Math.cos(a) * tilt);
+      g.add(br);
+    }
+    g.scale.setScalar(1.2 + Math.random() * 0.5);
+    return g;
+  }
+  const shroomMats = [0x7dff9a, 0xc77dff, 0x5ee7ff].map(c => new THREE.MeshBasicMaterial({ color: c }));
+  function makeShrooms() {
+    const g = new THREE.Group();
+    for (let k = 0; k < 4; k++) {
+      const h = 0.3 + Math.random() * 0.5, x = (Math.random() - 0.5) * 1.4, z = (Math.random() - 0.5) * 1.4;
+      const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.09, h, 6), lambert(0xf2eadf));
+      stem.position.set(x, h / 2, z);
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(0.22 + Math.random() * 0.12, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), shroomMats[k % 3]);
+      cap.position.set(x, h, z);
+      g.add(stem, cap);
+    }
+    g.scale.setScalar(1.5);
+    return g;
+  }
+  function makeHauntedHouse() {
+    const g = new THREE.Group();
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(3.3, 2.4, 4), spookRoofMat);
+    roof.rotation.y = Math.PI / 4; roof.position.y = 4.7;
+    const spire = new THREE.Mesh(new THREE.ConeGeometry(1.1, 1.8, 4), spookRoofMat);
+    spire.rotation.y = Math.PI / 4; spire.position.set(1.6, 6.4, 0.6);
+    g.add(box(4, 3.5, 3.5, houseMat, 0, 1.75, 0), roof, box(1.4, 5.5, 1.4, houseMat, 1.6, 2.75, 0.6), spire,
+      box(0.7, 0.8, 0.05, winMat, -1, 2.3, 1.78), box(0.7, 0.8, 0.05, winMat, 0.4, 2.3, 1.78), box(0.5, 0.6, 0.05, winMat, 1.6, 4.5, 1.32),
+      box(0.9, 1.4, 0.05, spookRoofMat, -0.2, 0.7, 1.78));
+    g.userData.house = true; g.userData.faces = true;
+    g.scale.setScalar(1.3);
+    return g;
+  }
+  const spookyMakers = [makeSpookyTree, makeSpookyTree, makeGrave, makeGrave, makeGrave, makeShrooms, makeHauntedHouse];
+  const SPOOK_GAP = 8, SPOOK_PER_SIDE = 16;
+  const spookyProps = [];
+  function placeSpookyProp(o, z) {
+    const side = o.userData.side;
+    o.position.set(side * (o.userData.house ? 15 + Math.random() * 6 : 5.6 + Math.random() * 5), 0, z);
+    o.rotation.y = o.userData.faces ? -side * (0.4 + Math.random() * 0.4) : Math.random() * Math.PI * 2;
+  }
+  for (let i = 0; i < SPOOK_PER_SIDE * 2; i++) {
+    const o = spookyMakers[Math.floor(Math.random() * spookyMakers.length)]();
+    o.userData.side = i % 2 ? 1 : -1;
+    o.userData.phase = Math.random() * 6;
+    placeSpookyProp(o, 10 - Math.floor(i / 2) * SPOOK_GAP - (i % 2) * SPOOK_GAP / 2);
+    o.visible = false;
+    scene.add(o);
+    spookyProps.push(o);
+  }
+  // jack-o'-lanterns along the track, glowing
+  const pumpkinTex = canvasTexture(256, 128, (ctx, w, h) => {
+    ctx.fillStyle = '#ff7a1a'; ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = '#e0600c'; ctx.lineWidth = 4;
+    for (let x = 0; x < w; x += 21) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+  });
+  const pumpkinGlow = canvasTexture(256, 128, (ctx, w, h) => {
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#ffd23f';
+    const cx = w * 0.25, cy = h * 0.5; // the face looks towards +z
+    for (const sx of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx + sx * 10, cy - 6); ctx.lineTo(cx + sx * 28, cy - 6); ctx.lineTo(cx + sx * 19, cy - 24); ctx.fill(); }
+    ctx.beginPath(); ctx.moveTo(cx - 30, cy + 8); ctx.quadraticCurveTo(cx, cy + 40, cx + 30, cy + 8); ctx.quadraticCurveTo(cx, cy + 22, cx - 30, cy + 8); ctx.fill();
+  });
+  const pumpkinMat = new THREE.MeshLambertMaterial({ map: pumpkinTex, emissive: 0xffffff, emissiveMap: pumpkinGlow, emissiveIntensity: 1 });
+  const pumpkinGeo = new THREE.SphereGeometry(0.42, 18, 12);
+  const pumpkins = [];
+  for (let i = 0; i < 24; i++) {
+    const p = new THREE.Group();
+    const b = new THREE.Mesh(pumpkinGeo, pumpkinMat); b.scale.y = 0.8; b.position.y = 0.34;
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.2, 6), lambert(0x3f8f3a)); stem.position.y = 0.72;
+    p.add(b, stem);
+    p.userData.side = i % 2 ? 1 : -1;
+    p.position.z = 10 - Math.floor(i / 2) * 9 - (i % 2) * 4.5;
+    p.visible = false;
+    scene.add(p);
+    pumpkins.push(p);
+  }
+  function placePumpkin(p, z) {
+    p.position.set(p.userData.side * (inSpooky ? 4.3 + Math.random() * 2.5 : 3.95), 0, z);
+    p.rotation.y = -p.userData.side * 0.6;
+    p.scale.setScalar(0.8 + Math.random() * 0.5);
+  }
+  for (const p of pumpkins) placePumpkin(p, p.position.z);
+  // a big bigMoon, with a witch who whizzes across it now and then
+  const nofog = c => new THREE.MeshBasicMaterial({ color: c, fog: false });
+  const bigMoon = ball(9, nofog(0xfff3c4), 30, 38, -130, 24);
+  const witch = new THREE.Group();
+  const wBlack = nofog(0x1a1024);
+  const broom = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 6, 6), wBlack); broom.rotation.z = Math.PI / 2;
+  const bristle = new THREE.Mesh(new THREE.ConeGeometry(0.8, 1.6, 8), wBlack); bristle.rotation.z = Math.PI / 2; bristle.position.x = -3.5;
+  const witchBody = new THREE.Mesh(new THREE.ConeGeometry(0.9, 2.2, 8), wBlack); witchBody.position.set(0.3, 1.1, 0);
+  const wHead = ball(0.45, wBlack, 0.5, 2.4, 0, 10);
+  const wHat = new THREE.Mesh(new THREE.ConeGeometry(0.6, 1.5, 8), wBlack); wHat.position.set(0.3, 3.3, 0); wHat.rotation.z = 0.4;
+  witch.add(broom, bristle, witchBody, wHead, wHat);
+  witch.position.set(-60, 36, -126);
+  hallowGroup.add(bigMoon, witch);
+  let witchT = 3;
+  // bats
+  const bats = new THREE.Group();
+  const batMat = new THREE.MeshBasicMaterial({ color: 0x1a1024, side: THREE.DoubleSide });
+  const wingGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1.1, 0.3, 0), new THREE.Vector3(0.9, -0.3, 0), new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.9, -0.3, 0), new THREE.Vector3(0.5, -0.15, 0.2)]);
+  wingGeo.computeVertexNormals();
+  for (let k = 0; k < 8; k++) {
+    const bt = new THREE.Group();
+    const wl = new THREE.Mesh(wingGeo, batMat), wr = new THREE.Mesh(wingGeo, batMat); wr.scale.x = -1;
+    bt.add(ball(0.22, batMat, 0, 0, 0, 8), wl, wr);
+    bt.position.set((Math.random() - 0.5) * 8, (Math.random() - 0.5) * 3, (Math.random() - 0.5) * 6);
+    bt.userData = { wl, wr, phase: Math.random() * 6 };
+    bats.add(bt);
+  }
+  bats.visible = false;
+  hallowGroup.add(bats);
+  let batT = 2;
+  // fireflies
+  const flyMat = new THREE.MeshBasicMaterial({ color: 0xd4ff6b });
+  const fireflies = [];
+  for (let k = 0; k < 40; k++) {
+    const f = ball(0.06, flyMat, (Math.random() < 0.5 ? -1 : 1) * (4.5 + Math.random() * 10), 0.5 + Math.random() * 4, 5 - Math.random() * 100, 6);
+    f.userData.phase = Math.random() * 6;
+    hallowGroup.add(f);
+    fireflies.push(f);
+  }
+  // friendly ghosts floating along, some drifting right over the track
+  const ghosts = [];
+  function resetGhost(g, z) { // out to the sides, or high over the track, so they never float into her face
+    const over = Math.random() < 0.3;
+    g.position.set(over ? (Math.random() - 0.5) * 4 : (Math.random() < 0.5 ? -1 : 1) * (6 + Math.random() * 7), over ? 7 + Math.random() * 2 : 2.4 + Math.random() * 4, z);
+    g.userData.booed = false;
+  }
+  for (let k = 0; k < 7; k++) {
+    const g = makeGhost();
+    g.userData.phase = Math.random() * 6;
+    resetGhost(g, -15 - k * 13);
+    spookyWorld.add(g);
+    ghosts.push(g);
+  }
+  function updateSpooky(dt, move) {
+    if (!awayFromTown && s.mode === 'running' && s.distance > s.nextHallow) {
+      // the town flips into (or out of) its Halloween colours
+      halloween = !halloween;
+      flash();
+      applyTheme(themeIndex);
+      toast(halloween ? 'Happy Halloween! 🎃' : themes[themeIndex].name + '!');
+      if (halloween) sfx.boo();
+      s.nextHallow = s.distance + (halloween ? 200 : 300) + Math.random() * 200;
+    }
+    if (!hallowGroup.visible) return;
+    const t = performance.now() / 1000;
+    for (const p of pumpkins) {
+      p.position.z += move;
+      if (p.position.z > DESPAWN_Z + 2) placePumpkin(p, p.position.z - 108);
+    }
+    pumpkinMat.emissiveIntensity = 0.85 + Math.sin(t * 9) * 0.08 + Math.sin(t * 23) * 0.06; // candle flicker
+    for (const f of fireflies) {
+      f.position.z += move * 0.8;
+      if (f.position.z > DESPAWN_Z) f.position.z -= 105;
+      f.position.y += Math.sin(t * 1.5 + f.userData.phase) * dt * 0.3;
+      f.scale.setScalar(0.4 + Math.max(0, Math.sin(t * 2.5 + f.userData.phase)) * 1.2);
+    }
+    witchT -= dt;
+    if (witchT <= 0) {
+      witch.position.x += dt * 14;
+      witch.position.y = 36 + Math.sin(t * 2) * 1.5;
+      if (witch.position.x > 90) { witch.position.x = -60; witchT = 10 + Math.random() * 10; }
+    }
+    batT -= dt;
+    if (!bats.visible && batT <= 0) { bats.userData.dir = Math.random() < 0.5 ? 1 : -1; bats.position.set(-bats.userData.dir * 40, 9 + Math.random() * 6, -30 - Math.random() * 30); bats.visible = true; }
+    if (bats.visible) {
+      bats.position.x += bats.userData.dir * dt * 11;
+      for (const b of bats.children) {
+        const fl = Math.sin(t * 16 + b.userData.phase) * 0.9;
+        b.userData.wl.rotation.y = fl; b.userData.wr.rotation.y = -fl;
+        b.rotation.y = bats.userData.dir > 0 ? 0 : Math.PI;
+        b.position.y += Math.sin(t * 4 + b.userData.phase) * dt;
+      }
+      if (Math.abs(bats.position.x) > 42) { bats.visible = false; batT = 3 + Math.random() * 6; }
+    }
+    if (!inSpooky) return;
+    for (const o of spookyProps) {
+      o.position.z += move;
+      if (o.position.z > DESPAWN_Z + 4) placeSpookyProp(o, o.position.z - SPOOK_PER_SIDE * SPOOK_GAP);
+      const pk = o.userData.peek;
+      if (pk) pk.position.y = Math.max(0, Math.sin(t * 1.3 + o.userData.phase)) * 1.25; // peekaboo!
+    }
+    for (const g of ghosts) {
+      const u = g.userData;
+      g.position.z += move * 0.75;
+      g.position.y += Math.sin(t * 1.6 + u.phase) * dt * 0.9;
+      g.position.x += Math.sin(t * 0.7 + u.phase) * dt * 0.8;
+      g.rotation.z = Math.sin(t * 1.4 + u.phase) * 0.15;
+      u.arms[0].position.y = 0.45 + Math.sin(t * 5 + u.phase) * 0.08;
+      u.arms[1].position.y = 0.45 - Math.sin(t * 5 + u.phase) * 0.08;
+      if (!u.booed && g.position.z > -3 && Math.abs(g.position.x - s.x) < 5) { u.booed = true; sfx.boo(); }
+      if (g.position.z > (Math.abs(g.position.x) < 5 ? 0 : DESPAWN_Z)) resetGhost(g, -100);
+    }
+  }
+  // the ghost portal: a green glowing ring with little ghosts going round it
+  const ghostSwirlTex = canvasTexture(256, 256, (ctx, w, h) => {
+    const g = ctx.createRadialGradient(w / 2, h / 2, 4, w / 2, h / 2, w / 2);
+    g.addColorStop(0, '#eaffd6'); g.addColorStop(0.35, '#7dff9a'); g.addColorStop(0.75, '#6a2fb0'); g.addColorStop(1, '#2b1a4a');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 6;
+    ctx.beginPath();
+    for (let a = 0; a < 18; a += 0.1) { const r = a * 7; ctx.lineTo(w / 2 + Math.cos(a) * r, h / 2 + Math.sin(a) * r); }
+    ctx.stroke();
+  });
+  function makeGhostPortal() {
+    const g = new THREE.Group();
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.3, 0.22, 12, 36), new THREE.MeshLambertMaterial({ color: 0x7dff9a, emissive: 0x1a6a2a }));
+    ring.position.y = 1.5;
+    const swirl = new THREE.Mesh(new THREE.CircleGeometry(1.15, 32), new THREE.MeshBasicMaterial({ map: ghostSwirlTex, side: THREE.DoubleSide }));
+    swirl.position.y = 1.5;
+    const orbit = new THREE.Group(); orbit.position.y = 1.5;
+    for (let k = 0; k < 3; k++) {
+      const gh = makeGhost(), a = (k / 3) * Math.PI * 2;
+      gh.scale.setScalar(0.35);
+      gh.position.set(Math.cos(a) * 1.8, Math.sin(a) * 1.8 - 0.2, 0);
+      orbit.add(gh);
+    }
+    g.add(ring, swirl, orbit, portalSign('👻', '#7dff9a'));
+    g.userData = { ghostPortal: true, halfW: 0.9, halfD: 0.5, height: 0, base: 0, swirl, orbit };
     return g;
   }
 
@@ -3073,11 +3406,13 @@
     { name: 'Starry Night', sky: 0x4b4fae, grass: 0x3f9e6e, track: 0xc9ae8a, hills: [0x2f7d5a, 0x368d62, 0x4aa877] },
     { name: 'Space', sky: 0x140f3a, grass: 0x6d7299, track: 0xb7bad6, hills: [0x4d5280, 0x5d6290, 0x3f4470] }, // only through the golden gate
     { name: 'Under the Sea', sky: 0x1f86c0, grass: 0xe6d29c, track: 0xf2e2b2, hills: [0xff7f9e, 0xff9f5c, 0x6fd6c8] }, // only through the bubble portal
+    { name: 'Spooky World', sky: 0x2b1a4a, grass: 0x3d3352, track: 0x9a8aa8, hills: [0x4a2f6b, 0x2b2238, 0x5a3a7a] }, // only through the ghost portal
   ];
   let themeIndex = 0;
   function applyTheme(i) {
     themeIndex = i;
-    const t = themes[i];
+    const hallow = halloween && i < SPACE;
+    const t = hallow ? { sky: 0x4a2a6e, grass: 0x3a3048, track: 0xa8703a, hills: [0xff7518, 0x6a2fb0, 0x2b2238] } : themes[i]; // Halloween colours
     scene.background.setHex(t.sky);
     scene.fog.color.setHex(t.sky);
     grass.material.color.setHex(t.grass);
@@ -3085,22 +3420,30 @@
     hillMats.forEach((m, k) => m.color.setHex(t.hills[k]));
     inSpace = i === SPACE;
     inSea = i === UNDER;
-    awayFromTown = inSpace || inSea;
-    stars.visible = i === 3 || inSpace;
-    rainbow.visible = i === 0 || i === 1;
-    sun.visible = sunGlow.visible = !awayFromTown;
+    inSpooky = i === SPOOKY;
+    awayFromTown = inSpace || inSea || inSpooky;
+    stars.visible = i === 3 || inSpace || inSpooky || hallow;
+    rainbow.visible = (i === 0 || i === 1) && !hallow;
+    sun.visible = sunGlow.visible = !awayFromTown && !hallow;
+    spookyWorld.visible = inSpooky;
+    hallowGroup.visible = inSpooky || hallow;
+    witchHat.visible = inSpooky || hallow;
+    for (const o of spookyProps) o.visible = inSpooky;
+    for (const p of pumpkins) { p.visible = inSpooky || hallow; placePumpkin(p, p.position.z); }
     planets.visible = inSpace;
     mountains.visible = inSpace;
-    helmet.visible = awayFromTown;
-    for (const c of clouds) c.visible = !awayFromTown;
+    helmet.visible = inSpace || inSea;
+    for (const c of clouds) c.visible = !awayFromTown && !hallow;
+    hemiLight.color.setHex(hallow || inSpooky ? 0xd8c0ff : 0xffffff); // a purple dusk glow
+    sunLight.color.setHex(hallow || inSpooky ? 0xffb37a : 0xfff1d0);
     for (const f of fences) f.visible = !awayFromTown;
     for (const t of terraces) t.visible = !awayFromTown;
     for (const c of cottages) c.visible = !awayFromTown;
     for (const o of spaceProps) o.visible = inSpace;
     for (const o of seaProps) o.visible = inSea;
     seaWorld.visible = inSea;
-    scene.fog.near = inSea ? 22 : 50;
-    scene.fog.far = inSea ? 115 : 140;
+    scene.fog.near = inSea ? 22 : inSpooky ? 30 : 50;
+    scene.fog.far = inSea ? 115 : inSpooky ? 125 : 140;
     sfx.muffle(inSea);
     if (awayFromTown) { flock.visible = false; plane.visible = false; }
     ufo.visible = false;
@@ -3217,14 +3560,17 @@
     sfx.portal();
     flash();
     clearWorld();
+    halloween = Math.random() < 0.35;
     applyTheme(themeIndex >= SPACE ? 0 : (themeIndex + 1) % SPACE);
-    toast(themes[themeIndex].name + '!');
+    toast(halloween ? 'Halloween ' + themes[themeIndex].name + '! 🎃' : themes[themeIndex].name + '!');
+    s.nextHallow = s.distance + 250 + Math.random() * 200;
     s.distance += 50;
     s.y = s.ground = 0; s.vy = 0; s.groundPlat = null;
     s.copZ = 30; s.copClose = 0; // the policeman is left far behind
     coinLine(s.lane, -8, 20, 0.8, 1.8); // a welcome trail of coins
     s.untilNext = 45;
-    s.nextPortal = s.distance + 220 + Math.random() * 120;
+    s.nextPortal = s.distance + 160 + Math.random() * 100;
+    s.nextCross = s.distance + 200 + Math.random() * 100;
   }
 
   function enterSpace() {
@@ -3235,14 +3581,14 @@
     clearWorld();
     applyTheme(SPACE);
     toast('Welcome to Space!');
-    s.gateReady = false;
-    s.gateAt = s.coins + 150; // the next trip needs 150 more
+    if (s.gateReady || s.coins >= s.gateAt) { s.gateReady = false; s.gateAt = s.coins + 150; } // the next golden gate needs 150 more
     s.distance += 50;
     s.y = s.ground = 0; s.vy = 0; s.groundPlat = null;
     s.copZ = 30; s.copClose = 0;
     coinLine(s.lane, -8, 20, 0.8, 1.8);
     s.untilNext = 45;
-    s.nextPortal = s.distance + 300 + Math.random() * 100;
+    s.nextPortal = s.distance + 200 + Math.random() * 100;
+    s.nextCross = s.distance + 250 + Math.random() * 100;
   }
 
   function enterSea() {
@@ -3259,14 +3605,34 @@
     coinLine(s.lane, -8, 20, 0.8, 1.8);
     blowBubbles(s.x, 1, -1, 20);
     s.untilNext = 45;
-    s.nextPortal = s.distance + 280 + Math.random() * 100;
-    s.nextSea = s.distance + 400 + Math.random() * 250;
+    s.nextPortal = s.distance + 200 + Math.random() * 100;
+    s.nextCross = s.distance + 250 + Math.random() * 100;
+    s.nextSea = s.distance + 250 + Math.random() * 150;
+  }
+
+  function enterSpooky() {
+    sfx.portal(); sfx.boo();
+    flashEl.style.background = 'radial-gradient(circle at center, #ffffff00 15%, #7dff9a 100%)';
+    flash();
+    setTimeout(() => { flashEl.style.background = ''; }, 900);
+    clearWorld();
+    applyTheme(SPOOKY);
+    toast('Spooky World! Boo! 👻');
+    s.distance += 50;
+    s.y = s.ground = 0; s.vy = 0; s.groundPlat = null;
+    s.copZ = 30; s.copClose = 0;
+    coinLine(s.lane, -8, 20, 0.8, 1.8);
+    s.untilNext = 45;
+    s.nextPortal = s.distance + 200 + Math.random() * 100;
+    s.nextCross = s.distance + 250 + Math.random() * 100;
+    s.nextSea = s.distance + 250 + Math.random() * 150;
   }
 
   function reset() {
     clearWorld();
+    halloween = Math.random() < 0.25;
     applyTheme(0);
-    Object.assign(s, { coins: 0, nextPortal: 150, copZ: 3.2, copX: 0, copY: 0, copVy: 0, copClose: 3.5, bumpCool: 0, stumbleT: 0, caught: false, lookT: 0, nextLook: 1.5, board: 0, nextBoard: 60, nextClimb: 70, zoom: 0, zoomF: 0, nextZoom: 110, nextBox: 35, magnet: 0, nextMagnet: 90, nextTunnel: 45, twirl: 0, milestone: 0, invuln: 0, lane: 1, prevLane: 1, lastTall: false, x: 0, y: 0, vy: 0, speed: START_SPEED, distance: 0, untilNext: 35, jumpBuffer: 0, crashT: 0, ground: 0, groundPlat: null, jet: 0, star: 0, jetF: 0, jetFall: false, nextJet: 140, nextStar: 210, combo: 0, comboT: 0, shake: 0, lean: 0, squash: 0, skyLane: 1, gateAt: 100, gateReady: false, gateHalf: false, nextSea: 170 });
+    Object.assign(s, { coins: 0, nextPortal: 150, copZ: 3.2, copX: 0, copY: 0, copVy: 0, copClose: 3.5, bumpCool: 0, stumbleT: 0, caught: false, lookT: 0, nextLook: 1.5, board: 0, nextBoard: 60, nextClimb: 70, zoom: 0, zoomF: 0, nextZoom: 110, nextBox: 35, magnet: 0, nextMagnet: 90, nextTunnel: 45, twirl: 0, milestone: 0, invuln: 0, lane: 1, prevLane: 1, lastTall: false, x: 0, y: 0, vy: 0, speed: START_SPEED, distance: 0, untilNext: 35, jumpBuffer: 0, crashT: 0, ground: 0, groundPlat: null, jet: 0, star: 0, jetF: 0, jetFall: false, nextJet: 140, nextStar: 210, combo: 0, comboT: 0, shake: 0, lean: 0, squash: 0, skyLane: 1, gateAt: 100, gateReady: false, gateHalf: false, nextSea: 170, nextCross: 330, nextHallow: 200 + Math.random() * 250 });
     comboEl.classList.remove('show');
     player.rotation.set(0, 0, 0);
     renderHud();
@@ -3396,8 +3762,9 @@
     } else if (prize === 'star') {
       startStar();
     } else if (prize === 'sea') {
-      toast('Splash!');
-      setTimeout(() => s.mode === 'running' && !awayFromTown && enterSea(), 400);
+      const boo = Math.random() < 0.5;
+      toast(boo ? 'Boo!' : 'Splash!');
+      setTimeout(() => s.mode === 'running' && !awayFromTown && (boo ? enterSpooky() : enterSea()), 400);
     } else if (prize === 'zoom') {
       setTimeout(() => s.mode === 'running' && startZoom(4), 350);
     } else {
@@ -3683,19 +4050,37 @@
       s.untilNext = 30;
       return;
     }
-    if (!tun && !s.gateReady && !awayFromTown && s.distance > s.nextSea && tallFree().length === 3) {
+    if (!tun && !s.gateReady && s.distance > s.nextCross && tallFree().length === 3) {
+      // portal crossroads: a portal in each lane, each to a different world. She picks!
+      const makers = [makePortal];
+      if (!inSea) makers.push(makeSeaPortal);
+      if (!inSpace) makers.push(makeStarPortal);
+      if (!inSpooky) makers.push(makeGhostPortal);
+      makers.sort(() => Math.random() - 0.5).splice(3);
+      const lanes = [0, 1, 2].sort(() => Math.random() - 0.5);
+      makers.forEach((mk, k) => { coinLine(lanes[k], SPAWN_Z + 12, 4, 0.8, 2.2); addObstacle(mk(), lanes[k], SPAWN_Z); });
+      if (makers.length < 3) coinLine(lanes[2], SPAWN_Z + 12, 8, 0.8, 2.2);
+      toast('Pick a portal!');
+      s.nextCross = s.distance + 260 + Math.random() * 120;
+      s.nextPortal = Math.max(s.nextPortal, s.distance + 100);
+      s.nextSea = Math.max(s.nextSea, s.distance + 100);
+      s.untilNext = 40;
+      return;
+    }
+    if (!tun && !s.gateReady && s.distance > s.nextSea && tallFree().length === 3) {
       // the bubble portal sits in one lane at the end of a trail of coins: find it to dive under the sea
       const li = Math.floor(Math.random() * 3);
       coinLine(li, SPAWN_Z + 16, 7, 0.8, 2.2);
-      addObstacle(makeSeaPortal(), li, SPAWN_Z);
-      s.nextSea = s.distance + 300 + Math.random() * 200; // missed it? another comes along
+      const ghostly = inSea || (!inSpooky && Math.random() < 0.5); // a bubble portal or a ghost portal
+      addObstacle(ghostly ? makeGhostPortal() : makeSeaPortal(), li, SPAWN_Z);
+      s.nextSea = s.distance + 220 + Math.random() * 150; // missed it? another comes along
       s.untilNext = 40;
       return;
     }
     if (!tun && !s.gateReady && s.distance > s.nextPortal && tallFree().length === 3) {
       // the portal gets a row all to itself, in a random lane
       addObstacle(makePortal(), Math.floor(Math.random() * 3), SPAWN_Z);
-      s.nextPortal = Infinity;
+      s.nextPortal = s.distance + 160 + Math.random() * 100; // missed it? another comes along
       s.untilNext = 40;
       return;
     }
@@ -3768,7 +4153,7 @@
   }
 
   // while zooming she steers and jumps by herself
-  const isHazard = (u) => !(u.portal || u.zoomPortal || u.boardPickup || u.magnetPickup || u.jetPickup || u.starPickup || u.spaceGate || u.seaPortal || u.pad || u.mystery);
+  const isHazard = (u) => !(u.portal || u.zoomPortal || u.boardPickup || u.magnetPickup || u.jetPickup || u.starPickup || u.spaceGate || u.seaPortal || u.starPortal || u.ghostPortal || u.pad || u.mystery);
   function hazardIn(li, from, to) {
     let near = Infinity, tall = false;
     for (const o of obstacles) {
@@ -3869,6 +4254,7 @@
     if (awayFromTown) for (const c of cottages) c.visible = false;
     updateSpace(dt, move);
     updateSea(dt, move);
+    updateSpooky(dt, move);
     updateFireworks(dt);
     updateDucks(dt, move, running);
     for (const b of billboards) {
@@ -3942,8 +4328,8 @@
         const hitX = Math.abs(o.position.x - s.x) < d.halfW + 0.22;
         const hitZ = Math.abs(o.position.z) < d.halfD + 0.18;
         const feet = s.y - d.base;
-        if (d.seaPortal) {
-          if (hitX && o.position.z > -0.6 && o.position.z - move < 0.6) { enterSea(); break; }
+        if (d.seaPortal || d.starPortal || d.ghostPortal) {
+          if (hitX && o.position.z > -0.6 && o.position.z - move < 0.6) { d.seaPortal ? enterSea() : d.starPortal ? enterSpace() : enterSpooky(); break; }
         } else if (d.spaceGate) {
           if (o.position.z > -0.6 && o.position.z - move < 0.6) { enterSpace(); break; } // can't be skipped over on a slow frame
         } else if (d.portal) {
@@ -3987,7 +4373,7 @@
         }
       }
       if (o.userData.portal) { o.userData.swirl.rotation.z -= dt * 4; }
-      if (o.userData.seaPortal) { o.userData.swirl.rotation.z += dt * 2; o.userData.orbit.rotation.z -= dt * 1.5; }
+      if (o.userData.seaPortal || o.userData.starPortal || o.userData.ghostPortal) { o.userData.swirl.rotation.z += dt * 2; o.userData.orbit.rotation.z -= dt * 1.5; }
       if (o.userData.zoomPortal) { o.userData.ring.rotation.z += dt * 3; }
       if (o.userData.mystery) {
         const u = o.userData;
@@ -4248,7 +4634,7 @@
     // he runs just off her shoulder so he never hides her from view
     const copSide = s.x > 0.5 ? -1.5 : 1.5;
     s.copX += (s.x + copSide - s.copX) * Math.min(1, dt * 5);
-    const copNear = obstacles.some(o => !o.userData.tall && !o.userData.portal && !o.userData.spaceGate && !o.userData.seaPortal && Math.abs(o.position.x - s.copX) < 1.2 && o.position.z - s.copZ > -2.5 && o.position.z - s.copZ < 0);
+    const copNear = obstacles.some(o => !o.userData.tall && !o.userData.portal && !o.userData.spaceGate && !o.userData.seaPortal && !o.userData.starPortal && !o.userData.ghostPortal && Math.abs(o.position.x - s.copX) < 1.2 && o.position.z - s.copZ > -2.5 && o.position.z - s.copZ < 0);
     if (copNear && s.copY <= copGround + 0.02) s.copVy = JUMP_V;
     s.copVy -= GRAVITY * (inSpace ? 0.6 : inSea ? 0.45 : 1) * dt;
     s.copY = Math.max(copGround, s.copY + s.copVy * dt);
@@ -4293,6 +4679,6 @@
   window.__hop = s;
   window.__hopWorld = () => ({ obstacles, platforms, LANES, ducks });
   window.__cottages = cottages;
-  window.__hopPower = { jet: startJet, star: startStar, space: enterSpace, sea: enterSea, sfx };
+  window.__hopPower = { jet: startJet, star: startStar, space: enterSpace, sea: enterSea, spooky: enterSpooky, halloween: () => { s.nextHallow = 0; }, sfx };
 })();
 </script>
