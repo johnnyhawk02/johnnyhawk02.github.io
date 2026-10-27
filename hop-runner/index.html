@@ -2867,12 +2867,13 @@
   const peakMat = new THREE.MeshLambertMaterial({ color: 0xeef0ff, fog: false });
   for (let i = 0; i < 18; i++) {
     const side = i % 2 ? 1 : -1;
-    const h = 16 + Math.random() * 26, r = h * (0.5 + Math.random() * 0.25);
+    const h = 24 + Math.random() * 28, r = h * (0.5 + Math.random() * 0.25);
     const m = new THREE.Mesh(new THREE.ConeGeometry(r, h, 6 + Math.floor(Math.random() * 3), 1), mountainMat);
     const cap = new THREE.Mesh(new THREE.ConeGeometry(r * 0.3, h * 0.3, m.geometry.parameters.radialSegments, 1), peakMat);
     cap.position.y = h * 0.35 + 0.05;
     m.add(cap);
-    m.position.set(side * (30 + Math.random() * 38), h / 2 - 1, -55 - Math.random() * 85);
+    const mz = -50 - Math.random() * 50, dz = (mz - 7.5) * 0.976;
+    m.position.set(side * (30 + Math.random() * 38), h / 2 - 1 - CURVE * dz * dz, mz); // sunk to sit on the curved horizon (they're drawn without the bend)
     m.rotation.y = Math.random() * Math.PI;
     mountains.add(m);
   }
