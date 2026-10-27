@@ -1335,7 +1335,7 @@
     const band = new THREE.Mesh(new THREE.TorusGeometry(70 - k * 2.2, 1.1, 6, 40, Math.PI), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.45, fog: false, depthWrite: false }));
     rainbow.add(band);
   });
-  rainbow.position.set(40, -8, -185);
+  rainbow.position.set(40, -38, -185); // low enough that its feet meet the curved horizon
   scene.add(rainbow);
 
   const clouds = [];
