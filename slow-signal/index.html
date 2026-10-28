@@ -76,6 +76,10 @@ button, select, input { font: inherit; color: inherit; }
 .file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .track { font-size: 12px; color: var(--ink-dim); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .track b { color: var(--ink); font-weight: 500; }
+#micBtn.on { border-color: var(--rec); color: var(--rec);
+  background: linear-gradient(to top, rgba(255, 77, 61, .28) var(--lv, 0%), transparent var(--lv, 0%)); }
+#micDev { flex: 1; min-width: 60px; max-width: 320px; margin-right: auto; }
+body.live #scrub { display: none; }
 select.sel {
   background: var(--rail); border: 1px solid var(--line); border-radius: 4px; padding: 5px 6px; font-size: 12px;
 }
@@ -247,7 +251,10 @@ table.matrix { border-collapse: collapse; width: 100%; min-width: 660px; }
   .matrix-head h2 { white-space: nowrap; flex: none; }
 }
 #loadLbl { display: inline-block; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
-@media (min-width: 1180px) and (max-width: 1460px) and (min-height: 600px) {
+@media (min-width: 1180px) and (max-width: 1279px) and (min-height: 600px) {
+  .brand { display: none; }
+}
+@media (min-width: 1180px) and (max-width: 1520px) and (min-height: 600px) {
   .brand small { display: none; }
   .brand { font-size: 12px; letter-spacing: .1em; }
   .track { display: none; }
@@ -317,6 +324,7 @@ body.perform.idle .perf-ui { opacity: 0; }
   <div class="brand">Slow Signal<small>LFO video synthesizer</small></div>
   <div class="group trackgrp">
     <label class="btn file-btn" for="file" id="loadBtn" title="Load a 3–6 minute audio track (or drop it on the screen)"><span id="loadLbl">Load audio</span><input id="file" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg"></label>
+    <button class="btn" id="micBtn" type="button" aria-pressed="false" title="Live input: a microphone or audio interface drives the audio sources (LVL, LOW, HI) instead of the track">Mic</button>
     <span class="track" id="track">No track yet, free-running</span>
   </div>
   <div class="grow"></div>
@@ -404,6 +412,7 @@ body.perform.idle .perf-ui { opacity: 0; }
         <button class="btn icon" id="play" type="button" aria-label="Play or pause">❚❚</button>
         <button class="btn icon" id="restart" type="button" aria-label="Back to start">⏮</button>
         <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Position">
+        <select class="sel" id="micDev" aria-label="Audio input" hidden></select>
         <span class="time mono" id="time">0:00.0 / 6:00</span>
         <button class="btn mark" id="setIn" type="button" title="Start the render here (key I). Shift-click to clear.">In</button>
         <button class="btn mark" id="setOut" type="button" title="End the render here (key O). Shift-click to clear.">Out</button>
@@ -551,7 +560,7 @@ function savePatch() {
 function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
 class Engine {
-  constructor() { this.features = null; this.reset(); }
+  constructor() { this.features = null; this.live = null; this.reset(); }
   reset() {
     this.n = 0;
     this.phase = new Float64Array(N_LFO);
@@ -569,6 +578,7 @@ class Engine {
   src(s) {
     if (s < 0) return 0;
     if (s < N_LFO) return this.val[s];
+    if (this.live) return this.live[s - N_LFO] * (patch.audioDepth ?? 1);
     const f = this.features;
     if (!f) return 0;
     return f[s - N_LFO][Math.min(this.n, f.len - 1)] * (patch.audioDepth ?? 1);
@@ -1085,6 +1095,7 @@ $("reset").addEventListener("click", () => { patch = defaultPatch(); syncAll(); 
 
 // ---------- audio loading & transport ----------
 let audioEl = null, audioBuf = null, features = null, trackName = "";
+let live = null;   // live input: { ctx, stream, an, buf, ref, env } while the mic is on
 let freeT = 0, playing = true, lastNow = performance.now();
 let inPt = 0, outPt = null;   // render in/out points in seconds; outPt null = end of track
 const engine = new Engine();
@@ -1093,6 +1104,7 @@ const duration = () => audioEl && isFinite(audioEl.duration) ? audioEl.duration 
 
 async function loadFile(file) {
   if (!file) return;
+  if (live) stopLive();
   $("track").textContent = `Reading ${file.name}…`;
   try {
     const bytes = await file.arrayBuffer();
@@ -1125,10 +1137,84 @@ document.addEventListener("drop", e => { const f = e.dataTransfer && e.dataTrans
 function setPlaying(on) {
   playing = on;
   $("play").textContent = on ? "❚❚" : "▶";
-  if (audioEl) { if (on) audioEl.play().catch(() => { playing = false; $("play").textContent = "▶"; }); else audioEl.pause(); }
+  if (audioEl && !live) { if (on) audioEl.play().catch(() => { playing = false; $("play").textContent = "▶"; }); else audioEl.pause(); }
 }
 $("play").addEventListener("click", () => setPlaying(!playing));
-$("restart").addEventListener("click", () => { if (audioEl) audioEl.currentTime = inPt; freeT = inPt; engine.reset(); });
+$("restart").addEventListener("click", () => { if (live) freeT = 0; else { if (audioEl) audioEl.currentTime = inPt; freeT = inPt; } engine.reset(); });
+
+// ---------- live input ----------
+async function startLive(deviceId) {
+  if (live) stopLive(true);
+  const btn = $("micBtn");
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $("track").textContent = "This browser has no microphone input."; return; }
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: {
+      deviceId: deviceId ? { exact: deviceId } : undefined,
+      echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+  } catch (e) {
+    $("track").textContent = e && e.name === "NotAllowedError"
+      ? "Microphone blocked. Allow it for this site in the browser, or open the website version."
+      : "Couldn't open an audio input.";
+    return;
+  }
+  const ctx = new AudioContext();
+  const src = ctx.createMediaStreamSource(stream);
+  const tap = node => { const a = ctx.createAnalyser(); a.fftSize = 2048; node.connect(a); return a; };
+  const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 180; src.connect(lp);
+  const hp = ctx.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 2500; src.connect(hp);
+  // the input is analysed only, never played back, so there's no feedback through the speakers
+  live = { ctx, stream, an: [tap(src), tap(lp), tap(hp)], buf: new Float32Array(2048), ref: [0.02, 0.02, 0.02], env: new Float32Array(3) };
+  engine.live = live.env;
+  if (audioEl) audioEl.pause();
+  freeT = 0; engine.reset(); setPlaying(true);
+  btn.classList.add("on"); btn.setAttribute("aria-pressed", "true");
+  ["scrub", "setIn", "setOut"].forEach(id => $(id).disabled = true);
+  document.body.classList.add("live");
+  const label = stream.getAudioTracks()[0]?.label || "Microphone";
+  $("track").textContent = ""; $("track").append(el("b", {}, "Live"), " · " + label); $("track").title = label;
+  // list the inputs (names are only shown after permission)
+  try {
+    const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "audioinput");
+    const sel = $("micDev"), cur = stream.getAudioTracks()[0]?.getSettings().deviceId;
+    sel.textContent = "";
+    devs.forEach((d, i) => sel.append(el("option", { value: d.deviceId }, d.label || `Input ${i + 1}`)));
+    if (cur) sel.value = cur;
+    sel.hidden = false;
+  } catch (e) {}
+}
+function stopLive(switching) {
+  if (!live) return;
+  live.stream.getTracks().forEach(t => t.stop());
+  live.ctx.close().catch(() => {});
+  live = null; engine.live = null;
+  if (switching) return;
+  const btn = $("micBtn"); btn.classList.remove("on"); btn.setAttribute("aria-pressed", "false"); btn.style.removeProperty("--lv");
+  $("micDev").hidden = true;
+  ["scrub", "setIn", "setOut"].forEach(id => $(id).disabled = false);
+  document.body.classList.remove("live");
+  const tr = $("track"); tr.textContent = ""; tr.title = "";
+  if (audioBuf) tr.append(el("b", {}, trackName), ` · ${fmtTime(audioBuf.duration).replace(/\.\d$/, "")}`);
+  else tr.textContent = "No track yet, free-running";
+  engine.reset(); setPlaying(false);
+}
+$("micBtn").addEventListener("click", () => live ? stopLive() : startLive());
+$("micDev").addEventListener("change", e => startLive(e.target.value));
+function updateLive(dt) {
+  const L = live, sr = L.ctx.sampleRate;
+  const n = Math.min(2048, Math.max(256, Math.round(sr * Math.max(dt, 1 / 120))));
+  const att = 1 - Math.exp(-dt / 0.012), rel = 1 - Math.exp(-dt / 0.18), fall = Math.exp(-dt / 8);
+  for (let k = 0; k < 3; k++) {
+    L.an[k].getFloatTimeDomainData(L.buf);
+    let sum = 0; for (let i = 2048 - n; i < 2048; i++) sum += L.buf[i] * L.buf[i];
+    const rms = Math.sqrt(sum / n);
+    // auto-gain: scale to the loudest recent level, which fades back over about 8 s (floor -40 dB)
+    L.ref[k] = Math.max(rms, L.ref[k] * fall, 0.01);
+    const v = Math.min(1, rms / (L.ref[k] * 0.9));
+    L.env[k] += (v > L.env[k] ? att : rel) * (v - L.env[k]);
+  }
+  $("micBtn").style.setProperty("--lv", (L.env[0] * 100).toFixed(1) + "%");
+}
 
 // ---------- in / out points ----------
 const nowT = () => audioEl ? audioEl.currentTime : freeT;
@@ -1158,6 +1244,7 @@ $("scrub").addEventListener("input", e => {
 document.addEventListener("keydown", e => {
   if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName) || e.metaKey || e.ctrlKey || e.altKey || !$("overlay").hidden) return;
   if (e.code === "Space" && document.activeElement.tagName !== "BUTTON") { e.preventDefault(); setPlaying(!playing); }
+  if (live) return;
   if (e.code === "KeyI") e.shiftKey ? (inPt = 0, showRegion()) : setIn(nowT());
   if (e.code === "KeyO") e.shiftKey ? (outPt = null, showRegion()) : setOut(nowT());
 });
@@ -1247,7 +1334,8 @@ function frame(now) {
   if (rendering || !renderer) return;
   stepMorph(now);
   let t;
-  if (audioEl) t = audioEl.currentTime;
+  if (live) { updateLive(dt); if (playing) freeT += dt; t = freeT; }
+  else if (audioEl) t = audioEl.currentTime;
   else { if (playing) freeT += dt; if (freeT > DEFAULT_DUR) freeT = 0; t = freeT; }
   const n0 = engine.n, nb = blurFrames();
   const us = [];
@@ -1273,8 +1361,11 @@ function frame(now) {
       lfoUI[i].live.textContent = (L.fmSrc >= 0 && L.fmAmt) || (patch.speed ?? 1) !== 1 ? "now " + fmtPeriod(liveRate(i)) : "";
     }
     const d = duration();
-    $("time").textContent = `${fmtTime(t)} / ${fmtTime(d).replace(/\.\d$/, "")}`;
-    if (document.activeElement !== $("scrub")) $("scrub").value = String(Math.round(t / d * 1000));
+    if (live) $("time").textContent = `LIVE ${fmtTime(t)}`;
+    else {
+      $("time").textContent = `${fmtTime(t)} / ${fmtTime(d).replace(/\.\d$/, "")}`;
+      if (document.activeElement !== $("scrub")) $("scrub").value = String(Math.round(t / d * 1000));
+    }
   }
 }
 requestAnimationFrame(frame);
