@@ -387,6 +387,7 @@ body.perform.idle .perf-ui { opacity: 0; }
   <label class="btn file-btn" for="presetImport" title="Import preset .json files">Import<input id="presetImport" type="file" accept=".json,application/json" multiple></label>
   <button class="btn" id="presetExport" type="button" title="Export the current patch as a .json file">Export</button>
   <button class="btn" id="presetExportAll" type="button" title="Export every saved preset in one .json file">Export all</button>
+  <button class="btn" id="presetCopy" type="button" title="Copy every saved preset as text, ready to paste into a message">Copy all</button>
   <span class="pmsg" id="presetMsg" role="status"></span>
   <span class="where" id="presetWhere" hidden>Saved in this browser</span>
   <div class="morphbar" id="morphBar" hidden><i></i></div>
@@ -1750,6 +1751,7 @@ function renderPresetList() {
   sel.value = presets.byId(currentPreset) ? currentPreset : "";
   $("presetDelete").disabled = !presets.list.some(y => y.id === sel.value);
   $("presetExportAll").disabled = !presets.list.length;
+  $("presetCopy").disabled = !presets.list.length;
 }
 function applyPatch(p) { if (morph) { morph = null; $("morphBar").hidden = true; } patch = p; syncAll(); savePatch(); }
 $("presetSel").addEventListener("change", e => {
@@ -1929,6 +1931,23 @@ $("presetExportAll").addEventListener("click", async () => {
     presets: presets.list.map(x => ({ name: x.name, savedAt: x.savedAt, patch: x.patch })) };
   const r = await offerDownload(`Slow Signal presets.json`, JSON.stringify(doc, null, 2));
   pmsg(r.msg, r.err);
+});
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
+  // fallback for frames where the async clipboard is blocked
+  const ta = el("textarea", { style: "position:fixed;left:-9999px;top:0;opacity:0" });
+  ta.value = text; document.body.append(ta); ta.select();
+  let ok = false; try { ok = document.execCommand("copy"); } catch (e) {}
+  ta.remove();
+  return ok;
+}
+$("presetCopy").addEventListener("click", async () => {
+  const list = [...presets.list].sort((a, b) => a.name.localeCompare(b.name));
+  // one preset per line keeps a big bank short enough to paste
+  const text = `{"format":"slow-signal-bank","version":1,"savedAt":${JSON.stringify(new Date().toISOString())},"presets":[\n` +
+    list.map(x => JSON.stringify({ name: x.name, patch: x.patch })).join(",\n") + "\n]}";
+  if (await copyText(text)) pmsg(`Copied ${list.length} preset${list.length === 1 ? "" : "s"}. Paste them into a message.`);
+  else pmsg("This page can't reach the clipboard. Use Export all instead.", true);
 });
 $("presetImport").addEventListener("change", async e => {
   const files = [...e.target.files]; e.target.value = "";
