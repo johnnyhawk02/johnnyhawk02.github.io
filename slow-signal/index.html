@@ -259,7 +259,11 @@ table.matrix { border-collapse: collapse; width: 100%; min-width: 660px; }
   .brand { font-size: 12px; letter-spacing: .1em; }
   .track { display: none; }
   #loadLbl { max-width: 110px; }
-  .speed input { width: 54px; }
+  .speed input { width: 54px; height: 14px; }
+  /* label above the slider so four sliders fit beside the buttons */
+  .speed { display: grid; grid-template-columns: auto auto; column-gap: 4px; row-gap: 0; padding: 2px 8px 1px; align-items: center; }
+  .speed .lbl { grid-column: 1 / -1; font-size: 9px; line-height: 11px; }
+  .speed-val { font-size: 11px; width: 42px; white-space: nowrap; }
   .top { gap: 8px; }
   .top .group { gap: 6px; }
   .track { max-width: 110px; }
@@ -338,6 +342,11 @@ body.perform.idle .perf-ui { opacity: 0; }
       <span class="lbl">Audio</span>
       <input type="range" id="audioDepth" min="0" max="100" step="1" value="100" aria-label="Audio effect depth">
       <span class="mono speed-val" id="audioVal">100%</span>
+    </label>
+    <label class="speed" for="audioBoost" title="Boosts the audio the synth listens to (not the sound you hear or render). Above 100% quieter passages push harder and loud ones hit the top. Double-click for 100%.">
+      <span class="lbl">Boost</span>
+      <input type="range" id="audioBoost" min="0" max="200" step="1" value="100" aria-label="Audio boost for the synth">
+      <span class="mono speed-val" id="boostVal">100%</span>
     </label>
     <label class="speed" for="slew" title="Global slew: every visual control eases toward its new value over this time. Double-click for 0.">
       <span class="lbl">Slew</span>
@@ -541,7 +550,7 @@ function defaultPatch() {
   set("hue", 0, 0.5); set("zoom", 1, 0.25); set("rot", 2, 0.3); set("warp", 3, 0.3);
   set("chroma", 4, 0.15); set("seg", 5, 0.45); set("fbRot", 6, 0.4); set("shape", 7, 0.5);
   set("bright", 8, 0.25); set("fbZoom", 9, 0.35); set("scan", 10, 0.3); set("spread", 1, -0.3); set("contour", 3, 0.25);
-  return { lfos, base, mod, speed: 1, slew: 0, audioDepth: 1 };
+  return { lfos, base, mod, speed: 1, slew: 0, audioDepth: 1, audioBoost: 1 };
 }
 let patch = loadPatch() || defaultPatch();
 function loadPatch() {
@@ -579,10 +588,12 @@ class Engine {
   src(s) {
     if (s < 0) return 0;
     if (s < N_LFO) return this.val[s];
-    if (this.live) return this.live[s - N_LFO] * (patch.audioDepth ?? 1);
+    // boost drives the analysis signal (clipping at full scale), depth then sets how far it moves things
+    const g = patch.audioBoost ?? 1, d = patch.audioDepth ?? 1;
+    if (this.live) return Math.min(1, this.live[s - N_LFO] * g) * d;
     const f = this.features;
     if (!f) return 0;
-    return f[s - N_LFO][Math.min(this.n, f.len - 1)] * (patch.audioDepth ?? 1);
+    return Math.min(1, f[s - N_LFO][Math.min(this.n, f.len - 1)] * g) * d;
   }
   computeVals() {
     for (let i = 0; i < N_LFO; i++) {
@@ -1046,10 +1057,11 @@ $("speed").addEventListener("input", e => {
 $("speed").addEventListener("dblclick", () => { patch.speed = 1; syncSpeed(); savePatch(); });
 function syncSlew() {
   const v = patch.slew || 0;
-  $("slew").value = String(Math.round(v * 1000));
-  $("slewVal").textContent = v.toFixed(2) + " s";
+  $("slew").value = String(Math.round(Math.cbrt(v) * 1000));
+  $("slewVal").textContent = v < 0.1 && v > 0 ? Math.round(v * 1000) + " ms" : v.toFixed(2) + " s";
 }
-$("slew").addEventListener("input", e => { patch.slew = +e.target.value / 1000; syncSlew(); savePatch(); });
+// cubic taper: the first 58% of the travel covers 0 to 0.2 s
+$("slew").addEventListener("input", e => { patch.slew = Math.round(Math.pow(+e.target.value / 1000, 3) * 1000) / 1000; syncSlew(); savePatch(); });
 $("slew").addEventListener("dblclick", () => { patch.slew = 0; syncSlew(); savePatch(); });
 function syncAudioDepth() {
   const v = patch.audioDepth ?? 1;
@@ -1058,9 +1070,16 @@ function syncAudioDepth() {
 }
 $("audioDepth").addEventListener("input", e => { patch.audioDepth = +e.target.value / 100; syncAudioDepth(); savePatch(); });
 $("audioDepth").addEventListener("dblclick", () => { patch.audioDepth = 1; syncAudioDepth(); savePatch(); });
+function syncBoost() {
+  const v = patch.audioBoost ?? 1;
+  $("audioBoost").value = String(Math.round(v * 100));
+  $("boostVal").textContent = Math.round(v * 100) + "%";
+}
+$("audioBoost").addEventListener("input", e => { patch.audioBoost = +e.target.value / 100; syncBoost(); savePatch(); });
+$("audioBoost").addEventListener("dblclick", () => { patch.audioBoost = 1; syncBoost(); savePatch(); });
 try { const b = localStorage.getItem("slowsignal.blur"); if (b && [...$("blur").options].some(o => o.value === b)) $("blur").value = b; } catch (e) {}
 $("blur").addEventListener("change", e => { try { localStorage.setItem("slowsignal.blur", e.target.value); } catch (err) {} });
-function syncAll() { syncSpeed(); syncSlew(); syncAudioDepth(); for (let i = 0; i < N_LFO; i++) syncLfo(i); for (let i = 0; i < PK.length; i++) syncRow(i); }
+function syncAll() { syncSpeed(); syncSlew(); syncAudioDepth(); syncBoost(); for (let i = 0; i < N_LFO; i++) syncLfo(i); for (let i = 0; i < PK.length; i++) syncRow(i); }
 syncAll();
 
 // ---------- randomise / init ----------
@@ -1090,6 +1109,7 @@ $("randomise").addEventListener("click", () => {
   p.speed = patch.speed ?? 1;
   p.slew = patch.slew || 0;
   p.audioDepth = patch.audioDepth ?? 1;
+  p.audioBoost = patch.audioBoost ?? 1;
   patch = p; syncAll(); savePatch();
 });
 $("reset").addEventListener("click", () => { patch = defaultPatch(); syncAll(); savePatch(); });
@@ -1614,6 +1634,7 @@ function patchToJSON(p) {
     speed: p.speed ?? 1,
     slew: p.slew || 0,
     audioDepth: p.audioDepth ?? 1,
+    audioBoost: p.audioBoost ?? 1,
     lfos: p.lfos.map(L => ({ period: +L.period.toPrecision(6), shape: SHAPES[L.shape], fm: L.fmSrc < 0 ? null : SRC[L.fmSrc], fmDepth: L.fmAmt })),
     controls: Object.fromEntries(PK.map((P, i) => {
       const mod = {};
@@ -1630,6 +1651,7 @@ function patchFromJSON(j) {
   p.speed = Math.max(0.01, Math.min(1, num(j.speed, 1)));
   p.slew = Math.max(0, Math.min(1, num(j.slew, 0)));
   p.audioDepth = Math.max(0, Math.min(1, num(j.audioDepth, 1)));
+  p.audioBoost = Math.max(0, Math.min(2, num(j.audioBoost, 1)));
   p.lfos = p.lfos.map((d, i) => {
     const L = j.lfos[i] || {};
     const sh = SHAPES.indexOf(L.shape);
@@ -1826,6 +1848,7 @@ function lerpPatch(a, b, x) {
     speed: G(a.speed ?? 1, b.speed ?? 1),
     slew: L(a.slew || 0, b.slew || 0),
     audioDepth: L(a.audioDepth ?? 1, b.audioDepth ?? 1),
+    audioBoost: L(a.audioBoost ?? 1, b.audioBoost ?? 1),
     lfos: a.lfos.map((A, i) => {
       const B = b.lfos[i];
       let fmSrc, fmAmt;
