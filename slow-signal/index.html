@@ -251,8 +251,11 @@ table.matrix { border-collapse: collapse; width: 100%; min-width: 660px; }
   .matrix-head h2 { white-space: nowrap; flex: none; }
 }
 #loadLbl { display: inline-block; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
-@media (min-width: 1180px) and (max-width: 1279px) and (min-height: 600px) {
+@media (min-width: 1180px) and (max-width: 1400px) and (min-height: 600px) {
   .brand { display: none; }
+}
+@media (min-width: 1180px) and (max-width: 1279px) and (min-height: 600px) {
+  .top .speed input { width: 40px; }
 }
 @media (min-width: 1180px) and (max-width: 1520px) and (min-height: 600px) {
   .brand small { display: none; }
@@ -301,6 +304,14 @@ body.perform.idle .perf-ui { opacity: 0; }
   position: absolute; top: calc(16px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
   background: rgba(10, 12, 16, .55); color: #f2f2f2; border: 1px solid rgba(255,255,255,.25); border-radius: 6px; padding: 6px 12px; cursor: pointer;
 }
+.perf-mic {
+  position: absolute; top: calc(16px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));
+  display: flex; align-items: center; gap: 6px; padding: 6px 12px 6px 10px; cursor: pointer;
+  background: rgba(10, 12, 16, .55); color: #f2f2f2; border: 1px solid rgba(255,255,255,.25); border-radius: 6px; font: inherit;
+}
+.perf-mic svg { width: 16px; height: 16px; }
+.perf-mic.on { color: var(--rec); border-color: var(--rec);
+  background: linear-gradient(to top, rgba(255, 77, 61, .35) var(--lv, 0%), rgba(10, 12, 16, .55) var(--lv, 0%)); }
 .overlay { position: fixed; inset: 0; background: rgba(8, 9, 12, .82); display: grid; place-items: center; z-index: 20; padding: 16px; }
 .dialog {
   width: min(520px, 100%); background: var(--module); border: 1px solid var(--line); border-radius: 10px; padding: 18px;
@@ -347,6 +358,11 @@ body.perform.idle .perf-ui { opacity: 0; }
       <span class="lbl">Boost</span>
       <input type="range" id="audioBoost" min="0" max="200" step="1" value="100" aria-label="Audio boost for the synth">
       <span class="mono speed-val" id="boostVal">100%</span>
+    </label>
+    <label class="speed" for="audioGate" title="Gate for the audio the synth listens to (not the sound you hear or render). Anything quieter than this, after Boost, doesn't move the visuals. Double-click for off.">
+      <span class="lbl">Gate</span>
+      <input type="range" id="audioGate" min="0" max="90" step="1" value="0" aria-label="Audio gate threshold for the synth">
+      <span class="mono speed-val" id="gateVal">Off</span>
     </label>
     <label class="speed" for="slew" title="Global slew: every visual control eases toward its new value over this time. Double-click for 0.">
       <span class="lbl">Slew</span>
@@ -415,6 +431,7 @@ body.perform.idle .perf-ui { opacity: 0; }
           <button class="perf-arrow right" id="perfNext" type="button" aria-label="Next preset">›</button>
           <div class="perf-name" id="perfName" aria-live="polite"></div>
           <button class="perf-exit" id="perfExit" type="button">Exit</button>
+          <button class="perf-mic" id="perfMic" type="button" aria-pressed="false" title="Live input from the microphone (M)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><path d="M12 18v4"/><path d="M8 22h8"/></svg>Mic in</button>
         </div>
       </div>
       </div>
@@ -550,7 +567,7 @@ function defaultPatch() {
   set("hue", 0, 0.5); set("zoom", 1, 0.25); set("rot", 2, 0.3); set("warp", 3, 0.3);
   set("chroma", 4, 0.15); set("seg", 5, 0.45); set("fbRot", 6, 0.4); set("shape", 7, 0.5);
   set("bright", 8, 0.25); set("fbZoom", 9, 0.35); set("scan", 10, 0.3); set("spread", 1, -0.3); set("contour", 3, 0.25);
-  return { lfos, base, mod, speed: 1, slew: 0, audioDepth: 1, audioBoost: 1 };
+  return { lfos, base, mod, speed: 1, slew: 0, audioDepth: 1, audioBoost: 1, audioGate: 0 };
 }
 let patch = loadPatch() || defaultPatch();
 function loadPatch() {
@@ -589,11 +606,13 @@ class Engine {
     if (s < 0) return 0;
     if (s < N_LFO) return this.val[s];
     // boost drives the analysis signal (clipping at full scale), depth then sets how far it moves things
-    const g = patch.audioBoost ?? 1, d = patch.audioDepth ?? 1;
-    if (this.live) return Math.min(1, this.live[s - N_LFO] * g) * d;
     const f = this.features;
-    if (!f) return 0;
-    return Math.min(1, f[s - N_LFO][Math.min(this.n, f.len - 1)] * g) * d;
+    if (!this.live && !f) return 0;
+    let v = Math.min(1, (this.live ? this.live[s - N_LFO] : f[s - N_LFO][Math.min(this.n, f.len - 1)]) * (patch.audioBoost ?? 1));
+    // gate: below the threshold is silence; above it the range is stretched back to 0..1 so it opens without a jump
+    const th = patch.audioGate || 0;
+    if (th > 0) v = v <= th ? 0 : (v - th) / (1 - th);
+    return v * (patch.audioDepth ?? 1);
   }
   computeVals() {
     for (let i = 0; i < N_LFO; i++) {
@@ -1077,9 +1096,16 @@ function syncBoost() {
 }
 $("audioBoost").addEventListener("input", e => { patch.audioBoost = +e.target.value / 100; syncBoost(); savePatch(); });
 $("audioBoost").addEventListener("dblclick", () => { patch.audioBoost = 1; syncBoost(); savePatch(); });
+function syncGate() {
+  const v = patch.audioGate || 0;
+  $("audioGate").value = String(Math.round(v * 100));
+  $("gateVal").textContent = v > 0 ? Math.round(v * 100) + "%" : "Off";
+}
+$("audioGate").addEventListener("input", e => { patch.audioGate = +e.target.value / 100; syncGate(); savePatch(); });
+$("audioGate").addEventListener("dblclick", () => { patch.audioGate = 0; syncGate(); savePatch(); });
 try { const b = localStorage.getItem("slowsignal.blur"); if (b && [...$("blur").options].some(o => o.value === b)) $("blur").value = b; } catch (e) {}
 $("blur").addEventListener("change", e => { try { localStorage.setItem("slowsignal.blur", e.target.value); } catch (err) {} });
-function syncAll() { syncSpeed(); syncSlew(); syncAudioDepth(); syncBoost(); for (let i = 0; i < N_LFO; i++) syncLfo(i); for (let i = 0; i < PK.length; i++) syncRow(i); }
+function syncAll() { syncSpeed(); syncSlew(); syncAudioDepth(); syncBoost(); syncGate(); for (let i = 0; i < N_LFO; i++) syncLfo(i); for (let i = 0; i < PK.length; i++) syncRow(i); }
 syncAll();
 
 // ---------- randomise / init ----------
@@ -1110,6 +1136,7 @@ $("randomise").addEventListener("click", () => {
   p.slew = patch.slew || 0;
   p.audioDepth = patch.audioDepth ?? 1;
   p.audioBoost = patch.audioBoost ?? 1;
+  p.audioGate = patch.audioGate || 0;
   patch = p; syncAll(); savePatch();
 });
 $("reset").addEventListener("click", () => { patch = defaultPatch(); syncAll(); savePatch(); });
@@ -1189,7 +1216,7 @@ async function startLive(deviceId) {
   engine.live = live.env;
   if (audioEl) audioEl.pause();
   freeT = 0; engine.reset(); setPlaying(true);
-  btn.classList.add("on"); btn.setAttribute("aria-pressed", "true");
+  for (const b of [btn, $("perfMic")]) { b.classList.add("on"); b.setAttribute("aria-pressed", "true"); }
   ["scrub", "setIn", "setOut"].forEach(id => $(id).disabled = true);
   document.body.classList.add("live");
   const label = stream.getAudioTracks()[0]?.label || "Microphone";
@@ -1210,7 +1237,7 @@ function stopLive(switching) {
   live.ctx.close().catch(() => {});
   live = null; engine.live = null;
   if (switching) return;
-  const btn = $("micBtn"); btn.classList.remove("on"); btn.setAttribute("aria-pressed", "false"); btn.style.removeProperty("--lv");
+  for (const b of [$("micBtn"), $("perfMic")]) { b.classList.remove("on"); b.setAttribute("aria-pressed", "false"); b.style.removeProperty("--lv"); }
   $("micDev").hidden = true;
   ["scrub", "setIn", "setOut"].forEach(id => $(id).disabled = false);
   document.body.classList.remove("live");
@@ -1220,6 +1247,7 @@ function stopLive(switching) {
   engine.reset(); setPlaying(false);
 }
 $("micBtn").addEventListener("click", () => live ? stopLive() : startLive());
+$("perfMic").addEventListener("click", () => live ? stopLive() : startLive());
 $("micDev").addEventListener("change", e => startLive(e.target.value));
 function updateLive(dt) {
   const L = live, sr = L.ctx.sampleRate;
@@ -1234,7 +1262,8 @@ function updateLive(dt) {
     const v = Math.min(1, rms / (L.ref[k] * 0.9));
     L.env[k] += (v > L.env[k] ? att : rel) * (v - L.env[k]);
   }
-  $("micBtn").style.setProperty("--lv", (L.env[0] * 100).toFixed(1) + "%");
+  const lv = (L.env[0] * 100).toFixed(1) + "%";
+  $("micBtn").style.setProperty("--lv", lv); $("perfMic").style.setProperty("--lv", lv);
 }
 
 // ---------- in / out points ----------
@@ -1265,6 +1294,7 @@ $("scrub").addEventListener("input", e => {
 document.addEventListener("keydown", e => {
   if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName) || e.metaKey || e.ctrlKey || e.altKey || !$("overlay").hidden) return;
   if (e.code === "Space" && document.activeElement.tagName !== "BUTTON") { e.preventDefault(); setPlaying(!playing); }
+  if (e.code === "KeyM") { live ? stopLive() : startLive(); return; }
   if (live) return;
   if (e.code === "KeyI") e.shiftKey ? (inPt = 0, showRegion()) : setIn(nowT());
   if (e.code === "KeyO") e.shiftKey ? (outPt = null, showRegion()) : setOut(nowT());
@@ -1635,6 +1665,7 @@ function patchToJSON(p) {
     slew: p.slew || 0,
     audioDepth: p.audioDepth ?? 1,
     audioBoost: p.audioBoost ?? 1,
+    audioGate: p.audioGate || 0,
     lfos: p.lfos.map(L => ({ period: +L.period.toPrecision(6), shape: SHAPES[L.shape], fm: L.fmSrc < 0 ? null : SRC[L.fmSrc], fmDepth: L.fmAmt })),
     controls: Object.fromEntries(PK.map((P, i) => {
       const mod = {};
@@ -1652,6 +1683,7 @@ function patchFromJSON(j) {
   p.slew = Math.max(0, Math.min(1, num(j.slew, 0)));
   p.audioDepth = Math.max(0, Math.min(1, num(j.audioDepth, 1)));
   p.audioBoost = Math.max(0, Math.min(2, num(j.audioBoost, 1)));
+  p.audioGate = Math.max(0, Math.min(0.9, num(j.audioGate, 0)));
   p.lfos = p.lfos.map((d, i) => {
     const L = j.lfos[i] || {};
     const sh = SHAPES.indexOf(L.shape);
@@ -1849,6 +1881,7 @@ function lerpPatch(a, b, x) {
     slew: L(a.slew || 0, b.slew || 0),
     audioDepth: L(a.audioDepth ?? 1, b.audioDepth ?? 1),
     audioBoost: L(a.audioBoost ?? 1, b.audioBoost ?? 1),
+    audioGate: L(a.audioGate || 0, b.audioGate || 0),
     lfos: a.lfos.map((A, i) => {
       const B = b.lfos[i];
       let fmSrc, fmAmt;
