@@ -299,17 +299,9 @@
   const BASE_START = 12.5;     // world units per second
   const BASE_MAX = 19.5;       // kept gentle for little players
   const BOARD_BOOST = 1.22;    // a bit quicker on the hoverboard
-  // adaptive help: short runs ease the speed down, long runs bring it back up
-  let ease = 0;
-  try { ease = Math.min(0.3, Math.max(0, Number(localStorage.getItem('hopRunnerEase')) || 0)); } catch (e) {}
-  let START_SPEED = BASE_START * (1 - ease), MAX_SPEED = BASE_MAX * (1 - ease);
-  function adaptSpeed(dist) {
-    if (dist < 250) ease = Math.min(0.3, ease + (dist < 120 ? 0.07 : 0.04));
-    else if (dist > 450) ease = Math.max(0, ease - 0.05);
-    START_SPEED = BASE_START * (1 - ease);
-    MAX_SPEED = BASE_MAX * (1 - ease);
-    try { localStorage.setItem('hopRunnerEase', ease.toFixed(3)); } catch (e) {}
-  }
+  // always full speed: no easing off after short runs (Johnny: it made it boring)
+  const START_SPEED = BASE_START, MAX_SPEED = BASE_MAX;
+  try { localStorage.removeItem('hopRunnerEase'); } catch (e) {} // forget any slow-down saved by the old helper
   const SPEED_RAMP = 0.08;     // speed gained per second of running
   const GRAVITY = 26;
   const JUMP_V = 10;           // peak ≈ 1.9 units, every obstacle is ≤ 1.0 tall
@@ -4125,7 +4117,6 @@
     s.caught = caught;
     s.crashT = 0;
     s.vy = 6;
-    adaptSpeed(s.distance);
     if (s.distance > best) {
       best = s.distance;
       try { localStorage.setItem('hopRunnerBest', String(Math.floor(best))); } catch (e) {}
