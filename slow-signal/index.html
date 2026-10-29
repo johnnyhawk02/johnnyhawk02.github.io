@@ -175,9 +175,9 @@ table.matrix { border-collapse: collapse; width: 100%; min-width: 660px; }
 .cell:hover span { outline: 1px solid var(--ink-dim); outline-offset: 2px; }
 .matrix tbody tr:hover td { background: rgba(255,255,255,.025); }
 
-.speed { display: flex; align-items: center; gap: 8px; padding: 4px 10px; background: var(--rail); border: 1px solid var(--line); border-radius: var(--r); --thumb: var(--focus); }
-.speed input { width: 120px; }
-.speed-val { font-size: 12px; width: 46px; text-align: right; }
+.knob { display: flex; align-items: center; gap: 8px; padding: 4px 10px; background: var(--rail); border: 1px solid var(--line); border-radius: var(--r); --thumb: var(--focus); }
+.knob input { width: 120px; }
+.knob-val { font-size: 12px; width: 46px; text-align: right; }
 .presets {
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px;
   background: var(--rail); border: 1px solid var(--line); border-radius: var(--r);
@@ -224,9 +224,9 @@ table.matrix { border-collapse: collapse; width: 100%; min-width: 660px; }
   .brand { font-size: 14px; }
   .group { flex-wrap: nowrap; }
   .track { max-width: 170px; }
-  .speed { padding: 3px 8px; gap: 6px; }
-  .speed input { width: 64px; }
-  .speed .lbl { letter-spacing: .08em; }
+  .knob { padding: 3px 8px; gap: 6px; }
+  .knob input { width: 64px; }
+  .knob .lbl { letter-spacing: .08em; }
   .presets { flex-wrap: nowrap; padding: 5px 8px; margin-bottom: 8px; gap: 6px; }
   .presets .btn { padding: 4px 8px; font-size: 12px; }
   .presets input[type=text] { width: 150px; }
@@ -255,18 +255,18 @@ table.matrix { border-collapse: collapse; width: 100%; min-width: 660px; }
   .brand { display: none; }
 }
 @media (min-width: 1180px) and (max-width: 1279px) and (min-height: 600px) {
-  .top .speed input { width: 40px; }
+  .top .knob input { width: 40px; }
 }
 @media (min-width: 1180px) and (max-width: 1520px) and (min-height: 600px) {
   .brand small { display: none; }
   .brand { font-size: 12px; letter-spacing: .1em; }
   .track { display: none; }
   #loadLbl { max-width: 110px; }
-  .speed input { width: 54px; height: 14px; }
+  .knob input { width: 54px; height: 14px; }
   /* label above the slider so four sliders fit beside the buttons */
-  .speed { display: grid; grid-template-columns: auto auto; column-gap: 4px; row-gap: 0; padding: 2px 8px 1px; align-items: center; }
-  .speed .lbl { grid-column: 1 / -1; font-size: 9px; line-height: 11px; }
-  .speed-val { font-size: 11px; width: 42px; white-space: nowrap; }
+  .knob { display: grid; grid-template-columns: auto auto; column-gap: 4px; row-gap: 0; padding: 2px 8px 1px; align-items: center; }
+  .knob .lbl { grid-column: 1 / -1; font-size: 9px; line-height: 11px; }
+  .knob-val { font-size: 11px; width: 42px; white-space: nowrap; }
   .top { gap: 8px; }
   .top .group { gap: 6px; }
   .track { max-width: 110px; }
@@ -344,30 +344,30 @@ body.perform.idle .perf-ui { opacity: 0; }
   </div>
   <div class="grow"></div>
   <div class="group">
-    <label class="speed" for="speed" title="Slows every LFO, the pattern flow and the feedback motion. Double-click for 1×.">
+    <label class="knob" for="speed" title="Slows every LFO, the pattern flow and the feedback motion. Double-click for 1×.">
       <span class="lbl">Speed</span>
       <input type="range" id="speed" min="0" max="1000" step="1" value="1000" aria-label="Master speed">
-      <span class="mono speed-val" id="speedVal">1.00×</span>
+      <span class="mono knob-val" id="speedVal">1.00×</span>
     </label>
-    <label class="speed" for="audioDepth" title="How strongly the audio (level, lows, highs) moves everything it is patched to. Double-click for 100%.">
+    <label class="knob" for="audioDepth" title="How strongly the audio (level, lows, highs) moves everything it is patched to. Double-click for 100%.">
       <span class="lbl">Audio</span>
       <input type="range" id="audioDepth" min="0" max="100" step="1" value="100" aria-label="Audio effect depth">
-      <span class="mono speed-val" id="audioVal">100%</span>
+      <span class="mono knob-val" id="audioDepthVal">100%</span>
     </label>
-    <label class="speed" for="audioBoost" title="Boosts the audio the synth listens to (not the sound you hear or render). Above 100% quieter passages push harder and loud ones hit the top. Double-click for 100%.">
+    <label class="knob" for="audioBoost" title="Boosts the audio the synth listens to (not the sound you hear or render). Above 100% quieter passages push harder and loud ones hit the top. Double-click for 100%.">
       <span class="lbl">Boost</span>
       <input type="range" id="audioBoost" min="0" max="200" step="1" value="100" aria-label="Audio boost for the synth">
-      <span class="mono speed-val" id="boostVal">100%</span>
+      <span class="mono knob-val" id="audioBoostVal">100%</span>
     </label>
-    <label class="speed" for="audioGate" title="Gate for the audio the synth listens to (not the sound you hear or render). Anything quieter than this, after Boost, doesn't move the visuals. Double-click for off.">
+    <label class="knob" for="audioGate" title="Gate for the audio the synth listens to (not the sound you hear or render). Anything quieter than this, after Boost, doesn't move the visuals. Double-click for off.">
       <span class="lbl">Gate</span>
       <input type="range" id="audioGate" min="0" max="90" step="1" value="0" aria-label="Audio gate threshold for the synth">
-      <span class="mono speed-val" id="gateVal">Off</span>
+      <span class="mono knob-val" id="audioGateVal">Off</span>
     </label>
-    <label class="speed" for="slew" title="Global slew: every visual control eases toward its new value over this time. Double-click for 0.">
+    <label class="knob" for="slew" title="Global slew: every visual control eases toward its new value over this time. Double-click for 0.">
       <span class="lbl">Slew</span>
       <input type="range" id="slew" min="0" max="1000" step="1" value="0" aria-label="Global slew time">
-      <span class="mono speed-val" id="slewVal">0.00 s</span>
+      <span class="mono knob-val" id="slewVal">0.00 s</span>
     </label>
   </div>
   <div class="group">
@@ -547,6 +547,25 @@ const PARAMS = [
   { k: "scan", n: "Scanlines", min: 0, max: 1, d: 0.15 },
 ];
 const PK = PARAMS.filter(p => p.k);
+
+// Global controls in the top bar. This one table drives their defaults, sliders, preset files and glides.
+// Each slider's input id is `k`, its readout `k + "Val"`; toPos/fromPos map value <-> slider position.
+const pct = { toPos: v => Math.round(v * 100), fromPos: x => x / 100, fmt: v => Math.round(v * 100) + "%" };
+const GLOBALS = [
+  { k: "speed", def: 1, min: 0.01, max: 1, glide: "log",
+    toPos: v => Math.round(Math.log(v / 0.01) / Math.log(100) * 1000),
+    fromPos: x => { const v = 0.01 * Math.pow(100, x / 1000); return v > 0.985 ? 1 : +v.toPrecision(3); },
+    fmt: v => (v < 0.1 ? v.toFixed(3) : v.toFixed(2)) + "×" },
+  { k: "audioDepth", def: 1, min: 0, max: 1, ...pct },
+  { k: "audioBoost", def: 1, min: 0, max: 2, ...pct },
+  { k: "audioGate", def: 0, min: 0, max: 0.9, ...pct, fmt: v => v > 0 ? pct.fmt(v) : "Off" },
+  // cubic taper: the first 58% of the travel covers 0 to 0.2 s
+  { k: "slew", def: 0, min: 0, max: 1,
+    toPos: v => Math.round(Math.cbrt(v) * 1000),
+    fromPos: x => Math.round(Math.pow(x / 1000, 3) * 1000) / 1000,
+    fmt: v => v < 0.1 && v > 0 ? Math.round(v * 1000) + " ms" : v.toFixed(2) + " s" },
+];
+const globalDefaults = () => Object.fromEntries(GLOBALS.map(g => [g.k, g.def]));
 const PIDX = Object.fromEntries(PK.map((p, i) => [p.k, i]));
 
 // ---------- patch state ----------
@@ -567,13 +586,17 @@ function defaultPatch() {
   set("hue", 0, 0.5); set("zoom", 1, 0.25); set("rot", 2, 0.3); set("warp", 3, 0.3);
   set("chroma", 4, 0.15); set("seg", 5, 0.45); set("fbRot", 6, 0.4); set("shape", 7, 0.5);
   set("bright", 8, 0.25); set("fbZoom", 9, 0.35); set("scan", 10, 0.3); set("spread", 1, -0.3); set("contour", 3, 0.25);
-  return { lfos, base, mod, speed: 1, slew: 0, audioDepth: 1, audioBoost: 1, audioGate: 0 };
+  return { lfos, base, mod, ...globalDefaults() };
 }
 let patch = loadPatch() || defaultPatch();
 function loadPatch() {
   try {
     const p = JSON.parse(localStorage.getItem("slowsignal.patch.v1"));
-    if (p && p.lfos && p.lfos.length === N_LFO && p.base.length === PK.length && p.mod.length === PK.length) return p;
+    if (p && p.lfos && p.lfos.length === N_LFO && p.base.length === PK.length && p.mod.length === PK.length) {
+      // state saved before a control existed gets that control's default
+      for (const g of GLOBALS) if (typeof p[g.k] !== "number") p[g.k] = g.def;
+      return p;
+    }
   } catch (e) {}
   return null;
 }
@@ -608,11 +631,11 @@ class Engine {
     // boost drives the analysis signal (clipping at full scale), depth then sets how far it moves things
     const f = this.features;
     if (!this.live && !f) return 0;
-    let v = Math.min(1, (this.live ? this.live[s - N_LFO] : f[s - N_LFO][Math.min(this.n, f.len - 1)]) * (patch.audioBoost ?? 1));
+    let v = Math.min(1, (this.live ? this.live[s - N_LFO] : f[s - N_LFO][Math.min(this.n, f.len - 1)]) * patch.audioBoost);
     // gate: below the threshold is silence; above it the range is stretched back to 0..1 so it opens without a jump
-    const th = patch.audioGate || 0;
+    const th = patch.audioGate;
     if (th > 0) v = v <= th ? 0 : (v - th) / (1 - th);
-    return v * (patch.audioDepth ?? 1);
+    return v * patch.audioDepth;
   }
   computeVals() {
     for (let i = 0; i < N_LFO; i++) {
@@ -635,7 +658,7 @@ class Engine {
     for (let i = 0; i < N_LFO; i++) {
       const L = patch.lfos[i];
       const m = this.src(L.fmSrc);
-      const f = Math.min(80, (patch.speed ?? 1) / L.period * Math.pow(2, L.fmAmt * 4 * m));
+      const f = Math.min(80, patch.speed / L.period * Math.pow(2, L.fmAmt * 4 * m));
       let p = this.phase[i] + f * dt;
       if (p >= 1) {
         p -= Math.floor(p);
@@ -660,11 +683,11 @@ class Engine {
       if (sh < 2 || sh > 5) this.s1[i] = raw;
     }
     this.slewTo(dt);
-    this.flow += this.sm[PIDX.flow] * dt * (patch.speed ?? 1);
+    this.flow += this.sm[PIDX.flow] * dt * patch.speed;
   }
   // global slew: every control's final value eases toward its target with this time constant
   slewTo(dt) {
-    const slew = patch.slew || 0;
+    const slew = patch.slew;
     const a = slew > 0 ? 1 - Math.exp(-dt / slew) : 1;
     for (let i = 0; i < PK.length; i++) {
       let d = this.param(i) - this.sm[i];
@@ -692,7 +715,7 @@ class Engine {
     const u = {};
     for (let i = 0; i < PK.length; i++) u[PK[i].k] = this.sm[i];
     u.flowT = this.flow;
-    u.speed = patch.speed ?? 1;
+    u.speed = patch.speed;
     return u;
   }
 }
@@ -917,6 +940,7 @@ function parsePeriod(str) {
 }
 const clampP = p => Math.min(MAX_P, Math.max(MIN_P, p));
 function fmtTime(t) { const m = Math.floor(t / 60), s = t - m * 60; return `${m}:${s.toFixed(1).padStart(4, "0")}`; }
+const fmtWhole = t => fmtTime(t).replace(/\.\d$/, "");   // 3:07 rather than 3:07.4
 function fmtVal(P, v) {
   if (P.int) return String(Math.floor(v + 0.5));
   if (P.wrap) v = ((v % 1) + 1) % 1;
@@ -1061,51 +1085,19 @@ function bindCell(b, idx, s) {
     else if (e.key === "Enter" || e.key === " ") { setA(a === 0 ? 0.5 : 0); e.preventDefault(); }
   });
 }
-const speedFromPos = x => 0.01 * Math.pow(100, x / 1000);
-const posFromSpeed = v => Math.round(Math.log(v / 0.01) / Math.log(100) * 1000);
-function syncSpeed() {
-  const v = patch.speed ?? 1;
-  $("speed").value = String(posFromSpeed(v));
-  $("speedVal").textContent = (v < 0.1 ? v.toFixed(3) : v.toFixed(2)) + "×";
+function syncGlobal(g) {
+  const v = patch[g.k];
+  $(g.k).value = String(g.toPos(v));
+  $(g.k + "Val").textContent = g.fmt(v);
 }
-$("speed").addEventListener("input", e => {
-  let v = speedFromPos(+e.target.value);
-  if (v > 0.985) v = 1;
-  patch.speed = +v.toPrecision(3); syncSpeed(); savePatch();
+GLOBALS.forEach(g => {
+  const set = v => { patch[g.k] = v; syncGlobal(g); savePatch(); };
+  $(g.k).addEventListener("input", e => set(g.fromPos(+e.target.value)));
+  $(g.k).addEventListener("dblclick", () => set(g.def));   // double-click resets
 });
-$("speed").addEventListener("dblclick", () => { patch.speed = 1; syncSpeed(); savePatch(); });
-function syncSlew() {
-  const v = patch.slew || 0;
-  $("slew").value = String(Math.round(Math.cbrt(v) * 1000));
-  $("slewVal").textContent = v < 0.1 && v > 0 ? Math.round(v * 1000) + " ms" : v.toFixed(2) + " s";
-}
-// cubic taper: the first 58% of the travel covers 0 to 0.2 s
-$("slew").addEventListener("input", e => { patch.slew = Math.round(Math.pow(+e.target.value / 1000, 3) * 1000) / 1000; syncSlew(); savePatch(); });
-$("slew").addEventListener("dblclick", () => { patch.slew = 0; syncSlew(); savePatch(); });
-function syncAudioDepth() {
-  const v = patch.audioDepth ?? 1;
-  $("audioDepth").value = String(Math.round(v * 100));
-  $("audioVal").textContent = Math.round(v * 100) + "%";
-}
-$("audioDepth").addEventListener("input", e => { patch.audioDepth = +e.target.value / 100; syncAudioDepth(); savePatch(); });
-$("audioDepth").addEventListener("dblclick", () => { patch.audioDepth = 1; syncAudioDepth(); savePatch(); });
-function syncBoost() {
-  const v = patch.audioBoost ?? 1;
-  $("audioBoost").value = String(Math.round(v * 100));
-  $("boostVal").textContent = Math.round(v * 100) + "%";
-}
-$("audioBoost").addEventListener("input", e => { patch.audioBoost = +e.target.value / 100; syncBoost(); savePatch(); });
-$("audioBoost").addEventListener("dblclick", () => { patch.audioBoost = 1; syncBoost(); savePatch(); });
-function syncGate() {
-  const v = patch.audioGate || 0;
-  $("audioGate").value = String(Math.round(v * 100));
-  $("gateVal").textContent = v > 0 ? Math.round(v * 100) + "%" : "Off";
-}
-$("audioGate").addEventListener("input", e => { patch.audioGate = +e.target.value / 100; syncGate(); savePatch(); });
-$("audioGate").addEventListener("dblclick", () => { patch.audioGate = 0; syncGate(); savePatch(); });
 try { const b = localStorage.getItem("slowsignal.blur"); if (b && [...$("blur").options].some(o => o.value === b)) $("blur").value = b; } catch (e) {}
 $("blur").addEventListener("change", e => { try { localStorage.setItem("slowsignal.blur", e.target.value); } catch (err) {} });
-function syncAll() { syncSpeed(); syncSlew(); syncAudioDepth(); syncBoost(); syncGate(); for (let i = 0; i < N_LFO; i++) syncLfo(i); for (let i = 0; i < PK.length; i++) syncRow(i); }
+function syncAll() { GLOBALS.forEach(syncGlobal); for (let i = 0; i < N_LFO; i++) syncLfo(i); for (let i = 0; i < PK.length; i++) syncRow(i); }
 syncAll();
 
 // ---------- randomise / init ----------
@@ -1132,11 +1124,7 @@ $("randomise").addEventListener("click", () => {
     const d = Math.floor(r() * PK.length), s = Math.floor(r() * N_SRC);
     p.mod[d][s] = Math.round((r() < 0.75 ? 1 : -1) * (0.15 + r() * 0.5) * 100) / 100;
   }
-  p.speed = patch.speed ?? 1;
-  p.slew = patch.slew || 0;
-  p.audioDepth = patch.audioDepth ?? 1;
-  p.audioBoost = patch.audioBoost ?? 1;
-  p.audioGate = patch.audioGate || 0;
+  for (const g of GLOBALS) p[g.k] = patch[g.k];   // randomise the patch, not the top-bar settings
   patch = p; syncAll(); savePatch();
 });
 $("reset").addEventListener("click", () => { patch = defaultPatch(); syncAll(); savePatch(); });
@@ -1150,6 +1138,11 @@ const engine = new Engine();
 const DEFAULT_DUR = 360;
 const duration = () => audioEl && isFinite(audioEl.duration) ? audioEl.duration : (audioBuf ? audioBuf.duration : DEFAULT_DUR);
 
+function showTrack(title = "") {
+  const tr = $("track"); tr.textContent = ""; tr.title = title;
+  if (audioBuf) tr.append(el("b", {}, trackName), ` · ${fmtWhole(audioBuf.duration)}`);
+  else tr.textContent = "No track yet, free-running";
+}
 async function loadFile(file) {
   if (!file) return;
   if (live) stopLive();
@@ -1165,9 +1158,7 @@ async function loadFile(file) {
     audioEl.addEventListener("ended", () => setPlaying(false));
     trackName = file.name.replace(/\.[^.]+$/, "");
     $("loadLbl").textContent = "♪ " + trackName; $("loadBtn").title = `${file.name}: click to load a different track`;
-    const tr = $("track"); tr.textContent = "";
-    tr.append(el("b", {}, trackName), ` · ${fmtTime(buf.duration).replace(/\.\d$/, "")}`);
-    tr.title = file.name;
+    showTrack(file.name);
     $("render").disabled = false;
     inPt = 0; outPt = null; showRegion();
     setPlaying(false);
@@ -1191,9 +1182,9 @@ $("play").addEventListener("click", () => setPlaying(!playing));
 $("restart").addEventListener("click", () => { if (live) freeT = 0; else { if (audioEl) audioEl.currentTime = inPt; freeT = inPt; } engine.reset(); });
 
 // ---------- live input ----------
+const micButtons = () => [$("micBtn"), $("perfMic")];
 async function startLive(deviceId) {
   if (live) stopLive(true);
-  const btn = $("micBtn");
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $("track").textContent = "This browser has no microphone input."; return; }
   let stream;
   try {
@@ -1216,7 +1207,7 @@ async function startLive(deviceId) {
   engine.live = live.env;
   if (audioEl) audioEl.pause();
   freeT = 0; engine.reset(); setPlaying(true);
-  for (const b of [btn, $("perfMic")]) { b.classList.add("on"); b.setAttribute("aria-pressed", "true"); }
+  micButtons().forEach(b => { b.classList.add("on"); b.setAttribute("aria-pressed", "true"); });
   ["scrub", "setIn", "setOut"].forEach(id => $(id).disabled = true);
   document.body.classList.add("live");
   const label = stream.getAudioTracks()[0]?.label || "Microphone";
@@ -1237,17 +1228,15 @@ function stopLive(switching) {
   live.ctx.close().catch(() => {});
   live = null; engine.live = null;
   if (switching) return;
-  for (const b of [$("micBtn"), $("perfMic")]) { b.classList.remove("on"); b.setAttribute("aria-pressed", "false"); b.style.removeProperty("--lv"); }
+  micButtons().forEach(b => { b.classList.remove("on"); b.setAttribute("aria-pressed", "false"); b.style.removeProperty("--lv"); });
   $("micDev").hidden = true;
   ["scrub", "setIn", "setOut"].forEach(id => $(id).disabled = false);
   document.body.classList.remove("live");
-  const tr = $("track"); tr.textContent = ""; tr.title = "";
-  if (audioBuf) tr.append(el("b", {}, trackName), ` · ${fmtTime(audioBuf.duration).replace(/\.\d$/, "")}`);
-  else tr.textContent = "No track yet, free-running";
+  showTrack();
   engine.reset(); setPlaying(false);
 }
-$("micBtn").addEventListener("click", () => live ? stopLive() : startLive());
-$("perfMic").addEventListener("click", () => live ? stopLive() : startLive());
+const toggleLive = () => live ? stopLive() : startLive();
+micButtons().forEach(b => b.addEventListener("click", toggleLive));
 $("micDev").addEventListener("change", e => startLive(e.target.value));
 function updateLive(dt) {
   const L = live, sr = L.ctx.sampleRate;
@@ -1263,7 +1252,7 @@ function updateLive(dt) {
     L.env[k] += (v > L.env[k] ? att : rel) * (v - L.env[k]);
   }
   const lv = (L.env[0] * 100).toFixed(1) + "%";
-  $("micBtn").style.setProperty("--lv", lv); $("perfMic").style.setProperty("--lv", lv);
+  micButtons().forEach(b => b.style.setProperty("--lv", lv));
 }
 
 // ---------- in / out points ----------
@@ -1294,7 +1283,7 @@ $("scrub").addEventListener("input", e => {
 document.addEventListener("keydown", e => {
   if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName) || e.metaKey || e.ctrlKey || e.altKey || !$("overlay").hidden) return;
   if (e.code === "Space" && document.activeElement.tagName !== "BUTTON") { e.preventDefault(); setPlaying(!playing); }
-  if (e.code === "KeyM") { live ? stopLive() : startLive(); return; }
+  if (e.code === "KeyM") { toggleLive(); return; }
   if (live) return;
   if (e.code === "KeyI") e.shiftKey ? (inPt = 0, showRegion()) : setIn(nowT());
   if (e.code === "KeyO") e.shiftKey ? (outPt = null, showRegion()) : setOut(nowT());
@@ -1306,7 +1295,8 @@ let renderer;
 try { renderer = new Renderer(view); } catch (err) {
   $("track").textContent = err.message;
 }
-function aspect() { const [w, h] = $("res").value.split("x").map(Number); return w / h; }
+const outSize = () => $("res").value.split("x").map(Number);   // [width, height]
+function aspect() { const [w, h] = outSize(); return w / h; }
 function layoutView() {
   const a = aspect();
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -1374,7 +1364,7 @@ function drawScope(i, now) {
 }
 function liveRate(i) {
   const L = patch.lfos[i];
-  const f = Math.min(80, (patch.speed ?? 1) / L.period * Math.pow(2, L.fmAmt * 4 * engine.src(L.fmSrc)));
+  const f = Math.min(80, patch.speed / L.period * Math.pow(2, L.fmAmt * 4 * engine.src(L.fmSrc)));
   return 1 / f;
 }
 let uiTick = 0, lastT = 0;
@@ -1409,12 +1399,12 @@ function frame(now) {
     }
     for (let i = 0; i < N_LFO; i++) {
       const L = patch.lfos[i];
-      lfoUI[i].live.textContent = (L.fmSrc >= 0 && L.fmAmt) || (patch.speed ?? 1) !== 1 ? "now " + fmtPeriod(liveRate(i)) : "";
+      lfoUI[i].live.textContent = (L.fmSrc >= 0 && L.fmAmt) || patch.speed !== 1 ? "now " + fmtPeriod(liveRate(i)) : "";
     }
     const d = duration();
     if (live) $("time").textContent = `LIVE ${fmtTime(t)}`;
     else {
-      $("time").textContent = `${fmtTime(t)} / ${fmtTime(d).replace(/\.\d$/, "")}`;
+      $("time").textContent = `${fmtTime(t)} / ${fmtWhole(d)}`;
       if (document.activeElement !== $("scrub")) $("scrub").value = String(Math.round(t / d * 1000));
     }
   }
@@ -1481,7 +1471,7 @@ $("res").addEventListener("change", () => { const t = TARGETS[$("target").value]
 const clock = t => fmtTime(t).replace(/\.0$/, "");
 function renderNote() {
   if (!audioBuf) return;
-  const [W, H] = $("res").value.split("x").map(Number);
+  const [W, H] = outSize();
   const fps = +$("fps").value, q = +$("quality").value;
   const mbps = W * H * fps * 0.14 * q / 1e6, len = outEnd() - inPt;
   const whole = inPt === 0 && outPt == null;
@@ -1524,19 +1514,17 @@ async function startRender() {
   $("rsetup").hidden = true; $("rstart").hidden = true;
   $("thumb").hidden = false; $("rbar").hidden = false; $("rstatus").hidden = false;
   $("rsave").hidden = true; $("rcancel").textContent = "Cancel"; $("bar").style.width = "0";
-  if (typeof VideoEncoder === "undefined" || typeof AudioEncoder === "undefined" || typeof Mp4Muxer === "undefined") {
-    status(typeof Mp4Muxer === "undefined" ? "The MP4 muxer didn't load. Check your connection and reload." :
-      "This browser can't encode video. Use a current Chrome or Edge on desktop.", true);
-    $("rcancel").textContent = "Close"; return;
-  }
-  const [W, H] = $("res").value.split("x").map(Number);
+  const giveUp = msg => { status(msg, true); $("rcancel").textContent = "Close"; };
+  if (typeof Mp4Muxer === "undefined") return giveUp("The MP4 muxer didn't load. Check your connection and reload.");
+  if (typeof VideoEncoder === "undefined" || typeof AudioEncoder === "undefined") return giveUp("This browser can't encode video. Use a current Chrome or Edge on desktop.");
+  const [W, H] = outSize();
   const fps = +$("fps").value;
   const q = +$("quality").value;
   const bitrate = Math.round(W * H * fps * 0.14 * q);   // ~8.7 Mbps for 1080p30 at High
   const sr = audioBuf.sampleRate, ch = Math.min(2, audioBuf.numberOfChannels);
   const vsel = await pickVideoConfig(W, H, fps, bitrate);
   const asel = await pickAudioConfig(sr, ch);
-  if (!vsel || !asel) { status(`This browser can't encode ${!vsel ? W + "×" + H + " video" : "audio"} for MP4. Try a smaller size, or Chrome/Edge on desktop.`, true); $("rcancel").textContent = "Close"; return; }
+  if (!vsel || !asel) return giveUp(`This browser can't encode ${!vsel ? W + "×" + H + " video" : "audio"} for MP4. Try a smaller size, or Chrome/Edge on desktop.`);
 
   rendering = true; cancelRender = false; setPlaying(false);
   let wake = null; try { wake = await navigator.wakeLock.request("screen"); } catch (e) {}
@@ -1560,7 +1548,6 @@ async function startRender() {
   const eng = new Engine(); eng.features = features;
   const tIn = Math.min(inPt, audioBuf.duration - 0.5), tOut = Math.min(outEnd(), audioBuf.duration);
   const dur = tOut - tIn, total = Math.ceil(dur * fps);
-  const partial = tIn > 0 || tOut < audioBuf.duration - 0.05;
   const chans = []; for (let c = 0; c < ch; c++) chans.push(audioBuf.getChannelData(c));
   const aStart = Math.round(tIn * sr), aStop = Math.min(audioBuf.length, Math.round(tOut * sr));
   const FADE = Math.round(sr * 0.01);   // 10 ms de-click at a cut
@@ -1568,43 +1555,47 @@ async function startRender() {
   const t0 = performance.now();
   const keyEvery = fps * 2;
   const nb = blurFrames();
+  // draw output frame f (counted from the in point; negative = before it), with its motion-blur sub-frames
+  const drawFrame = f => {
+    const us = [];
+    for (let k = 0; k < nb; k++) { eng.advanceTo(tIn + (f + k / nb) / fps); us.push(eng.uniforms()); }
+    r.drawFrames(us, 1 / fps);
+  };
+  // samples [a, b) of the track as one AudioData, with a short fade wherever the render cuts into the track
+  const fadeIn = tIn > 0, fadeOut = tOut < audioBuf.duration - 0.05;
+  const audioChunk = (a, b) => {
+    const n = b - a, data = new Float32Array(n * ch);
+    for (let c = 0; c < ch; c++) data.set(chans[c].subarray(a, b), c * n);
+    if (fadeIn || fadeOut) for (let k = 0; k < n; k++) {
+      const g = a + k, gain = Math.min(1, fadeIn ? (g - aStart) / FADE : 1, fadeOut ? (aStop - g) / FADE : 1);
+      if (gain < 1) for (let c = 0; c < ch; c++) data[c * n + k] *= gain;
+    }
+    return new AudioData({ format: "f32-planar", sampleRate: sr, numberOfFrames: n, numberOfChannels: ch, timestamp: Math.round((a - aStart) / sr * 1e6), data });
+  };
   // pre-roll: run the few seconds before the in point so the feedback trails are already built up
   const preN = r ? Math.round(Math.min(tIn, 4) * fps) : 0;
   if (preN) status("Warming up the feedback before the in point…");
   for (let j = preN; j > 0 && !failure && !cancelRender; j--) {
-    const us = [];
-    for (let k = 0; k < nb; k++) { eng.advanceTo(tIn + (k / nb - j) / fps); us.push(eng.uniforms()); }
-    r.drawFrames(us, 1 / fps);
+    drawFrame(-j);
     if (j % 15 === 0) await yieldNow();
   }
   status(`Encoding ${W}×${H} at ${fps} fps · ${vsel.mux === "avc" ? "H.264" : vsel.mux.toUpperCase()} + ${asel.mux === "aac" ? "AAC " + Math.round(asel.cfg.bitrate / 1000) + " kbps" : "Opus"} audio`);
 
   for (let i = 0; i < total && !failure && !cancelRender; i++) {
     const t = i / fps;
-    const us = [];
-    for (let k = 0; k < nb; k++) { eng.advanceTo(tIn + (i + k / nb) / fps); us.push(eng.uniforms()); }
-    r.drawFrames(us, 1 / fps);
+    drawFrame(i);
     const vf = new VideoFrame(rc, { timestamp: Math.round(i * 1e6 / fps), duration: Math.round(1e6 / fps) });
     venc.encode(vf, { keyFrame: i % keyEvery === 0 });
     vf.close();
     // feed audio up to the end of this frame so the two tracks stay interleaved
     const aEnd = Math.min(aStop, aStart + Math.round((i + 1) / fps * sr));
-    if (aEnd > aPos) {
-      const n = aEnd - aPos, data = new Float32Array(n * ch);
-      for (let c = 0; c < ch; c++) data.set(chans[c].subarray(aPos, aEnd), c * n);
-      if (partial) for (let k = 0; k < n; k++) {
-        const g = aPos + k, gain = Math.min(1, tIn > 0 ? (g - aStart) / FADE : 1, tOut < audioBuf.duration - 0.05 ? (aStop - g) / FADE : 1);
-        if (gain < 1) for (let c = 0; c < ch; c++) data[c * n + k] *= gain;
-      }
-      const ad = new AudioData({ format: "f32-planar", sampleRate: sr, numberOfFrames: n, numberOfChannels: ch, timestamp: Math.round((aPos - aStart) / sr * 1e6), data });
-      aenc.encode(ad); ad.close(); aPos = aEnd;
-    }
+    if (aEnd > aPos) { const ad = audioChunk(aPos, aEnd); aenc.encode(ad); ad.close(); aPos = aEnd; }
     while (venc.encodeQueueSize > 6 && !failure) await new Promise(res => venc.addEventListener("dequeue", res, { once: true }));
     if (i % 8 === 0) {
       const done = (i + 1) / total, el2 = (performance.now() - t0) / 1000;
       const eta = el2 / done - el2;
       $("bar").style.width = (done * 100).toFixed(2) + "%";
-      $("rstatus").textContent = `Frame ${i + 1} of ${total} · ${fmtTime(t).replace(/\.\d$/, "")} of ${fmtTime(dur).replace(/\.\d$/, "")} · ${(i / el2 || 0).toFixed(0)} fps · about ${Math.ceil(eta / 60)} min left`;
+      $("rstatus").textContent = `Frame ${i + 1} of ${total} · ${fmtWhole(t)} of ${fmtWhole(dur)} · ${(i / el2 || 0).toFixed(0)} fps · about ${Math.ceil(eta / 60)} min left`;
       if (i % 24 === 0) tctx.drawImage(rc, 0, 0, thumb.width, thumb.height);
       await yieldNow();
     }
@@ -1626,8 +1617,8 @@ async function startRender() {
   if (failure) { status(`Encoding stopped: ${failure.message || failure}. Try a smaller size or lower quality.`, true); return; }
   const blob = new Blob([muxer.target.buffer], { type: "video/mp4" });
   const secs = ((performance.now() - t0) / 1000).toFixed(0);
-  const stamp = x => fmtTime(x).replace(/\.\d$/, "").replace(":", "m") + "s";
-  const name = `${(trackName || "slow-signal").replace(/[^\w\- ]+/g, "").trim() || "slow-signal"}${partial ? ` ${stamp(tIn)}-${stamp(tOut)}` : ""} - ${W}x${H}.mp4`;
+  const stamp = x => fmtWhole(x).replace(":", "m") + "s";
+  const name = `${fileSafe(trackName, "slow-signal")}${fadeIn || fadeOut ? ` ${stamp(tIn)}-${stamp(tOut)}` : ""} - ${W}x${H}.mp4`;
   lastFile = { blob, name };
   $("bar").style.width = "100%";
   status(`Done in ${secs} s · ${(blob.size / 1048576).toFixed(0)} MB${asel.mux === "opus" ? " · audio is Opus (this browser has no AAC encoder), plays in Chrome and VLC" : ""}`);
@@ -1661,11 +1652,7 @@ async function saveFile() {
 // Portable format: everything keyed by name, so files stay readable and survive new controls being added.
 function patchToJSON(p) {
   return {
-    speed: p.speed ?? 1,
-    slew: p.slew || 0,
-    audioDepth: p.audioDepth ?? 1,
-    audioBoost: p.audioBoost ?? 1,
-    audioGate: p.audioGate || 0,
+    ...Object.fromEntries(GLOBALS.map(g => [g.k, p[g.k] ?? g.def])),
     lfos: p.lfos.map(L => ({ period: +L.period.toPrecision(6), shape: SHAPES[L.shape], fm: L.fmSrc < 0 ? null : SRC[L.fmSrc], fmDepth: L.fmAmt })),
     controls: Object.fromEntries(PK.map((P, i) => {
       const mod = {};
@@ -1679,11 +1666,7 @@ function patchFromJSON(j) {
   const p = defaultPatch();
   p.mod = PK.map(() => new Array(N_SRC).fill(0));
   const num = (v, d) => (typeof v === "number" && isFinite(v) ? v : d);
-  p.speed = Math.max(0.01, Math.min(1, num(j.speed, 1)));
-  p.slew = Math.max(0, Math.min(1, num(j.slew, 0)));
-  p.audioDepth = Math.max(0, Math.min(1, num(j.audioDepth, 1)));
-  p.audioBoost = Math.max(0, Math.min(2, num(j.audioBoost, 1)));
-  p.audioGate = Math.max(0, Math.min(0.9, num(j.audioGate, 0)));
+  for (const g of GLOBALS) p[g.k] = Math.max(g.min, Math.min(g.max, num(j[g.k], g.def)));
   p.lfos = p.lfos.map((d, i) => {
     const L = j.lfos[i] || {};
     const sh = SHAPES.indexOf(L.shape);
@@ -1877,11 +1860,7 @@ function lerpPatch(a, b, x) {
   const L = (u, v) => u + (v - u) * s;
   const G = (u, v) => u * Math.pow(v / u, s);   // rates and periods glide on a log scale
   return {
-    speed: G(a.speed ?? 1, b.speed ?? 1),
-    slew: L(a.slew || 0, b.slew || 0),
-    audioDepth: L(a.audioDepth ?? 1, b.audioDepth ?? 1),
-    audioBoost: L(a.audioBoost ?? 1, b.audioBoost ?? 1),
-    audioGate: L(a.audioGate || 0, b.audioGate || 0),
+    ...Object.fromEntries(GLOBALS.map(g => [g.k, (g.glide === "log" ? G : L)(a[g.k], b[g.k])])),
     lfos: a.lfos.map((A, i) => {
       const B = b.lfos[i];
       let fmSrc, fmAmt;
@@ -1931,7 +1910,7 @@ function stopMorph(why) {
 }
 // touching any control mid-glide stops it where it is, so the hand always wins
 ["input", "change", "pointerdown"].forEach(ev => document.addEventListener(ev, e => {
-  if (morph && e.isTrusted && e.target.closest && e.target.closest(".rack, .speed")) stopMorph("Glide stopped. Your change took over.");
+  if (morph && e.isTrusted && e.target.closest && e.target.closest(".rack, .knob")) stopMorph("Glide stopped. Your change took over.");
 }, true));
 function stepPreset(dir) {
   const ids = [...FACTORY.map(f => f.id), ...[...presets.list].sort((a, b) => a.name.localeCompare(b.name)).map(x => x.id)];
@@ -1975,7 +1954,7 @@ $("presetDelete").addEventListener("click", async () => {
   currentPreset = "";
   try { await presets.remove(x.id); pmsg(`Deleted “${x.name}”.`); } catch (e) { pmsg(`Couldn't delete: ${e.message || e.code}.`, true); }
 });
-const fileSafe = n => n.replace(/[^\w\- ]+/g, "").trim() || "patch";
+const fileSafe = (n, fallback = "patch") => n.replace(/[^\w\- ]+/g, "").trim() || fallback;
 $("presetExport").addEventListener("click", async () => {
   const name = $("presetName").value.trim() || suggestName();
   const doc = { format: "slow-signal-preset", version: 1, name, savedAt: new Date().toISOString(), patch: patchToJSON(patch) };
