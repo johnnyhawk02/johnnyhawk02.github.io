@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TD-3 Live Patterns</title>
+<style>
+  :root {
+    --bg: #15171a; --panel: #1e2125; --panel2: #262a2f; --line: #343941;
+    --text: #e6e6e6; --muted: #8b939c; --accent: #ff8a1f; --accent2: #ffd166;
+    --ok: #4cc38a; --bad: #ef5b5b; --note: #ff8a1f; --tie: #b5651d; --black: #1a1c1f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 system-ui, -apple-system, Segoe UI, sans-serif; }
+  header { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 16px; margin: 0 12px 0 0; letter-spacing: .5px; }
+  header h1 span { color: var(--accent); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--bad); display: inline-block; }
+  .dot.on { background: var(--ok); }
+  main { display: grid; grid-template-columns: 300px 1fr; gap: 12px; padding: 12px 16px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+  section h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin: 0 0 10px; }
+  label { display: flex; align-items: center; gap: 6px; margin: 6px 0; }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0; }
+  select, input[type=number] { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 5px; padding: 4px 6px; font: inherit; }
+  input[type=number] { width: 64px; }
+  button { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 5px; padding: 5px 10px; font: inherit; cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  button.primary { background: var(--accent); color: #111; border-color: var(--accent); font-weight: 600; }
+  button.on { background: var(--accent2); color: #111; border-color: var(--accent2); }
+  button:disabled { opacity: .4; cursor: default; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 10px; }
+  .tabs button { flex: 1; }
+  .hint { color: var(--muted); font-size: 12px; margin: 6px 0; }
+  .callout { background: #33260f; border: 1px solid #6b4a12; color: var(--accent2); border-radius: 6px; padding: 8px; margin: 8px 0; font-size: 13px; }
+  .bufs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0; }
+  .buf { border: 1px solid var(--line); border-radius: 6px; padding: 6px; text-align: center; }
+  .buf.playing { border-color: var(--ok); }
+  .buf.spare { border-color: var(--accent); }
+  .buf b { display: block; font-size: 18px; }
+  .buf small { color: var(--muted); }
+
+  /* piano roll */
+  .roll-wrap { overflow-x: auto; }
+  .roll { touch-action: none; display: grid; grid-template-columns: 44px repeat(16, minmax(30px, 1fr)); user-select: none; min-width: 560px; }
+  .roll .key { font-size: 10px; color: var(--muted); padding-right: 4px; text-align: right; height: 13px; line-height: 13px; border-bottom: 1px solid #22262b; }
+  .roll .key.c { color: var(--text); }
+  .roll .cell { height: 13px; border-left: 1px solid #22262b; border-bottom: 1px solid #22262b; background: #1b1e22; cursor: pointer; }
+  .roll .cell.blk { background: #17191c; }
+  .roll .cell.beat { border-left-color: #3a4048; }
+  .roll .cell.off { opacity: .35; }
+  .roll .cell.note { background: var(--note); }
+  .roll .cell.note.acc { background: #ff4f1f; }
+  .roll .cell.tie { background: var(--tie); }
+  .roll .cell.play { box-shadow: inset 0 0 0 2px #fff4; }
+  .roll .lab { font-size: 11px; color: var(--muted); text-align: right; padding-right: 4px; line-height: 24px; }
+  .roll .ctl { height: 24px; margin: 2px 1px 0; border-radius: 4px; border: 1px solid var(--line); background: var(--panel2); font-size: 11px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .roll .ctl.on { background: var(--accent); color: #111; border-color: var(--accent); font-weight: 600; }
+  .roll .ctl.tie { background: var(--tie); color: #fff; }
+  .roll .ctl.rest { color: var(--muted); }
+  .roll .ctl.off { opacity: .35; }
+  .roll .stepnum { font-size: 10px; color: var(--muted); text-align: center; padding-bottom: 3px; }
+
+  #log { height: 200px; overflow-y: auto; font: 12px/1.45 ui-monospace, Menlo, Consolas, monospace; background: #101214; border-radius: 6px; padding: 8px; white-space: pre-wrap; word-break: break-all; }
+  #log .tx { color: var(--accent2); } #log .rx { color: var(--ok); } #log .err { color: var(--bad); } #log .info { color: var(--muted); }
+  .stats { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+  .stats b { color: var(--text); font-weight: 600; }
+  ol.tests { margin: 6px 0 0 18px; padding: 0; color: var(--muted); font-size: 13px; }
+  ol.tests li { margin: 4px 0; }
+  ol.tests b { color: var(--text); }
+</style>
+</head>
+<body>
+<header>
+  <h1>TD-3 <span>Live Patterns</span></h1>
+  <button id="connect" class="primary">Connect MIDI</button>
+  <label>Out <select id="outSel"><option value="">none</option></select></label>
+  <label>In <select id="inSel"><option value="">none</option></select></label>
+  <span class="dot" id="dot" title="MIDI status"></span><span id="status" class="hint">Not connected. Chrome or Edge, USB cable (SysEx doesn't go over DIN).</span>
+</header>
+
+<main>
+  <div>
+    <section>
+      <h2>Mode</h2>
+      <div class="tabs">
+        <button id="modeLive" class="on">Live write</button>
+        <button id="modeDouble">Double buffer</button>
+      </div>
+
+      <div id="livePane">
+        <p class="hint">Every edit overwrites the slot the TD-3 is playing. Pick it on the panel, then tell the editor which one it is (it can't be read or set over MIDI).</p>
+        <div class="row">
+          <label>Group <select id="liveGroup"></select></label>
+          <label>Slot <select id="liveSlot"></select></label>
+        </div>
+      </div>
+
+      <div id="doublePane" hidden>
+        <p class="hint">Edits go to the spare slot. When you like it, press that slot on the TD-3 (it switches at the end of the bar), then click "I switched".</p>
+        <div class="row">
+          <label>Group <select id="dbGroup"></select></label>
+        </div>
+        <div class="row">
+          <label>Slot 1 <select id="dbSlotA"></select></label>
+          <label>Slot 2 <select id="dbSlotB"></select></label>
+        </div>
+        <div class="bufs">
+          <div class="buf" id="bufA"><small>slot 1</small><b id="bufAName">1A</b><small id="bufARole"></small></div>
+          <div class="buf" id="bufB"><small>slot 2</small><b id="bufBName">1B</b><small id="bufBRole"></small></div>
+        </div>
+        <div class="callout" id="dbCallout" hidden></div>
+        <button id="dbSwitched" style="width:100%">I switched on the panel</button>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <button id="autoSend" class="on" title="Send automatically on every edit">Auto-send: on</button>
+        <button id="sendNow" class="primary" title="Space">Send now</button>
+      </div>
+      <div class="row">
+        <button id="readBack" title="Request the target slot (opcode 77) and compare">Read back target</button>
+        <button id="exportSyx">Save .syx</button>
+      </div>
+      <p class="hint" id="targetLine"></p>
+    </section>
+
+    <section>
+      <h2>Pattern</h2>
+      <div class="row">
+        <label>Length <input type="number" id="length" min="1" max="16" value="16"></label>
+        <label><input type="checkbox" id="triplet"> Triplet</label>
+      </div>
+      <div class="row">
+        <button id="random">Random acid</button>
+        <button id="mutate">Mutate</button>
+        <button id="clear">Clear</button>
+      </div>
+      <div class="row">
+        <button id="shiftL" title="Rotate left">◀ Rotate</button>
+        <button id="shiftR" title="Rotate right">Rotate ▶</button>
+        <button id="tDown">−1</button><button id="tUp">+1</button>
+        <button id="oDown">−oct</button><button id="oUp">+oct</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Advanced</h2>
+      <label>Pitch storage
+        <select id="pitchModel">
+          <option value="packed">packed (per note)</option>
+          <option value="indexed">indexed (per step)</option>
+        </select>
+      </label>
+      <p class="hint">If notes land on the wrong steps after a rest or tie, switch this. It's one of the things to confirm on hardware.</p>
+      <label>ACK timeout <input type="number" id="ackTimeout" min="20" max="2000" value="150"> ms</label>
+      <label>Min gap between writes <input type="number" id="minGap" min="0" max="2000" value="30"> ms</label>
+      <label>Debounce edits <input type="number" id="debounce" min="0" max="1000" value="40"> ms</label>
+      <div class="row">
+        <span class="hint">Clock source:</span>
+        <button data-clock="0">Internal</button>
+        <button data-clock="2">USB</button>
+      </div>
+    </section>
+  </div>
+
+  <div>
+    <section>
+      <h2>Steps</h2>
+      <div class="roll-wrap"><div class="roll" id="roll"></div></div>
+      <p class="hint">Click a cell to place a note, click it again for a rest. Drag to paint. The Time row cycles note → tie → rest.</p>
+    </section>
+
+    <section>
+      <h2>Hardware test</h2>
+      <p class="hint">The open question is what the TD-3 does when the slot it's playing gets overwritten. This sends two very different patterns to the live slot, alternating, so you can hear when a change lands.</p>
+      <div class="row">
+        <button id="flip">Start flip test</button>
+        <label>every <input type="number" id="flipSecs" min="0.2" max="30" step="0.1" value="2"> s</label>
+        <button id="flipOnce">Flip once</button>
+      </div>
+      <ol class="tests">
+        <li><b>Immediate, next loop, or only after reselect?</b> Run the flip test with the TD-3 playing the live slot.</li>
+        <li><b>Does the sequencer stop or glitch</b> on a write? Try a short interval (0.3 s).</li>
+        <li><b>Clock:</b> repeat with internal clock and with USB clock.</li>
+        <li><b>Pitch storage:</b> make a pattern with a rest in the middle and check the next note plays on the right step. If not, switch to "indexed".</li>
+        <li><b>Double buffer:</b> write to the spare slot, press it, confirm it switches at the end of the bar.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Log</h2>
+      <div class="stats">
+        <span>writes <b id="stWrites">0</b></span>
+        <span>ACKs <b id="stAcks">0</b></span>
+        <span>timeouts <b id="stTimeouts">0</b></span>
+        <span>last ACK <b id="stLat">–</b></span>
+        <span>dropped (coalesced) <b id="stCoalesced">0</b></span>
+        <button id="clearLog" style="margin-left:auto;padding:2px 8px">Clear</button>
+      </div>
+      <div id="log"></div>
+    </section>
+  </div>
+</main>
+
+<script src="td3.js"></script>
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+
+// ---------- state ----------
+const state = {
+  pattern: TD3.emptyPattern(),
+  mode: 'live',
+  live: { group: 0, slot: 0 },
+  db: { group: 0, a: 0, b: 8, playing: 'a', pendingSwitch: false },
+  autoSend: true,
+  model: 'packed',
+};
+
+function save() {
+  try { localStorage.setItem('td3-live', JSON.stringify(state)); } catch (e) {}
+}
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem('td3-live') || 'null');
+    if (s && s.pattern && s.pattern.steps && s.pattern.steps.length === 16) Object.assign(state, s);
+  } catch (e) {}
+}
+
+// ---------- log ----------
+const logEl = $('log');
+function log(msg, cls = 'info') {
+  const t = new Date();
+  const ts = t.toTimeString().slice(0, 8) + '.' + String(t.getMilliseconds()).padStart(3, '0');
+  const line = document.createElement('div');
+  line.className = cls;
+  line.textContent = ts + '  ' + msg;
+  logEl.appendChild(line);
+  while (logEl.childNodes.length > 400) logEl.removeChild(logEl.firstChild);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+const stats = { writes: 0, acks: 0, timeouts: 0, coalesced: 0 };
+function showStats(lat) {
+  $('stWrites').textContent = stats.writes;
+  $('stAcks').textContent = stats.acks;
+  $('stTimeouts').textContent = stats.timeouts;
+  $('stCoalesced').textContent = stats.coalesced;
+  if (lat !== undefined) $('stLat').textContent = lat + ' ms';
+}
+
+// ---------- MIDI ----------
+let midi = null, out = null, inp = null;
+
+async function connect() {
+  if (!navigator.requestMIDIAccess) {
+    setStatus(false, 'This browser has no Web MIDI. Use Chrome or Edge.');
+    return;
+  }
+  try {
+    midi = await navigator.requestMIDIAccess({ sysex: true });
+  } catch (e) {
+    setStatus(false, 'MIDI access refused: ' + e.message + '. SysEx permission is required.');
+    return;
+  }
+  midi.onstatechange = refreshPorts;
+  refreshPorts();
+  log('Web MIDI ready (SysEx allowed)');
+}
+
+function refreshPorts() {
+  const fill = (sel, ports, current) => {
+    const prev = current || sel.value;
+    sel.innerHTML = '<option value="">none</option>';
+    let pick = '';
+    for (const p of ports) {
+      const o = document.createElement('option');
+      o.value = p.id; o.textContent = p.name;
+      sel.appendChild(o);
+      if (p.id === prev) pick = p.id;
+      if (!pick && /td-?3/i.test(p.name)) pick = p.id;
+    }
+    sel.value = pick;
+  };
+  fill($('outSel'), [...midi.outputs.values()], out && out.id);
+  fill($('inSel'), [...midi.inputs.values()], inp && inp.id);
+  bindPorts();
+}
+
+function bindPorts() {
+  out = midi && $('outSel').value ? midi.outputs.get($('outSel').value) : null;
+  const newIn = midi && $('inSel').value ? midi.inputs.get($('inSel').value) : null;
+  if (inp && inp !== newIn) inp.onmidimessage = null;
+  inp = newIn;
+  if (inp) inp.onmidimessage = onMidi;
+  if (out) setStatus(true, 'Sending to ' + out.name + (inp ? ', listening on ' + inp.name : ' (no input: ACKs not checked)'));
+  else setStatus(false, midi ? 'No TD-3 output found. Plug in USB and pick it.' : 'Not connected.');
+}
+
+function setStatus(ok, text) {
+  $('dot').classList.toggle('on', ok);
+  $('status').textContent = text;
+}
+
+function onMidi(ev) {
+  const d = ev.data;
+  if (d[0] !== 0xF0) return; // ignore clock/notes
+  const m = TD3.parse(d);
+  if (!m) { log('RX other SysEx ' + TD3.hex(d.slice(0, 16)) + (d.length > 16 ? ' …' : ''), 'rx'); return; }
+  if (m.opcode === TD3.OP.ACK) {
+    sender.ack('ACK');
+  } else if (m.opcode === TD3.OP.PATTERN && m.block) {
+    onReadBack(m);
+    sender.ack('pattern');
+  } else {
+    log('RX opcode ' + m.opcode.toString(16) + ': ' + TD3.hex(d), 'rx');
+    sender.ack('reply');
+  }
+}
+
+// ---------- sender: one write in flight, newest pattern per slot wins ----------
+const sender = {
+  pending: new Map(), // key "g:s" -> {group, slot, bytes, label}
+  inFlight: null,
+  timer: null,
+  lastDone: 0,
+
+  write(group, slot, bytes, label) {
+    const key = group + ':' + slot;
+    if (this.pending.has(key)) stats.coalesced++;
+    this.pending.set(key, { group, slot, bytes, label });
+    this.pump();
+  },
+  raw(bytes, label) {
+    this.pending.set('raw:' + Math.random(), { bytes, label, raw: true });
+    this.pump();
+  },
+  pump() {
+    if (this.inFlight || !this.pending.size) return;
+    if (!out) { log('Not sent: no MIDI output selected', 'err'); this.pending.clear(); return; }
+    const gap = (+$('minGap').value || 0) - (performance.now() - this.lastDone);
+    if (gap > 0) { clearTimeout(this.gapTimer); this.gapTimer = setTimeout(() => this.pump(), gap); return; }
+    const [key, job] = this.pending.entries().next().value;
+    this.pending.delete(key);
+    try {
+      out.send(job.bytes);
+    } catch (e) {
+      log('Send failed: ' + e.message, 'err');
+      return this.pump();
+    }
+    if (!job.raw) stats.writes++;
+    showStats();
+    log('TX ' + job.label + '  (' + job.bytes.length + ' B)  ' + TD3.hex(job.bytes.slice(0, 12)) + ' …', 'tx');
+    this.inFlight = { job, t: performance.now() };
+    const timeout = +$('ackTimeout').value || 150;
+    this.timer = setTimeout(() => {
+      if (!this.inFlight) return;
+      if (inp) { stats.timeouts++; log('No reply within ' + timeout + ' ms, continuing', 'info'); }
+      this.done();
+    }, inp ? timeout : Math.min(timeout, 60));
+    showStats();
+  },
+  ack(kind) {
+    if (!this.inFlight) { log('RX ' + kind + ' (unsolicited)', 'rx'); return; }
+    const lat = Math.round(performance.now() - this.inFlight.t);
+    stats.acks++;
+    log('RX ' + kind + ' after ' + lat + ' ms', 'rx');
+    showStats(lat);
+    this.done();
+  },
+  done() {
+    clearTimeout(this.timer);
+    this.inFlight = null;
+    this.lastDone = performance.now();
+    this.pump();
+  },
+};
+
+// ---------- targets ----------
+function slotOptions(sel) {
+  sel.innerHTML = '';
+  for (let s = 0; s < 16; s++) {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = TD3.slotName(s);
+    sel.appendChild(o);
+  }
+}
+function groupOptions(sel) {
+  sel.innerHTML = '';
+  for (let g = 0; g < 4; g++) {
+    const o = document.createElement('option');
+    o.value = g; o.textContent = TD3.groupName(g);
+    sel.appendChild(o);
+  }
+}
+const label = (g, s) => TD3.groupName(g) + '-' + TD3.slotName(s);
+
+function target() {
+  if (state.mode === 'live') return { group: state.live.group, slot: state.live.slot };
+  const spare = state.db.playing === 'a' ? state.db.b : state.db.a;
+  return { group: state.db.group, slot: spare };
+}
+
+function sendPattern(reason) {
+  const t = target();
+  const bytes = TD3.patternMessage(t.group, t.slot, state.pattern, state.model);
+  sender.write(t.group, t.slot, bytes, 'write ' + label(t.group, t.slot) + (reason ? ' [' + reason + ']' : ''));
+  if (state.mode === 'double') {
+    state.db.pendingSwitch = true;
+    renderTarget();
+  }
+}
+
+let debounceTimer = null;
+function edited() {
+  save();
+  renderRoll();
+  if (!state.autoSend) return;
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => sendPattern('edit'), +$('debounce').value || 0);
+}
+
+function renderTarget() {
+  const t = target();
+  $('modeLive').classList.toggle('on', state.mode === 'live');
+  $('modeDouble').classList.toggle('on', state.mode === 'double');
+  $('livePane').hidden = state.mode !== 'live';
+  $('doublePane').hidden = state.mode !== 'double';
+  $('autoSend').classList.toggle('on', state.autoSend);
+  $('autoSend').textContent = 'Auto-send: ' + (state.autoSend ? 'on' : 'off');
+  $('targetLine').textContent = 'Writes go to ' + label(t.group, t.slot) + (state.mode === 'live' ? ' (the playing slot).' : ' (the spare slot).');
+
+  const db = state.db;
+  $('bufAName').textContent = label(db.group, db.a);
+  $('bufBName').textContent = label(db.group, db.b);
+  $('bufA').className = 'buf ' + (db.playing === 'a' ? 'playing' : 'spare');
+  $('bufB').className = 'buf ' + (db.playing === 'b' ? 'playing' : 'spare');
+  $('bufARole').textContent = db.playing === 'a' ? 'playing' : 'spare (editing)';
+  $('bufBRole').textContent = db.playing === 'b' ? 'playing' : 'spare (editing)';
+  const spareSlot = db.playing === 'a' ? db.b : db.a;
+  $('dbCallout').hidden = !db.pendingSwitch;
+  $('dbCallout').textContent = 'New pattern is in ' + label(db.group, spareSlot) + '. Press ' + TD3.slotName(spareSlot) +
+    ' on the TD-3 (group ' + TD3.groupName(db.group) + '), then click "I switched".';
+}
+
+// ---------- read back ----------
+let readExpect = null;
+function readBack() {
+  const t = target();
+  readExpect = { ...t, sent: TD3.encodeBlock(state.pattern, state.model) };
+  sender.raw(TD3.requestMessage(t.group, t.slot), 'request ' + label(t.group, t.slot));
+  if (!inp) log('No MIDI input selected, so the reply will not be seen', 'err');
+}
+function onReadBack(m) {
+  const name = label(m.group, m.slot);
+  if (readExpect && readExpect.group === m.group && readExpect.slot === m.slot) {
+    const same = readExpect.sent.every((b, i) => b === m.block[i]);
+    if (same) log('Read back ' + name + ': matches the editor exactly', 'rx');
+    else {
+      const diffs = readExpect.sent.map((b, i) => (b !== m.block[i] ? i : -1)).filter((i) => i >= 0);
+      log('Read back ' + name + ': differs at block bytes ' + diffs.slice(0, 20).map((i) => '0x' + i.toString(16)).join(', ') + (diffs.length > 20 ? ' …' : ''), 'err');
+    }
+    readExpect = null;
+  } else {
+    log('Pattern dump from ' + name + ' received', 'rx');
+  }
+}
+
+// ---------- piano roll ----------
+const roll = $('roll');
+const NOTES = [];
+for (let n = TD3.MIDI_MAX; n >= TD3.MIDI_MIN; n--) NOTES.push(n);
+const isBlack = (n) => [1, 3, 6, 8, 10].includes(n % 12);
+let cells = [], timeCtls = [], accCtls = [], slideCtls = [];
+
+// pitch that actually sounds on each step (ties carry the previous note)
+function effective() {
+  const p = state.pattern;
+  const res = [];
+  let last = null;
+  for (let i = 0; i < 16; i++) {
+    const s = p.steps[i];
+    if (s.time === 'note') { last = s.note; res.push({ kind: 'note', note: s.note, acc: s.accent }); }
+    else if (s.time === 'tie' && last !== null) res.push({ kind: 'tie', note: last });
+    else { res.push({ kind: 'rest' }); if (s.time === 'rest') last = null; }
+  }
+  return res;
+}
+
+function buildRoll() {
+  roll.innerHTML = '';
+  roll.appendChild(document.createElement('div'));
+  for (let i = 0; i < 16; i++) {
+    const d = document.createElement('div');
+    d.className = 'stepnum'; d.textContent = i + 1;
+    roll.appendChild(d);
+  }
+  cells = [];
+  NOTES.forEach((n, r) => {
+    const k = document.createElement('div');
+    k.className = 'key' + (n % 12 === 0 ? ' c' : '');
+    k.textContent = n % 12 === 0 || n === TD3.MIDI_MAX ? TD3.noteName(n) : (isBlack(n) ? '' : TD3.noteName(n).replace(/\d/, ''));
+    roll.appendChild(k);
+    cells[r] = [];
+    for (let i = 0; i < 16; i++) {
+      const c = document.createElement('div');
+      c.className = 'cell' + (isBlack(n) ? ' blk' : '') + (i % 4 === 0 ? ' beat' : '');
+      c.dataset.step = i; c.dataset.note = n;
+      roll.appendChild(c);
+      cells[r][i] = c;
+    }
+  });
+  const ctlRow = (name, arr, onClick) => {
+    const l = document.createElement('div');
+    l.className = 'lab'; l.textContent = name;
+    roll.appendChild(l);
+    for (let i = 0; i < 16; i++) {
+      const c = document.createElement('div');
+      c.className = 'ctl';
+      c.addEventListener('click', () => onClick(i));
+      roll.appendChild(c);
+      arr[i] = c;
+    }
+  };
+  timeCtls = []; accCtls = []; slideCtls = [];
+  ctlRow('Time', timeCtls, (i) => {
+    const s = state.pattern.steps[i];
+    s.time = s.time === 'note' ? (i === 0 ? 'rest' : 'tie') : s.time === 'tie' ? 'rest' : 'note';
+    edited();
+  });
+  ctlRow('Accent', accCtls, (i) => { const s = state.pattern.steps[i]; s.accent = !s.accent; if (s.time !== 'note') s.time = 'note'; edited(); });
+  ctlRow('Slide', slideCtls, (i) => { const s = state.pattern.steps[i]; s.slide = !s.slide; if (s.time !== 'note') s.time = 'note'; edited(); });
+
+  // click / drag painting
+  let painting = null; // 'add' | 'erase'
+  roll.addEventListener('pointerdown', (e) => {
+    const c = e.target.closest('.cell');
+    if (!c) return;
+    e.preventDefault();
+    const i = +c.dataset.step, n = +c.dataset.note;
+    const s = state.pattern.steps[i];
+    painting = s.time === 'note' && s.note === n ? 'erase' : 'add';
+    paint(i, n);
+  });
+  roll.addEventListener('pointerover', (e) => {
+    if (!painting) return;
+    const c = e.target.closest('.cell');
+    if (c) paint(+c.dataset.step, +c.dataset.note);
+  });
+  window.addEventListener('pointerup', () => { painting = null; });
+  function paint(i, n) {
+    const s = state.pattern.steps[i];
+    if (painting === 'erase') {
+      if (s.time === 'rest') return;
+      s.time = 'rest';
+    } else {
+      if (s.time === 'note' && s.note === n) return;
+      s.time = 'note'; s.note = n;
+    }
+    edited();
+  }
+}
+
+function renderRoll() {
+  const p = state.pattern;
+  const len = p.triplet ? Math.min(p.length, 15) : p.length;
+  const eff = effective();
+  NOTES.forEach((n, r) => {
+    for (let i = 0; i < 16; i++) {
+      const e = eff[i];
+      const c = cells[r][i];
+      c.classList.toggle('note', e.kind === 'note' && e.note === n);
+      c.classList.toggle('acc', e.kind === 'note' && e.note === n && !!e.acc);
+      c.classList.toggle('tie', e.kind === 'tie' && e.note === n);
+      c.classList.toggle('off', i >= len);
+    }
+  });
+  for (let i = 0; i < 16; i++) {
+    const s = p.steps[i];
+    const off = i >= len;
+    timeCtls[i].className = 'ctl ' + (s.time === 'note' ? 'on' : s.time) + (off ? ' off' : '');
+    timeCtls[i].textContent = s.time === 'note' ? TD3.noteName(s.note) : s.time;
+    accCtls[i].className = 'ctl' + (s.accent && s.time === 'note' ? ' on' : '') + (off ? ' off' : '');
+    accCtls[i].textContent = 'A';
+    slideCtls[i].className = 'ctl' + (s.slide && s.time === 'note' ? ' on' : '') + (off ? ' off' : '');
+    slideCtls[i].textContent = 'S';
+  }
+  $('length').value = p.length;
+  $('triplet').checked = p.triplet;
+}
+
+// ---------- pattern tools ----------
+function randomPattern() {
+  const p = TD3.emptyPattern();
+  const scale = [0, 3, 5, 7, 10, 12, 15];
+  const root = 36 + Math.floor(Math.random() * 5);
+  p.steps.forEach((s, i) => {
+    const r = Math.random();
+    s.time = i === 0 || r < 0.65 ? 'note' : r < 0.8 ? 'tie' : 'rest';
+    let n = root + scale[Math.floor(Math.random() * scale.length)];
+    if (Math.random() < 0.2) n += 12;
+    if (Math.random() < 0.1) n -= 12;
+    s.note = Math.max(TD3.MIDI_MIN, Math.min(TD3.MIDI_MAX, n));
+    s.accent = Math.random() < 0.25;
+    s.slide = Math.random() < 0.2;
+  });
+  return p;
+}
+function mutate() {
+  const p = state.pattern;
+  const fresh = randomPattern();
+  for (let k = 0; k < 3; k++) {
+    const i = Math.floor(Math.random() * 16);
+    const field = ['note', 'accent', 'slide', 'time'][Math.floor(Math.random() * 4)];
+    p.steps[i][field] = fresh.steps[i][field];
+    if (i === 0 && p.steps[0].time === 'tie') p.steps[0].time = 'note';
+  }
+}
+function transpose(d) {
+  for (const s of state.pattern.steps) s.note = Math.max(TD3.MIDI_MIN, Math.min(TD3.MIDI_MAX, s.note + d));
+}
+function rotate(d) {
+  const st = state.pattern.steps;
+  if (d > 0) st.unshift(st.pop()); else st.push(st.shift());
+  if (st[0].time === 'tie') st[0].time = 'note';
+}
+
+// ---------- flip test ----------
+function flipPatterns() {
+  const low = TD3.emptyPattern(), high = TD3.emptyPattern();
+  low.steps.forEach((s, i) => { s.time = i % 4 === 0 ? 'note' : 'rest'; s.note = 24; s.accent = true; });
+  high.steps.forEach((s, i) => { s.time = 'note'; s.note = 48 + (i % 4) * 3; s.accent = i % 2 === 0; });
+  return [low, high];
+}
+let flipTimer = null, flipIdx = 0;
+function flipOnce() {
+  if (state.mode !== 'live') { log('Flip test writes to the live slot, switch to Live write mode', 'err'); stopFlip(); return; }
+  const [low, high] = flipPatterns();
+  const p = flipIdx++ % 2 ? high : low;
+  const t = target();
+  sender.write(t.group, t.slot, TD3.patternMessage(t.group, t.slot, p, state.model),
+    'write ' + label(t.group, t.slot) + ' [flip: ' + (p === low ? 'LOW quarter notes' : 'HIGH 16ths') + ']');
+}
+function stopFlip() {
+  clearInterval(flipTimer); flipTimer = null;
+  $('flip').textContent = 'Start flip test';
+  $('flip').classList.remove('on');
+}
+
+// ---------- wiring ----------
+function init() {
+  load();
+  [$('liveGroup'), $('dbGroup')].forEach(groupOptions);
+  [$('liveSlot'), $('dbSlotA'), $('dbSlotB')].forEach(slotOptions);
+  $('liveGroup').value = state.live.group; $('liveSlot').value = state.live.slot;
+  $('dbGroup').value = state.db.group; $('dbSlotA').value = state.db.a; $('dbSlotB').value = state.db.b;
+  $('pitchModel').value = state.model;
+  buildRoll();
+  renderRoll();
+  renderTarget();
+
+  $('connect').onclick = connect;
+  $('outSel').onchange = bindPorts;
+  $('inSel').onchange = bindPorts;
+
+  $('modeLive').onclick = () => { state.mode = 'live'; save(); renderTarget(); };
+  $('modeDouble').onclick = () => { state.mode = 'double'; stopFlip(); save(); renderTarget(); };
+  $('liveGroup').onchange = (e) => { state.live.group = +e.target.value; save(); renderTarget(); };
+  $('liveSlot').onchange = (e) => { state.live.slot = +e.target.value; save(); renderTarget(); };
+  $('dbGroup').onchange = (e) => { state.db.group = +e.target.value; save(); renderTarget(); };
+  $('dbSlotA').onchange = (e) => { state.db.a = +e.target.value; save(); renderTarget(); };
+  $('dbSlotB').onchange = (e) => { state.db.b = +e.target.value; save(); renderTarget(); };
+  $('dbSwitched').onclick = () => {
+    const db = state.db;
+    db.playing = db.playing === 'a' ? 'b' : 'a';
+    db.pendingSwitch = false;
+    log('Now playing ' + label(db.group, db.playing === 'a' ? db.a : db.b) + ', edits go to ' + label(target().group, target().slot));
+    save(); renderTarget();
+  };
+
+  $('autoSend').onclick = () => { state.autoSend = !state.autoSend; save(); renderTarget(); };
+  $('sendNow').onclick = () => sendPattern('manual');
+  $('readBack').onclick = readBack;
+  $('exportSyx').onclick = () => {
+    const t = target();
+    const blob = new Blob([TD3.patternMessage(t.group, t.slot, state.pattern, state.model)], { type: 'application/octet-stream' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'td3-' + label(t.group, t.slot) + '.syx';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
+
+  $('length').onchange = (e) => { state.pattern.length = Math.max(1, Math.min(16, +e.target.value || 16)); edited(); };
+  $('triplet').onchange = (e) => { state.pattern.triplet = e.target.checked; edited(); };
+  $('random').onclick = () => { const len = state.pattern.length; state.pattern = randomPattern(); state.pattern.length = len; edited(); };
+  $('mutate').onclick = () => { mutate(); edited(); };
+  $('clear').onclick = () => { state.pattern = TD3.emptyPattern(); edited(); };
+  $('shiftL').onclick = () => { rotate(-1); edited(); };
+  $('shiftR').onclick = () => { rotate(1); edited(); };
+  $('tDown').onclick = () => { transpose(-1); edited(); };
+  $('tUp').onclick = () => { transpose(1); edited(); };
+  $('oDown').onclick = () => { transpose(-12); edited(); };
+  $('oUp').onclick = () => { transpose(12); edited(); };
+
+  $('pitchModel').onchange = (e) => { state.model = e.target.value; edited(); };
+  document.querySelectorAll('[data-clock]').forEach((b) => {
+    b.onclick = () => sender.raw(TD3.clockMessage(+b.dataset.clock), 'set clock source ' + b.textContent);
+  });
+
+  $('flip').onclick = () => {
+    if (flipTimer) return stopFlip();
+    if (state.mode !== 'live') { log('Flip test writes to the live slot, switch to Live write mode', 'err'); return; }
+    flipOnce();
+    flipTimer = setInterval(flipOnce, Math.max(200, (+$('flipSecs').value || 2) * 1000));
+    $('flip').textContent = 'Stop flip test';
+    $('flip').classList.add('on');
+  };
+  $('flipOnce').onclick = flipOnce;
+  $('clearLog').onclick = () => { logEl.innerHTML = ''; };
+
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && !/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) { e.preventDefault(); sendPattern('manual'); }
+  });
+
+  log('Pick the slot that is playing on the TD-3, then click Connect MIDI.');
+}
+init();
+</script>
+</body>
+</html>
