@@ -63,6 +63,12 @@
   body.adult .badge { display: block; }
   #note { display: none; font-size: 13px; text-align: center; opacity: .85; margin-top: 8px; }
   body.adult #note { display: block; }
+  #voiceBar { display: none; margin-top: 8px; gap: 6px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+  body.adult #voiceBar.has { display: flex; }
+  #voiceBar span { flex: 0 0 auto; align-self: center; font-size: 14px; font-weight: 700; opacity: .9; }
+  #voiceBar button { flex: 0 0 auto; border: 2px solid rgba(255,255,255,.35); background: rgba(255,255,255,.12); color: #fff;
+    border-radius: 14px; padding: 8px 12px; font-size: 15px; font-family: inherit; font-weight: 700; text-transform: capitalize; }
+  #voiceBar button.on { background: #fff; color: #3b1460; border-color: #fff; }
   #toast {
     position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 20px); transform: translateX(-50%);
     background: #fff; color: #3b1460; padding: 10px 16px; border-radius: 14px; font-size: 15px; font-weight: 700;
@@ -88,6 +94,7 @@
 </header>
 
 <div id="grid"></div>
+<div id="voiceBar"><span>Voice:</span></div>
 <div id="note">Tap 🎙️ Record, speak, then tap ⏹ Stop. Tap the big button to hear it.</div>
 
 <input type="file" id="fileIn" accept="audio/*" capture style="display:none">
@@ -210,7 +217,7 @@ async function play(id, btn) {
     a.onended = () => btn.classList.remove("playing");
     a.play().catch(() => speak(p.text, btn));
   } else if (p.audio) {
-    const a = new Audio(p.audio);
+    const a = new Audio(voiceSrc(p));
     currentAudio = a;
     a.onended = () => btn.classList.remove("playing");
     a.play().catch(() => speak(p.text, btn));
@@ -226,6 +233,35 @@ grid.addEventListener("click", (e) => {
   const del = e.target.closest(".del");
   if (del) { deleteClip(del.dataset.id).then(refreshBadges); toast("Back to the starter voice"); }
 });
+
+// ---------- starter voice choice ----------
+let VOICES = [], voice = null;
+function voiceSrc(p) { return voice ? `audio/${voice}/${p.id}.mp3` : p.audio; }
+function renderVoices() {
+  const bar = document.getElementById("voiceBar");
+  bar.querySelectorAll("button").forEach(b => b.remove());
+  VOICES.forEach(v => {
+    const b = document.createElement("button");
+    b.textContent = v; b.className = v === voice ? "on" : "";
+    b.onclick = () => {
+      voice = v; try { localStorage.setItem("tot-voice", v); } catch (e) {}
+      renderVoices();
+      const t = document.querySelector('.talk[data-id="trick"]');
+      stopAll(); t.classList.add("playing");
+      const a = new Audio(`audio/${v}/trick.mp3`); currentAudio = a;
+      a.onended = a.onerror = () => t.classList.remove("playing");
+      a.play().catch(() => t.classList.remove("playing"));
+    };
+    bar.appendChild(b);
+  });
+  bar.classList.toggle("has", VOICES.length > 0);
+}
+fetch("audio/voices.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : []).then(list => {
+  VOICES = Array.isArray(list) ? list : [];
+  let saved = null; try { saved = localStorage.getItem("tot-voice"); } catch (e) {}
+  voice = VOICES.includes(saved) ? saved : (VOICES.includes("nova") ? "nova" : (VOICES[0] || null));
+  renderVoices();
+}).catch(() => {});
 
 // ---------- recording ----------
 // Live microphone where allowed; otherwise the phone's own recorder via file picker.
