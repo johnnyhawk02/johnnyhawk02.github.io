@@ -1,14 +1,16 @@
 {
+  "id": "/trick-or-treat/talk",
   "name": "Trick or Treat Talk",
   "short_name": "Trick or Treat",
-  "start_url": "./",
-  "scope": "./",
+  "start_url": "/trick-or-treat/?source=pwa",
+  "scope": "/trick-or-treat/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#1a0b2e",
   "theme_color": "#1a0b2e",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
