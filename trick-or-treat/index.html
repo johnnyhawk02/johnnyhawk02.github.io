@@ -20,8 +20,17 @@
     display: flex; flex-direction: column; min-height: 100dvh;
     user-select: none; -webkit-user-select: none; overflow: hidden;
   }
-  header { display: flex; align-items: center; justify-content: space-between; min-height: 44px; }
+  header { display: none; }
+  body.adult header { display: flex; align-items: center; justify-content: flex-end; min-height: 44px; }
   header h1 { font-size: 20px; margin: 0; opacity: .9; }
+  #installBtn { display: none; margin: 0 0 8px; border: none; border-radius: 16px; padding: 12px; font-size: 18px; font-weight: 900;
+    font-family: inherit; background: #22c55e; color: #fff; box-shadow: 0 4px 0 rgba(0,0,0,.3); }
+  #installBtn.show { display: block; }
+  #installHelp { display: none; position: fixed; inset: 0; z-index: 12; background: rgba(10,0,20,.9); align-items: center; justify-content: center; }
+  #installHelp.open { display: flex; }
+  #installHelp .box { background: #fff; color: #3b1460; border-radius: 20px; padding: 20px; width: min(360px, 92vw); font-size: 16px; line-height: 1.4; }
+  #installHelp ol { padding-left: 20px; margin: 8px 0 14px; }
+  #installHelp button { width: 100%; padding: 14px; border: none; border-radius: 14px; font-size: 18px; font-weight: 800; font-family: inherit; background: #7c3aed; color: #fff; }
   .hbtns { display: none; gap: 8px; }
   body.adult .hbtns { display: flex; }
   .hbtns button { white-space: nowrap; }
@@ -67,7 +76,7 @@
     background: rgba(255,255,255,.12); color: #fff; border: 2px solid rgba(255,255,255,.3);
     border-radius: 14px; padding: 8px 12px; font-size: 14px; font-family: inherit;
   }
-  #grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0,1fr) minmax(0,1fr); gap: 12px; margin-top: 10px; }
+  #grid { flex: 1; display: grid; min-height: 0; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0,1fr) minmax(0,1fr); gap: 12px; margin-top: 10px; }
   .card { position: relative; display: flex; flex-direction: column; min-height: 0; }
   .talk { min-height: 0; }
   .talk {
@@ -124,8 +133,8 @@
 </style>
 </head>
 <body>
+<button id="installBtn">📲 Install app</button>
 <header>
-  <h1>🎃 Trick or Treat!</h1>
   <div class="hbtns"><button id="voiceBtn" style="display:none">🗣️ Voices</button><button id="adultBtn">✅ Done</button></div>
 </header>
 
@@ -153,6 +162,17 @@
   <div class="trow"><button id="tPlay">▶️ Play</button><button id="tAuto">✨ Auto</button></div>
   <div class="trow"><button id="tCancel">Cancel</button><button id="tSave">💾 Save</button></div>
 </div>
+
+<div id="installHelp"><div class="box">
+  <b>Install on your phone</b>
+  <ol>
+    <li>Tap Chrome's <b>⋮</b> menu (top right).</li>
+    <li>Tap <b>Add to home screen</b>, then <b>Install</b>.</li>
+    <li>If Chrome says it's already installed but it won't open: go to <b>Settings → Apps</b>, find <b>Trick or Treat</b>, uninstall it, then come back here and try again.</li>
+    <li>Still stuck? In step 2 choose <b>Create shortcut</b> instead. It works the same.</li>
+  </ol>
+  <button id="installHelpOk">OK</button>
+</div></div>
 
 <div id="toast"></div>
 
@@ -507,6 +527,26 @@ async function openTrim(id, blob, isNew) {
   requestAnimationFrame(() => { drawWave(); layout(); });
 }
 
+// ---------- install button ----------
+let deferredInstall = null;
+const isStandalone = () => matchMedia("(display-mode: standalone)").matches || matchMedia("(display-mode: fullscreen)").matches || navigator.standalone;
+const installBtn = document.getElementById("installBtn");
+function updateInstallBtn() {
+  installBtn.classList.toggle("show", !isStandalone() && (!!deferredInstall || document.body.classList.contains("adult")));
+}
+window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredInstall = e; updateInstallBtn(); });
+window.addEventListener("appinstalled", () => { deferredInstall = null; updateInstallBtn(); toast("Installed! 🎉 Open it from your home screen"); });
+installBtn.addEventListener("click", async () => {
+  if (deferredInstall) {
+    const ev = deferredInstall; deferredInstall = null;
+    try { ev.prompt(); const r = await ev.userChoice; if (r && r.outcome !== "accepted") deferredInstall = null; } catch (e) {}
+    updateInstallBtn();
+  } else {
+    document.getElementById("installHelp").classList.add("open");
+  }
+});
+document.getElementById("installHelpOk").onclick = () => document.getElementById("installHelp").classList.remove("open");
+
 // ---------- grown-up gate (press and hold so the child doesn't wander in) ----------
 document.getElementById("adultBtn").addEventListener("click", () => setAdult(false));
 
@@ -529,6 +569,7 @@ document.addEventListener("pointermove", (e) => { if (lpT && Math.hypot(e.client
 document.addEventListener("click", (e) => { if (swallowClick) { swallowClick = false; e.stopPropagation(); e.preventDefault(); } }, true);
 
 function setAdult(on) {
+  setTimeout(updateInstallBtn, 0);
   document.body.classList.toggle("adult", on);
   document.getElementById("adultBtn").textContent = "✅ Done";
   if (on) refreshBadges();
