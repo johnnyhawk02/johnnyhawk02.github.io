@@ -35,7 +35,7 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
     box-shadow: 0 8px 0 rgba(0,0,0,.35), inset 0 -6px 0 rgba(0,0,0,.15);
     text-shadow: 0 3px 0 rgba(0,0,0,.3); transition: transform .08s;
-    padding: 8px;
+    padding: 8px 8px 18px;
   }
   .talk .pic { background: transparent; width: 92%; flex: 1; min-height: 0; position: relative; }
   .talk .pic img { position: absolute; inset: 6px; width: calc(100% - 12px); height: calc(100% - 12px); object-fit: contain; pointer-events: none; filter: drop-shadow(0 0 2px rgba(255,255,255,.9)) drop-shadow(0 0 1px #fff); }
@@ -105,7 +105,7 @@ const PHRASES = [
   { id: "trick", text: "Trick or treat!", emoji: "🎃", img: "img/trick.png" },
   { id: "boo",   text: "BOO!",            emoji: "👻", img: "img/boo.png" },
   { id: "thanks",text: "Thank you",       emoji: "🍬", img: "img/thanks.png" },
-  { id: "bye",   text: "Bye!",            emoji: "👋" },
+  { id: "bye",   text: "Bye!",            emoji: "👋", img: "img/bye.png" },
 ];
 
 // ---------- storage (IndexedDB, with in-memory fallback) ----------
