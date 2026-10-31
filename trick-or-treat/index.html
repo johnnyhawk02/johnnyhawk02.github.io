@@ -102,10 +102,10 @@
 
 <script>
 const PHRASES = [
-  { id: "trick", text: "Trick or treat!", emoji: "🎃", img: "img/trick.png" },
-  { id: "boo",   text: "BOO!",            emoji: "👻", img: "img/boo.png" },
-  { id: "thanks",text: "Thank you",       emoji: "🍬", img: "img/thanks.png" },
-  { id: "bye",   text: "Bye!",            emoji: "👋", img: "img/bye.png" },
+  { id: "trick", text: "Trick or treat!", emoji: "🎃", img: "img/trick.png", audio: "audio/trick.mp3" },
+  { id: "boo",   text: "BOO!",            emoji: "👻", img: "img/boo.png", audio: "audio/boo.mp3" },
+  { id: "thanks",text: "Thank you",       emoji: "🍬", img: "img/thanks.png", audio: "audio/thanks.mp3" },
+  { id: "bye",   text: "Bye!",            emoji: "👋", img: "img/bye.png", audio: "audio/bye.mp3" },
 ];
 
 // ---------- storage (IndexedDB, with in-memory fallback) ----------
@@ -165,10 +165,10 @@ PHRASES.forEach((p, i) => {
   card.className = "card";
   card.innerHTML = `
     <button class="talk c${i}" data-id="${p.id}">${p.img ? `<span class="pic"><img src="${p.img}" alt=""></span>` : `<span class="emoji">${p.emoji}</span>`}<span>${p.text}</span></button>
-    <span class="badge" id="badge-${p.id}">robot voice</span>
+    <span class="badge" id="badge-${p.id}">starter voice</span>
     <div class="rec">
       <button class="recBtn" data-id="${p.id}">🎙️ Record</button>
-      <button class="del" data-id="${p.id}" title="Use robot voice">🗑️</button>
+      <button class="del" data-id="${p.id}" title="Use starter voice">🗑️</button>
     </div>`;
   grid.appendChild(card);
 });
@@ -176,7 +176,7 @@ PHRASES.forEach((p, i) => {
 async function refreshBadges() {
   for (const p of PHRASES) {
     const has = await loadClip(p.id);
-    document.getElementById("badge-" + p.id).textContent = has ? "✅ your voice" : "robot voice";
+    document.getElementById("badge-" + p.id).textContent = has ? "✅ your voice" : "starter voice";
   }
 }
 
@@ -209,6 +209,11 @@ async function play(id, btn) {
     currentAudio = a;
     a.onended = () => btn.classList.remove("playing");
     a.play().catch(() => speak(p.text, btn));
+  } else if (p.audio) {
+    const a = new Audio(p.audio);
+    currentAudio = a;
+    a.onended = () => btn.classList.remove("playing");
+    a.play().catch(() => speak(p.text, btn));
   } else {
     speak(p.text, btn);
   }
@@ -219,7 +224,7 @@ grid.addEventListener("click", (e) => {
   const rec = e.target.closest(".recBtn");
   if (rec) return toggleRecord(rec.dataset.id, rec);
   const del = e.target.closest(".del");
-  if (del) { deleteClip(del.dataset.id).then(refreshBadges); toast("Back to robot voice"); }
+  if (del) { deleteClip(del.dataset.id).then(refreshBadges); toast("Back to the starter voice"); }
 });
 
 // ---------- recording ----------
