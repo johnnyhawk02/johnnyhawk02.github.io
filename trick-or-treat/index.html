@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#1a0b2e">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Trick or Treat Talk Buttons</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: "Comic Sans MS", "Chalkboard SE", "Baloo 2", system-ui, sans-serif;
+    background: radial-gradient(circle at 80% 8%, #fff6c9 0 28px, transparent 30px),
+                linear-gradient(#1a0b2e, #3b1460);
+    color: #fff;
+    padding: calc(env(safe-area-inset-top) + 10px) 12px calc(env(safe-area-inset-bottom) + 10px);
+    display: flex; flex-direction: column; min-height: 100dvh;
+    user-select: none; -webkit-user-select: none; overflow: hidden;
+  }
+  header { display: flex; align-items: center; justify-content: space-between; min-height: 44px; }
+  header h1 { font-size: 20px; margin: 0; opacity: .9; }
+  #adultBtn {
+    background: rgba(255,255,255,.12); color: #fff; border: 2px solid rgba(255,255,255,.3);
+    border-radius: 14px; padding: 8px 12px; font-size: 14px; font-family: inherit;
+  }
+  #grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0,1fr) minmax(0,1fr); gap: 12px; margin-top: 10px; }
+  .card { position: relative; display: flex; flex-direction: column; min-height: 0; }
+  .talk { min-height: 0; }
+  .talk {
+    flex: 1; border: none; border-radius: 28px; font-family: inherit; color: #fff;
+    font-size: clamp(24px, 7.5vw, 40px); font-weight: 900; line-height: 1.05;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    box-shadow: 0 8px 0 rgba(0,0,0,.35), inset 0 -6px 0 rgba(0,0,0,.15);
+    text-shadow: 0 3px 0 rgba(0,0,0,.3); transition: transform .08s;
+    padding: 8px;
+  }
+  .talk .pic { background: transparent; width: 92%; flex: 1; min-height: 0; position: relative; }
+  .talk .pic img { position: absolute; inset: 6px; width: calc(100% - 12px); height: calc(100% - 12px); object-fit: contain; pointer-events: none; filter: drop-shadow(0 0 2px rgba(255,255,255,.9)) drop-shadow(0 0 1px #fff); }
+  .talk .emoji { font-size: clamp(56px, 20vw, 96px); text-shadow: none; }
+  .talk:active, .talk.playing { transform: translateY(6px) scale(.97); box-shadow: 0 2px 0 rgba(0,0,0,.35); }
+  .talk.playing { animation: wiggle .35s ease-in-out infinite alternate; }
+  @keyframes wiggle { from { rotate: -2deg; } to { rotate: 2deg; } }
+  .c0 { background: linear-gradient(#ff9a1f, #e8590c); }
+  .c1 { background: linear-gradient(#a855f7, #6d28d9); }
+  .c2 { background: linear-gradient(#22c55e, #15803d); }
+  .c3 { background: linear-gradient(#f43f5e, #be123c); }
+  .rec { display: none; gap: 6px; margin-top: 6px; }
+  body.adult .rec { display: flex; }
+  .rec button {
+    flex: 1; border: none; border-radius: 14px; padding: 12px 4px; font-size: 15px; font-weight: 700;
+    font-family: inherit; background: #fff; color: #3b1460;
+  }
+  .rec button.recording { background: #ef4444; color: #fff; animation: pulse 1s infinite; }
+  .rec button.del { flex: 0 0 48px; background: rgba(255,255,255,.25); color: #fff; }
+  @keyframes pulse { 50% { opacity: .6; } }
+  .badge {
+    position: absolute; top: 8px; right: 10px; font-size: 12px; background: rgba(0,0,0,.35);
+    padding: 3px 8px; border-radius: 10px; display: none;
+  }
+  body.adult .badge { display: block; }
+  #note { display: none; font-size: 13px; text-align: center; opacity: .85; margin-top: 8px; }
+  body.adult #note { display: block; }
+  #toast {
+    position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 20px); transform: translateX(-50%);
+    background: #fff; color: #3b1460; padding: 10px 16px; border-radius: 14px; font-size: 15px; font-weight: 700;
+    opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 90vw; text-align: center;
+  }
+  #toast.show { opacity: 1; }
+  #gate {
+    position: fixed; inset: 0; background: rgba(10,0,20,.85); display: none; align-items: center; justify-content: center; z-index: 10;
+  }
+  #gate .box { background: #fff; color: #3b1460; border-radius: 20px; padding: 20px; width: min(320px, 90vw); text-align: center; }
+  #gate .box p { margin: 0 0 12px; font-size: 18px; font-weight: 700; }
+  #holdBtn {
+    width: 100%; padding: 18px; border: none; border-radius: 14px; font-size: 18px; font-family: inherit; font-weight: 800;
+    background: linear-gradient(90deg, #a855f7 var(--p,0%), #e9d5ff var(--p,0%)); color: #3b1460;
+  }
+  #gateCancel { margin-top: 10px; background: none; border: none; color: #6b7280; font-size: 15px; font-family: inherit; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎃 Trick or Treat!</h1>
+  <button id="adultBtn">🔒 Grown-up</button>
+</header>
+
+<div id="grid"></div>
+<div id="note">Tap 🎙️ Record, speak, then tap ⏹ Stop. Tap the big button to hear it.</div>
+
+<input type="file" id="fileIn" accept="audio/*" capture style="display:none">
+
+<div id="gate"><div class="box">
+  <p>Grown-ups: press and hold</p>
+  <button id="holdBtn">Hold for 2 seconds</button>
+  <button id="gateCancel">Cancel</button>
+</div></div>
+
+<div id="toast"></div>
+
+<script>
+const PHRASES = [
+  { id: "trick", text: "Trick or treat!", emoji: "🎃", img: "img/trick.png" },
+  { id: "boo",   text: "BOO!",            emoji: "👻" },
+  { id: "thanks",text: "Thank you",       emoji: "🍬" },
+  { id: "bye",   text: "Bye!",            emoji: "👋" },
+];
+
+// ---------- storage (IndexedDB, with in-memory fallback) ----------
+const mem = {};
+let dbp = null;
+function openDB() {
+  if (dbp) return dbp;
+  dbp = new Promise((res) => {
+    try {
+      const r = indexedDB.open("talk-buttons", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("clips");
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => res(null);
+    } catch (e) { res(null); }
+  });
+  return dbp;
+}
+async function saveClip(id, blob) {
+  mem[id] = blob;
+  const db = await openDB(); if (!db) return false;
+  return new Promise((res) => {
+    try {
+      const tx = db.transaction("clips", "readwrite");
+      tx.objectStore("clips").put(blob, id);
+      tx.oncomplete = () => res(true); tx.onerror = () => res(false);
+    } catch (e) { res(false); }
+  });
+}
+async function loadClip(id) {
+  if (mem[id]) return mem[id];
+  const db = await openDB(); if (!db) return null;
+  return new Promise((res) => {
+    try {
+      const q = db.transaction("clips").objectStore("clips").get(id);
+      q.onsuccess = () => { if (q.result) mem[id] = q.result; res(q.result || null); };
+      q.onerror = () => res(null);
+    } catch (e) { res(null); }
+  });
+}
+async function deleteClip(id) {
+  delete mem[id];
+  const db = await openDB(); if (!db) return;
+  try { db.transaction("clips", "readwrite").objectStore("clips").delete(id); } catch (e) {}
+}
+
+// ---------- UI ----------
+const grid = document.getElementById("grid");
+const toastEl = document.getElementById("toast");
+let toastT;
+function toast(msg, ms = 2200) {
+  toastEl.textContent = msg; toastEl.classList.add("show");
+  clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove("show"), ms);
+}
+
+PHRASES.forEach((p, i) => {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
+    <button class="talk c${i}" data-id="${p.id}">${p.img ? `<span class="pic"><img src="${p.img}" alt=""></span>` : `<span class="emoji">${p.emoji}</span>`}<span>${p.text}</span></button>
+    <span class="badge" id="badge-${p.id}">robot voice</span>
+    <div class="rec">
+      <button class="recBtn" data-id="${p.id}">🎙️ Record</button>
+      <button class="del" data-id="${p.id}" title="Use robot voice">🗑️</button>
+    </div>`;
+  grid.appendChild(card);
+});
+
+async function refreshBadges() {
+  for (const p of PHRASES) {
+    const has = await loadClip(p.id);
+    document.getElementById("badge-" + p.id).textContent = has ? "✅ your voice" : "robot voice";
+  }
+}
+
+// ---------- playback ----------
+let currentAudio = null, currentUrl = null;
+function stopAll() {
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  if (currentUrl) { URL.revokeObjectURL(currentUrl); currentUrl = null; }
+  try { speechSynthesis.cancel(); } catch (e) {}
+  document.querySelectorAll(".talk.playing").forEach(b => b.classList.remove("playing"));
+}
+function speak(text, btn) {
+  try {
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.95; u.pitch = 1.2; u.volume = 1;
+    u.onend = u.onerror = () => btn.classList.remove("playing");
+    speechSynthesis.speak(u);
+  } catch (e) { btn.classList.remove("playing"); toast("No voice available — record one in Grown-up mode"); }
+}
+async function play(id, btn) {
+  stopAll();
+  btn.classList.add("playing");
+  if (navigator.vibrate) navigator.vibrate(30);
+  const p = PHRASES.find(x => x.id === id);
+  const blob = await loadClip(id);
+  if (blob) {
+    currentUrl = URL.createObjectURL(blob);
+    const a = new Audio(currentUrl);
+    a.volume = 1;
+    currentAudio = a;
+    a.onended = () => btn.classList.remove("playing");
+    a.play().catch(() => speak(p.text, btn));
+  } else {
+    speak(p.text, btn);
+  }
+}
+grid.addEventListener("click", (e) => {
+  const talk = e.target.closest(".talk");
+  if (talk) return play(talk.dataset.id, talk);
+  const rec = e.target.closest(".recBtn");
+  if (rec) return toggleRecord(rec.dataset.id, rec);
+  const del = e.target.closest(".del");
+  if (del) { deleteClip(del.dataset.id).then(refreshBadges); toast("Back to robot voice"); }
+});
+
+// ---------- recording ----------
+// Live microphone where allowed; otherwise the phone's own recorder via file picker.
+let recorder = null, recId = null, recBtn = null, chunks = [], recTimer = null;
+const fileIn = document.getElementById("fileIn");
+let pickId = null;
+
+function canLiveRecord() {
+  return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder && window.isSecureContext);
+}
+function pickFile(id) {
+  pickId = id; fileIn.value = ""; fileIn.click();
+}
+fileIn.addEventListener("change", async () => {
+  const f = fileIn.files && fileIn.files[0];
+  if (!f || !pickId) return;
+  const ok = await saveClip(pickId, f);
+  await refreshBadges();
+  toast(ok ? "Saved! 🎉 Tap the big button to hear it" : "Saved for now (this browser may not keep it)");
+});
+
+async function toggleRecord(id, btn) {
+  if (recorder && recorder.state === "recording") {
+    if (recId === id) recorder.stop();
+    return;
+  }
+  stopAll();
+  if (!canLiveRecord()) return pickFile(id);
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+  } catch (e) {
+    toast("Opening the phone recorder instead…");
+    return pickFile(id);
+  }
+  chunks = [];
+  const mime = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"].find(m => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m));
+  recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+  recId = id; recBtn = btn;
+  recorder.ondataavailable = (ev) => { if (ev.data && ev.data.size) chunks.push(ev.data); };
+  recorder.onstop = async () => {
+    clearTimeout(recTimer);
+    stream.getTracks().forEach(t => t.stop());
+    btn.classList.remove("recording"); btn.textContent = "🎙️ Record";
+    const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
+    recorder = null; recId = null;
+    if (blob.size < 500) { toast("That was too short, try again"); return; }
+    const ok = await saveClip(id, blob);
+    await refreshBadges();
+    toast(ok ? "Saved! 🎉 Tap the big button to hear it" : "Saved for now (this browser may not keep it)");
+  };
+  recorder.start();
+  btn.classList.add("recording"); btn.textContent = "⏹ Stop";
+  recTimer = setTimeout(() => { if (recorder && recorder.state === "recording") recorder.stop(); }, 10000);
+}
+
+// ---------- grown-up gate (press and hold so the child doesn't wander in) ----------
+const gate = document.getElementById("gate"), holdBtn = document.getElementById("holdBtn");
+let holdStart = 0, holdRAF = null;
+document.getElementById("adultBtn").addEventListener("click", () => {
+  if (document.body.classList.contains("adult")) return setAdult(false);
+  gate.style.display = "flex";
+});
+document.getElementById("gateCancel").addEventListener("click", () => { gate.style.display = "none"; resetHold(); });
+function resetHold() { cancelAnimationFrame(holdRAF); holdBtn.style.setProperty("--p", "0%"); }
+function holdTick() {
+  const p = Math.min(100, (Date.now() - holdStart) / 20);
+  holdBtn.style.setProperty("--p", p + "%");
+  if (p >= 100) { gate.style.display = "none"; resetHold(); setAdult(true); return; }
+  holdRAF = requestAnimationFrame(holdTick);
+}
+holdBtn.addEventListener("pointerdown", (e) => { e.preventDefault(); holdStart = Date.now(); holdTick(); });
+["pointerup", "pointerleave", "pointercancel"].forEach(ev => holdBtn.addEventListener(ev, resetHold));
+holdBtn.addEventListener("contextmenu", e => e.preventDefault());
+function setAdult(on) {
+  document.body.classList.toggle("adult", on);
+  document.getElementById("adultBtn").textContent = on ? "✅ Done" : "🔒 Grown-up";
+  if (on) refreshBadges();
+}
+
+// keep screen from sleeping while open, where allowed
+async function wake() { try { if (navigator.wakeLock) await navigator.wakeLock.request("screen"); } catch (e) {} }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") wake(); });
+wake();
+refreshBadges();
+if ("serviceWorker" in navigator) { try { navigator.serviceWorker.register("sw.js").catch(() => {}); } catch (e) {} }
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
+document.addEventListener("contextmenu", e => e.preventDefault());
+</script>
+</body>
+</html>
