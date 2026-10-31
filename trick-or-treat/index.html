@@ -22,6 +22,25 @@
   }
   header { display: flex; align-items: center; justify-content: space-between; min-height: 44px; }
   header h1 { font-size: 20px; margin: 0; opacity: .9; }
+  .hbtns { display: flex; gap: 8px; }
+  .hbtns button { white-space: nowrap; }
+  header h1 { white-space: nowrap; }
+  #voiceBtn { background: linear-gradient(#facc15, #f59e0b); color: #3b1460; border: none; border-radius: 14px;
+    padding: 8px 14px; font-size: 16px; font-weight: 900; font-family: inherit; box-shadow: 0 4px 0 rgba(0,0,0,.3); }
+  #voices { position: fixed; inset: 0; z-index: 9; display: none; flex-direction: column;
+    background: linear-gradient(#1a0b2e, #3b1460);
+    padding: calc(env(safe-area-inset-top) + 12px) 12px calc(env(safe-area-inset-bottom) + 12px); }
+  #voices.open { display: flex; }
+  #voices h2 { margin: 0 0 10px; text-align: center; font-size: 26px; }
+  #vgrid { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-content: start; }
+  .vt { border: none; border-radius: 22px; padding: 10px 4px 8px; font-family: inherit; color: #fff; font-weight: 900; font-size: 17px;
+    display: flex; flex-direction: column; align-items: center; gap: 2px; box-shadow: 0 6px 0 rgba(0,0,0,.35); transition: transform .08s; }
+  .vt .ve { font-size: 46px; line-height: 1.1; }
+  .vt small { font-size: 11px; font-weight: 600; opacity: .75; }
+  .vt:active, .vt.playing { transform: translateY(4px) scale(.96); box-shadow: 0 2px 0 rgba(0,0,0,.35); }
+  .vt.on { outline: 5px solid #fff; outline-offset: -5px; }
+    #vdone { margin-top: 12px; border: none; border-radius: 20px; padding: 18px; font-size: 24px; font-weight: 900; font-family: inherit;
+    background: #fff; color: #3b1460; box-shadow: 0 6px 0 rgba(0,0,0,.35); }
   #adultBtn {
     background: rgba(255,255,255,.12); color: #fff; border: 2px solid rgba(255,255,255,.3);
     border-radius: 14px; padding: 8px 12px; font-size: 14px; font-family: inherit;
@@ -63,12 +82,6 @@
   body.adult .badge { display: block; }
   #note { display: none; font-size: 13px; text-align: center; opacity: .85; margin-top: 8px; }
   body.adult #note { display: block; }
-  #voiceBar { display: none; margin-top: 8px; gap: 6px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
-  body.adult #voiceBar.has { display: flex; }
-  #voiceBar span { flex: 0 0 auto; align-self: center; font-size: 14px; font-weight: 700; opacity: .9; }
-  #voiceBar button { flex: 0 0 auto; border: 2px solid rgba(255,255,255,.35); background: rgba(255,255,255,.12); color: #fff;
-    border-radius: 14px; padding: 8px 12px; font-size: 15px; font-family: inherit; font-weight: 700; text-transform: capitalize; }
-  #voiceBar button.on { background: #fff; color: #3b1460; border-color: #fff; }
   #toast {
     position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 20px); transform: translateX(-50%);
     background: #fff; color: #3b1460; padding: 10px 16px; border-radius: 14px; font-size: 15px; font-weight: 700;
@@ -90,11 +103,10 @@
 <body>
 <header>
   <h1>🎃 Trick or Treat!</h1>
-  <button id="adultBtn">🔒 Grown-up</button>
+  <div class="hbtns"><button id="voiceBtn" style="display:none">🗣️ Voices</button><button id="adultBtn" aria-label="Grown-up">🔒</button></div>
 </header>
 
 <div id="grid"></div>
-<div id="voiceBar"><span>Voice:</span></div>
 <div id="note">Tap 🎙️ Record, speak, then tap ⏹ Stop. Tap the big button to hear it.</div>
 
 <input type="file" id="fileIn" accept="audio/*" capture style="display:none">
@@ -104,6 +116,12 @@
   <button id="holdBtn">Hold for 2 seconds</button>
   <button id="gateCancel">Cancel</button>
 </div></div>
+
+<div id="voices">
+  <h2>Pick a voice! 🗣️</h2>
+  <div id="vgrid"></div>
+  <button id="vdone">👍 Done</button>
+</div>
 
 <div id="toast"></div>
 
@@ -237,25 +255,37 @@ grid.addEventListener("click", (e) => {
 // ---------- starter voice choice ----------
 let VOICES = [], voice = null;
 function voiceSrc(p) { return voice ? `audio/${voice}/${p.id}.mp3` : p.audio; }
+const CHARS = {
+  alloy:   ["🎃", "Pumpkin", "#f97316"], ash:    ["🦇", "Bat",     "#6d28d9"], ballad: ["🦉", "Owl",     "#a16207"],
+  coral:   ["🧚", "Fairy",   "#db2777"], echo:   ["👻", "Ghost",   "#64748b"], fable:  ["🧙", "Wizard",  "#4338ca"],
+  nova:    ["⭐", "Star",    "#ca8a04"], onyx:   ["🐻", "Bear",    "#78350f"], sage:   ["🐱", "Cat",     "#15803d"],
+  shimmer: ["🦄", "Unicorn", "#c026d3"], verse:  ["🐉", "Dragon",  "#b91c1c"], marin:  ["🧜", "Mermaid", "#0e7490"],
+  cedar:   ["🦊", "Fox",     "#ea580c"],
+};
 function renderVoices() {
-  const bar = document.getElementById("voiceBar");
-  bar.querySelectorAll("button").forEach(b => b.remove());
+  const g = document.getElementById("vgrid");
+  g.innerHTML = "";
   VOICES.forEach(v => {
+    const [e, name, col] = CHARS[v] || ["🔊", v, "#7c3aed"];
     const b = document.createElement("button");
-    b.textContent = v; b.className = v === voice ? "on" : "";
+    b.className = "vt" + (v === voice ? " on" : "");
+    b.style.background = col;
+    b.innerHTML = `<span class="ve">${e}</span>${name}<small>${v}</small>`;
     b.onclick = () => {
       voice = v; try { localStorage.setItem("tot-voice", v); } catch (e) {}
-      renderVoices();
-      const t = document.querySelector('.talk[data-id="trick"]');
-      stopAll(); t.classList.add("playing");
+      g.querySelectorAll(".vt").forEach(x => x.classList.remove("on", "playing"));
+      b.classList.add("on", "playing");
+      stopAll();
       const a = new Audio(`audio/${v}/trick.mp3`); currentAudio = a;
-      a.onended = a.onerror = () => t.classList.remove("playing");
-      a.play().catch(() => t.classList.remove("playing"));
+      a.onended = a.onerror = () => b.classList.remove("playing");
+      a.play().catch(() => b.classList.remove("playing"));
     };
-    bar.appendChild(b);
+    g.appendChild(b);
   });
-  bar.classList.toggle("has", VOICES.length > 0);
+  document.getElementById("voiceBtn").style.display = VOICES.length ? "" : "none";
 }
+document.getElementById("voiceBtn").onclick = () => { renderVoices(); document.getElementById("voices").classList.add("open"); };
+document.getElementById("vdone").onclick = () => { stopAll(); document.getElementById("voices").classList.remove("open"); };
 fetch("audio/voices.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : []).then(list => {
   VOICES = Array.isArray(list) ? list : [];
   let saved = null; try { saved = localStorage.getItem("tot-voice"); } catch (e) {}
@@ -338,7 +368,7 @@ holdBtn.addEventListener("pointerdown", (e) => { e.preventDefault(); holdStart =
 holdBtn.addEventListener("contextmenu", e => e.preventDefault());
 function setAdult(on) {
   document.body.classList.toggle("adult", on);
-  document.getElementById("adultBtn").textContent = on ? "✅ Done" : "🔒 Grown-up";
+  document.getElementById("adultBtn").textContent = on ? "✅ Done" : "🔒";
   if (on) refreshBadges();
 }
 
