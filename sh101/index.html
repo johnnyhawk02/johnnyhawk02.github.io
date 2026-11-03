@@ -206,6 +206,18 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
 .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
 .acts button { font-size: 18px; height: 28px; text-transform: lowercase; }
 .sq-msg { font-size: 16px; color: var(--muted); min-height: 2.3em; line-height: 1.15; }
+.sq-main { display: grid; gap: 6px; min-width: 0; }
+.sq-bank { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font-size: 16px; text-transform: lowercase; }
+.slots { display: flex; gap: 4px; }
+.slots button, .sq-ed button, .chain-read button { appearance: none; background: none; border: 2px solid var(--ink); color: var(--ink); min-width: 30px; height: 26px; padding: 0 6px; border-radius: 3px; cursor: pointer; font: inherit; font-size: 15px; text-transform: inherit; position: relative; text-shadow: var(--shadow); -webkit-touch-callout: none; user-select: none; }
+.slots button.used:not([aria-pressed=true]) { background: var(--ghost); }
+.slots button[aria-pressed=true], .slots button:active, .sq-ed button:active { background: var(--ink); color: var(--glass); }
+.slots button[data-ch]:not([data-ch=""])::after { content: attr(data-ch); position: absolute; top: -8px; right: -5px; font-size: 10px; line-height: 1; padding: 1px 3px; background: var(--ink); color: var(--glass); border-radius: 2px; }
+.slots button.playing { outline: 2px dashed var(--ink); outline-offset: 2px; }
+.sq-ed { display: flex; gap: 4px; } .sq-ed button:disabled { opacity: .35; cursor: default; }
+.chain-read { display: flex; align-items: center; gap: 6px; } .chain-read[hidden] { display: none; }
+.chain-read .now { background: var(--ink); color: var(--glass); padding: 0 3px; } .chain-read .arr { opacity: .5; }
+.chain-read button { min-width: 0; height: 22px; padding: 0 6px; }
 .rollwrap { overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
 .roll { --row: 17px; display: grid; grid-template-columns: 40px repeat(var(--steps, 32), minmax(0, 1fr)); grid-auto-rows: var(--row);
   width: 100%; min-width: calc(44px + var(--steps, 32) * 20px); border: 2px solid var(--ink); user-select: none; -webkit-user-select: none; text-shadow: none; }
@@ -299,7 +311,9 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
   .sld input::-webkit-slider-runnable-track { height: 8px; border-width: 1.5px; } .sld input::-webkit-slider-thumb { width: 9px; height: 15px; margin-top: -5px; }
   .acts { gap: 3px; margin-top: 2px; } .acts button { height: 20px; font-size: 14px; border-width: 1.5px; }
   .sq-msg { display: none; }
-  .roll { --row: clamp(8px, calc((100dvh - 86px) / 20), 18px); grid-template-columns: 30px repeat(var(--steps, 32), minmax(0, 1fr)); min-width: calc(32px + var(--steps, 32) * 15px); border-width: 1.5px; }
+  .sq-main { gap: 3px; } .sq-bank { gap: 3px 8px; font-size: 13px; } .bk-lab { display: none; }
+  .slots { gap: 3px; } .slots button, .sq-ed button { height: 20px; min-width: 26px; font-size: 13px; border-width: 1.5px; padding: 0 4px; } .chain-read button { height: 18px; }
+  .roll { --row: clamp(8px, calc((100dvh - 110px) / 20), 18px); grid-template-columns: 30px repeat(var(--steps, 32), minmax(0, 1fr)); min-width: calc(32px + var(--steps, 32) * 15px); border-width: 1.5px; }
   .roll > * { font-size: 11px; }
   .roll .rh { padding-left: 2px; }
   .perf101 { padding: 4px 8px; gap: 8px 16px; } .perf101 h3 { font-size: 16px; }
@@ -330,7 +344,7 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
 </div>
 <div class="unit" id="unit">
   <header class="top">
-    <div class="brand"><b>KESTREL MS-1 <i class="ver" id="ver">v0.5.3</i></b><span>Circuit-modelled monosynth · bendable</span></div>
+    <div class="brand"><b>KESTREL MS-1 <i class="ver" id="ver">v0.6.0</i></b><span>Circuit-modelled monosynth · bendable</span></div>
     <canvas class="scope" id="scope" width="400" height="92" aria-label="Oscilloscope"></canvas>
     <div class="transport">
       <button class="btn play" id="play"><span class="led"></span><span id="playLab">Run</span></button>
@@ -383,7 +397,15 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
           </div>
           <span class="sq-msg" id="sq-msg" role="status">Tap a note to set or rest a step. Drag to paint. Tap a step number, then play keys to write.</span>
         </div>
-        <div class="rollwrap"><div class="roll" id="roll" role="grid" aria-label="Pattern"></div></div>
+        <div class="sq-main">
+          <div class="sq-bank">
+            <span class="bk-lab">pattern</span>
+            <div class="slots" id="slots" role="group" aria-label="Pattern slots"><button type="button" data-n="0" aria-pressed="false">1</button><button type="button" data-n="1" aria-pressed="false">2</button><button type="button" data-n="2" aria-pressed="false">3</button><button type="button" data-n="3" aria-pressed="false">4</button><button type="button" data-n="4" aria-pressed="false">5</button><button type="button" data-n="5" aria-pressed="false">6</button><button type="button" data-n="6" aria-pressed="false">7</button><button type="button" data-n="7" aria-pressed="false">8</button></div>
+            <div class="chain-read" id="chain-read" hidden><span class="ch-list"></span><button type="button" id="chain-clear" aria-label="Clear chain">×</button></div>
+            <div class="sq-ed"><button type="button" id="p-copy">Copy</button><button type="button" id="p-paste" disabled>Paste</button></div>
+          </div>
+          <div class="rollwrap"><div class="roll" id="roll" role="grid" aria-label="Pattern"></div></div>
+        </div>
       </div>
     </section>
 
@@ -1242,7 +1264,7 @@ class KestrelProcessor extends AudioWorkletProcessor {
   }
 
   seqStep() {
-    const S = this.seq, len = Math.max(1, Math.min(64, S.length | 0, S.steps.length || 1));
+    const S = this.seq, len = Math.max(1, Math.min(512, S.length | 0, S.steps.length || 1));
     if (this.stepIdx >= len) this.stepIdx = 0;
     const i = this.stepIdx, st = S.steps[i] || { m: 'R' }, nx = S.steps[(i + 1) % len] || { m: 'R' };
     const base = this.fs * 60 / S.bpm / 4, sw = S.swing * 0.5;
@@ -1664,6 +1686,16 @@ for (const st of state.steps) { while (st.n >= 12) { st.n -= 12; st.o++; } st.o 
 state.v = 2; state.bend = { ...stockBend(), ...(state.bend || {}) }; state.br = state.br || {};
 state.params = { ...defaults, ...state.params };
 state.fx = { rat: false, dly: false, lex: false, ...(state.fx || {}) };
+// pattern slots (from the 303 app's banks): 8 patterns, edits save to the selected slot, ctrl/right-click or long-press chains them
+const SLOTS = 8;
+const slotOf = st => ({ steps: JSON.parse(JSON.stringify(st.steps)), swing: st.params ? st.params.swing : 0, gateLen: st.params ? st.params.gateLen : .5 });
+if (!Array.isArray(state.slots) || state.slots.length !== SLOTS) {
+  const names = Object.keys(PRESETS);
+  state.slots = Array.from({ length: SLOTS }, (_, i) => i === 0 ? slotOf(state) : names[i] ? slotOf(presetState(names[i])) : null);
+  state.slot = 0; state.chain = [];
+}
+if (!(state.slot >= 0 && state.slot < SLOTS)) state.slot = 0;
+state.chain = (state.chain || []).filter(k => k >= 0 && k < SLOTS);
 let saveT;
 function save() { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem('kestrel-ms1-v2', JSON.stringify(state)); } catch (e) {} }, 300); }
 
@@ -1691,7 +1723,13 @@ async function boot() {
 const post = (m) => { if (node) node.port.postMessage(m); };
 function seqMsg() {
   const p = state.params;
-  return { type: 'seq', seq: { steps: state.steps, length: state.steps.length, bpm: state.bpm, swing: p.swing, gateLen: 0.1 + p.gateLen * 0.85 } };
+  let steps = state.steps; chainOffs = [];
+  if (state.chain && state.chain.length >= 2) {
+    steps = [];
+    for (const k of state.chain) { chainOffs.push(steps.length); steps = steps.concat(k === state.slot ? state.steps : slotSteps(k)); }
+    chainOffs.push(steps.length);
+  }
+  return { type: 'seq', seq: { steps, length: steps.length, bpm: state.bpm, swing: p.swing, gateLen: 0.1 + p.gateLen * 0.85 } };
 }
 function pushFx() { post({ type: 'fxknobs', k: fxKnobs(state.params) }); for (const n of ['rat', 'dly', 'lex']) post({ type: 'fx', name: n, on: !!state.fx[n] }); }
 function pushAll() { pushFx(); post({ type: 'seq101', steps: state.s101 || [] }); post({ type: 'params', p: state.params }); post({ type: 'bend', b: bendPhysical(state.bend) }); post({ type: 'bridges', br: state.br }); post(seqMsg()); }
@@ -1846,7 +1884,7 @@ const roll = document.getElementById('roll'), sqMsg = document.getElementById('s
 const KEY_ROWS = [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], OCT_ROWS = [2, 1, -1, -2], BLACK = new Set([1, 3, 6, 8, 10]);
 const FLAG_ROWS = [['t', 'tie'], ['s', 'slide'], ['a', 'acc']];
 const SEQ_SHOW = 32, SEQ_MAX = 64;
-let selStep = -1, playStep = -1, seqCols = [], tail = [], undoBuf = null;
+let selStep = -1, playStep = -1, seqCols = [], tail = [], undoBuf = null, playingSlot = -1, chainOffs = [];
 const restStep = (st) => ({ n: st ? st.n : 0, o: st ? st.o : 0, m: 'R', a: false, s: false });
 const say = t => { sqMsg.textContent = t; };
 function renderSeq() {
@@ -1893,7 +1931,7 @@ function renderSide() {
   sv('len', P.length); sv('gate', Math.round((0.1 + p.gateLen * 0.85) * 100)); sv('swing', Math.round(p.swing * 100));
   document.getElementById('p-undo').disabled = !undoBuf;
 }
-function stepChanged() { renderSeq(); post(seqMsg()); save(); }
+function stepChanged() { storeSlot(); renderSeq(); post(seqMsg()); save(); renderBank(); }
 function setPitch(st, v) { st.o = Math.max(-2, Math.min(2, Math.floor(v / 12))); st.n = Math.max(0, Math.min(11, v - 12 * st.o)); }
 // one press: a key cell sets that note, or rests the step if it is already that note; octave lanes toggle;
 // tie holds the note before it (and takes its pitch); slide and accent toggle
@@ -2057,12 +2095,80 @@ async function lockLandscape() {
 }
 addEventListener('pointerdown', lockLandscape, { once: true, capture: true });
 
+// ---------- pattern slots ----------
+let clip = null; try { clip = JSON.parse(localStorage.getItem('kestrel.clip')); } catch (e) {}
+const slotsEl = document.getElementById('slots');
+const blankSteps = (len = 16) => Array.from({ length: len }, () => restStep());
+function slotSteps(k) { const x = state.slots[k]; return x && x.steps && x.steps.length ? x.steps : blankSteps(); }
+function storeSlot() { state.slots[state.slot] = { steps: clone(state.steps), swing: state.params.swing, gateLen: state.params.gateLen }; }
+function loadSlotData() {
+  const x = state.slots[state.slot];
+  state.steps = x && x.steps && x.steps.length ? cleanSteps(x.steps) : blankSteps();
+  if (x) { state.params.swing = x.swing ?? state.params.swing; state.params.gateLen = x.gateLen ?? state.params.gateLen; }
+  tail = []; undoBuf = null; selStep = -1;
+}
+function loadSlot(n) {
+  if (n === state.slot) return;
+  storeSlot(); state.slot = n; loadSlotData();
+  renderSeq(); post(seqMsg()); save(); renderBank(); say(`Pattern ${n + 1}.`);
+}
+function renderBank() {
+  for (const b of slotsEl.children) {
+    const n = +b.dataset.n, x = state.slots[n];
+    b.setAttribute('aria-pressed', n === state.slot);
+    b.classList.toggle('used', !!(x && x.steps && x.steps.some(st => st.m !== 'R')));
+    b.setAttribute('aria-label', `Pattern ${n + 1}`);
+  }
+  document.getElementById('p-paste').disabled = !clip;
+  renderChain();
+}
+function renderChain() {
+  const el = document.getElementById('chain-read'), on = state.chain.length >= 2;
+  el.hidden = !on;
+  el.querySelector('.ch-list').innerHTML = state.chain.map(k => `<span class="${on && running && k === playingSlot ? 'now' : ''}">${k + 1}</span>`).join('<span class="arr">›</span>');
+  for (const b of slotsEl.children) {
+    const k = +b.dataset.n, pos = state.chain.indexOf(k);
+    b.dataset.ch = on && pos >= 0 ? pos + 1 : '';
+    b.classList.toggle('playing', on && running && k === playingSlot);
+  }
+}
+function toggleChain(k) {
+  const pos = state.chain.indexOf(k);
+  if (pos >= 0) state.chain.splice(pos, 1);
+  else { if (!state.chain.length && k !== state.slot) state.chain.push(state.slot); state.chain.push(k); }
+  if (state.chain.length === 1) state.chain = [];
+  storeSlot(); post(seqMsg()); save(); renderBank();
+  say(state.chain.length >= 2 ? `Chain ${state.chain.map(k => k + 1).join(' › ')}. Right-click or long-press a slot to add or remove it.` : 'Chain cleared.');
+}
+// tap a slot to load it; ctrl/cmd-click, right-click or long-press adds it to the chain (as in the 303 app)
+let lpT = null, lpFired = false;
+slotsEl.addEventListener('pointerdown', e => {
+  const b = e.target.closest('button'); if (!b) return; lpFired = false;
+  clearTimeout(lpT); lpT = setTimeout(() => { lpFired = true; toggleChain(+b.dataset.n); if (navigator.vibrate) navigator.vibrate(15); }, 500);
+});
+for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) slotsEl.addEventListener(ev, () => clearTimeout(lpT));
+slotsEl.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (lpFired) { lpFired = false; return; }
+  if (e.metaKey || e.ctrlKey) toggleChain(+b.dataset.n); else loadSlot(+b.dataset.n);
+});
+slotsEl.addEventListener('contextmenu', e => { const b = e.target.closest('button'); if (!b) return; e.preventDefault(); if (!lpFired) toggleChain(+b.dataset.n); });
+document.getElementById('chain-clear').onclick = () => { state.chain = []; playingSlot = -1; post(seqMsg()); save(); renderBank(); say('Chain cleared.'); };
+document.getElementById('p-copy').onclick = () => { clip = { steps: clone(state.steps), swing: state.params.swing, gateLen: state.params.gateLen }; try { localStorage.setItem('kestrel.clip', JSON.stringify(clip)); } catch (e) {} renderBank(); say(`Copied pattern ${state.slot + 1}. Pick a slot and Paste.`); };
+document.getElementById('p-paste').onclick = () => {
+  if (!clip || !Array.isArray(clip.steps)) return; keepUndo();
+  state.steps = cleanSteps(clip.steps); state.params.swing = clip.swing ?? state.params.swing; state.params.gateLen = clip.gateLen ?? state.params.gateLen;
+  tail = []; stepChanged(); say(`Pasted into pattern ${state.slot + 1}. Undo puts it back.`);
+};
+renderBank();
+
 // ---------- transport ----------
 const playBtn = document.getElementById('play');
 async function setRun(on) {
   await boot(); running = on; post({ type: 'run', on });
   playBtn.classList.toggle('on', on); document.getElementById('playLab').textContent = on ? 'Stop' : 'Run';
-  if (!on) { for (const el of seqCols[playStep] || []) el.classList.remove('cur'); playStep = -1; }
+  if (!on) { for (const el of seqCols[playStep] || []) el.classList.remove('cur'); playStep = -1; playingSlot = -1; }
+  renderChain();
 }
 playBtn.onclick = () => setRun(!running);
 const bpmEl = document.getElementById('bpm');
@@ -2332,9 +2438,10 @@ const NAMER = (() => {
 
 // ---------- Kestrel glue: what a preset holds and how it loads ----------
 const clone = o => JSON.parse(JSON.stringify(o));
+const cleanSteps = a => clone(a).slice(0, 64).map(st => ({ n: Math.max(0, Math.min(11, st.n | 0)), o: Math.max(-2, Math.min(2, st.o | 0)), m: 'NTR'.includes(st.m) ? st.m : 'N', a: !!st.a, s: !!st.s }));
 function soundSnap() { return { params: clone(state.params), bend: clone(state.bend), br: clone(state.br), fx: clone(state.fx) }; }
 function patternSnap() { return { steps: clone(state.steps), s101: clone(state.s101 || []) }; }
-function projectSnap() { return { sound: soundSnap(), pattern: patternSnap(), bpm: state.bpm }; }
+function projectSnap() { storeSlot(); return { sound: soundSnap(), pattern: patternSnap(), bpm: state.bpm, slots: clone(state.slots), slot: state.slot, chain: [...state.chain] }; }
 function applySound(x) {
   if (!x || typeof x !== 'object') return;
   state.params = { ...defaults, ...(x.params || {}) }; state.bend = { ...stockBend(), ...(x.bend || {}) };
@@ -2345,7 +2452,7 @@ function applySound(x) {
 }
 function applyPattern(x) {
   if (!x || typeof x !== 'object' || !Array.isArray(x.steps) || !x.steps.length) return;
-  state.steps = clone(x.steps).slice(0, 64).map(st => ({ n: Math.max(0, Math.min(11, st.n | 0)), o: Math.max(-2, Math.min(2, st.o | 0)), m: 'NTR'.includes(st.m) ? st.m : 'N', a: !!st.a, s: !!st.s }));
+  state.steps = cleanSteps(x.steps);
   if (Array.isArray(x.s101)) state.s101 = clone(x.s101).slice(0, 100);
   tail = []; undoBuf = null; renderSeq();
 }
@@ -2357,7 +2464,16 @@ function applyPreset(x) {
   if (!x || typeof x !== 'object') return;
   boot();
   if (x.sound) applySound(x.sound);
-  if (!sndOnlyEl.checked && x.pattern) applyPattern(x.pattern);
+  if (!sndOnlyEl.checked) {
+    if (Array.isArray(x.slots) && x.slots.length) {
+      // a saved project brings all 8 pattern slots and the chain, as the 303's projects bring all their banks
+      state.slots = Array.from({ length: SLOTS }, (_, i) => { const v = x.slots[i]; return v && Array.isArray(v.steps) && v.steps.length ? { steps: cleanSteps(v.steps), swing: +v.swing || 0, gateLen: v.gateLen ?? .5 } : null; });
+      state.slot = x.slot >= 0 && x.slot < SLOTS ? x.slot | 0 : 0;
+      state.chain = Array.isArray(x.chain) ? x.chain.filter(k => k >= 0 && k < SLOTS) : [];
+      playingSlot = -1; loadSlotData();
+    } else if (x.pattern) { applyPattern(x.pattern); storeSlot(); }
+    renderBank();
+  }
   pushAll(); save();
 }
 // the four factory patches become the built-in presets
@@ -2396,7 +2512,15 @@ document.querySelector('#prj-bar .pm-btn').addEventListener('click', () => prjBa
 // ---------- engine feedback ----------
 function onEngineMsg(e) {
   const m = e.data;
-  if (m.type === 'step') { playStep = m.i; requestAnimationFrame(renderPlayLed); }
+  if (m.type === 'step') {
+    let i = m.i;
+    if (state.chain.length >= 2 && chainOffs.length) {
+      let c = 0; while (c < state.chain.length - 1 && i >= chainOffs[c + 1]) c++;
+      const k = state.chain[c]; i = k === state.slot ? i - chainOffs[c] : -1;
+      if (k !== playingSlot) { playingSlot = k; requestAnimationFrame(renderChain); }
+    }
+    playStep = i; requestAnimationFrame(renderPlayLed);
+  }
   else if (m.type === 's101') renderS101(m.i);
   else if (m.type === 'meters') {
     NODES.forEach((n, i) => { volts[n].textContent = (m.node[i] >= 0 ? '+' : '') + m.node[i].toFixed(2) + 'V'; });
