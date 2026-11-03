@@ -48,6 +48,7 @@ button, table, input, select { font: inherit; color: inherit; }
 .brand { display: flex; flex-direction: column; gap: 0; margin-right: auto; }
 .brand b { font-size: 40px; font-weight: 400; letter-spacing: .06em; line-height: 1; }
 .brand span { font-size: 18px; color: var(--muted); }
+.ver { font-style: normal; font-size: 18px; letter-spacing: 0; color: var(--muted); vertical-align: top; }
 .transport { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
 .btn { appearance: none; background: none; border: 2px solid var(--ink); color: var(--ink); padding: 2px 10px; border-radius: 4px; cursor: pointer;
   font-family: var(--f-lcd); font-size: 20px; text-transform: lowercase; text-shadow: var(--shadow); box-shadow: var(--shadow); }
@@ -122,6 +123,7 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
 .tabs .psu { margin: 0 0 6px auto; }
 .panel { padding: 12px 18px 14px; border-bottom: var(--rule); }
 .panel[hidden] { display: none; }
+.tabs .ph-only { display: none; }
 
 /* piano-roll sequencer: key rows, octave lanes, tie/slide/accent rows; dim columns past the end extend the pattern */
 .sq-body { display: grid; grid-template-columns: 196px minmax(0, 1fr); gap: 14px; align-items: start; }
@@ -170,35 +172,6 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
 }
 @keyframes tilt { 0%, 25% { transform: rotate(0); } 55%, 100% { transform: rotate(-90deg); } }
 /* landscape phone: everything tighter, the rack scrolls sideways in one row */
-@media (orientation: landscape) and (max-height: 520px) {
-  body { padding-block: 4px 8px; font-size: 16px; padding-left: max(6px, env(safe-area-inset-left, 0px)); padding-right: max(6px, env(safe-area-inset-right, 0px)); }
-  .unit { border-width: 3px; border-radius: 8px; }
-  .top { padding: 4px 10px; gap: 6px 14px; flex-wrap: nowrap; }
-  .brand b { font-size: 26px; } .brand span { display: none; }
-  canvas.scope { width: 150px; height: 32px; }
-  .btn { font-size: 18px; padding: 0 8px; }
-  .num { flex-direction: row; align-items: center; gap: 6px; font-size: 16px; }
-  .num input { font-size: 20px; width: 54px; }
-  .rack { display: flex; overflow-x: auto; scrollbar-width: thin; }
-  .mod { padding: 4px 8px 6px; gap: 4px; flex: none; border-bottom: 0; border-right: var(--rule); }
-  .mod h2 { font-size: 19px; } .mod h2 small { font-size: 14px; }
-  .ctrls { gap: 6px; flex-wrap: nowrap; }
-  .fdr { width: 34px; gap: 2px; } .fdr .track { height: 64px; width: 18px; }
-  .fdr label { font-size: 15px; } .fdr output { font-size: 13px; min-height: 13px; }
-  .sw .lab { font-size: 15px; } .sw button { font-size: 16px; }
-  .tabs { padding: 4px 10px 0; } .tabs button { font-size: 18px; padding: 0 10px; } .psu { font-size: 16px; }
-  .panel { padding: 6px 10px 8px; }
-  .sec-h p { display: none; }
-  .sq-body { grid-template-columns: 150px minmax(0, 1fr); gap: 8px; }
-  .stp { grid-template-columns: 1fr 22px 42px 22px; font-size: 15px; } .stp button { height: 20px; } .stp output { font-size: 16px; }
-  .acts { gap: 4px; } .acts button { height: 22px; font-size: 15px; }
-  .sq-msg { display: none; }
-  .roll { --row: clamp(9px, calc((100dvh - 64px) / 21), 14px); grid-template-columns: 32px repeat(var(--steps, 32), minmax(0, 1fr)); min-width: calc(34px + var(--steps, 32) * 16px); }
-  .roll > * { font-size: 12px; }
-  .perf101 { padding: 6px 10px 0; gap: 10px; } .perf101 h3 { font-size: 18px; }
-  .kb-wrap { padding: 6px 10px 8px; } .kb { height: 74px; }
-  .hint { display: none; }
-}
 
 .perf101 { display: flex; gap: 18px 32px; flex-wrap: wrap; align-items: flex-start; padding: 12px 18px 0; }
 .perf101 .grp { display: flex; flex-direction: column; gap: 6px; }
@@ -227,6 +200,52 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
   .brand { margin-right: 0; width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+/* landscape phone (sized on a Pixel 9a, 915 x 412 css px): the whole instrument is one screen with no page scroll.
+   Header, tabs and keyboard stay put; the space between shows one view: synth, sequencer, bend, bridges or perform. */
+@media (orientation: landscape) and (max-height: 520px) {
+  html, body { height: 100%; overflow: hidden; margin: 0; }
+  body { padding: 2px max(4px, env(safe-area-inset-right, 0px)) 2px max(4px, env(safe-area-inset-left, 0px)); font-size: 15px; }
+  .unit { height: calc(100dvh - 4px); display: flex; flex-direction: column; overflow: hidden; border-width: 3px; border-radius: 8px; }
+  .lower { display: contents; }
+  .top { order: 0; padding: 2px 8px; gap: 4px 10px; flex-wrap: nowrap; flex: none; }
+  .brand b { font-size: 22px; } .brand span { display: none; } .ver { font-size: 13px; }
+  canvas.scope { width: 120px; height: 26px; border-width: 1px; }
+  .btn { font-size: 16px; padding: 0 6px; border-width: 1.5px; }
+  .btn.play { min-width: 64px; }
+  .num { flex-direction: row; align-items: center; gap: 4px; font-size: 14px; }
+  .num input { font-size: 17px; width: 46px; border-width: 1.5px; padding: 0 2px; }
+  .tabs { order: 1; flex: none; padding: 2px 8px 0; gap: 3px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .tabs button { font-size: 16px; padding: 0 8px; border-width: 1.5px; white-space: nowrap; }
+  .tabs .ph-only { display: inline-block; }
+  .tabs .psu { font-size: 14px; margin-bottom: 3px; white-space: nowrap; padding: 0 4px; border-width: 1.5px; }
+  .rack, .panel, .perf101 { order: 2; flex: 1 1 auto; min-height: 0; overflow: auto; border-bottom: 0; }
+  .unit:not([data-view="tab-synth"]) .rack { display: none; }
+  .unit:not([data-view="tab-perf"]) .perf101 { display: none; }
+  .rack { display: flex; flex-wrap: wrap; align-content: flex-start; }
+  .mod { padding: 2px 6px 4px; gap: 2px; flex: none; border-bottom: var(--rule); border-right: var(--rule); }
+  .mod h2 { font-size: 16px; padding-bottom: 0; } .mod h2 small { display: none; }
+  .ctrls { gap: 3px; flex-wrap: nowrap; }
+  .fdr { width: 30px; gap: 1px; } .fdr .track { height: calc(min(56px, (100dvh - 190px) / 2)); width: 16px; }
+  .fdr label { font-size: 13px; } .fdr output { font-size: 12px; min-height: 12px; }
+  .sw { gap: 0; } .sw .lab { font-size: 13px; } .sw button { font-size: 14px; padding: 0 2px; }
+  .panel { padding: 4px 8px; }
+  .sec-h { margin-bottom: 4px; } .sec-h p { display: none; }
+  .bend-vals { gap: 6px 12px; margin-bottom: 4px; }
+  .sq-body { grid-template-columns: 136px minmax(0, 1fr); gap: 6px; }
+  .sq-side { gap: 3px; }
+  .stp { grid-template-columns: 1fr 20px 36px 20px; font-size: 14px; } .stp button { height: 18px; font-size: 11px; border-width: 1.5px; } .stp output { font-size: 15px; }
+  .acts { gap: 3px; margin-top: 2px; } .acts button { height: 20px; font-size: 14px; border-width: 1.5px; }
+  .sq-msg { display: none; }
+  .roll { --row: clamp(7px, calc((100dvh - 158px) / 20), 14px); grid-template-columns: 30px repeat(var(--steps, 32), minmax(0, 1fr)); min-width: calc(32px + var(--steps, 32) * 15px); border-width: 1.5px; }
+  .roll > * { font-size: 11px; }
+  .roll .rh { padding-left: 2px; }
+  .perf101 { padding: 4px 8px; gap: 8px 16px; } .perf101 h3 { font-size: 16px; }
+  .kb-wrap { order: 3; flex: none; padding: 3px 8px 4px; border-top: var(--rule); } .kb { height: clamp(44px, 16dvh, 70px); }
+  table.mx { border-spacing: 2px 1px; font-size: 13px; } .mx th { font-size: 13px; padding: 0 2px; line-height: 1; }
+  .mx .cell, .mx .cell.bridge { width: 46px; height: 17px; border-width: 1.5px; font-size: 12px; }
+  .mx .volt { font-size: 12px; width: 50px; margin-left: 2px; } .mx .jack { width: 7px; height: 7px; margin-right: 3px; }
+  .hint { display: none; }
+}
 </style>
 
 <div class="rotate" role="alert">
@@ -236,7 +255,7 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
 </div>
 <div class="unit" id="unit">
   <header class="top">
-    <div class="brand"><b>KESTREL MS-1</b><span>Circuit-modelled monosynth · bendable</span></div>
+    <div class="brand"><b>KESTREL MS-1 <i class="ver" id="ver">v0.4.0</i></b><span>Circuit-modelled monosynth · bendable</span></div>
     <canvas class="scope" id="scope" width="400" height="92" aria-label="Oscilloscope"></canvas>
     <div class="transport">
       <button class="btn play" id="play"><span class="led"></span><span id="playLab">Run</span></button>
@@ -251,9 +270,11 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
 
   <div class="lower">
     <nav class="tabs" role="tablist" aria-label="Panels">
+      <button role="tab" id="tab-synth" class="ph-only" aria-controls="rack" aria-selected="false">Synth</button>
       <button role="tab" id="tab-seq" aria-controls="pan-seq" aria-selected="true">Sequencer</button>
       <button role="tab" id="tab-bend" aria-controls="pan-bend" aria-selected="false">Bend board</button>
       <button role="tab" id="tab-br" aria-controls="pan-br" aria-selected="false">Bridges</button>
+      <button role="tab" id="tab-perf" class="ph-only" aria-controls="perf101" aria-selected="false">Perform</button>
       <span class="psu" id="psu">Battery 9.0 V · rail 100%</span>
     </nav>
 
@@ -294,7 +315,7 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
       <div class="scroll"><table class="mx" id="mx"></table></div>
     </section>
 
-    <section class="perf101" aria-label="Performance controls">
+    <section class="perf101" id="perf101" aria-label="Performance controls">
       <div class="grp"><h3>Bender</h3>
         <div class="row" id="benderSlot"></div>
         <div class="row"><div class="lever" id="lever" role="slider" tabindex="0" aria-label="Bend lever" aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0"><i></i></div>
@@ -1294,16 +1315,23 @@ document.getElementById('p-undo').onclick = () => {
 renderSeq();
 
 // ---------- tabs ----------
-const TABS = [['tab-seq', 'pan-seq'], ['tab-bend', 'pan-bend'], ['tab-br', 'pan-br']];
+const TABS = [['tab-synth', null], ['tab-seq', 'pan-seq'], ['tab-bend', 'pan-bend'], ['tab-br', 'pan-br'], ['tab-perf', null]];
+const phoneMQ = matchMedia('(orientation: landscape) and (max-height: 520px)'), unitEl = document.getElementById('unit');
+// Synth and Perform are tabs only on a landscape phone; elsewhere those sections are always on screen
 function showTab(id) {
-  for (const [t, p] of TABS) { const on = t === id; document.getElementById(t).setAttribute('aria-selected', on); document.getElementById(p).hidden = !on; }
+  if (!phoneMQ.matches && (id === 'tab-synth' || id === 'tab-perf')) id = 'tab-seq';
+  unitEl.dataset.view = id;
+  for (const [t, p] of TABS) { const on = t === id; document.getElementById(t).setAttribute('aria-selected', on); if (p) document.getElementById(p).hidden = !on; }
   try { localStorage.setItem('kestrel-ms1-tab', id); } catch (e) {}
 }
 TABS.forEach(([t], i) => {
   const b = document.getElementById(t); b.onclick = () => showTab(t);
   b.addEventListener('keydown', e => { const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!d) return; const n = TABS[(i + d + TABS.length) % TABS.length][0]; showTab(n); document.getElementById(n).focus(); });
 });
-try { const t = localStorage.getItem('kestrel-ms1-tab'); if (t && TABS.some(x => x[0] === t)) showTab(t); } catch (e) {}
+let firstTab = phoneMQ.matches ? 'tab-synth' : 'tab-seq';
+try { const t = localStorage.getItem('kestrel-ms1-tab'); if (t && TABS.some(x => x[0] === t)) firstTab = t; } catch (e) {}
+showTab(firstTab);
+phoneMQ.addEventListener('change', () => showTab(unitEl.dataset.view || 'tab-seq'));
 
 // ---------- phones: go full screen and hold landscape on the first touch ----------
 const coarse = matchMedia('(pointer: coarse)').matches;
