@@ -99,6 +99,8 @@ select.btn option { color: #000; }
 .sec-h h2 { margin: 0; font-size: 24px; font-weight: 400; text-transform: lowercase; }
 .sec-h p { margin: 0; font-size: 17px; color: var(--muted); max-width: 70ch; }
 .sec-h .tools { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.br-depth { grid-template-columns: 140px 44px; grid-template-rows: auto; gap: 0 6px; } .br-depth span { grid-column: auto; display: none; }
+.br-depth::before { content: 'depth'; grid-column: 1 / -1; font-size: 15px; line-height: 1; }
 .scroll { overflow-x: auto; }
 table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
 .mx th { font-size: 17px; font-weight: 400; text-transform: lowercase; padding: 0 4px; text-align: center; }
@@ -359,7 +361,7 @@ body { padding-block: 12px; margin: 0; }
 </div>
 <div class="unit" id="unit">
   <header class="top">
-    <div class="brand"><b>SHYOY <i class="ver" id="ver">v0.8.0</i></b><span>Circuit-modelled monosynth · bendable</span></div>
+    <div class="brand"><b>SHYOY <i class="ver" id="ver">v0.8.1</i></b><span>Circuit-modelled monosynth · bendable</span></div>
     <div class="transport">
       <button class="btn play" id="play"><span class="led"></span><span id="playLab">Run</span></button>
       <label class="num">Tempo<input id="bpm" type="number" min="40" max="240" value="124"></label>
@@ -438,7 +440,7 @@ body { padding-block: 12px; margin: 0; }
     <section class="panel" id="pan-br" role="tabpanel" aria-labelledby="tab-br" hidden>
       <div class="sec-h">
         <p>Bridge any circuit node into another through a resistor; lower resistance is a stronger bridge. Rows are nodes you tap, columns are where the wire lands. Your finger carries mains hum.</p>
-        <div class="tools"><button class="btn light" id="mxClear">Remove bridges</button></div>
+        <div class="tools"><label class="sld br-depth" title="How wild Randomise is: more bridges, lower resistances"><span>Depth</span><input type="range" id="brDepth" min="0" max="100" step="1" value="35" aria-label="Randomise depth"><output id="o-brDepth">35%</output></label><button class="btn light" id="mxRand" title="Replace the bridges with a random set, as wild as Depth">Randomise</button><button class="btn light" id="mxClear">Remove bridges</button></div>
       </div>
       <div class="scroll"><table class="mx" id="mx"></table></div>
     </section>
@@ -1894,6 +1896,22 @@ function renderFx() {
 }
 renderFx();
 
+// Randomise: depth sets how many bridges (1 at 0%, 8 at 100%) and how strong they can be (lower resistance)
+const brDepthEl = document.getElementById('brDepth'), brDepthOut = document.getElementById('o-brDepth');
+try { const d = localStorage.getItem('kestrel.brDepth'); if (d != null) brDepthEl.value = d; } catch (e) {}
+const showBrDepth = () => { brDepthOut.textContent = brDepthEl.value + '%'; };
+showBrDepth();
+brDepthEl.oninput = () => { showBrDepth(); try { localStorage.setItem('kestrel.brDepth', brDepthEl.value); } catch (e) {} };
+document.getElementById('mxRand').onclick = () => {
+  boot();
+  const d = brDepthEl.value / 100, keys = Object.keys(cells), n = 1 + Math.round(d * 7);
+  state.br = {};
+  for (let i = 0; i < n && keys.length; i++) {
+    const k = keys.splice(Math.floor(Math.random() * keys.length), 1)[0];
+    state.br[k] = Math.round((0.05 + Math.random() * (0.15 + 0.8 * d)) * 1000) / 1000;
+  }
+  Object.values(cells).forEach(r => r()); post({ type: 'bridges', br: state.br }); save();
+};
 document.getElementById('mxClear').onclick = () => { state.br = {}; Object.values(cells).forEach(r => r()); post({ type: 'bridges', br: state.br }); save(); };
 
 // ---------- UI: sequencer (piano roll) ----------
