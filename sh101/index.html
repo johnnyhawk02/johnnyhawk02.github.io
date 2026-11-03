@@ -290,7 +290,25 @@ body { padding-block: 12px; margin: 0; }
 .unit:not([data-view="tab-synth"]) .rack { display: none; }
 .unit:not([data-view="tab-perf"]) .perf101 { display: none; }
 .rack, .perf101 { border-bottom: 0; padding-bottom: 14px; }
-.roll { --row: clamp(14px, calc((100dvh - 340px) / 20), 26px); }
+.roll { --row: clamp(14px, calc((100dvh - 300px) / 21), 32px); }
+/* tidy pass (v0.9.0): one heading style, labels that always take two lines so value rows line up,
+   inline header labels, and the Perform tab laid out like the rack */
+.mod h2, .bend-grp h3, .perf101 h3 { font-size: 21px; color: var(--ink); font-weight: 400; border-bottom: var(--rule); padding-bottom: 2px; }
+.mod h2 small { font-size: 14px; }
+.fdr { width: auto; min-width: 40px; } .fdr label { white-space: nowrap; }
+.perf101 { align-items: stretch; }
+.unit[data-view="tab-bend"] .fdr .track { height: clamp(110px, calc(100dvh - 480px), 300px); }
+.fdr .track { height: clamp(70px, calc((100dvh - 350px) / 2), 190px); }
+.top .num { flex-direction: row; align-items: center; gap: 8px; }
+.transport { align-items: center; }
+.bend-vals { gap: 14px 0; }
+.bend-grp { padding: 0 22px; border-right: var(--rule); } .bend-grp:first-child { padding-left: 0; } .bend-grp:last-child { border-right: 0; }
+.perf101 { padding: 0; gap: 0; }
+.perf101 .grp { padding: 10px 22px 14px; border-right: var(--rule); border-bottom: var(--rule); gap: 10px; }
+.perf101 .row { align-items: flex-start; gap: 18px; }
+.perf101 .hint { padding: 12px 22px; }
+.fxrow { gap: 12px; }
+.fxu { padding: 6px 10px 8px; }
 /* landscape phone (sized on a Pixel 9a, 915 x 412 css px): the whole instrument is one screen with no page scroll.
    Header, tabs and keyboard stay put; the space between shows one view: synth, sequencer, bend, bridges or perform. */
 @media (orientation: landscape) and (max-height: 520px) {
@@ -343,12 +361,20 @@ body { padding-block: 12px; margin: 0; }
   .pm-pop { position: fixed; top: 34px; right: 6px; width: 360px; max-height: calc(100dvh - 40px) !important; }
   .pm button, .pm-foot button, .pm-foot input[type=text] { font-size: 15px; border-width: 1.5px; }
   .fxrow { gap: 3px 4px; }
-  .fxu .fdr .track { height: calc(min(64px, (100dvh - 178px) / 2)); }
+  .fxu .fdr .track { height: calc(min(92px, (100dvh - 200px) / 2)); }
   .fxu .fdr output { font-size: 11px; } .fxu .fdr label { font-size: 12px; } .fxu .sw button { font-size: 12px; line-height: 1.05; }
   .fxu .progs { grid-template-columns: repeat(2, auto); }
   .fxu { padding: 2px 4px 3px; gap: 2px; border-width: 1.5px; flex: none; }
   .fxu .fxh b { font-size: 16px; } .fxu .fxh small, .fxu .fxnote { display: none; }
   .fxu .onoff { font-size: 13px; border-width: 1.5px; padding: 0 3px; } .fxu .lcd { font-size: 13px; }
+  .mod h2, .bend-grp h3, .perf101 h3 { font-size: 16px; padding-bottom: 0; }
+  .fdr { width: auto; min-width: 30px; }
+  .rack .fdr .track { height: calc(min(100px, (100dvh - 190px) / 2)); }
+  .bend-grp { padding: 0 10px; }
+  .unit[data-view="tab-bend"] .fdr .track { height: calc(min(150px, 100dvh - 215px)); }
+  .unit[data-view="tab-perf"] .fdr .track { height: calc(min(130px, 100dvh - 230px)); }
+  .perf101 .grp { padding: 4px 10px 8px; gap: 6px; } .perf101 .row { gap: 10px; }
+  .top .num { gap: 4px; }
   .fxu .progs { grid-template-columns: repeat(3, auto); }
   .hint { display: none; }
 }
@@ -361,7 +387,7 @@ body { padding-block: 12px; margin: 0; }
 </div>
 <div class="unit" id="unit">
   <header class="top">
-    <div class="brand"><b>SHYOY <i class="ver" id="ver">v0.8.1</i></b><span>Circuit-modelled monosynth · bendable</span></div>
+    <div class="brand"><b>SHYOY <i class="ver" id="ver">v0.9.0</i></b><span>Circuit-modelled monosynth · bendable</span></div>
     <div class="transport">
       <button class="btn play" id="play"><span class="led"></span><span id="playLab">Run</span></button>
       <label class="num">Tempo<input id="bpm" type="number" min="40" max="240" value="124"></label>
