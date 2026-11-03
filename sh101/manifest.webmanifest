@@ -1,6 +1,6 @@
 {
-  "name": "Kestrel MS-1",
-  "short_name": "Kestrel",
+  "name": "Shyoy",
+  "short_name": "Shyoy",
   "description": "A circuit-modelled monosynth with a piano-roll sequencer, a bend board and effects.",
   "start_url": "./",
   "scope": "./",
