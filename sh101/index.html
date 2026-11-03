@@ -330,7 +330,7 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
 </div>
 <div class="unit" id="unit">
   <header class="top">
-    <div class="brand"><b>KESTREL MS-1 <i class="ver" id="ver">v0.5.2</i></b><span>Circuit-modelled monosynth · bendable</span></div>
+    <div class="brand"><b>KESTREL MS-1 <i class="ver" id="ver">v0.5.3</i></b><span>Circuit-modelled monosynth · bendable</span></div>
     <canvas class="scope" id="scope" width="400" height="92" aria-label="Oscilloscope"></canvas>
     <div class="transport">
       <button class="btn play" id="play"><span class="led"></span><span id="playLab">Run</span></button>
@@ -2520,7 +2520,22 @@ document.getElementById('installGo').onclick = async () => {
 };
 document.getElementById('installNo').onclick = () => { installEl.hidden = true; store.set('installNo', Date.now()); };
 addEventListener('appinstalled', () => { installEl.hidden = true; installEvt = null; });
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+// Auto-update: check for a new build on launch, whenever the app comes back to the front, and every 15 minutes.
+// A new build activates straight away (skipWaiting + clients.claim) and the page reloads itself, but never mid-pattern:
+// if the sequencer is running it waits until you stop or switch away. Patch and pattern are saved, so nothing is lost.
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  const hadSW = !!navigator.serviceWorker.controller;
+  let reloadDue = false;
+  const tryReload = () => { if (reloadDue && (!running || document.hidden)) { reloadDue = false; clearTimeout(saveT); try { localStorage.setItem('kestrel-ms1-v2', JSON.stringify(state)); } catch (e) {} location.reload(); } };
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadSW) { reloadDue = true; tryReload(); } });
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((reg) => {
+    const check = () => reg.update().catch(() => {});
+    check(); setInterval(check, 15 * 60 * 1000);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) tryReload(); else check(); });
+    addEventListener('focus', check);
+  }).catch(() => {});
+  playBtn.addEventListener('click', () => setTimeout(tryReload, 0));
+}
 
 window.__kestrel = { state, boot, setRun };
 })();
