@@ -365,6 +365,8 @@ const VCO_PPM = 50e-6;           // CEM3340 datasheet: on-chip tempco cancellati
 const I_CAP_MAX = 570e-6;        // CEM3340 datasheet: max timing-cap charge current ~570 uA typ
 const V_PULSE = 15 - 1.3;        // CEM3340 pulse: open-emitter output, high = V+ - 1.3 V
 const VCF_TC = 0.15;             // [SM] SDT-1000 thermistor (TH1) compensates the IR3109 expo
+const VCA_IN = OTA_DIV / 151;    // [SM] R130 150k / R139 1k divider into the BA662
+const VCA_OUT = 0.77 / VCA_IN;   // output scaled so small-signal loudness matches the earlier build
 const RES_DIODE = 1.6;           // [SM] D30/D31 clamp in the resonance loop (normalised OTA units)
 
 const NODES = ['SAW', 'PULSE', 'SUB', 'NOISE', 'LFOTRI', 'LFOSQ', 'ENVCAP', 'VCF2', 'VCFOUT', 'VCAOUT', 'FINGER'];
@@ -814,8 +816,10 @@ class KestrelProcessor extends AudioWorkletProcessor {
         this.y2 = y2; this.y4 = y4;
 
         // ===== VCA: OTA =====
-        const vcaIn = y4 * 0.35;
-        const v = tanh(vcaIn * tsc) * gain * 2.2;
+        // [SM] VCF out reaches the BA662 input through R130 150k into R139 1k (C53 couples it), so the OTA
+        // sees VCFout/151; in OTA units (2Vt) that is y4 * OTA_DIV / 151. R140 47k loads the current output.
+        const vcaIn = y4 * VCA_IN;
+        const v = tanh(vcaIn * tsc) * gain * VCA_OUT;
         y = bq(this.dec2, bq(this.dec1, v));
       }
       // node voltages for bend bridges (volts)
