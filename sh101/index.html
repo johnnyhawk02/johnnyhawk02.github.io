@@ -406,7 +406,7 @@ body { padding-block: 12px; margin: 0; }
 </div>
 <div class="unit" id="unit">
   <header class="top">
-    <div class="brand"><b>SHYOY <i class="ver" id="ver">v0.9.4</i></b><span>Circuit-modelled monosynth · bendable</span></div>
+    <div class="brand"><b>SHYOY <i class="ver" id="ver">v0.9.5</i></b><span>Circuit-modelled monosynth · bendable</span></div>
     <div class="transport">
       <button class="btn play" id="play"><span class="led"></span><span id="playLab">Run</span></button>
       <label class="num">Tempo<input id="bpm" type="number" min="40" max="240" value="124"></label>
@@ -429,7 +429,7 @@ body { padding-block: 12px; margin: 0; }
         <div class="menu-pop" id="menuPop" role="menu" hidden>
           <button role="menuitem" id="mInstall">Install app</button>
           <button role="menuitem" id="mUpdate">Check for update</button>
-          <span class="menu-ver" id="mVer">Shyoy v0.9.4</span>
+          <span class="menu-ver" id="mVer">Shyoy v0.9.5</span>
         </div>
       </div>
     </div>
@@ -2699,8 +2699,17 @@ window.addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
   if (k in KEYMAP) { noteOn(KEY_C + KEYMAP[k]); e.preventDefault(); }
   else if (k === 'z') setTranspose(-1); else if (k === 'x') setTranspose(1);
-  else if (k === ' ' && !(e.target.matches && e.target.matches('button, [role=slider]'))) { setRun(!running); e.preventDefault(); }
 });
+// Space is run/stop wherever focus is (buttons, sliders, faders, menus), except while typing text.
+// Caught first, in the capture phase, so a focused button or slider never gets it (buttons click on Space keyup).
+const typing = t => t && t.matches && (t.matches('textarea, [contenteditable=""], [contenteditable="true"]') || (t.matches('input') && !t.matches('[type=range], [type=number], [type=checkbox], [type=radio], [type=button], [type=file]')));
+addEventListener('keydown', e => {
+  if (e.code !== 'Space' && e.key !== ' ') return;
+  if (e.metaKey || e.ctrlKey || e.altKey || typing(e.target)) return;
+  e.preventDefault(); e.stopPropagation();
+  if (!e.repeat) setRun(!running);
+}, true);
+addEventListener('keyup', e => { if ((e.code === 'Space' || e.key === ' ') && !typing(e.target)) { e.preventDefault(); e.stopPropagation(); } }, true);
 window.addEventListener('keyup', e => { const k = e.key.toLowerCase(); if (k in KEYMAP) noteOff(KEY_C + KEYMAP[k]); });
 window.addEventListener('blur', allOff);
 // ---------- install as an app (Chrome on Android shows its own prompt when we ask) ----------
