@@ -243,15 +243,6 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
 .lever::after { content: ""; position: absolute; left: 50%; top: 2px; bottom: 2px; width: 2px; background: var(--muted); }
 .lever i { position: absolute; top: 2px; width: 18px; height: 22px; background: var(--ink); left: calc(50% - 9px); box-shadow: var(--shadow); }
 .readout { font-size: 22px; border: 2px solid var(--ink); padding: 0 8px; border-radius: 4px; min-width: 130px; }
-.kb-wrap { padding: 12px 18px 16px; display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-end; }
-.kb { position: relative; height: 110px; flex: 1 1 520px; min-width: 0; display: flex; user-select: none; touch-action: none; }
-.kb .w { flex: 1; border: 2px solid var(--ink); border-left-width: 0; position: relative; }
-.kb .w:first-child { border-left-width: 2px; }
-.kb .b { position: absolute; top: 0; height: 60%; background: var(--ink); z-index: 2; box-shadow: var(--shadow); }
-.kb .w.down { background: var(--ink); }
-.kb .b.down { background: var(--glass); outline: 2px solid var(--ink); outline-offset: -2px; }
-.kb .w small { position: absolute; bottom: 2px; left: 0; right: 0; text-align: center; font-size: 15px; color: var(--muted); }
-.kb .w.down small { color: var(--glass); }
 .hint { font-size: 17px; color: #8c9679; max-width: 1240px; margin: 12px auto 0; line-height: 1.3; }
 .hint kbd { font-family: var(--f-lcd); border: 1px solid #8c9679; padding: 0 4px; border-radius: 3px; color: #c8d1b4; }
 .status { font-size: 17px; color: var(--muted); }
@@ -286,7 +277,7 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
   .mod { padding: 2px 6px 4px; gap: 2px; flex: none; border-bottom: var(--rule); border-right: var(--rule); }
   .mod h2 { font-size: 16px; padding-bottom: 0; } .mod h2 small { display: none; }
   .ctrls { gap: 3px; flex-wrap: nowrap; }
-  .fdr { width: 30px; gap: 1px; } .fdr .track { height: calc(min(56px, (100dvh - 190px) / 2)); width: 16px; }
+  .fdr { width: 30px; gap: 1px; } .fdr .track { height: calc(min(84px, (100dvh - 120px) / 2)); width: 16px; }
   .fdr label { font-size: 13px; } .fdr output { font-size: 12px; min-height: 12px; }
   .sw { gap: 0; } .sw .lab { font-size: 13px; } .sw button { font-size: 14px; padding: 0 2px; }
   .panel { padding: 4px 8px; }
@@ -297,11 +288,10 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
   .stp { grid-template-columns: 1fr 20px 36px 20px; font-size: 14px; } .stp button { height: 18px; font-size: 11px; border-width: 1.5px; } .stp output { font-size: 15px; }
   .acts { gap: 3px; margin-top: 2px; } .acts button { height: 20px; font-size: 14px; border-width: 1.5px; }
   .sq-msg { display: none; }
-  .roll { --row: clamp(7px, calc((100dvh - 158px) / 20), 14px); grid-template-columns: 30px repeat(var(--steps, 32), minmax(0, 1fr)); min-width: calc(32px + var(--steps, 32) * 15px); border-width: 1.5px; }
+  .roll { --row: clamp(8px, calc((100dvh - 86px) / 20), 18px); grid-template-columns: 30px repeat(var(--steps, 32), minmax(0, 1fr)); min-width: calc(32px + var(--steps, 32) * 15px); border-width: 1.5px; }
   .roll > * { font-size: 11px; }
   .roll .rh { padding-left: 2px; }
   .perf101 { padding: 4px 8px; gap: 8px 16px; } .perf101 h3 { font-size: 16px; }
-  .kb-wrap { order: 3; flex: none; padding: 3px 8px 4px; border-top: var(--rule); } .kb { height: clamp(44px, 16dvh, 70px); }
   table.mx { border-spacing: 2px 1px; font-size: 13px; } .mx th { font-size: 13px; padding: 0 2px; line-height: 1; }
   .mx .cell, .mx .cell.bridge { width: 46px; height: 17px; border-width: 1.5px; font-size: 12px; }
   .mx .volt { font-size: 12px; width: 50px; margin-left: 2px; } .mx .jack { width: 7px; height: 7px; margin-right: 3px; }
@@ -311,7 +301,7 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
   .pm-pop { position: fixed; top: 34px; right: 6px; width: 360px; max-height: calc(100dvh - 40px) !important; }
   .pm button, .pm-foot button, .pm-foot input[type=text] { font-size: 15px; border-width: 1.5px; }
   .fxrow { gap: 3px 4px; }
-  .fxu .fdr .track { height: calc(min(40px, (100dvh - 250px) / 2)); }
+  .fxu .fdr .track { height: calc(min(64px, (100dvh - 178px) / 2)); }
   .fxu .fdr output { font-size: 11px; } .fxu .fdr label { font-size: 12px; } .fxu .sw button { font-size: 12px; line-height: 1.05; }
   .fxu .progs { grid-template-columns: repeat(2, auto); }
   .fxu { padding: 2px 4px 3px; gap: 2px; border-width: 1.5px; flex: none; }
@@ -329,7 +319,7 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
 </div>
 <div class="unit" id="unit">
   <header class="top">
-    <div class="brand"><b>KESTREL MS-1 <i class="ver" id="ver">v0.5.0</i></b><span>Circuit-modelled monosynth · bendable</span></div>
+    <div class="brand"><b>KESTREL MS-1 <i class="ver" id="ver">v0.5.1</i></b><span>Circuit-modelled monosynth · bendable</span></div>
     <canvas class="scope" id="scope" width="400" height="92" aria-label="Oscilloscope"></canvas>
     <div class="transport">
       <button class="btn play" id="play"><span class="led"></span><span id="playLab">Run</span></button>
@@ -428,9 +418,6 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
         </div>
         <span class="readout" id="s101Read">Seq 0/100</span>
       </div>
-    </section>
-    <section class="kb-wrap" aria-label="Keyboard">
-      <div class="kb" id="kb"></div>
     </section>
   </div>
 </div>
@@ -2408,23 +2395,9 @@ function drawScope() {
 
 
 // ---------- keyboard: 32 keys, F to C ----------
-const LOW_F = 53; const kb = document.getElementById('kb');
+// notes come from the computer keyboard (and the sequencers); the on-screen keyboard was removed at Johnny's request
+const LOW_F = 53;
 const keyEls = {};
-function buildKb() {
-  kb.innerHTML = '';
-  const isBlack = r => [1, 3, 6, 8, 10].includes((r + 5) % 12);
-  const whites = []; for (let r = 0; r < 32; r++) if (!isBlack(r)) whites.push(r);
-  const nW = whites.length;
-  whites.forEach(r => { const d = document.createElement('div'); d.className = 'w'; d.dataset.n = r; if ((r + 5) % 12 === 0) d.innerHTML = `<small>C${(LOW_F + r) / 12 - 1}</small>`; kb.appendChild(d); keyEls[r] = d; });
-  whites.forEach((r, i) => {
-    if (r + 1 < 32 && isBlack(r + 1)) {
-      const b = document.createElement('div'); b.className = 'b'; b.dataset.n = r + 1;
-      b.style.left = `calc(${(i + 1) / nW * 100}% - ${100 / nW * 0.3}%)`; b.style.width = (100 / nW * 0.6) + '%';
-      kb.appendChild(b); keyEls[r + 1] = b;
-    }
-  });
-}
-buildKb();
 const held = new Set();
 const mode101 = { arp: 0, seq: 0, hold: false };
 state.s101 = Array.isArray(state.s101) ? state.s101 : [{ n: 48 }, { n: 48 }, { n: 60 }, { r: true }, { n: 55 }, { n: 58, l: true }, { n: 60 }, { n: 63 }];
@@ -2444,14 +2417,6 @@ async function noteOn(rel) {
   post({ type: 'noteOn', n });
 }
 function noteOff(rel) { const n = LOW_F + rel; if (!held.has(n)) return; held.delete(n); keyEls[rel] && keyEls[rel].classList.remove('down'); post({ type: 'noteOff', n }); }
-const ptrNote = new Map();
-kb.addEventListener('pointerdown', e => { const k = e.target.closest('[data-n]'); if (!k) return; kb.setPointerCapture(e.pointerId); const n = +k.dataset.n; ptrNote.set(e.pointerId, n); noteOn(n); });
-kb.addEventListener('pointermove', e => {
-  if (!ptrNote.has(e.pointerId)) return; const t = document.elementFromPoint(e.clientX, e.clientY); const k = t && t.closest && t.closest('#kb [data-n]'); if (!k) return;
-  const n = +k.dataset.n, prev = ptrNote.get(e.pointerId); if (n !== prev) { ptrNote.set(e.pointerId, n); noteOn(n); noteOff(prev); }
-});
-const kbUp = e => { if (!ptrNote.has(e.pointerId)) return; noteOff(ptrNote.get(e.pointerId)); ptrNote.delete(e.pointerId); };
-kb.addEventListener('pointerup', kbUp); kb.addEventListener('pointercancel', kbUp);
 // computer keys: A = the C in the middle of the keyboard
 const KEYMAP = { a: 0, w: 1, s: 2, e: 3, d: 4, f: 5, t: 6, g: 7, y: 8, h: 9, u: 10, j: 11, k: 12, o: 13, l: 14, p: 15, ';': 16 };
 const KEY_C = 7;
