@@ -271,6 +271,24 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
   .brand { margin-right: 0; width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+/* every screen is tabbed (Johnny, v0.8.0): header, then the tab row, then one view: synth, sequencer, bend board,
+   bridges, FX or perform. On desktop the unit fills the window height and the piano roll grows with it. */
+.lower { display: contents; }
+.unit { display: flex; flex-direction: column; height: calc(100dvh - 24px); min-height: 560px; max-width: 1480px; overflow: hidden; }
+body { padding-block: 12px; margin: 0; }
+.top { order: 0; flex: none; } .tabs { order: 1; flex: none; } .rack, .panel, .perf101 { order: 2; flex: 1 1 auto; min-height: 0; overflow: auto; }
+.rack { display: flex; flex-wrap: wrap; align-content: flex-start; }
+.rack .mod { flex: 1 1 auto; border-bottom: var(--rule); }
+.rack .ctrls { flex-wrap: nowrap; }
+.fdr .track { height: clamp(70px, calc((100dvh - 330px) / 2), 170px); }
+.perf101 { align-content: flex-start; }
+.perf101 .hint { flex-basis: 100%; color: var(--muted); margin: 0; max-width: none; }
+.perf101 .hint kbd { color: var(--ink); border-color: var(--ink); }
+.tabs .ph-only { display: inline-block; }
+.unit:not([data-view="tab-synth"]) .rack { display: none; }
+.unit:not([data-view="tab-perf"]) .perf101 { display: none; }
+.rack, .perf101 { border-bottom: 0; padding-bottom: 14px; }
+.roll { --row: clamp(14px, calc((100dvh - 340px) / 20), 26px); }
 /* landscape phone (sized on a Pixel 9a, 915 x 412 css px): the whole instrument is one screen with no page scroll.
    Header, tabs and keyboard stay put; the space between shows one view: synth, sequencer, bend, bridges or perform. */
 @media (orientation: landscape) and (max-height: 520px) {
@@ -341,7 +359,7 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
 </div>
 <div class="unit" id="unit">
   <header class="top">
-    <div class="brand"><b>SHYOY <i class="ver" id="ver">v0.7.0</i></b><span>Circuit-modelled monosynth · bendable</span></div>
+    <div class="brand"><b>SHYOY <i class="ver" id="ver">v0.8.0</i></b><span>Circuit-modelled monosynth · bendable</span></div>
     <div class="transport">
       <button class="btn play" id="play"><span class="led"></span><span id="playLab">Run</span></button>
       <label class="num">Tempo<input id="bpm" type="number" min="40" max="240" value="124"></label>
@@ -2072,9 +2090,7 @@ renderSeq();
 // ---------- tabs ----------
 const TABS = [['tab-synth', null], ['tab-seq', 'pan-seq'], ['tab-bend', 'pan-bend'], ['tab-br', 'pan-br'], ['tab-fx', 'pan-fx'], ['tab-perf', null]];
 const phoneMQ = matchMedia('(orientation: landscape) and (max-height: 520px)'), unitEl = document.getElementById('unit');
-// Synth and Perform are tabs only on a landscape phone; elsewhere those sections are always on screen
 function showTab(id) {
-  if (!phoneMQ.matches && (id === 'tab-synth' || id === 'tab-perf')) id = 'tab-seq';
   unitEl.dataset.view = id;
   for (const [t, p] of TABS) { const on = t === id; document.getElementById(t).setAttribute('aria-selected', on); if (p) document.getElementById(p).hidden = !on; }
   try { localStorage.setItem('kestrel-ms1-tab', id); } catch (e) {}
@@ -2083,8 +2099,10 @@ TABS.forEach(([t], i) => {
   const b = document.getElementById(t); b.onclick = () => showTab(t);
   b.addEventListener('keydown', e => { const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!d) return; const n = TABS[(i + d + TABS.length) % TABS.length][0]; showTab(n); document.getElementById(n).focus(); });
 });
-let firstTab = phoneMQ.matches ? 'tab-synth' : 'tab-seq';
+let firstTab = 'tab-synth';
 try { const t = localStorage.getItem('kestrel-ms1-tab'); if (t && TABS.some(x => x[0] === t)) firstTab = t; } catch (e) {}
+// the computer-keyboard help lives in the Perform tab now that every screen is tabbed
+{ const h = document.querySelector('body > .hint'); const pf = document.getElementById('perf101'); if (h && pf) pf.appendChild(h); }
 showTab(firstTab);
 phoneMQ.addEventListener('change', () => showTab(unitEl.dataset.view || 'tab-seq'));
 
