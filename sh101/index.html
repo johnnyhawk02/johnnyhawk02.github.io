@@ -299,7 +299,7 @@ body { padding-block: 12px; margin: 0; }
 .unit:not([data-view="tab-synth"]) .rack { display: none; }
 .unit:not([data-view="tab-perf"]) .perf101 { display: none; }
 .rack, .perf101 { border-bottom: 0; padding-bottom: 14px; }
-.roll { --row: clamp(14px, calc((100dvh - 300px) / 21), 32px); }
+.roll { --row: clamp(14px, calc((100dvh - 330px) / 21), 32px); }
 /* tidy pass (v0.9.0): one heading style, labels that always take two lines so value rows line up,
    inline header labels, and the Perform tab laid out like the rack */
 .mod h2, .bend-grp h3, .perf101 h3 { font-size: 21px; color: var(--ink); font-weight: 400; border-bottom: var(--rule); padding-bottom: 2px; }
@@ -318,6 +318,13 @@ body { padding-block: 12px; margin: 0; }
 .perf101 .hint { padding: 12px 22px; }
 .fxrow { gap: 12px; }
 .fxu { padding: 6px 10px 8px; }
+/* sequencer controls in one strip above the roll, so the roll gets the full width (Johnny, v0.9.4) */
+.sq-body { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.sq-side { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; }
+.sq-side .sld { grid-template-columns: auto 120px 44px; grid-template-rows: auto; gap: 0 8px; }
+.sq-side .sld span { grid-column: auto; }
+.acts { display: flex; gap: 6px; margin: 0; } .acts button { padding: 0 10px; }
+.sq-msg { flex: 1 1 200px; min-height: 0; font-size: 15px; }
 /* landscape phone (sized on a Pixel 9a, 915 x 412 css px): the whole instrument is one screen with no page scroll.
    Header, tabs and keyboard stay put; the space between shows one view: synth, sequencer, bend, bridges or perform. */
 @media (orientation: landscape) and (max-height: 520px) {
@@ -357,7 +364,7 @@ body { padding-block: 12px; margin: 0; }
   .sq-msg { display: none; }
   .sq-main { gap: 3px; } .sq-bank { gap: 3px 8px; font-size: 13px; } .bk-lab { display: none; }
   .slots { gap: 3px; } .slots button, .sq-ed button { height: 20px; min-width: 26px; font-size: 13px; border-width: 1.5px; padding: 0 4px; } .chain-read button { height: 18px; }
-  .roll { --row: clamp(8px, calc((100dvh - 110px) / 20), 18px); grid-template-columns: 30px repeat(var(--steps, 32), minmax(0, 1fr)); min-width: 0; border-width: 1.5px; }
+  .roll { --row: clamp(8px, calc((100dvh - 138px) / 20), 18px); grid-template-columns: 30px repeat(var(--steps, 32), minmax(0, 1fr)); min-width: 0; border-width: 1.5px; }
   .roll > * { font-size: 11px; }
   .roll .rh { padding-left: 2px; }
   .perf101 { padding: 4px 8px; gap: 8px 16px; } .perf101 h3 { font-size: 16px; }
@@ -378,6 +385,9 @@ body { padding-block: 12px; margin: 0; }
   .fxu .onoff { font-size: 13px; border-width: 1.5px; padding: 0 3px; } .fxu .lcd { font-size: 13px; }
   .mod h2, .bend-grp h3, .perf101 h3 { font-size: 16px; padding-bottom: 0; }
   .fdr { width: auto; min-width: 30px; }
+  .sq-body { grid-template-columns: minmax(0, 1fr); gap: 3px; } .sq-side { gap: 3px 12px; }
+  .sq-side .sld { grid-template-columns: auto 64px 30px; gap: 0 4px; font-size: 13px; } .sq-side .sld span { line-height: 1; }
+  .acts button { padding: 0 6px; height: 20px; }
   .rack .fdr .track { height: calc(min(100px, (100dvh - 190px) / 2)); }
   .bend-grp { padding: 0 10px; }
   .unit[data-view="tab-bend"] .fdr .track { height: calc(min(150px, 100dvh - 215px)); }
@@ -396,7 +406,7 @@ body { padding-block: 12px; margin: 0; }
 </div>
 <div class="unit" id="unit">
   <header class="top">
-    <div class="brand"><b>SHYOY <i class="ver" id="ver">v0.9.3</i></b><span>Circuit-modelled monosynth · bendable</span></div>
+    <div class="brand"><b>SHYOY <i class="ver" id="ver">v0.9.4</i></b><span>Circuit-modelled monosynth · bendable</span></div>
     <div class="transport">
       <button class="btn play" id="play"><span class="led"></span><span id="playLab">Run</span></button>
       <label class="num">Tempo<input id="bpm" type="number" min="40" max="240" value="124"></label>
@@ -419,7 +429,7 @@ body { padding-block: 12px; margin: 0; }
         <div class="menu-pop" id="menuPop" role="menu" hidden>
           <button role="menuitem" id="mInstall">Install app</button>
           <button role="menuitem" id="mUpdate">Check for update</button>
-          <span class="menu-ver" id="mVer">Shyoy v0.9.3</span>
+          <span class="menu-ver" id="mVer">Shyoy v0.9.4</span>
         </div>
       </div>
     </div>
