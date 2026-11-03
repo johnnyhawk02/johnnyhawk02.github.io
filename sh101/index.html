@@ -194,6 +194,15 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
 .stp button:active, .acts button:active { background: var(--ink); color: var(--glass); }
 .stp button:disabled, .acts button:disabled { opacity: .35; cursor: default; }
 .stp output { text-align: center; font-size: 20px; }
+.sld { display: grid; grid-template-columns: 1fr 46px; grid-template-rows: auto auto; align-items: center; gap: 0 6px; font-size: 18px; text-transform: lowercase; }
+.sld span { grid-column: 1 / -1; }
+.sld output { text-align: right; font-size: 20px; }
+.sld input { -webkit-appearance: none; appearance: none; width: 100%; height: 22px; margin: 0; background: none; cursor: pointer; touch-action: none; }
+.sld input::-webkit-slider-runnable-track { height: 10px; border: 2px solid var(--ink); border-radius: 2px; background: repeating-linear-gradient(90deg, var(--ghost) 0 3px, transparent 3px 6px); }
+.sld input::-moz-range-track { height: 6px; border: 2px solid var(--ink); border-radius: 2px; background: repeating-linear-gradient(90deg, var(--ghost) 0 3px, transparent 3px 6px); }
+.sld input::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 20px; margin-top: -7px; background: var(--ink); border: 0; border-radius: 2px; box-shadow: var(--shadow); }
+.sld input::-moz-range-thumb { width: 12px; height: 20px; background: var(--ink); border: 0; border-radius: 2px; }
+.sld input:focus-visible { outline: 2px dashed var(--ink); outline-offset: 2px; }
 .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
 .acts button { font-size: 18px; height: 28px; text-transform: lowercase; }
 .sq-msg { font-size: 16px; color: var(--muted); min-height: 2.3em; line-height: 1.15; }
@@ -286,6 +295,8 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
   .sq-body { grid-template-columns: 136px minmax(0, 1fr); gap: 6px; }
   .sq-side { gap: 3px; }
   .stp { grid-template-columns: 1fr 20px 36px 20px; font-size: 14px; } .stp button { height: 18px; font-size: 11px; border-width: 1.5px; } .stp output { font-size: 15px; }
+  .sld { grid-template-columns: 1fr 34px; grid-template-rows: auto; font-size: 13px; } .sld span { grid-column: 1 / -1; line-height: 1; } .sld output { font-size: 14px; } .sld input { height: 16px; }
+  .sld input::-webkit-slider-runnable-track { height: 8px; border-width: 1.5px; } .sld input::-webkit-slider-thumb { width: 9px; height: 15px; margin-top: -5px; }
   .acts { gap: 3px; margin-top: 2px; } .acts button { height: 20px; font-size: 14px; border-width: 1.5px; }
   .sq-msg { display: none; }
   .roll { --row: clamp(8px, calc((100dvh - 86px) / 20), 18px); grid-template-columns: 30px repeat(var(--steps, 32), minmax(0, 1fr)); min-width: calc(32px + var(--steps, 32) * 15px); border-width: 1.5px; }
@@ -319,7 +330,7 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
 </div>
 <div class="unit" id="unit">
   <header class="top">
-    <div class="brand"><b>KESTREL MS-1 <i class="ver" id="ver">v0.5.1</i></b><span>Circuit-modelled monosynth · bendable</span></div>
+    <div class="brand"><b>KESTREL MS-1 <i class="ver" id="ver">v0.5.2</i></b><span>Circuit-modelled monosynth · bendable</span></div>
     <canvas class="scope" id="scope" width="400" height="92" aria-label="Oscilloscope"></canvas>
     <div class="transport">
       <button class="btn play" id="play"><span class="led"></span><span id="playLab">Run</span></button>
@@ -358,11 +369,11 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
     <section class="panel seq" id="pan-seq" role="tabpanel" aria-labelledby="tab-seq">
       <div class="sq-body">
         <div class="sq-side">
-          <div class="stp"><span>Length</span><button data-a="len" data-d="-1" aria-label="Length down">◀</button><output id="o-len">16</output><button data-a="len" data-d="1" aria-label="Length up">▶</button></div>
-          <div class="stp"><span>Gate</span><button data-a="gate" data-d="-1" aria-label="Gate time down">◀</button><output id="o-gate">50%</output><button data-a="gate" data-d="1" aria-label="Gate time up">▶</button></div>
-          <div class="stp"><span>Swing</span><button data-a="swing" data-d="-1" aria-label="Swing down">◀</button><output id="o-swing">0%</output><button data-a="swing" data-d="1" aria-label="Swing up">▶</button></div>
-          <div class="stp"><span>Shift</span><button data-a="shift" data-d="-1" aria-label="Shift pattern left">◀</button><output>step</output><button data-a="shift" data-d="1" aria-label="Shift pattern right">▶</button></div>
-          <div class="stp"><span>Transpose</span><button data-a="tr" data-d="-1" aria-label="Transpose down a semitone">▼</button><output>semi</output><button data-a="tr" data-d="1" aria-label="Transpose up a semitone">▲</button></div>
+          <label class="sld"><span>Length</span><input type="range" data-a="len" min="1" max="64" step="1" aria-label="Pattern length"><output id="o-len">16</output></label>
+          <label class="sld"><span>Gate</span><input type="range" data-a="gate" min="10" max="95" step="1" aria-label="Gate time"><output id="o-gate">50%</output></label>
+          <label class="sld"><span>Swing</span><input type="range" data-a="swing" min="0" max="75" step="1" aria-label="Swing"><output id="o-swing">0%</output></label>
+          <label class="sld spr" title="Drag to rotate the pattern; springs back to centre"><span>Shift</span><input type="range" data-a="shift" min="-16" max="16" step="1" value="0" aria-label="Shift pattern by steps"><output id="o-shift">0</output></label>
+          <label class="sld spr" title="Drag to transpose the pattern; springs back to centre"><span>Transpose</span><input type="range" data-a="tr" min="-12" max="12" step="1" value="0" aria-label="Transpose pattern by semitones"><output id="o-tr">0</output></label>
           <div class="acts">
             <button id="p-dup" title="Repeat the pattern out to 16, 32 or 64 steps">Double</button>
             <button id="p-shuf" title="Deal the steps out in a new order">Shuffle</button>
@@ -1878,8 +1889,8 @@ function renderSide() {
   document.getElementById('o-len').textContent = P.length;
   document.getElementById('o-gate').textContent = Math.round((0.1 + p.gateLen * 0.85) * 100) + '%';
   document.getElementById('o-swing').textContent = Math.round(p.swing * 100) + '%';
-  const pit = P.map(st => st.n + 12 * st.o), lo = Math.min(...pit), hi = Math.max(...pit);
-  for (const b of document.querySelectorAll('.stp button[data-a="tr"]')) b.disabled = +b.dataset.d < 0 ? lo <= -24 : hi >= 35;
+  const sv = (a, v) => { const el = sideIn[a]; if (el && !el.matches(':active')) el.value = v; };
+  sv('len', P.length); sv('gate', Math.round((0.1 + p.gateLen * 0.85) * 100)); sv('swing', Math.round(p.swing * 100));
   document.getElementById('p-undo').disabled = !undoBuf;
 }
 function stepChanged() { renderSeq(); post(seqMsg()); save(); }
@@ -1951,15 +1962,38 @@ function preview(i) {
   post({ type: 'noteOn', n }); clearTimeout(prevT); prevT = setTimeout(() => post({ type: 'noteOff', n }), 160);
 }
 const keepUndo = () => { undoBuf = JSON.stringify({ steps: state.steps, tail }); };
-document.querySelector('.sq-side').addEventListener('click', e => {
-  const b = e.target.closest('button[data-a]'); if (!b) return;
-  const d = +b.dataset.d, P = state.steps, p = state.params;
-  switch (b.dataset.a) {
-    case 'len': if (d < 0 && P.length > 1) tail.unshift(P.pop()); else if (d > 0) extendTo(P.length + 1); break;
-    case 'gate': { const g = Math.min(0.95, Math.max(0.1, Math.round((0.1 + p.gateLen * 0.85 + d * 0.05) * 100) / 100)); p.gateLen = (g - 0.1) / 0.85; break; }
-    case 'swing': p.swing = Math.min(0.75, Math.max(0, Math.round((p.swing + d * 0.05) * 100) / 100)); break;
-    case 'shift': if (d > 0) P.unshift(P.pop()); else P.push(P.shift()); break;
-    case 'tr': if (P.every(st => { const v = st.n + 12 * st.o + d; return v >= -24 && v <= 35; })) for (const st of P) setPitch(st, st.n + 12 * st.o + d); break;
+// length, gate and swing are plain sliders; shift and transpose are spring-loaded:
+// they act relative to the pattern as it was when the drag began, then snap back to 0
+const sideIn = {}; for (const el of document.querySelectorAll('.sld input')) sideIn[el.dataset.a] = el;
+let sprBase = null;
+const sprReset = () => { sprBase = null; for (const a of ['shift', 'tr']) { sideIn[a].value = 0; document.getElementById('o-' + a).textContent = '0'; } };
+for (const a of ['shift', 'tr']) {
+  const el = sideIn[a];
+  el.addEventListener('pointerdown', () => { sprBase = state.steps.map(st => ({ ...st })); });
+  el.addEventListener('focus', () => { if (!sprBase) sprBase = state.steps.map(st => ({ ...st })); });
+  el.addEventListener('change', () => { if (el.matches(':focus-visible')) return; sprReset(); });
+  el.addEventListener('pointerup', sprReset); el.addEventListener('pointercancel', sprReset); el.addEventListener('blur', sprReset);
+}
+document.querySelector('.sq-side').addEventListener('input', e => {
+  const el = e.target.closest('input[data-a]'); if (!el) return;
+  const v = +el.value, P = state.steps, p = state.params;
+  switch (el.dataset.a) {
+    case 'len': while (P.length > v && P.length > 1) tail.unshift(P.pop()); extendTo(v); break;
+    case 'gate': p.gateLen = (v / 100 - 0.1) / 0.85; break;
+    case 'swing': p.swing = v / 100; break;
+    case 'shift': {
+      if (!sprBase || sprBase.length !== P.length) sprBase = P.map(st => ({ ...st }));
+      const n = sprBase.length, k = ((v % n) + n) % n;
+      state.steps = sprBase.map((_, i) => ({ ...sprBase[(i - k + n) % n] }));
+      document.getElementById('o-shift').textContent = (v > 0 ? '+' : '') + v; break;
+    }
+    case 'tr': {
+      if (!sprBase || sprBase.length !== P.length) sprBase = P.map(st => ({ ...st }));
+      const pit = sprBase.map(st => st.n + 12 * st.o), lo = Math.min(...pit), hi = Math.max(...pit);
+      const d = Math.max(-24 - lo, Math.min(35 - hi, v));
+      state.steps = sprBase.map(st => { const c = { ...st }; setPitch(c, st.n + 12 * st.o + d); return c; });
+      document.getElementById('o-tr').textContent = (d > 0 ? '+' : '') + d; break;
+    }
   }
   stepChanged();
 });
