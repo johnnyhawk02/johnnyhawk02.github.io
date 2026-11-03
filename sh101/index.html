@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#161815">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 </head>
 <body>
 <title>Kestrel MS-1</title>
@@ -124,6 +128,63 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
 .panel { padding: 12px 18px 14px; border-bottom: var(--rule); }
 .panel[hidden] { display: none; }
 .tabs .ph-only { display: none; }
+/* install pop-up: an LCD card along the bottom edge */
+.install { position: fixed; z-index: 60; left: 50%; bottom: max(12px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(560px, calc(100vw - 24px));
+  display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: var(--glass); color: var(--ink); border: 4px solid var(--bezel); border-radius: 10px;
+  box-shadow: 0 12px 34px rgba(0,0,0,.55); text-shadow: var(--shadow); }
+.install[hidden] { display: none; }
+.install svg { width: 34px; height: 34px; flex: none; }
+.install div { display: flex; flex-direction: column; flex: 1; min-width: 0; line-height: 1.1; }
+.install b { font-weight: 400; font-size: 22px; text-transform: lowercase; }
+.install span { font-size: 16px; color: var(--muted); }
+/* effects (from the 303 app): one box per unit, a power switch in its head */
+.fxrow { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-start; }
+.fxu { border: 2px solid var(--ink); border-radius: 4px; padding: 4px 8px 6px; display: flex; flex-direction: column; gap: 4px; opacity: .55; }
+.fxu.on { opacity: 1; }
+.fxu .fxh { display: flex; align-items: center; gap: 8px; border-bottom: var(--rule); padding-bottom: 2px; }
+.fxu .fxh b { font-weight: 400; font-size: 21px; text-transform: lowercase; }
+.fxu .fxh small { color: var(--muted); font-size: 15px; }
+.fxu .onoff { appearance: none; border: 2px solid var(--ink); background: none; color: var(--ink); border-radius: 3px; font-size: 16px; padding: 0 6px; cursor: pointer; text-transform: lowercase; }
+.fxu .onoff[aria-pressed="true"] { background: var(--ink); color: var(--glass); }
+.fxu .lcd { font-size: 17px; border: 1.5px solid var(--ink); padding: 0 6px; border-radius: 3px; white-space: nowrap; }
+.fxu .fxnote { font-size: 15px; color: var(--muted); max-width: 46ch; margin: 0; }
+.fxu .progs { display: grid; grid-template-columns: repeat(3, auto); gap: 0 6px; }
+
+/* preset menu (from the 303 app), drawn as LCD */
+.presets { position: relative; display: flex; align-items: center; gap: 6px; }
+.pm { position: relative; display: flex; min-width: 0; }
+.pm button, .pm-foot button, .pm input[type=text], .pm-foot input[type=text] { appearance: none; border: 2px solid var(--ink); background: none; color: var(--ink); border-radius: 3px; font-size: 18px; padding: 0 8px; cursor: pointer; text-shadow: none; }
+.pm .pm-btn { min-width: 170px; max-width: 260px; display: flex; justify-content: space-between; text-align: left; text-transform: lowercase; }
+.pm-btn .cur { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pm .pm-btn::after { content: "▾"; margin-left: 8px; }
+.pm .pm-step { padding: 0 6px; font-size: 13px; border-left-width: 0; border-radius: 0; }
+.pm .pm-step:last-of-type { border-radius: 0 3px 3px 0; }
+.pm-pop { position: absolute; z-index: 40; top: calc(100% + 4px); right: 0; width: 340px; max-height: min(62vh, 460px); display: flex; flex-direction: column;
+  background: var(--glass); color: var(--ink); border: 2px solid var(--ink); border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,.45); text-shadow: none; }
+.pm-pop[hidden] { display: none; }
+.pm .pm-qrow { display: flex; gap: 6px; margin: 6px; }
+.pm .pm-q { flex: 1; min-width: 0; cursor: text; }
+.pm .pm-favf { opacity: .5; } .pm .pm-favf[aria-pressed=true] { opacity: 1; background: var(--ink); color: var(--glass); }
+.pm-list { overflow-y: auto; overscroll-behavior: contain; padding-bottom: 4px; scrollbar-width: thin; }
+.pm .pm-g { display: flex; width: 100%; border: 0; border-top: var(--rule); border-radius: 0; padding: 2px 8px; padding-left: calc(8px + var(--d, 0) * 14px); text-transform: lowercase; font-size: 17px; }
+.pm .pm-g.sub { border-top-color: transparent; }
+.pm-g::before { content: "▸"; margin-right: 8px; } .pm-g[aria-expanded=true]::before { content: "▾"; }
+.pm-g .n { margin-left: auto; color: var(--muted); }
+.pm-row { display: flex; align-items: stretch; }
+.pm .pm-i { flex: 1; min-width: 0; border: 0; border-radius: 0; padding: 0 10px; padding-left: calc(10px + var(--d, 0) * 14px); text-align: left; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; gap: 8px; align-items: baseline; }
+.pm .pm-i[aria-selected=true] { background: var(--ink); color: var(--glass); }
+.pm-i.act, .pm-i:hover, .pm-g.act, .pm-g:hover { background: var(--ghost); }
+.pm-path { margin-left: auto; color: var(--muted); font-size: 14px; flex: none; }
+.pm .pm-star { flex: none; width: 30px; padding: 0; border: 0; color: var(--muted); font-size: 15px; }
+.pm .pm-star[aria-pressed=true] { color: var(--ink); }
+.pm-sum, .pm-none { padding: 4px 10px; font-size: 15px; color: var(--muted); }
+.pm-foot { display: none; }
+.pm-pop .pm-foot { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px; border-top: 2px solid var(--ink); }
+.pm-foot input[type=text] { flex: 1 1 140px; min-width: 0; cursor: text; }
+.pm-foot .hint:empty { display: none; }
+.pm-foot .hint { font-size: 15px; color: var(--muted); flex-basis: 100%; }
+.pm-opt { display: inline-flex; align-items: center; gap: 5px; font-size: 16px; cursor: pointer; }
+
 
 /* piano-roll sequencer: key rows, octave lanes, tie/slide/accent rows; dim columns past the end extend the pattern */
 .sq-body { display: grid; grid-template-columns: 196px minmax(0, 1fr); gap: 14px; align-items: start; }
@@ -244,6 +305,19 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
   table.mx { border-spacing: 2px 1px; font-size: 13px; } .mx th { font-size: 13px; padding: 0 2px; line-height: 1; }
   .mx .cell, .mx .cell.bridge { width: 46px; height: 17px; border-width: 1.5px; font-size: 12px; }
   .mx .volt { font-size: 12px; width: 50px; margin-left: 2px; } .mx .jack { width: 7px; height: 7px; margin-right: 3px; }
+  .pm .pm-btn { min-width: 110px; max-width: 150px; font-size: 15px; padding: 0 5px; border-width: 1.5px; }
+  .pm .pm-step { display: none; }
+  .presets > .num { display: none; }
+  .pm-pop { position: fixed; top: 34px; right: 6px; width: 360px; max-height: calc(100dvh - 40px) !important; }
+  .pm button, .pm-foot button, .pm-foot input[type=text] { font-size: 15px; border-width: 1.5px; }
+  .fxrow { gap: 3px 4px; }
+  .fxu .fdr .track { height: calc(min(40px, (100dvh - 250px) / 2)); }
+  .fxu .fdr output { font-size: 11px; } .fxu .fdr label { font-size: 12px; } .fxu .sw button { font-size: 12px; line-height: 1.05; }
+  .fxu .progs { grid-template-columns: repeat(2, auto); }
+  .fxu { padding: 2px 4px 3px; gap: 2px; border-width: 1.5px; flex: none; }
+  .fxu .fxh b { font-size: 16px; } .fxu .fxh small, .fxu .fxnote { display: none; }
+  .fxu .onoff { font-size: 13px; border-width: 1.5px; padding: 0 3px; } .fxu .lcd { font-size: 13px; }
+  .fxu .progs { grid-template-columns: repeat(3, auto); }
   .hint { display: none; }
 }
 </style>
@@ -255,14 +329,26 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
 </div>
 <div class="unit" id="unit">
   <header class="top">
-    <div class="brand"><b>KESTREL MS-1 <i class="ver" id="ver">v0.4.0</i></b><span>Circuit-modelled monosynth · bendable</span></div>
+    <div class="brand"><b>KESTREL MS-1 <i class="ver" id="ver">v0.5.0</i></b><span>Circuit-modelled monosynth · bendable</span></div>
     <canvas class="scope" id="scope" width="400" height="92" aria-label="Oscilloscope"></canvas>
     <div class="transport">
       <button class="btn play" id="play"><span class="led"></span><span id="playLab">Run</span></button>
       <label class="num">Tempo<input id="bpm" type="number" min="40" max="240" value="124"></label>
-      <label class="num">Patch
-        <select class="btn light" id="preset"></select>
-      </label>
+      <div class="presets" id="prj-bar">
+        <span class="num">Preset</span>
+        <select id="prj-preset" aria-label="Presets" hidden></select><div class="pm" data-for="prj-preset"></div>
+        <div class="pm-foot">
+          <input id="prj-name" type="text" placeholder="Save everything as…" maxlength="40" aria-label="Preset name">
+          <button id="prj-roll" title="Another name" aria-label="Suggest another name">🎲</button>
+          <button id="prj-save">Save</button>
+          <button id="prj-del">Delete</button>
+          <button id="prj-export">Export file</button>
+          <button id="prj-import">Import file</button>
+          <label class="pm-opt" title="Loading a preset changes only the sound and effects, and keeps your pattern"><input type="checkbox" id="prj-sndonly"> Sound only</label>
+          <input type="file" id="prj-file" accept=".json,application/json" hidden>
+          <span class="hint" id="prj-msg" role="status"></span>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -274,6 +360,7 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
       <button role="tab" id="tab-seq" aria-controls="pan-seq" aria-selected="true">Sequencer</button>
       <button role="tab" id="tab-bend" aria-controls="pan-bend" aria-selected="false">Bend board</button>
       <button role="tab" id="tab-br" aria-controls="pan-br" aria-selected="false">Bridges</button>
+      <button role="tab" id="tab-fx" aria-controls="pan-fx" aria-selected="false">FX</button>
       <button role="tab" id="tab-perf" class="ph-only" aria-controls="perf101" aria-selected="false">Perform</button>
       <span class="psu" id="psu">Battery 9.0 V · rail 100%</span>
     </nav>
@@ -305,6 +392,10 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
         <div class="tools"><button class="btn light" id="bendStock">Stock values</button></div>
       </div>
       <div class="bend-vals" id="bendVals"></div>
+    </section>
+
+    <section class="panel" id="pan-fx" role="tabpanel" aria-labelledby="tab-fx" hidden>
+      <div class="fxrow" id="fxrow"></div>
     </section>
 
     <section class="panel" id="pan-br" role="tabpanel" aria-labelledby="tab-br" hidden>
@@ -343,9 +434,548 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
     </section>
   </div>
 </div>
+<div class="install" id="install" role="dialog" aria-labelledby="installH" hidden>
+  <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="3" width="26" height="26" rx="4" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M9 24v-5M14 24V9M19 24v-8M24 24v-11" stroke="currentColor" stroke-width="3"/></svg>
+  <div><b id="installH">Install Kestrel</b><span>Add it to your home screen. It opens full screen in landscape and works offline.</span></div>
+  <button class="btn" id="installGo">Install</button><button class="btn light" id="installNo">Not now</button>
+</div>
 <p class="hint">Play from your computer keyboard: <kbd>A</kbd>–<kbd>K</kbd> white keys, <kbd>W</kbd> <kbd>E</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> black keys, <kbd>Z</kbd>/<kbd>X</kbd> transpose low/high, <kbd>Space</kbd> run/stop. While a sequencer runs, keys transpose it. Arpeggio and the 100-step sequencer step once per LFO cycle, so the LFO rate is their tempo. In Load, each key adds a step; play the next key before releasing the last to tie them. Sound starts on your first click or key press. Your patch and pattern are kept in this browser.</p>
 
-<script type="text/plain" id="dsp-src">// Kestrel MS-1 circuit-level engine (AudioWorklet).
+<script type="text/plain" id="dsp-src">// Effects for Kestrel MS-1, ported from Johnny's tb303-circuit-model (tb303-model.js, commit 2b6e821):
+// ProCo RAT pedal, tempo-synced digital delay, Lexicon 224 reverb and the Compactor sidechain on the returns.
+// The classes below are copied from that file with only the wrapper (FxChain) new, so the two apps sound alike.
+// Runs inside the AudioWorklet; no DOM use.
+
+const FX_VT = 0.02585;
+function audioTaper(p) { return p <= 0 ? 0 : Math.pow(p, 2.74); } // 'A' pot, ~15% at mid
+const FX_PARTS = {
+  RAT_CIN: 22e-9,
+  RAT_RD: 100e3,
+  RAT_CF: 100e-12,
+  RAT_RG1: 47,
+  RAT_CG1: 2.2e-6,
+  RAT_RG2: 560,
+  RAT_CG2: 4.7e-6,
+  RAT_CC: 30e-12,
+  RAT_GBW: 1e6,
+  RAT_SR: 0.3,
+  RAT_RCL: 1e3,
+  RAT_VF: 0.6,
+  RAT_RF: 1.5e3,
+  RAT_CFLT: 3.3e-9,
+  RAT_VS: 9,
+  LEX_FS: 20000,
+  LEX_BW: 9000,
+  LEX_BITS: 12,
+  LEX_RANGE: 24,
+  LEX_GREL: 0.08,
+  LEX_WORD: 16,
+  LEX_MEM: 32768,
+  LEX_XSAT: 1.6,
+};
+
+// ---------------------------------------------------------------------------
+// Lexicon 224 digital reverb (1978, David Griesinger)
+//
+// What is documented (Lexicon 224 v4.4 manual, spec sheet, Dattorro 1997):
+//   20 kHz sample rate, 20 Hz–8 kHz response, 12-bit DAC80 converters with
+//   gain ranging for about 24 dB more range, 16-bit fixed-point words, 16K
+//   words of delay memory at launch (soon 32K). Nine v4.4 programs (P1/P3 and
+//   P2/P5 share algorithms). Controls: Bass and Mid decay (0.6–70 s) split at
+//   Crossover (100 Hz–10.9 kHz), Treble decay (100 Hz–10.9 kHz), Depth (0–71,
+//   close to far), Diffusion (0–63), Predelay (a per-program range), and Mode
+//   Enhancement: random modulation of delay taps, Amount 1–16 (time between
+//   tap updates, lower is stronger) and Pitch shift 1–16.
+// What is estimated: the actual 224 microcode was never published. The core
+// here is the "plate-class topology in the style of Griesinger" that Dattorro
+// published (input allpass diffusers, then a figure-eight tank of two
+// cross-coupled halves, each a modulated allpass, delay, decay filter,
+// allpass, delay), with his delay lengths and output taps. The hall, chamber,
+// room and constant-density variants, the depth mapping and the chorus voice
+// timings are my estimates, shaped to the manual's descriptions.
+//
+// Like the hardware, all delay lines share one circular memory addressed by a
+// single decrementing pointer, every write is rounded to the fixed-point word,
+// and a program that does not fit in LEX_MEM is shrunk until it does.
+const LEX_PROGRAMS = [
+  { n: 1, name: 'Small Concert Hall B',     short: 'Small Hall B', alg: 'hallB',   size: 1.2,  pre: [24, 152] },
+  { n: 2, name: 'Vocal Plate',              short: 'Vocal Plate',  alg: 'plate',   size: 1.0,  pre: [0, 107] },
+  { n: 3, name: 'Large Concert Hall B',     short: 'Large Hall B', alg: 'hallB',   size: 1.85, pre: [24, 152] },
+  { n: 4, name: 'Acoustic Chamber',         short: 'Chamber',      alg: 'chamber', size: 1.1,  pre: [25, 255] },
+  { n: 5, name: 'Percussion Plate A',       short: 'Perc Plate',   alg: 'plate',   size: 0.75, pre: [0, 107] },
+  { n: 6, name: 'Small Concert Hall A',     short: 'Small Hall A', alg: 'hallA',   size: 1.25, pre: [24, 152] },
+  { n: 7, name: 'Room A',                   short: 'Room A',       alg: 'room',    size: 0.5,  pre: [24, 255] },
+  { n: 8, name: 'Constant Density Plate A', short: 'CD Plate',     alg: 'cdplate', size: 1.0,  pre: [5, 185] },
+  { n: 9, name: 'Chorus A',                 short: 'Chorus',       alg: 'chorus',  size: 1,    pre: [0, 253] },
+];
+// Dattorro's plate at 29761 Hz: tank lines [L modAP, L d1, L ap2, L d2, R modAP, R d1, R ap2, R d2]
+const LEX_TANK = [672, 4453, 1800, 3720, 908, 4217, 2656, 3163];
+// his output taps (Table 2): [line, position, sign]
+const LEX_TAPS_L = [[5, 266, 1], [5, 2974, 1], [6, 1913, -1], [7, 1996, 1], [1, 1990, -1], [2, 187, -1], [3, 1066, -1]];
+const LEX_TAPS_R = [[1, 353, 1], [1, 3627, 1], [2, 1228, -1], [3, 2673, 1], [5, 2111, -1], [6, 335, -1], [7, 121, -1]];
+// algorithm shapes. Only 'plate' is Dattorro's published network; the rest are estimates.
+const LEX_ALGS = {
+  plate:   { ind: [142, 107, 379, 277], mul: [1, 1, 1, 1, 1, 1, 1, 1], ap3: null, dd1: 0.70, er: 0.25 },
+  hallB:   { ind: [142, 107, 379, 277], mul: [1.13, 1.07, 0.93, 1.11, 1.09, 0.97, 1.12, 1.04], ap3: [1123, 1327], dd1: 0.65, er: 0.45 },
+  hallA:   { ind: [233, 571], mul: [1.21, 1.03, 1.07, 0.95, 0.89, 1.11, 0.97, 1.08], ap3: [977, 1201], dd1: 0.60, er: 0.5 },
+  chamber: { ind: [113, 163, 293], mul: [0.83, 0.91, 1.17, 0.88, 0.95, 0.86, 1.21, 0.93], ap3: null, dd1: 0.68, er: 0.7 },
+  room:    { ind: [101, 271], mul: [1, 1, 1, 1, 1, 1, 1, 1], ap3: null, dd1: 0.62, er: 0.9 },
+  cdplate: { ind: [142, 107, 379, 277, 199, 151], mul: [1, 0.97, 1, 1.03, 1, 1.02, 1, 0.98], ap3: [811, 947], dd1: 0.75, er: 0.15 },
+};
+const LEX_CHORUS_MS = [9, 14, 19, 25]; // base delay per voice pair (estimate)
+
+// front-panel knobs (0..1) to the 224's own units
+function lexParams(k) {
+  const ex = (lo, hi, p) => lo * Math.pow(hi / lo, p);
+  const prog = Math.max(0, Math.min(8, Math.round(k.lexprog * 8))), P = LEX_PROGRAMS[prog];
+  return {
+    prog, P,
+    bass: ex(0.6, 70, k.lexbass), mid: ex(0.6, 70, k.lexmid),
+    xover: ex(100, 10900, k.lexxover), treble: ex(100, 10900, k.lextreble),
+    depth: Math.round(k.lexdepth * 71), diff: Math.round(k.lexdiff * 63),
+    pre: P.pre[0] + (P.pre[1] - P.pre[0]) * k.lexpre,
+    me: k.lexme < 0.03 ? 0 : 17 - Math.max(1, Math.min(16, Math.ceil(k.lexme * 16))),
+    pitch: 1 + Math.round(k.lexpitch * 15),
+    pairs: [k.lexbass, k.lexmid, k.lexxover, k.lextreble],
+    wet: 2 * audioTaper(k.lexmix),
+  };
+}
+
+function lexLowpass(fc, Q, fs) {
+  const w = 2 * Math.PI * Math.min(fc, 0.45 * fs) / fs, al = Math.sin(w) / (2 * Q), cw = Math.cos(w), a0 = 1 + al;
+  return { b0: (1 - cw) / 2 / a0, b1: (1 - cw) / a0, b2: (1 - cw) / 2 / a0, a1: -2 * cw / a0, a2: (1 - al) / a0, x1: 0, x2: 0, y1: 0, y2: 0 };
+}
+function lexBiq(f, x) {
+  for (const s of f) {
+    const y = s.b0 * x + s.b1 * s.x1 + s.b2 * s.x2 - s.a1 * s.y1 - s.a2 * s.y2;
+    s.x2 = s.x1; s.x1 = x; s.y2 = s.y1; s.y1 = y; x = y;
+  }
+  return x;
+}
+
+class Lexicon224 {
+  constructor(fsHost) {
+    this.fsHost = fsHost;
+    this.F = 0; this.memWords = 0; this.prog = -1;
+    this.seed = 22477; this.L = 0; this.R = 0; this.yl = 0; this.yr = 0;
+    this.ph = 0; this.prev = 0; this.hx = 0; this.hxIn = 0;
+    this.envIn = 0; this.envL = 0; this.envR = 0; this.zl = 0; this.zr = 0;
+  }
+  _rand() { this.seed = (this.seed * 1103515245 + 12345) >>> 0; return this.seed / 4294967296; }
+
+  derive(c, k) {
+    const q = lexParams(k), F = Math.round(c.LEX_FS), fh = this.fsHost;
+    const layoutChanged = F !== this.F || Math.round(c.LEX_MEM) !== this.memWords || q.prog !== this.prog;
+    if (F !== this.F || c.LEX_BW !== this.bw) {
+      this.F = F; this.bw = c.LEX_BW; this.ratio = F / fh;
+      const fc = Math.min(c.LEX_BW, 0.45 * F), Qs = [0.5176, 0.7071, 1.9319];
+      this.aa = Qs.map(Qv => lexLowpass(fc, Qv, fh));
+      this.rcL = Qs.map(Qv => lexLowpass(fc, Qv, fh));
+      this.rcR = Qs.map(Qv => lexLowpass(fc, Qv, fh));
+    }
+    this.memWords = Math.round(c.LEX_MEM); this.prog = q.prog; this.q = q;
+    if (layoutChanged) this._layout();
+    // converters and word size
+    this.adcQ = Math.pow(2, Math.round(c.LEX_BITS) - 1);
+    this.steps = Math.max(0, Math.round(c.LEX_RANGE / 6));
+    this.envRel = Math.exp(-1 / (c.LEX_GREL * F));
+    this.wq = Math.pow(2, Math.round(c.LEX_WORD) - 1);
+    this.xsat = c.LEX_XSAT;
+    this.hxA = Math.exp(-2 * Math.PI * 12 / fh); // transformer low end, estimate
+    this.wet = q.wet;
+    // program parameters
+    this.preD = Math.max(1, Math.round(q.pre * F / 1000));
+    const g1 = Math.min(0.9, 0.75 * q.diff / 35);
+    this.gIn = [g1, g1, g1 * 0.833, g1 * 0.833, g1 * 0.8, g1 * 0.8];
+    this.dd2 = Math.min(0.7, 0.5 * q.diff / 35);
+    const half = (o) => { let s = 0; for (let i = 0; i < 4; i++) s += this.len[o + i]; return s; };
+    if (this.alg !== 'chorus') {
+      const hL = half(0) + (this.ap3 ? this.ap3[0] : 0), hR = half(4) + (this.ap3 ? this.ap3[1] : 0);
+      const g = (rt, h) => Math.pow(10, -3 * h / (rt * F));
+      this.gB = [g(q.bass, hL), g(q.bass, hR)]; this.gM = [g(q.mid, hL), g(q.mid, hR)];
+    }
+    this.cx = 1 - Math.exp(-2 * Math.PI * q.xover / F);
+    this.tb = q.treble >= F / 2 ? 1 : 1 - Math.exp(-2 * Math.PI * q.treble / F);
+    this.depth = q.depth / 71;
+    this.meT = q.me ? q.me * 32 : 0; // ticks between tap updates (estimate: 1.6–26 ms at 20 kHz)
+    this.pitch = q.me ? q.pitch : 0;
+    this.pairs = q.pairs;
+    this.chDepth = q.depth / 71 * 0.008 * F;
+    this.chT = Math.round((q.me || 8) * 0.04 * F);
+  }
+
+  _layout(fit = 1) {
+    const P = LEX_PROGRAMS[this.prog], F = this.F, A = LEX_ALGS[P.alg];
+    this.alg = P.alg;
+    const maxPre = Math.ceil(P.pre[1] * F / 1000) + 2;
+    let words = 0;
+    const alloc = (len) => { const b = words; words += len + 2; return b; };
+    this.preB = alloc(maxPre);
+    if (P.alg === 'chorus') {
+      this.chLen = Math.ceil(0.045 * F);
+      this.chB = alloc(this.chLen);
+      this.chAp = [0, 1, 2, 3].map(i => { const len = Math.round([0.0053, 0.0071, 0.0047, 0.0083][i] * F); return { b: alloc(len), len }; });
+      this.chW = Array.from({ length: 8 }, () => ({ from: 0, to: 0, ctr: 1 + Math.floor(this._rand() * 2000) }));
+      this.scale = 1;
+    } else {
+      const base = A.ind.reduce((a, b) => a + b, 0) + LEX_TANK.reduce((a, l, i) => a + l * A.mul[i], 0) + (A.ap3 ? A.ap3[0] + A.ap3[1] : 0);
+      let sc = F / 29761 * P.size * fit;
+      const room = this.memWords - maxPre - 3 * (A.ind.length + 12) - 80;
+      if (base * sc > room) sc = Math.max(0.05, room / base);
+      this.scale = sc / (F / 29761);
+      const L = (n) => Math.max(2, Math.round(n * sc)) | 1;
+      this.ind = A.ind.map(n => { const len = L(n); return { b: alloc(len), len }; });
+      this.len = LEX_TANK.map((n, i) => L(n * A.mul[i]));
+      this.tb_ = this.len.map((len, i) => alloc(len + ((i & 3) <= 1 ? 36 : 0)));
+      this.ap3 = A.ap3 ? A.ap3.map(L) : null;
+      this.ap3B = this.ap3 ? this.ap3.map(len => alloc(len)) : null;
+      this.dd1 = A.dd1; this.er = A.er;
+      const tap = (t, near) => { const [line, pos, sg] = t; return [line, Math.max(1, Math.round(pos / LEX_TANK[line] * this.len[line] * (near ? 0.3 : 1))), sg]; };
+      this.tapsL = LEX_TAPS_L.map(t => tap(t)); this.tapsR = LEX_TAPS_R.map(t => tap(t));
+      this.nearL = LEX_TAPS_L.map(t => tap(t, 1)); this.nearR = LEX_TAPS_R.map(t => tap(t, 1));
+      this.walk = [0, 1, 2, 3].map(() => ({ from: 0, to: 0 })); this.meCtr = 1;
+      this.lastL = 0; this.lastR = 0; this.xl = [0, 0]; this.tr = [0, 0];
+    }
+    this.words = words;
+    if (words > this.memWords && fit > 0.5 && P.alg !== 'chorus') return this._layout(fit * (this.memWords - 8) / words);
+    let size = 1024; while (size < words) size <<= 1;
+    this.mem = new Float64Array(size); this.mask = size - 1; this.p = 0;
+  }
+
+  _w(a, v) { // write one fixed-point word, saturating. Magnitude truncation (estimate) lets tails die instead of limit-cycling.
+    const q = this.wq; v = Math.trunc(v * q) / q;
+    this.mem[a & this.mask] = v > 1 ? 1 : v < -1 ? -1 : v;
+  }
+  _r(a) { return this.mem[a & this.mask]; }
+  _rf(a, d) { const i = Math.floor(d), f = d - i; return this._r(a + i) * (1 - f) + this._r(a + i + 1) * f; }
+  _ap(b, len, g, x) { const p = this.p, vd = this._r(p + b + len), w = x + g * vd; this._w(p + b, w); return vd - g * w; }
+
+  // gain-ranging 12-bit converter: the signal is boosted in 6 dB steps while it is small
+  _conv(x, env) {
+    let s = this.steps; while (s > 0 && env * (1 << s) >= 1) s--;
+    const g = 1 << s; let y = x * g; y = y > 1 ? 1 : y < -1 ? -1 : y;
+    return Math.round(y * this.adcQ) / this.adcQ / g;
+  }
+
+  _tick(x) {
+    const p = this.p = (this.p - 1) & this.mask;
+    this._w(p + this.preB, x);
+    const u0 = this._r(p + this.preB + this.preD);
+    if (this.alg === 'chorus') { this._chorus(u0); return; }
+    // input diffusers
+    let u = u0, uE = 0;
+    for (let i = 0; i < this.ind.length; i++) { u = this._ap(this.ind[i].b, this.ind[i].len, this.gIn[i], u); if (i === this.ind.length - 2) uE = u; }
+    // Mode Enhancement: each tap walks one sample at a time, at random, inside ±Pitch
+    const W = this.walk;
+    if (this.meT) {
+      if (--this.meCtr <= 0) {
+        this.meCtr = this.meT;
+        for (const w of W) { w.from = w.to; let n = w.to + (this._rand() < 0.5 ? -1 : 1); if (Math.abs(n) > this.pitch) n = w.to - Math.sign(n - w.to); w.to = n; }
+      }
+    } else { this.meCtr = 1; for (const w of W) { w.from = w.to = 0; } }
+    const ph = this.meT ? 1 - this.meCtr / this.meT : 0;
+    const len = this.len, B = this.tb_;
+    let out0 = 0, out1 = 0;
+    for (let s = 0; s < 2; s++) {
+      const o = s * 4;
+      let a = u + (s ? this.lastL : this.lastR);
+      // modulated allpass (decay diffusion 1)
+      const vd = this._rf(p + B[o], len[o] + 16 + (W[s].from + (W[s].to - W[s].from) * ph)), g = -this.dd1, w = a + g * vd;
+      this._w(p + B[o], w); a = vd - g * w;
+      // delay 1, read through a wandering tap
+      this._w(p + B[o + 1], a);
+      let v = this._rf(p + B[o + 1], len[o + 1] + 16 + (W[2 + s].from + (W[2 + s].to - W[2 + s].from) * ph));
+      // Bass / Mid decay split at Crossover, then Treble decay
+      this.xl[s] += this.cx * (v - this.xl[s]);
+      v = this.gB[s] * this.xl[s] + this.gM[s] * (v - this.xl[s]);
+      this.tr[s] += this.tb * (v - this.tr[s]); v = this.tr[s];
+      // allpass (decay diffusion 2), optional third allpass, delay 2
+      v = this._ap(B[o + 2], len[o + 2], this.dd2, v);
+      if (this.ap3) v = this._ap(this.ap3B[s], this.ap3[s], -this.dd2 * 0.8, v);
+      this._w(p + B[o + 3], v);
+      if (s) out1 = this._r(p + B[o + 3] + len[o + 3]); else out0 = this._r(p + B[o + 3] + len[o + 3]);
+    }
+    this.lastL = out0; this.lastR = out1;
+    // output taps; Depth crossfades near taps (plus the diffused input) to the far ones
+    const d = this.depth;
+    this.yl = 0.6 * (d * this._sum(this.tapsL, p, B) + (1 - d) * (this._sum(this.nearL, p, B) + this.er * u));
+    this.yr = 0.6 * (d * this._sum(this.tapsR, p, B) + (1 - d) * (this._sum(this.nearR, p, B) + this.er * uE));
+  }
+  _sum(T, p, B) { let y = 0; for (let i = 0; i < T.length; i++) { const t = T[i]; y += t[2] * this._r(p + B[t[0]] + t[1]); } return y;
+  }
+
+  // P9: eight voices, four per side, each delay wandering at random; diffusion on pairs 3 and 4
+  _chorus(u) {
+    const p = this.p; this._w(p + this.chB, u);
+    const y = [0, 0];
+    for (let v = 0; v < 8; v++) {
+      const w = this.chW[v];
+      if (--w.ctr <= 0) { w.from = w.to; w.to = this._rand() * 2 - 1; w.ctr = this.chT; }
+      const t = 1 - w.ctr / this.chT, sm = w.from + (w.to - w.from) * (0.5 - 0.5 * Math.cos(Math.PI * t));
+      const pair = v >> 1, side = v & 1;
+      const dl = Math.min(this.chLen - 2, (LEX_CHORUS_MS[pair] + side * 1.3) * 0.001 * this.F + this.chDepth * sm);
+      let s = this._rf(p + this.chB, Math.max(1, dl));
+      if (pair >= 2) { const a = this.chAp[(pair - 2) * 2 + side]; s = this._ap(a.b, a.len, this.dd2 * 1.2, s); }
+      y[side] += this.pairs[pair] * s;
+    }
+    this.yl = 0.5 * y[0]; this.yr = 0.5 * y[1];
+  }
+
+  // one host-rate sample in, sets this.L / this.R
+  run(x) {
+    // input transformer: low-end roll-off and soft saturation
+    this.hx = this.hxA * (this.hx + x - this.hxIn); this.hxIn = x;
+    let v = this.xsat * Math.tanh(this.hx / this.xsat);
+    v = lexBiq(this.aa, v * 0.5); // anti-alias filter; converter full scale is about ±2 V
+    this.ph += this.ratio;
+    while (this.ph >= 1) {
+      this.ph -= 1;
+      const back = this.ph / this.ratio, xi = v - (v - this.prev) * Math.min(1, back);
+      const a = Math.abs(xi); this.envIn = a > this.envIn ? a : this.envIn * this.envRel;
+      this._tick(this._conv(xi, this.envIn)); const yl = this.yl, yr = this.yr;
+      const al = Math.abs(yl), ar = Math.abs(yr);
+      this.envL = al > this.envL ? al : this.envL * this.envRel; this.envR = ar > this.envR ? ar : this.envR * this.envRel;
+      this.zl = this._conv(yl, this.envL); this.zr = this._conv(yr, this.envR); // DAC with zero-order hold
+    }
+    this.prev = v;
+    this.L = lexBiq(this.rcL, this.zl) * 2; this.R = lexBiq(this.rcR, this.zr) * 2;
+  }
+
+  memoryUse() { return { words: this.words, of: this.memWords, scale: this.scale }; }
+}
+
+
+const RAT_OS = 2; // the RAT runs at 2x the voice rate (4x the host rate)
+
+// Simple digital delay (outside the circuit): tempo-synced time, feedback, and a low cut and high cut
+// inside the feedback loop, so every repeat gets thinner and darker. Clean digital repeats, no saturation.
+// Ping-pong (default): the synth goes into the left line only and each line feeds the other, so repeats
+// alternate left, right, left. Mono: one line, the same repeats on both sides.
+const DLY_DIVS = [['1/32', 1 / 8], ['1/16T', 1 / 6], ['1/16', 1 / 4], ['1/8T', 1 / 3], ['1/16D', 3 / 8], ['1/8', 1 / 2], ['1/4T', 2 / 3], ['1/8D', 3 / 4], ['1/4', 1], ['1/4D', 3 / 2], ['1/2', 2]];
+const dlyDiv = (p) => DLY_DIVS[Math.min(DLY_DIVS.length - 1, Math.round(p * (DLY_DIVS.length - 1)))];
+const dlyLo = (p) => 20 * Math.pow(50, p);        // 20 Hz .. 1 kHz
+const dlyHi = (p) => 1000 * Math.pow(20, p);      // 1 kHz .. 20 kHz
+class DigitalDelay {
+  constructor(fs) {
+    this.fs = fs; this.buf = new Float32Array(Math.ceil(fs * 2.6)); this.bufR = new Float32Array(this.buf.length); this.w = 0;
+    this.d = fs * 0.25; this.dT = this.d; this.lp = 0; this.hp = 0; this.hpIn = 0; this.lpR = 0; this.hpR = 0; this.hpInR = 0;
+    this.l = 0; this.r = 0; this.pp = true;
+  }
+  derive(k, bpm) {
+    const fs = this.fs;
+    this.dT = Math.min(this.buf.length - 4, dlyDiv(k.dlytime)[1] * 60 / bpm * fs);
+    this.fb = 0.95 * k.dlyfb;
+    this.lpA = Math.exp(-2 * Math.PI * Math.min(dlyHi(k.dlyhi), 0.45 * fs) / fs);
+    this.hpA = Math.exp(-2 * Math.PI * dlyLo(k.dlylo) / fs);
+    this.mix = k.dlymix * k.dlymix * 1.2; // return level, roughly even in loudness
+    this.slewA = 1 - Math.exp(-1 / (0.06 * fs)); // time changes glide over ~60 ms instead of clicking
+    const pp = k.dlypp >= 0.5; if (pp !== this.pp) { this.pp = pp; this.bufR.fill(0); }
+  }
+  run(x) {
+    const b = this.buf, B = this.bufR, N = b.length;
+    this.d += (this.dT - this.d) * this.slewA;
+    let r = this.w - this.d; if (r < 0) r += N;
+    const i = Math.floor(r), f = r - i, j = i + 1 === N ? 0 : i + 1;
+    let y = b[i] + (b[j] - b[i]) * f;
+    // tone: one-pole low cut and high cut on what comes back
+    this.hp = this.hpA * (this.hp + y - this.hpIn); this.hpIn = y; y = this.hp;
+    this.lp = y + this.lpA * (this.lp - y); y = this.lp;
+    if (this.pp) {
+      let z = B[i] + (B[j] - B[i]) * f;
+      this.hpR = this.hpA * (this.hpR + z - this.hpInR); this.hpInR = z; z = this.hpR;
+      this.lpR = z + this.lpA * (this.lpR - z); z = this.lpR;
+      b[this.w] = x + this.fb * z; B[this.w] = y; // left takes the input and the right's repeats; right takes the left's
+      this.l = y * this.mix; this.r = z * this.mix;
+    } else {
+      b[this.w] = x + this.fb * y;
+      this.l = this.r = y * this.mix;
+    }
+    this.w = this.w + 1 === N ? 0 : this.w + 1;
+    return this.l;
+  }
+}
+
+// Sidechain on the effect returns, after the Kilohearts Compactor (a limiter/ducker that works at sample
+// level). The key is the dry synth. Threshold is the key level that ducks the returns to silence;
+// Range shapes how the key maps onto that (below 100% quieter key levels are ignored, above 100% they
+// duck harder, like a soft clipper on the key). Attack is lookahead: the returns are delayed by it and the
+// ducking ramps in ahead of the transient. Hold keeps full ducking after the key drops, Release brings it
+// back. Mode picks the detector: per-sample Peak, inter-sample peaks (ISP), or RMS. Mix blends in the
+// unducked returns. With Attack and Release at 0 the gain follows the key waveform: ring-mod sidechaining.
+// Our reading of the published control descriptions; Kilohearts does not publish its gain law.
+const CMP_MODES = ['Peak', 'ISP', 'RMS'];
+const cmpThrDb = (p) => -40 + 40 * p;
+const cmpAtkMs = (p) => 10 * p;
+const cmpHoldMs = (p) => 500 * p * p;
+const cmpRelMs = (p) => 1000 * p * p;
+class Compactor {
+  constructor(fs) {
+    this.fs = fs; this.L = new Float32Array(Math.ceil(fs * 0.011)); this.R = new Float32Array(this.L.length); this.w = 0;
+    this.env = 0; this.hold = 0; this.ms = 0; this.k1 = 0; this.k2 = 0; this.k3 = 0; this.l = 0; this.r = 0; this.g = 1;
+  }
+  derive(k) {
+    const fs = this.fs;
+    this.thr = Math.pow(10, cmpThrDb(k.cmpthr) / 20);
+    this.rng = 2 * k.cmprng;
+    this.D = Math.min(this.L.length - 1, Math.round(cmpAtkMs(k.cmpatk) * 1e-3 * fs));
+    this.atkA = this.D > 0 ? 1 - Math.exp(-3 / this.D) : 1;
+    this.holdN = Math.round(cmpHoldMs(k.cmphold) * 1e-3 * fs);
+    const rel = cmpRelMs(k.cmprel) * 1e-3 * fs;
+    this.relA = rel > 0.5 ? Math.exp(-1 / rel) : 0;
+    this.mode = Math.round(k.cmpmode * 2);
+    this.rmsA = Math.exp(-1 / (0.01 * fs));
+    this.mix = k.cmpmix;
+  }
+  // key -> duck amount 0..1 (1 = silence at threshold)
+  _amount(det) {
+    const x = det / this.thr, R = this.rng;
+    let a;
+    if (R <= 1) a = R > 0 ? (x - (1 - R)) / R : 0;
+    else { const s = R - 1; a = (1 - s) * x + s * Math.tanh(3 * x) / 0.99505; }
+    return a <= 0 ? 0 : a >= 1 ? 1 : a;
+  }
+  // key y, returns wl/wr: stores the delayed returns in l/r and gives the gain for them
+  run(y, wl, wr) {
+    let det;
+    if (this.mode === 2) { this.ms = y * y + this.rmsA * (this.ms - y * y); det = Math.sqrt(this.ms * 2); } // sine peak = rms * sqrt 2
+    else {
+      det = Math.abs(y);
+      if (this.mode === 1) { // inter-sample peak: Catmull-Rom midpoint between the last two samples
+        const m = (-this.k3 + 9 * this.k2 + 9 * this.k1 - y) / 16; // Catmull-Rom midpoint of the previous two samples
+        if (Math.abs(m) > det) det = Math.abs(m);
+      }
+      this.k3 = this.k2; this.k2 = this.k1; this.k1 = y;
+    }
+    const a = this._amount(det);
+    if (a >= this.env) { this.env += (a - this.env) * this.atkA; this.hold = this.holdN; }
+    else if (this.hold > 0) this.hold--;
+    else this.env = a + (this.env - a) * this.relA;
+    // lookahead: the returns come out D samples late, so the ramp lands on time
+    const N = this.L.length; let ri = this.w - this.D; if (ri < 0) ri += N;
+    this.L[this.w] = wl; this.R[this.w] = wr; this.l = this.L[ri]; this.r = this.R[ri]; this.w = this.w + 1 === N ? 0 : this.w + 1;
+    this.g = 1 - this.mix * this.env;
+    return this.g;
+  }
+}
+
+// The chain after the Kestrel's output stage: RAT in series, then the 224 and the delay as parallel returns,
+// both ducked by the Compactor keyed from the dry synth, then a soft clip. Same order as the 303 app.
+const FX_KNOB_DEFS = { dist: 0.5, filter: 0.4, ratvol: 0.5,
+  lexprog: 0.125, lexbass: 0.3, lexmid: 0.27, lexxover: 0.443, lextreble: 0.834, lexdepth: 0.5, lexdiff: 0.55, lexpre: 0.2, lexme: 0.5, lexpitch: 0.2, lexmix: 0.5,
+  cmpthr: 0.5, cmprng: 0.5, cmpatk: 0.3, cmphold: 0, cmprel: 0.4, cmpmix: 0.7, cmpmode: 0,
+  dlypp: 1, dlytime: 0.7, dlyfb: 0.35, dlylo: 0.3, dlyhi: 0.55, dlymix: 0.35 };
+class FxChain {
+  constructor(fs) {
+    this.fs = fs; this.c = { ...FX_PARTS }; this.knobs = { ...FX_KNOB_DEFS };
+    this.fx = { rat: false, lex: false, dly: false }; this.bpm = 120;
+    this.lex = new Lexicon224(fs); this.dly = new DigitalDelay(fs); this.cmp = new Compactor(fs);
+    this.rt = { hin: 0, xin: 0, h1: 0, h2: 0, x1: 0, fb: 0, y: 0, hc: 0, xc: 0, v: 0, f: 0, xp: 0, dco: 0, dci: 0 };
+    this.L = 0; this.R = 0;
+    this.derive();
+  }
+  setKnob(k, v) { if (k in this.knobs) { this.knobs[k] = v; this.derive(); } }
+  setFx(n, on) { if (n in this.fx) this.fx[n] = !!on; }
+  setBpm(b) { if (b !== this.bpm) { this.bpm = b; this.dly.derive(this.knobs, b); } }
+  derive() {
+    const c = this.c, k = this.knobs;
+    this.cmp.derive(k); this.dly.derive(k, this.bpm);
+    // RAT runs at RAT_OS x 2 the host rate here (the 303 voice is already 2x oversampled)
+    const fs = this.fs * 2 * RAT_OS, e = (tau) => Math.exp(-1 / (Math.max(tau, 1e-12) * fs));
+    this.ratN2 = 2 * RAT_OS;
+    if (!this.ratLP) {
+      const fc = 22000 / fs, w = 2 * Math.PI * fc, cs = Math.cos(w);
+      this.ratLP = [0.5176, 0.7071, 1.9319].map(Q => { const al = Math.sin(w) / (2 * Q), a0 = 1 + al; return { b0: (1 - cs) / 2 / a0, b1: (1 - cs) / a0, b2: (1 - cs) / 2 / a0, a1: -2 * cs / a0, a2: (1 - al) / a0, x1: 0, x2: 0, y1: 0, y2: 0 }; });
+    }
+    this.ratDcA = Math.exp(-2 * Math.PI * 5 / this.fs);
+    const rd = c.RAT_RD * audioTaper(k.dist) + 1;
+    this.ratRd = rd;
+    this.ratInA = e(c.RAT_CIN * 1e6);
+    this.ratA1 = e(c.RAT_RG1 * c.RAT_CG1); this.ratA2 = e(c.RAT_RG2 * c.RAT_CG2);
+    this.ratFA = e(rd * c.RAT_CF);
+    const comp = 30e-12 / c.RAT_CC;
+    const gHf = 1 + rd * (1 / c.RAT_RG1 + 1 / c.RAT_RG2);
+    this.ratK = Math.min(1, 2 * Math.PI * c.RAT_GBW * comp / gHf / fs);
+    this.ratSlew = c.RAT_SR * 1e6 * comp / fs;
+    this.ratRail = Math.max(c.RAT_VS / 2 - 1, 0.5);
+    this.ratCA = e(4.7e-6 * (c.RAT_RCL + 1e3));
+    this.ratN = 1.8 * FX_VT;
+    this.ratIs = 1e-3 / Math.exp(c.RAT_VF / this.ratN);
+    this.ratFltA = e((c.RAT_RF + 100e3 * k.filter) * c.RAT_CFLT);
+    this.ratLevel = audioTaper(k.ratvol) * 6;
+    this.lex.derive(c, k);
+  }
+  _rat(x) {
+    const s = this.rt, x0 = s.xp, N = this.ratN2; s.xp = x;
+    let y = 0;
+    for (let i = 1; i <= N; i++) {
+      let z = this._ratCore(x0 + (x - x0) * (i / N));
+      for (const q of this.ratLP) { const o = q.b0 * z + q.b1 * q.x1 + q.b2 * q.x2 - q.a1 * q.y1 - q.a2 * q.y2; q.x2 = q.x1; q.x1 = z; q.y2 = q.y1; q.y1 = o; z = o; }
+      y = z;
+    }
+    s.dco = this.ratDcA * (s.dco + y - s.dci); s.dci = y;
+    return s.dco;
+  }
+  _ratCore(x) {
+    const s = this.rt, c = this.c;
+    s.hin = this.ratInA * (s.hin + x - s.xin); s.xin = x;
+    const u = s.hin;
+    // current through the two RC gain legs (inverting input follows u)
+    s.h1 = this.ratA1 * (s.h1 + u - s.x1); s.h2 = this.ratA2 * (s.h2 + u - s.x1); s.x1 = u;
+    const iv = (s.h1 / c.RAT_RG1 + s.h2 / c.RAT_RG2) * this.ratRd;
+    s.fb = iv + this.ratFA * (s.fb - iv);                        // pot || 100p
+    const target = u + s.fb;
+    let dy = (target - s.y) * this.ratK;                         // gain-bandwidth limit
+    if (dy > this.ratSlew) dy = this.ratSlew; else if (dy < -this.ratSlew) dy = -this.ratSlew; // slew limit
+    s.y = Math.max(-this.ratRail, Math.min(this.ratRail, s.y + dy));
+    s.hc = this.ratCA * (s.hc + s.y - s.xc); s.xc = s.y;         // 4.7µ output coupling
+    // diode pair to ground through RAT_RCL: (w - v)/R = 2 Is sinh(v / nVt)
+    const w = s.hc, R = c.RAT_RCL, n = this.ratN, Is = this.ratIs;
+    // Safeguarded Newton: the root lies between 0 and w, so keep it bracketed and bisect whenever a Newton
+    // step would leave the bracket. Plain Newton from the last sample could not follow a fast swing into
+    // the diodes' exponential region in 4 steps and left v volts off, which was heard as spitting and fizz.
+    let lo = w < 0 ? w : 0, hi = w < 0 ? 0 : w;
+    let v = Math.min(hi, Math.max(lo, s.v));
+    for (let i = 0; i < 40; i++) {
+      const t = Math.min(Math.max(v / n, -80), 80), e = Math.exp(t), ei = 1 / e;
+      const f = (w - v) / R - Is * (e - ei), df = -1 / R - Is * (e + ei) / n;
+      if (f > 0) lo = v; else hi = v;
+      let nv = v - f / df;
+      if (!(nv > lo && nv < hi)) nv = 0.5 * (lo + hi);
+      const dv = nv - v; v = nv;
+      if (dv < 1e-7 && dv > -1e-7) break;
+    }
+    s.v = v;
+    s.f = v + this.ratFltA * (s.f - v);                          // FILTER: (1.5k + pot) with 3.3n
+    return s.f * this.ratLevel;
+  }
+  // one host-rate sample in; sets this.L / this.R
+  run(x) {
+    let y = this.fx.rat ? 0.95 * Math.tanh(this._rat(x) / 0.95) : x;
+    if (!(this.fx.lex || this.fx.dly)) { this.L = this.R = y; return; }
+    let wl = 0, wr = 0;
+    if (this.fx.lex) { this.lex.run(y); wl += this.lex.wet * this.lex.L; wr += this.lex.wet * this.lex.R; }
+    if (this.fx.dly) { this.dly.run(y); wl += this.dly.l; wr += this.dly.r; }
+    const g = this.cmp.run(y, wl, wr);
+    this.L = 0.98 * Math.tanh((y + this.cmp.l * g) / 0.98);
+    this.R = 0.98 * Math.tanh((y + this.cmp.r * g) / 0.98);
+  }
+  flush() { fxFlushTiny(this, 0); fxFlushTiny(this.lex, 0); fxFlushTiny(this.dly, 0); fxFlushTiny(this.cmp, 0); }
+}
+const FX_FLUSH_SKIP = new Set(['c', 'knobs', 'fx', 'lex', 'mem', 'buf', 'bufR', 'L', 'R', 'dly', 'cmp']);
+function fxFlushTiny(o, depth) {
+  if (Array.isArray(o) || ArrayBuffer.isView(o)) {
+    if (o.length > 64) return;
+    for (let i = 0; i < o.length; i++) { const x = o[i]; if (typeof x === 'number') { if (x !== 0 && x < 1e-150 && x > -1e-150) o[i] = 0; } else if (x && typeof x === 'object' && depth < 2) fxFlushTiny(x, depth + 1); }
+    return;
+  }
+  for (const k in o) {
+    const x = o[k];
+    if (typeof x === 'number') { if (x !== 0 && x < 1e-150 && x > -1e-150) o[k] = 0; }
+    else if (x && typeof x === 'object' && depth < 2 && !FX_FLUSH_SKIP.has(k)) fxFlushTiny(x, depth + 1);
+  }
+}
+
+// Kestrel MS-1 circuit-level engine (AudioWorklet).
 //
 // Every stage is written in physical units (volts, amps, farads, ohms, kelvin)
 // and integrated in time, so changing a component value changes the sound the
@@ -462,6 +1092,7 @@ class KestrelProcessor extends AudioWorkletProcessor {
     this.node = new Float64Array(NODES.length);
     this.inj = new Float64Array(INJ.length);
     this.y4 = 0; this.y2 = 0; this.out = 0; this.clockPending = false; this.fcLast = 1000;
+    this.fxc = new FxChain(sampleRate); // effects from the 303 app (src/fx.js, loaded ahead of this file)
     this.port.onmessage = (e) => this.onMsg(e.data);
   }
 
@@ -469,7 +1100,7 @@ class KestrelProcessor extends AudioWorkletProcessor {
 
   onMsg(m) {
     switch (m.type) {
-      case 'param': this.setParam(m.id, m.v); break;
+      case 'param': if (m.id in FX_KNOB_DEFS) this.fxc.setKnob(m.id, m.v); else this.setParam(m.id, m.v); break;
       case 'params': for (const k in m.p) this.setParam(k, m.p[k]); break;
       case 'bend': for (const k in m.b) this.setBend(k, m.b[k]); break;
       case 'bridges':
@@ -481,7 +1112,9 @@ class KestrelProcessor extends AudioWorkletProcessor {
         break;
       case 'noteOn': this.keyOn(m.n); break;
       case 'noteOff': this.keyOff(m.n); break;
-      case 'seq': Object.assign(this.seq, m.seq); break;
+      case 'seq': Object.assign(this.seq, m.seq); if (m.seq.bpm) this.fxc.setBpm(m.seq.bpm); break;
+      case 'fx': this.fxc.setFx(m.name, m.on); break;
+      case 'fxknobs': for (const k in m.k) this.fxc.knobs[k] = m.k[k]; this.fxc.derive(); break;
       case 'mode': {
         const was = this.arp || this.seqMode === 2;
         if ('arp' in m) this.arp = m.arp | 0;
@@ -643,6 +1276,8 @@ class KestrelProcessor extends AudioWorkletProcessor {
     const eD = 1 - Math.exp(-dt / (P.dec / (4 * CE_NOM) * C.ce));
     const eR = 1 - Math.exp(-dt / (P.rel / (4 * CE_NOM) * C.ce));
 
+    const fxc = this.fxc, fxOn = fxc.fx.rat || fxc.fx.lex || fxc.fx.dly;
+    if (fxOn) fxc.flush();
     for (let j = 0; j < n; j++) {
       if (this.running) {
         if (this.t >= this.nextStepAt) this.seqStep();
@@ -853,8 +1488,8 @@ class KestrelProcessor extends AudioWorkletProcessor {
       // output coupling cap + level
       const dcOut = y - this.dcx + 0.9995 * this.dcy; this.dcx = y; this.dcy = dcOut;
       this.out = dcOut;
-      const o = clamp(dcOut * sm.level, -1, 1);
-      L[j] = o; if (R) R[j] = o;
+      if (fxOn) { fxc.run(dcOut * sm.level); L[j] = clamp(fxc.L, -1, 1); if (R) R[j] = clamp(fxc.R, -1, 1); }
+      else { const o = clamp(dcOut * sm.level, -1, 1); L[j] = o; if (R) R[j] = o; }
     }
     this.meterAt += n;
     if (this.meterAt >= 2048) {
@@ -957,6 +1592,38 @@ const BENDER = [
   { f: 'bendVcf', label: 'VCF', def: 0, fmt: v => '±' + (v * 4).toFixed(1) + 'oct' },
   { f: 'lfoMod', label: 'LFO mod', def: .3, fmt: pct } ];
 
+// ---------- effects (the 303 app's RAT, delay, Lexicon 224 and Compactor) ----------
+const DLY_DIV_NAMES = ['1/32', '1/16T', '1/16', '1/8T', '1/16D', '1/8', '1/4T', '1/8D', '1/4', '1/4D', '1/2'];
+const LEX_PROGS = [['Small Hall B', 24, 152], ['Vocal Plate', 0, 107], ['Large Hall B', 24, 152], ['Chamber', 25, 255], ['Perc Plate', 0, 107],
+  ['Small Hall A', 24, 152], ['Room A', 24, 255], ['CD Plate', 5, 185], ['Chorus', 0, 253]];
+const exr = (lo, hi, p) => lo * Math.pow(hi / lo, p);
+const hz = f => f >= 1000 ? (f / 1000).toFixed(f < 10000 ? 2 : 1) + 'k' : f.toFixed(0) + 'Hz';
+const sec = t => t < 10 ? t.toFixed(1) + 's' : t.toFixed(0) + 's';
+const FX = [
+  { id: 'rat', name: 'RAT', sub: 'LM308 + diodes', items: [
+    { f: 'dist', label: 'Dist', def: .5, fmt: pct }, { f: 'filter', label: 'Filter', def: .4, fmt: pct }, { f: 'ratvol', label: 'Level', def: .5, fmt: pct } ] },
+  { id: 'dly', name: 'Delay', sub: 'tempo synced', items: [
+    { f: 'dlytime', label: 'Time', def: .7, fmt: v => DLY_DIV_NAMES[Math.round(v * 10)] }, { f: 'dlyfb', label: 'Fdbk', def: .35, fmt: v => Math.round(v * 95) + '%' },
+    { f: 'dlylo', label: 'Lo cut', def: .3, fmt: v => hz(20 * Math.pow(50, v)) }, { f: 'dlyhi', label: 'Hi cut', def: .55, fmt: v => hz(1000 * Math.pow(20, v)) },
+    { f: 'dlymix', label: 'Return', def: .35, fmt: pct }, { s: 'dlypp', label: 'Mode', opts: ['Mono', 'Ping-pong'], def: 1, val: i => i } ] },
+  { id: 'lex', name: 'Lexicon 224', sub: '20 kHz, 12-bit', items: [
+    { s: 'lexprog', label: 'Program', opts: LEX_PROGS.map((p, i) => 'P' + (i + 1) + ' ' + p[0]), def: 1, val: i => i / 8, progs: true },
+    { f: 'lexbass', label: 'Bass', def: .3, fmt: v => sec(exr(0.6, 70, v)) }, { f: 'lexmid', label: 'Mid', def: .27, fmt: v => sec(exr(0.6, 70, v)) },
+    { f: 'lexxover', label: 'X-over', def: .443, fmt: v => hz(exr(100, 10900, v)) }, { f: 'lextreble', label: 'Treble', def: .834, fmt: v => hz(exr(100, 10900, v)) },
+    { f: 'lexdepth', label: 'Depth', def: .5, fmt: v => Math.round(v * 71) }, { f: 'lexdiff', label: 'Diff', def: .55, fmt: v => Math.round(v * 63) },
+    { f: 'lexpre', label: 'Pre', def: .2, fmt: v => { const P = LEX_PROGS[state.params.lexprog | 0] || LEX_PROGS[1]; return Math.round(P[1] + (P[2] - P[1]) * v) + 'ms'; } },
+    { f: 'lexme', label: 'Mode enh', def: .5, fmt: v => v < .03 ? 'off' : 17 - Math.max(1, Math.min(16, Math.ceil(v * 16))) },
+    { f: 'lexpitch', label: 'Pitch', def: .2, fmt: v => 1 + Math.round(v * 15) }, { f: 'lexmix', label: 'Return', def: .5, fmt: pct } ] },
+  { id: 'cmp', name: 'Compactor', sub: 'ducks the returns', items: [
+    { f: 'cmpthr', label: 'Thresh', def: .5, fmt: v => (-40 + 40 * v).toFixed(0) + 'dB' }, { f: 'cmprng', label: 'Range', def: .5, fmt: v => Math.round(200 * v) + '%' },
+    { f: 'cmpatk', label: 'Attack', def: .3, fmt: v => (10 * v).toFixed(1) + 'ms' }, { f: 'cmphold', label: 'Hold', def: 0, fmt: v => Math.round(500 * v * v) + 'ms' },
+    { f: 'cmprel', label: 'Release', def: .4, fmt: v => Math.round(1000 * v * v) + 'ms' }, { f: 'cmpmix', label: 'Mix', def: .7, fmt: pct },
+    { s: 'cmpmode', label: 'Detect', opts: ['Peak', 'ISP', 'RMS'], def: 0, val: i => i / 2 } ] },
+];
+const FX_SW = {}; for (const u of FX) for (const it of u.items) if (it.s) FX_SW[it.s] = it;
+// the engine takes every effect control as a 0..1 knob; switches are stored as their index
+const fxKnobs = p => { const k = {}; for (const u of FX) for (const it of u.items) { const id = it.f || it.s; k[id] = it.s ? it.val(p[id] | 0) : p[id]; } return k; };
+
 // ---------- patterns ----------
 function parsePat(str) {
   return str.split(',').map(t => t.trim()).map(t => {
@@ -984,12 +1651,13 @@ const PRESETS = {
 const defaults = {};
 for (const m of RACK) for (const it of m.items) defaults[it.f || it.s] = it.def;
 for (const b of BENDER) defaults[b.f] = b.def; defaults.transpose = 1; defaults.swing = 0; defaults.gateLen = .5;
+for (const u of FX) for (const it of u.items) defaults[it.f || it.s] = it.def;
 let state;
 function presetState(name) {
   const P = PRESETS[name];
   const bend = stockBend();
   for (const k in (P.bend || {})) { const b = BEND_ITEMS.find(x => x.id === k || x.sw === k); bend[k] = b.sw ? P.bend[k] : toNorm(b, P.bend[k]); }
-  return { params: { ...defaults, ...P.p }, bend, br: { ...(P.br || {}) }, steps: parsePat(P.pat), bpm: P.bpm, preset: name };
+  return { params: { ...defaults, ...P.p }, bend, br: { ...(P.br || {}) }, steps: parsePat(P.pat), bpm: P.bpm, preset: name, fx: { rat: false, dly: false, lex: false, ...(P.fx || {}) } };
 }
 try { state = JSON.parse(localStorage.getItem('kestrel-ms1-v2')); } catch (e) { state = null; }
 if (!state || state.v !== 2 || !state.params || !Array.isArray(state.steps) || !state.steps.length || state.steps.length > 64) state = presetState('Acid line');
@@ -997,6 +1665,7 @@ if (state.len) { state.steps = state.steps.slice(0, Math.max(1, state.len)); del
 for (const st of state.steps) { while (st.n >= 12) { st.n -= 12; st.o++; } st.o = Math.max(-2, Math.min(2, st.o | 0)); }
 state.v = 2; state.bend = { ...stockBend(), ...(state.bend || {}) }; state.br = state.br || {};
 state.params = { ...defaults, ...state.params };
+state.fx = { rat: false, dly: false, lex: false, ...(state.fx || {}) };
 let saveT;
 function save() { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem('kestrel-ms1-v2', JSON.stringify(state)); } catch (e) {} }, 300); }
 
@@ -1026,7 +1695,8 @@ function seqMsg() {
   const p = state.params;
   return { type: 'seq', seq: { steps: state.steps, length: state.steps.length, bpm: state.bpm, swing: p.swing, gateLen: 0.1 + p.gateLen * 0.85 } };
 }
-function pushAll() { post({ type: 'seq101', steps: state.s101 || [] }); post({ type: 'params', p: state.params }); post({ type: 'bend', b: bendPhysical(state.bend) }); post({ type: 'bridges', br: state.br }); post(seqMsg()); }
+function pushFx() { post({ type: 'fxknobs', k: fxKnobs(state.params) }); for (const n of ['rat', 'dly', 'lex']) post({ type: 'fx', name: n, on: !!state.fx[n] }); }
+function pushAll() { pushFx(); post({ type: 'seq101', steps: state.s101 || [] }); post({ type: 'params', p: state.params }); post({ type: 'bend', b: bendPhysical(state.bend) }); post({ type: 'bridges', br: state.br }); post(seqMsg()); }
 
 // ---------- UI: faders ----------
 const ui = {};
@@ -1073,7 +1743,8 @@ function switcher(def, mount) {
   const btns = [...el.querySelectorAll('button')];
   const set = (v, send = true) => {
     bucket()[id] = v; btns.forEach((b, i) => b.setAttribute('aria-pressed', i === v ? 'true' : 'false'));
-    if (send) { if (def.bend) post({ type: 'bend', b: bendPhysical(state.bend) }); else post({ type: 'param', id, v }); save(); }
+    if (send) { if (def.bend) post({ type: 'bend', b: bendPhysical(state.bend) }); else post({ type: 'param', id, v: def.val ? def.val(v) : v }); save(); }
+    if (def.onSet) def.onSet(v);
   };
   btns.forEach(b => b.addEventListener('click', () => { boot(); set(+b.dataset.i); }));
   mount.appendChild(el);
@@ -1144,6 +1815,29 @@ function buildMatrix() {
   });
 }
 buildMatrix();
+// ---------- UI: effects ----------
+const fxrow = document.getElementById('fxrow'), fxBox = {};
+for (const u of FX) {
+  const el = document.createElement('section'); el.className = 'fxu'; el.setAttribute('aria-label', u.name);
+  const sw = u.id === 'cmp' ? '' : `<button class="onoff" id="fx-${u.id}-on" aria-pressed="false">off</button>`;
+  el.innerHTML = `<div class="fxh">${sw}<b>${u.name}</b><small>${u.sub}</small></div><div class="ctrls"></div>`;
+  const c = el.querySelector('.ctrls');
+  for (const it of u.items) {
+    if (it.f) fader(it, c);
+    else switcher({ ...it, onSet: it.progs ? () => ui.lexpre && ui.lexpre(state.params.lexpre) : null }, c);
+  }
+  if (u.id === 'lex') c.querySelector('.sw').classList.add('progs');
+  if (u.id === 'cmp') el.insertAdjacentHTML('beforeend', '<p class="fxnote">Keyed from the dry synth: it ducks the delay and reverb returns while you play, like the 303 app.</p>');
+  fxrow.appendChild(el); fxBox[u.id] = el;
+  const b = el.querySelector('.onoff');
+  if (b) b.onclick = () => { boot(); state.fx[u.id] = !state.fx[u.id]; post({ type: 'fx', name: u.id, on: state.fx[u.id] }); renderFx(); save(); };
+}
+function renderFx() {
+  for (const n of ['rat', 'dly', 'lex']) { const b = document.getElementById(`fx-${n}-on`); b.setAttribute('aria-pressed', !!state.fx[n]); b.textContent = state.fx[n] ? 'on' : 'off'; fxBox[n].classList.toggle('on', !!state.fx[n]); }
+  fxBox.cmp.classList.toggle('on', !!(state.fx.dly || state.fx.lex));
+}
+renderFx();
+
 document.getElementById('mxClear').onclick = () => { state.br = {}; Object.values(cells).forEach(r => r()); post({ type: 'bridges', br: state.br }); save(); };
 
 // ---------- UI: sequencer (piano roll) ----------
@@ -1315,7 +2009,7 @@ document.getElementById('p-undo').onclick = () => {
 renderSeq();
 
 // ---------- tabs ----------
-const TABS = [['tab-synth', null], ['tab-seq', 'pan-seq'], ['tab-bend', 'pan-bend'], ['tab-br', 'pan-br'], ['tab-perf', null]];
+const TABS = [['tab-synth', null], ['tab-seq', 'pan-seq'], ['tab-bend', 'pan-bend'], ['tab-br', 'pan-br'], ['tab-fx', 'pan-fx'], ['tab-perf', null]];
 const phoneMQ = matchMedia('(orientation: landscape) and (max-height: 520px)'), unitEl = document.getElementById('unit');
 // Synth and Perform are tabs only on a landscape phone; elsewhere those sections are always on screen
 function showTab(id) {
@@ -1353,16 +2047,330 @@ playBtn.onclick = () => setRun(!running);
 const bpmEl = document.getElementById('bpm');
 bpmEl.value = state.bpm;
 bpmEl.onchange = () => { state.bpm = Math.max(40, Math.min(240, +bpmEl.value || 120)); bpmEl.value = state.bpm; post(seqMsg()); save(); };
-const presetEl = document.getElementById('preset');
-presetEl.innerHTML = Object.keys(PRESETS).map(n => `<option>${n}</option>`).join('');
-presetEl.value = state.preset || 'Acid line';
-presetEl.onchange = () => {
-  state = { ...presetState(presetEl.value), s101: state.s101 };
+// ---------- presets: menu, save bar and namer copied from tb303-circuit-model (presets.js, namer.js @2b6e821) ----------
+const store = { get(k, d) { try { const v = localStorage.getItem('kestrel.' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('kestrel.' + k, JSON.stringify(v)); } catch (e) {} } };
+function loadStore(key) { const v = store.get(key, {}); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; }
+function presetBar(pre, storeKey, builtins, snap, apply, autoName) {
+  const sel = document.getElementById(pre + '-preset'), nameEl = document.getElementById(pre + '-name');
+  const delBtn = document.getElementById(pre + '-del'), msg = document.getElementById(pre + '-msg');
+  const bar = { user: loadStore(storeKey), say: (t) => { msg.textContent = t; clearTimeout(bar.t); bar.t = setTimeout(() => { msg.textContent = ''; }, 4000); } };
+  let armed = '';
+  const esc = (n) => n.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  bar.render = (selected) => {
+    const opt = (g, n) => `<option value="${g}:${esc(n)}">${esc(n.split(' / ').pop())}</option>`;
+    const names = Object.keys(bar.user).sort((a, b) => a.localeCompare(b));
+    const groups = {};
+    for (const n of Object.keys(builtins)) (groups[n.includes(' / ') ? n.split(' / ')[0] : 'Built-in'] ||= []).push(n);
+    sel.innerHTML = '<option value="">Choose…</option>'
+      + Object.entries(groups).map(([g, ns]) => `<optgroup label="${esc(g)}">` + ns.map(n => opt('b', n)).join('') + '</optgroup>').join('')
+      + (names.length ? '<optgroup label="Saved">' + names.map(n => opt('u', n)).join('') + '</optgroup>' : '');
+    sel.value = selected || '';
+    delBtn.disabled = !sel.value.startsWith('u:'); armed = ''; delBtn.textContent = 'Delete';
+    sel.dispatchEvent(new Event('sync'));
+  };
+  bar.save = () => store.set(storeKey, bar.user);
+  // auto-namer: fill the name box with a suggestion, unless the person typed their own
+  let suggested = '';
+  bar.suggest = (force) => {
+    if (!autoName || (!force && nameEl.value.trim() && nameEl.value !== suggested)) return;
+    nameEl.value = suggested = autoName(bar.user);
+  };
+  sel.addEventListener('change', () => {
+    const v = sel.value; delBtn.disabled = !v.startsWith('u:'); armed = ''; delBtn.textContent = 'Delete';
+    if (!v) return;
+    const name = v.slice(2);
+    apply(v[0] === 'b' ? builtins[name] : bar.user[name]);
+    if (v[0] === 'u') nameEl.value = name;
+    bar.say(`Loaded ${name}.`);
+  });
+  document.getElementById(pre + '-save').onclick = () => {
+    if (autoName && !nameEl.value.trim()) bar.suggest(true);
+    const name = nameEl.value.trim();
+    if (!name) { nameEl.focus(); bar.say('Type a name first, then save.'); return; }
+    suggested = '';
+    const existed = name in bar.user;
+    bar.user[name] = snap(); bar.save(); bar.render('u:' + name);
+    bar.say(existed ? `Updated ${name}.` : `Saved ${name}.`);
+  };
+  nameEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById(pre + '-save').click(); });
+  delBtn.onclick = () => {
+    const v = sel.value; if (!v.startsWith('u:')) return;
+    const name = v.slice(2);
+    if (armed !== name) { armed = name; delBtn.textContent = 'Confirm delete'; bar.say(`Click Confirm delete to remove ${name}.`); return; }
+    delete bar.user[name]; bar.save(); bar.render(''); bar.say(`Deleted ${name}.`);
+  };
+  bar.render('');
+  return bar;
+}
+// ---------- preset menu: our own picker over the hidden <select>, grouped, searchable, with prev/next ----------
+function presetMenu(host) {
+  const sel = document.getElementById(host.dataset.for), pre = host.dataset.for.replace('-preset', '');
+  const isPat = pre === 'pat';
+  host.innerHTML = `<button type="button" class="pm-btn" aria-haspopup="listbox" aria-expanded="false"><span class="cur"></span></button>`
+    + `<button type="button" class="pm-step" data-d="-1" aria-label="Previous preset">◀</button><button type="button" class="pm-step" data-d="1" aria-label="Next preset">▶</button>`
+    + `<div class="pm-pop" hidden><div class="pm-head"><div class="pm-qrow"><input type="text" class="pm-q" placeholder="Search" aria-label="Search presets"><button type="button" class="pm-favf" aria-pressed="false" title="Show favourites only">★</button></div>`
+    + (isPat ? `<div class="pm-chips" role="group" aria-label="Filter">${PM_TAGS.map(t => `<button type="button" class="pm-chip" data-t="${t.k}" aria-pressed="false" title="${t.tip}">${t.label}</button>`).join('')}</div>` : '')
+    + `</div><div class="pm-list" role="listbox" aria-label="${sel.getAttribute('aria-label')}"></div></div>`;
+  host.querySelector('.pm-pop').appendChild(host.parentElement.querySelector('.pm-foot'));
+  const btn = host.querySelector('.pm-btn'), pop = host.querySelector('.pm-pop'), q = host.querySelector('.pm-q'), list = host.querySelector('.pm-list');
+  const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  const coll = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+  const favKey = 'fav.' + pre, recKey = 'recent.' + pre, openKey = 'pmOpen.' + pre;
+  const fav = new Set(store.get(favKey, [])), open = new Set(store.get(openKey, ['fav', 'rec', 'my', 'built']));
+  let recent = store.get(recKey, []), chips = new Set(), act = -1, tree = null, order = [], byV = new Map(), favOnly = !!store.get('favOnly.' + pre, false);
+
+  // every option becomes an item with a folder path: My presets, Built-in, or source > author > song
+  function build() {
+    const items = [...sel.querySelectorAll('option')].filter(o => o.value).map(o => {
+      const v = o.value, full = v.slice(2);
+      let path, name = full;
+      if (v.startsWith('u:')) path = ['my'];
+      else if (full.includes(' / ')) {
+        const [grp, nm] = full.split(' / '); name = nm;
+        const m = /^ABL3 (.+)$/.exec(grp); path = m ? ['ABL3', m[1]] : [grp];
+      } else path = ['built'];
+      name = name.replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+      return { v, name, path, label: name };
+    });
+    byV = new Map(items.map(it => [it.v, it]));
+    const root = { kids: new Map(), items: [] };
+    const node = (path) => { let n = root; for (const k of path) { if (!n.kids.has(k)) n.kids.set(k, { key: (n.key ? n.key + '/' : '') + k, label: k, kids: new Map(), items: [] }); n = n.kids.get(k); } return n; };
+    for (const it of items) node(it.path).items.push(it);
+    // multi-part songs ("Name - Part") become one row inside their folder
+    const songs = (n) => {
+      const stems = new Map();
+      for (const it of n.items) { const i = it.name.indexOf(' - '); if (i > 0) { const st = it.name.slice(0, i); (stems.get(st) || stems.set(st, []).get(st)).push(it); } }
+      for (const [st, its] of stems) if (its.length > 1) {
+        const k = { key: n.key + '/' + st, label: st, kids: new Map(), items: its, song: true };
+        for (const it of its) it.label = it.name.slice(st.length + 3);
+        n.items = n.items.filter(it => !its.includes(it)); n.kids.set(st, k);
+      }
+      for (const c of n.kids.values()) if (!c.song) songs(c);
+    };
+    for (const c of root.kids.values()) if (c.key !== 'my' && c.key !== 'built') songs(c);
+    const LABEL = { my: 'My presets', built: 'Built-in' };
+    for (const [k, c] of root.kids) if (LABEL[k]) c.label = LABEL[k];
+    const sortN = (n) => { n.items.sort((a, b) => coll.compare(a.label, b.label)); for (const c of n.kids.values()) sortN(c); };
+    sortN(root);
+    // top level order: mine, built-in, then sources A-Z
+    const top = [...root.kids.values()].sort((a, b) => (a.key === 'my' ? -2 : a.key === 'built' ? -1 : 0) - (b.key === 'my' ? -2 : b.key === 'built' ? -1 : 0) || coll.compare(a.label, b.label));
+    tree = top; order = [];
+    // folders before loose items inside a folder, song rows sorted in with folders
+    const walk2 = (n) => { n.sorted = [...n.kids.values()].sort((a, b) => (a.song - b.song) || coll.compare(a.label, b.label)); for (const c of n.sorted) walk2(c); };
+    for (const t of top) walk2(t);
+    const flatten = (n) => { for (const c of n.sorted) if (!c.song) flatten(c); const rows = [...n.sorted.filter(c => c.song).map(c => ({ song: c })), ...n.items.map(it => ({ it }))].sort((a, b) => coll.compare((a.song || a.it).label, (b.song || b.it).label)); for (const r of rows) if (r.song) order.push(...r.song.items); else order.push(r.it); };
+    for (const t of top) flatten(t);
+    recent = recent.filter(v => byV.has(v)); for (const v of [...fav]) if (!byV.has(v)) fav.delete(v);
+  }
+  const small = () => byV.size <= 14;
+  const pathText = (it) => it.path.map(k => ({ my: 'My presets', built: 'Built-in' }[k] || k)).join(' › ');
+  function sync() {
+    const it = byV.get(sel.value);
+    btn.querySelector('.cur').textContent = it ? it.name : 'Choose…';
+  }
+  const row = (it, d, hint) => `<div class="pm-row" style="--d:${d}"><button type="button" class="pm-i" role="option" data-v="${esc(it.v)}" aria-selected="${it.v === sel.value}">${esc(hint ? it.name : it.label)}${hint ? `<span class="pm-path">${esc(pathText(it))}</span>` : ''}</button>`
+    + `<button type="button" class="pm-star" data-v="${esc(it.v)}" aria-pressed="${fav.has(it.v)}" aria-label="${fav.has(it.v) ? 'Remove from' : 'Add to'} favourites">★</button></div>`;
+  const folder = (key, label, n, d) => `<button type="button" class="pm-g${d ? ' sub' : ''}" style="--d:${d}" data-g="${esc(key)}" aria-expanded="${open.has(key)}">${esc(label)}<span class="n">${n}</span></button>`;
+  const count = (n) => n.items.length + [...n.kids.values()].reduce((a, c) => a + count(c), 0);
+  function drawNode(n, d) {
+    let h = folder(n.key, n.label, count(n), d);
+    if (!open.has(n.key)) return h;
+    const rows = [...n.sorted.map(c => ({ c })), ...n.items.map(it => ({ it }))];
+    rows.sort((a, b) => (a.c && !a.c.song ? 0 : 1) - (b.c && !b.c.song ? 0 : 1) || coll.compare((a.c || a.it).label, (b.c || b.it).label));
+    for (const r of rows) h += r.c ? drawNode(r.c, d + 1) : row(r.it, d + 1);
+    return h;
+  }
+  function draw() {
+    const term = q.value.trim().toLowerCase(); let h = '';
+    if (term || chips.size || favOnly) {
+      const hits = order.filter(it => (!favOnly || fav.has(it.v)) && (!term || (it.name + ' ' + pathText(it)).toLowerCase().includes(term)) && [...chips].every(t => pmTags(it.v).has(t)));
+      h = hits.slice(0, 300).map(it => row(it, 0, byV.size > 14)).join('');
+      h = (hits.length && (term || chips.size) ? `<div class="pm-sum">${hits.length} match${hits.length === 1 ? '' : 'es'}${hits.length > 300 ? ', first 300 shown' : ''}</div>` : '') + h;
+    } else {
+      if (small()) h = order.map(it => row(it, 0)).join('');
+      else for (const t of tree) h += drawNode(t, 0);
+    }
+    list.innerHTML = h || `<div class="pm-none">${!byV.size ? 'No presets yet. Save one below.' : favOnly && !term ? 'No favourites yet. Tap ☆ on a preset to add it.' : 'Nothing matches.'}</div>`;
+    act = -1;
+  }
+  function show() {
+    build();
+    const it = byV.get(sel.value);
+    if (it) { let k = ''; for (const p of it.path) { k = k ? k + '/' + p : p; open.add(k); } const i = it.name.indexOf(' - '); if (i > 0) open.add(it.path.join('/') + '/' + it.name.slice(0, i)); }
+    q.value = ''; draw(); pop.hidden = false; pop.style.maxHeight = Math.max(240, Math.min(520, innerHeight - btn.getBoundingClientRect().bottom - 16)) + 'px'; btn.setAttribute('aria-expanded', 'true');
+    if (matchMedia('(pointer: fine)').matches) q.focus();
+    list.querySelector('.pm-g ~ .pm-row [aria-selected=true], .pm-row [aria-selected=true]')?.scrollIntoView({ block: 'center' });
+  }
+  function hide(refocus) { pop.hidden = true; btn.setAttribute('aria-expanded', 'false'); if (refocus) btn.focus(); }
+  function choose(v, remember) {
+    sel.value = v; sel.dispatchEvent(new Event('change')); sync();
+    if (remember) { recent = [v, ...recent.filter(x => x !== v)].slice(0, 8); store.set(recKey, recent); }
+  }
+  btn.onclick = () => (pop.hidden ? show() : hide());
+  host.querySelectorAll('.pm-step').forEach(b => b.onclick = () => {
+    build(); const L = favOnly && order.some(it => fav.has(it.v)) ? order.filter(it => fav.has(it.v)) : order; if (!L.length) return;
+    const d = +b.dataset.d, i = L.findIndex(it => it.v === sel.value);
+    choose(L[i < 0 ? (d > 0 ? 0 : L.length - 1) : (i + d + L.length) % L.length].v);
+  });
+  list.addEventListener('click', (e) => {
+    const g = e.target.closest('.pm-g');
+    if (g) { open.has(g.dataset.g) ? open.delete(g.dataset.g) : open.add(g.dataset.g); store.set(openKey, [...open]); const y = list.scrollTop; draw(); list.scrollTop = y; return; }
+    const st = e.target.closest('.pm-star');
+    if (st) { const v = st.dataset.v; fav.has(v) ? fav.delete(v) : fav.add(v); store.set(favKey, [...fav]); const y = list.scrollTop; draw(); list.scrollTop = y; return; }
+    const it = e.target.closest('.pm-i'); if (it) { choose(it.dataset.v, true); hide(true); }
+  });
+  host.querySelector('.pm-chips')?.addEventListener('click', (e) => {
+    const c = e.target.closest('.pm-chip'); if (!c) return;
+    chips.has(c.dataset.t) ? chips.delete(c.dataset.t) : chips.add(c.dataset.t); c.setAttribute('aria-pressed', chips.has(c.dataset.t)); draw();
+  });
+  q.addEventListener('input', draw);
+  const favBtn = host.querySelector('.pm-favf');
+  favBtn.setAttribute('aria-pressed', favOnly);
+  favBtn.onclick = () => { favOnly = !favOnly; favBtn.setAttribute('aria-pressed', favOnly); store.set('favOnly.' + pre, favOnly); draw(); };
+  pop.addEventListener('keydown', (e) => {
+    const items = [...list.querySelectorAll('.pm-i, .pm-g')];
+    if (e.key === 'Escape') { e.preventDefault(); hide(true); return; }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault(); if (!items.length) return;
+      act = Math.max(0, Math.min(items.length - 1, act + (e.key === 'ArrowDown' ? 1 : -1)));
+      items.forEach((el, i) => el.classList.toggle('act', i === act)); items[act].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter' && act >= 0 && items[act]) { e.preventDefault(); items[act].click(); }
+  });
+  document.addEventListener('pointerdown', (e) => { if (!pop.hidden && !host.contains(e.target)) hide(); });
+  sel.addEventListener('sync', () => { build(); sync(); if (!pop.hidden) { const y = list.scrollTop; draw(); list.scrollTop = y; } }); sel.addEventListener('change', sync);
+  build(); sync();
+}
+const PM_TAGS = []; const pmTags = () => new Set();
+// ---------- preset auto-namer ----------
+// Five styles, often mixed: alien word-part mashups, messed-up desserts, cosmology, ancient Greek-ish,
+// and a last pass where each s turns into z 60% of the time.
+const NAMER = (() => {
+  const pick = (a) => a[Math.floor(Math.random() * a.length)];
+  const cap = (w) => w.charAt(0).toUpperCase() + w.slice(1);
+  const chance = (p) => Math.random() < p;
+  const WORDS = ['squelch', 'acid', 'resonance', 'filter', 'bubble', 'sludge', 'wobble', 'circuit', 'diode', 'ladder', 'voltage', 'quantum',
+    'thunder', 'velvet', 'crystal', 'murmur', 'fractal', 'glimmer', 'plasma', 'mollusc', 'saxophone', 'lantern', 'whisper', 'cobalt'];
+  const A_PRE = ['zor', 'qua', 'vex', 'thra', 'xil', 'oom', 'kry', 'bla', 'nyx', 'gor', 'fen', 'plu', 'yth', 'ska', 'zub', 'mor', 'quee', 'drax'];
+  const A_MID = ['la', 'ri', 'on', 'ex', 'ub', 'ae', 'ix', 'ol', 'ee', 'aa', 'u', 'yo'];
+  const A_END = ['th', 'x', 'nok', 'ar', 'ium', 'ozz', 'eep', 'ul', 'orb', 'ak', 'ish', 'oid'];
+  // front of one word up to a vowel, back of another from a consonant, so the joint stays sayable
+  const splice = (a, b) => {
+    const cuts = [...a.slice(1, -1)].map((c, i) => (/[aeiouy]/.test(c) ? i + 2 : 0)).filter(Boolean);
+    const tails = [...b.slice(1)].map((c, i) => (!/[aeiouy]/.test(c) ? i + 1 : 0)).filter(i => i && i >= b.length / 3);
+    return a.slice(0, cuts.length ? pick(cuts) : 2) + b.slice(tails.length ? pick(tails) : b.length >> 1);
+  };
+  const alien = () => {
+    if (chance(0.5)) { // splice the front of one word onto the back of another
+      const a = pick(WORDS), b = pick(WORDS);
+      return cap(splice(a, b));
+    }
+    let w = pick(A_PRE); if (chance(0.7)) w += pick(A_MID); w += pick(A_END);
+    return cap(w) + (chance(0.25) ? '-' + cap(pick(A_PRE) + pick(A_END)) : '');
+  };
+  const DESSERTS = ['Tiramisu', 'Pavlova', 'Eclair', 'Creme Brulee', 'Baklava', 'Panna Cotta', 'Profiterole', 'Trifle', 'Cheesecake', 'Sorbet',
+    'Macaron', 'Strudel', 'Meringue', 'Parfait', 'Clafoutis', 'Mille-feuille', 'Cannoli', 'Gelato', 'Souffle', 'Sticky Toffee', 'Banoffee', 'Tarte Tatin', 'Spotted Dick', 'Jelly'];
+  const MESS = ['Burnt', 'Melted', 'Sideways', 'Haunted', 'Soggy', 'Inverted', 'Radioactive', 'Fermented', 'Exploded', 'Backwards', 'Feral', 'Damp', 'Cursed', 'Upside-down'];
+  const dessert = () => {
+    const d = pick(DESSERTS), r = Math.random();
+    if (r < 0.3) return pick(MESS) + ' ' + d;
+    if (r < 0.55) return splice(d.replace(/ .*/, ''), pick(DESSERTS).replace(/ .*/, '').toLowerCase()); // Tiramiclair
+    if (r < 0.75) return d.replace(/[aeiou]/g, (v) => (chance(0.5) ? { a: 'o', e: 'u', i: 'a', o: 'e', u: 'i' }[v] : v)); // vowels slipped
+    if (r < 0.9) { const w = d.split(' '); w[0] = w[0].split('').reverse().join('').toLowerCase(); w[0] = cap(w[0]); return w.join(' '); } // backwards
+    return d + ' ' + pick(['Incident', 'Collapse', 'Mishap', 'Disaster', 'Situation']);
+  };
+  const COSMOS = ['Redshift', 'Event Horizon', 'Dark Matter', 'Inflaton', 'Quasar', 'Pulsar', 'Magnetar', 'Cosmic Web', 'Baryon', 'Hubble Flow',
+    'Accretion Disk', 'Neutrino', 'Singularity', 'Nebula', 'Perihelion', 'Aphelion', 'Parsec', 'Lagrange Point', 'Oort Cloud', 'Lensing',
+    'Big Crunch', 'Supernova', 'Blueshift', 'Dyson Sphere', 'Wormhole', 'Planck Epoch', 'Cepheid', 'Kuiper Belt', 'Dark Energy', 'Spaghettification'];
+  const cosmos = () => pick(COSMOS) + (chance(0.2) ? ' ' + pick(['Prime', 'Remnant', 'Drift', 'Echo', 'Zero']) : '');
+  const GREEK = ['Aether', 'Logos', 'Kairos', 'Chronos', 'Pneuma', 'Eidolon', 'Arete', 'Hubris', 'Nous', 'Telos', 'Apeiron', 'Kosmos', 'Chthonia',
+    'Eros', 'Thanatos', 'Hypnos', 'Mneme', 'Agora', 'Oracle', 'Labyrinth', 'Amphora', 'Odyssey', 'Hydra', 'Gorgon', 'Elysion', 'Tartaros', 'Delphi', 'Ithaka'];
+  const greekify = (w) => {
+    const base = w.replace(/[^a-z]+$/i, '').replace(/[aeiouy]+$/i, '');
+    return (chance(0.3) ? pick(['Proto', 'Hyper', 'Neo', 'Pan', 'Archi', 'Meta']) : '') + cap(base.toLowerCase()) + pick(['os', 'ia', 'eion', 'ikon', 'ides', 'ax']);
+  };
+  const greek = () => (chance(0.55) ? pick(GREEK) : greekify(pick([...WORDS, ...GREEK]))) + (chance(0.15) ? ' ' + pick(['of Delphi', 'the Elder', 'Ascending', 'Rex']) : '');
+  const STYLES = [alien, dessert, cosmos, greek];
+  // mixes: two styles side by side, or a word from one greekified
+  const mix = () => {
+    const r = Math.random();
+    if (r < 0.4) return pick([cosmos, greek, alien])() + ' ' + pick([dessert, cosmos])().split(' ').pop();
+    if (r < 0.7) return greekify(pick([...DESSERTS, ...COSMOS]).split(' ')[0]);
+    return pick(STYLES)() + ' ' + pick(STYLES)().split(' ')[0];
+  };
+  const zed = (t) => t.replace(/s/g, (c) => (chance(0.6) ? 'z' : c)).replace(/S/g, (c) => (chance(0.6) ? 'Z' : c));
+  return (taken = {}) => {
+    for (let i = 0; i < 20; i++) {
+      let n = chance(0.4) ? mix() : pick(STYLES)();
+      const w = n.split(/\s+/).filter((x, j, a) => x && a.indexOf(x) === j).slice(0, 3); // no repeats, three words at most
+      n = zed(w.join(' ')).slice(0, 40);
+      if (n && !(n in taken)) return n;
+    }
+    return 'Preset ' + (Object.keys(taken).length + 1);
+  };
+})();
+
+// ---------- Kestrel glue: what a preset holds and how it loads ----------
+const clone = o => JSON.parse(JSON.stringify(o));
+function soundSnap() { return { params: clone(state.params), bend: clone(state.bend), br: clone(state.br), fx: clone(state.fx) }; }
+function patternSnap() { return { steps: clone(state.steps), s101: clone(state.s101 || []) }; }
+function projectSnap() { return { sound: soundSnap(), pattern: patternSnap(), bpm: state.bpm }; }
+function applySound(x) {
+  if (!x || typeof x !== 'object') return;
+  state.params = { ...defaults, ...(x.params || {}) }; state.bend = { ...stockBend(), ...(x.bend || {}) };
+  state.br = { ...(x.br || {}) }; state.fx = { rat: false, dly: false, lex: false, ...(x.fx || {}) };
   for (const k in ui) ui[k](state.params[k]);
   for (const k in bui) bui[k](state.bend[k]);
-  Object.values(cells).forEach(r => r());
-  bpmEl.value = state.bpm; tail = []; undoBuf = null; renderSeq(); pushAll(); save();
+  Object.values(cells).forEach(r => r()); renderFx();
+}
+function applyPattern(x) {
+  if (!x || typeof x !== 'object' || !Array.isArray(x.steps) || !x.steps.length) return;
+  state.steps = clone(x.steps).slice(0, 64).map(st => ({ n: Math.max(0, Math.min(11, st.n | 0)), o: Math.max(-2, Math.min(2, st.o | 0)), m: 'NTR'.includes(st.m) ? st.m : 'N', a: !!st.a, s: !!st.s }));
+  if (Array.isArray(x.s101)) state.s101 = clone(x.s101).slice(0, 100);
+  tail = []; undoBuf = null; renderSeq();
+}
+const sndOnlyEl = document.getElementById('prj-sndonly');
+sndOnlyEl.checked = !!store.get('prjSoundOnly', false);
+sndOnlyEl.onchange = () => store.set('prjSoundOnly', sndOnlyEl.checked);
+// as in the 303 app, loading a preset keeps the current tempo
+function applyPreset(x) {
+  if (!x || typeof x !== 'object') return;
+  boot();
+  if (x.sound) applySound(x.sound);
+  if (!sndOnlyEl.checked && x.pattern) applyPattern(x.pattern);
+  pushAll(); save();
+}
+// the four factory patches become the built-in presets
+const PROJECT_BUILTIN = {};
+for (const name of Object.keys(PRESETS)) { const st = presetState(name); PROJECT_BUILTIN[name] = { sound: { params: st.params, bend: st.bend, br: st.br, fx: st.fx }, pattern: { steps: st.steps }, bpm: st.bpm }; }
+const prjBar = presetBar('prj', 'projectPresets', PROJECT_BUILTIN, projectSnap, applyPreset, (taken) => NAMER(taken));
+const download = (name, obj) => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' }));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 };
+document.getElementById('prj-export').onclick = () => {
+  const nm = (document.getElementById('prj-name').value.trim() || 'kestrel-preset').replace(/[^\w .-]+/g, '_');
+  download(nm + '.json', { app: 'kestrel-ms1', kind: 'project', version: 1, project: projectSnap(), presets: prjBar.user });
+  prjBar.say(`Exported ${nm}.json with your ${Object.keys(prjBar.user).length} saved presets.`);
+};
+const prjFile = document.getElementById('prj-file');
+document.getElementById('prj-import').onclick = () => prjFile.click();
+prjFile.addEventListener('change', async () => {
+  const f = prjFile.files[0]; prjFile.value = ''; if (!f) return;
+  try {
+    const j = JSON.parse(await f.text());
+    if (!j || j.app !== 'kestrel-ms1' || !j.project) throw 0;
+    let n = 0; if (j.presets && typeof j.presets === 'object') for (const [k, v] of Object.entries(j.presets)) { const nm = k.trim().slice(0, 40); if (nm && v && typeof v === 'object') { prjBar.user[nm] = v; n++; } }
+    applyPreset(j.project);
+    const nm = f.name.replace(/\.json$/i, '').trim().slice(0, 40) || 'Imported';
+    prjBar.user[nm] = projectSnap(); prjBar.save(); prjBar.render('u:' + nm);
+    prjBar.say(`Loaded ${nm}${n ? ` and added ${n} saved preset${n === 1 ? '' : 's'}` : ''}.`);
+  } catch (e) { prjBar.say('That file is not a Kestrel preset export.'); }
+});
+if (PROJECT_BUILTIN[state.preset]) prjBar.render('b:' + state.preset);
+for (const el of document.querySelectorAll('.pm')) presetMenu(el);
+document.getElementById('prj-roll').onclick = () => prjBar.suggest(true);
+document.querySelector('#prj-bar .pm-btn').addEventListener('click', () => prjBar.suggest(false));
 
 // ---------- engine feedback ----------
 function onEngineMsg(e) {
@@ -1498,6 +2506,23 @@ window.addEventListener('keydown', e => {
 });
 window.addEventListener('keyup', e => { const k = e.key.toLowerCase(); if (k in KEYMAP) noteOff(KEY_C + KEYMAP[k]); });
 window.addEventListener('blur', allOff);
+// ---------- install as an app (Chrome on Android shows its own prompt when we ask) ----------
+const installEl = document.getElementById('install');
+let installEvt = null;
+const standalone = () => matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches || navigator.standalone;
+const snoozed = () => Date.now() - (store.get('installNo', 0) || 0) < 7 * 864e5;
+addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); installEvt = e;
+  if (!standalone() && !snoozed()) installEl.hidden = false;
+});
+document.getElementById('installGo').onclick = async () => {
+  installEl.hidden = true; if (!installEvt) return;
+  installEvt.prompt(); try { await installEvt.userChoice; } catch (e) {} installEvt = null;
+};
+document.getElementById('installNo').onclick = () => { installEl.hidden = true; store.set('installNo', Date.now()); };
+addEventListener('appinstalled', () => { installEl.hidden = true; installEvt = null; });
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+
 window.__kestrel = { state, boot, setRun };
 })();
 </script>
