@@ -114,21 +114,93 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
 .bend-grp .ctrls { gap: 8px; }
 .psu { font-size: 19px; border: 2px solid var(--ink); padding: 1px 8px; border-radius: 4px; white-space: nowrap; }
 
-.steps { display: grid; grid-template-columns: 58px repeat(16, minmax(46px, 1fr)); gap: 4px; min-width: 840px; }
-.steps .rl { font-size: 17px; text-transform: lowercase; align-self: center; }
-.st { appearance: none; border: 2px solid var(--ink); border-radius: 3px; background: none; color: var(--ink); font-size: 18px; height: 28px; cursor: pointer; padding: 0; text-transform: lowercase; text-shadow: var(--shadow); }
-.st.note { cursor: ns-resize; touch-action: none; user-select: none; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-.st.note.rest, .st.note.tie { color: var(--muted); }
-.st.on, .st.acc.on, .st.sld.on, .st.mode.T { background: var(--ink); color: var(--glass); text-shadow: none; }
-.st.mode.R { border-style: dashed; color: var(--muted); }
-.stephead { display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: 0; cursor: pointer; font-size: 17px; color: var(--ink); padding: 0; border-radius: 2px; text-shadow: var(--shadow); }
-.stephead .led { width: 10px; height: 10px; }
-.stephead.play .led { background: var(--ink); }
-.stephead.sel { background: var(--ink); color: var(--glass); text-shadow: none; }
-.stephead.sel .led { background: var(--glass); }
-.stepcol-off { opacity: .35; }
+/* tabs: sequencer, bend board and bridges share one panel */
+.tabs { display: flex; align-items: flex-end; gap: 6px; padding: 10px 18px 0; border-bottom: 2px solid var(--ink); flex-wrap: wrap; }
+.tabs button { appearance: none; background: none; border: 2px solid var(--ink); border-bottom: 0; border-radius: 4px 4px 0 0; padding: 2px 14px; margin-bottom: 0;
+  color: var(--ink); font-size: 22px; text-transform: lowercase; cursor: pointer; text-shadow: var(--shadow); }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--glass); text-shadow: none; }
+.tabs .psu { margin: 0 0 6px auto; }
+.panel { padding: 12px 18px 14px; border-bottom: var(--rule); }
+.panel[hidden] { display: none; }
 
-.perf101 { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-end; padding: 12px 18px 0; }
+/* piano-roll sequencer: key rows, octave lanes, tie/slide/accent rows; dim columns past the end extend the pattern */
+.sq-body { display: grid; grid-template-columns: 196px minmax(0, 1fr); gap: 14px; align-items: start; }
+.sq-side { display: grid; gap: 6px; align-content: start; }
+.stp { display: grid; grid-template-columns: 1fr 26px 54px 26px; align-items: center; gap: 0 3px; font-size: 18px; text-transform: lowercase; }
+.stp button, .acts button { appearance: none; background: none; border: 2px solid var(--ink); color: var(--ink); height: 26px; padding: 0; border-radius: 3px; cursor: pointer; font-size: 14px; text-shadow: var(--shadow); }
+.stp button:active, .acts button:active { background: var(--ink); color: var(--glass); }
+.stp button:disabled, .acts button:disabled { opacity: .35; cursor: default; }
+.stp output { text-align: center; font-size: 20px; }
+.acts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
+.acts button { font-size: 18px; height: 28px; text-transform: lowercase; }
+.sq-msg { font-size: 16px; color: var(--muted); min-height: 2.3em; line-height: 1.15; }
+.rollwrap { overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
+.roll { --row: 17px; display: grid; grid-template-columns: 40px repeat(var(--steps, 32), minmax(0, 1fr)); grid-auto-rows: var(--row);
+  width: 100%; min-width: calc(44px + var(--steps, 32) * 20px); border: 2px solid var(--ink); user-select: none; -webkit-user-select: none; text-shadow: none; }
+.roll > * { border: 0; border-right: 1px solid rgba(23,32,14,.2); border-bottom: 1px solid rgba(23,32,14,.2); padding: 0; background: transparent; color: var(--ink);
+  min-width: 0; width: 100%; height: 100%; min-height: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 15px; line-height: 1; border-radius: 0; }
+.roll .rh { justify-content: flex-start; padding-left: 4px; border-right: 2px solid var(--ink); text-transform: lowercase; white-space: nowrap; }
+.roll .blk { background: var(--tint); }
+.roll .rh.blk { background: rgba(23,32,14,.17); }
+.roll .bar { border-right-color: rgba(23,32,14,.6); }
+.roll .gap { border-bottom: 2px solid rgba(23,32,14,.6); }
+.roll button { cursor: pointer; }
+.roll button[data-t] { touch-action: none; }
+.roll button:focus-visible { outline: 2px dashed var(--ink); outline-offset: -3px; }
+.roll .hd { font-size: 15px; }
+.roll .hd.sel { outline: 2px dashed var(--ink); outline-offset: -3px; }
+.roll .hd.cur { background: var(--ink); color: var(--glass); }
+.roll .cell.cur:not(.on) { background: rgba(23,32,14,.2); }
+.roll .cell.on { background: var(--ink); }
+.roll .cell.on.cur { box-shadow: inset 0 0 0 2px var(--glass); }
+.roll .cell.tie { background: repeating-linear-gradient(90deg, var(--ink) 0 3px, transparent 3px 5px); }
+.roll .cell.mem { box-shadow: inset 0 0 0 1px var(--muted); }
+.roll .ghost { opacity: .3; }
+.roll .cell.ghost:hover { opacity: .55; }
+.roll .end { border-right: 3px solid var(--ink); }
+
+/* phones are played sideways: portrait shows a turn-your-phone card */
+.rotate { display: none; }
+@media (orientation: portrait) and (pointer: coarse) and (max-width: 900px) {
+  .rotate { display: flex; position: fixed; inset: 0; z-index: 50; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+    background: var(--glass); color: var(--ink); border: 6px solid var(--bezel); text-align: center; padding: 24px; font-size: 26px; text-shadow: var(--shadow); }
+  .rotate svg { width: 120px; height: 120px; animation: tilt 2.4s ease-in-out infinite; }
+  .rotate small { font-size: 19px; color: var(--muted); max-width: 26ch; }
+  .unit, .hint { display: none; }
+}
+@keyframes tilt { 0%, 25% { transform: rotate(0); } 55%, 100% { transform: rotate(-90deg); } }
+/* landscape phone: everything tighter, the rack scrolls sideways in one row */
+@media (orientation: landscape) and (max-height: 520px) {
+  body { padding-block: 4px 8px; font-size: 16px; padding-left: max(6px, env(safe-area-inset-left, 0px)); padding-right: max(6px, env(safe-area-inset-right, 0px)); }
+  .unit { border-width: 3px; border-radius: 8px; }
+  .top { padding: 4px 10px; gap: 6px 14px; flex-wrap: nowrap; }
+  .brand b { font-size: 26px; } .brand span { display: none; }
+  canvas.scope { width: 150px; height: 32px; }
+  .btn { font-size: 18px; padding: 0 8px; }
+  .num { flex-direction: row; align-items: center; gap: 6px; font-size: 16px; }
+  .num input { font-size: 20px; width: 54px; }
+  .rack { display: flex; overflow-x: auto; scrollbar-width: thin; }
+  .mod { padding: 4px 8px 6px; gap: 4px; flex: none; border-bottom: 0; border-right: var(--rule); }
+  .mod h2 { font-size: 19px; } .mod h2 small { font-size: 14px; }
+  .ctrls { gap: 6px; flex-wrap: nowrap; }
+  .fdr { width: 34px; gap: 2px; } .fdr .track { height: 64px; width: 18px; }
+  .fdr label { font-size: 15px; } .fdr output { font-size: 13px; min-height: 13px; }
+  .sw .lab { font-size: 15px; } .sw button { font-size: 16px; }
+  .tabs { padding: 4px 10px 0; } .tabs button { font-size: 18px; padding: 0 10px; } .psu { font-size: 16px; }
+  .panel { padding: 6px 10px 8px; }
+  .sec-h p { display: none; }
+  .sq-body { grid-template-columns: 150px minmax(0, 1fr); gap: 8px; }
+  .stp { grid-template-columns: 1fr 22px 42px 22px; font-size: 15px; } .stp button { height: 20px; } .stp output { font-size: 16px; }
+  .acts { gap: 4px; } .acts button { height: 22px; font-size: 15px; }
+  .sq-msg { display: none; }
+  .roll { --row: clamp(9px, calc((100dvh - 64px) / 21), 14px); grid-template-columns: 32px repeat(var(--steps, 32), minmax(0, 1fr)); min-width: calc(34px + var(--steps, 32) * 16px); }
+  .roll > * { font-size: 12px; }
+  .perf101 { padding: 6px 10px 0; gap: 10px; } .perf101 h3 { font-size: 18px; }
+  .kb-wrap { padding: 6px 10px 8px; } .kb { height: 74px; }
+  .hint { display: none; }
+}
+
+.perf101 { display: flex; gap: 18px 32px; flex-wrap: wrap; align-items: flex-start; padding: 12px 18px 0; }
 .perf101 .grp { display: flex; flex-direction: column; gap: 6px; }
 .perf101 h3 { margin: 0; font-size: 22px; font-weight: 400; text-transform: lowercase; border-bottom: var(--rule); }
 .perf101 .row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
@@ -157,6 +229,11 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
+<div class="rotate" role="alert">
+  <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><rect x="20" y="6" width="24" height="44" rx="3"/><path d="M29 44h6"/></svg>
+  Turn your phone sideways
+  <small>Kestrel is laid out like the hardware, so it plays in landscape.</small>
+</div>
 <div class="unit" id="unit">
   <header class="top">
     <div class="brand"><b>KESTREL MS-1</b><span>Circuit-modelled monosynth · bendable</span></div>
@@ -164,7 +241,6 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
     <div class="transport">
       <button class="btn play" id="play"><span class="led"></span><span id="playLab">Run</span></button>
       <label class="num">Tempo<input id="bpm" type="number" min="40" max="240" value="124"></label>
-      <label class="num">Steps<input id="len" type="number" min="1" max="16" value="16"></label>
       <label class="num">Patch
         <select class="btn light" id="preset"></select>
       </label>
@@ -174,29 +250,48 @@ table.mx { border-collapse: separate; border-spacing: 4px; font-size: 17px; }
   <section class="rack" id="rack"></section>
 
   <div class="lower">
-    <section class="bay" aria-labelledby="bayh">
-      <div class="sec-h">
-        <h2 id="bayh">Bend board</h2>
-        <p>Swap component values on the live circuit, or bridge any circuit node into another through a resistor. Lower resistance means a stronger bridge. Double-click any control to put it back to stock.</p>
-        <div class="tools"><span class="psu" id="psu">Battery 9.0 V · rail 100%</span><button class="btn light" id="bendStock">Stock values</button><button class="btn light" id="mxClear">Remove bridges</button></div>
+    <nav class="tabs" role="tablist" aria-label="Panels">
+      <button role="tab" id="tab-seq" aria-controls="pan-seq" aria-selected="true">Sequencer</button>
+      <button role="tab" id="tab-bend" aria-controls="pan-bend" aria-selected="false">Bend board</button>
+      <button role="tab" id="tab-br" aria-controls="pan-br" aria-selected="false">Bridges</button>
+      <span class="psu" id="psu">Battery 9.0 V · rail 100%</span>
+    </nav>
+
+    <section class="panel seq" id="pan-seq" role="tabpanel" aria-labelledby="tab-seq">
+      <div class="sq-body">
+        <div class="sq-side">
+          <div class="stp"><span>Length</span><button data-a="len" data-d="-1" aria-label="Length down">◀</button><output id="o-len">16</output><button data-a="len" data-d="1" aria-label="Length up">▶</button></div>
+          <div class="stp"><span>Gate</span><button data-a="gate" data-d="-1" aria-label="Gate time down">◀</button><output id="o-gate">50%</output><button data-a="gate" data-d="1" aria-label="Gate time up">▶</button></div>
+          <div class="stp"><span>Swing</span><button data-a="swing" data-d="-1" aria-label="Swing down">◀</button><output id="o-swing">0%</output><button data-a="swing" data-d="1" aria-label="Swing up">▶</button></div>
+          <div class="stp"><span>Shift</span><button data-a="shift" data-d="-1" aria-label="Shift pattern left">◀</button><output>step</output><button data-a="shift" data-d="1" aria-label="Shift pattern right">▶</button></div>
+          <div class="stp"><span>Transpose</span><button data-a="tr" data-d="-1" aria-label="Transpose down a semitone">▼</button><output>semi</output><button data-a="tr" data-d="1" aria-label="Transpose up a semitone">▲</button></div>
+          <div class="acts">
+            <button id="p-dup" title="Repeat the pattern out to 16, 32 or 64 steps">Double</button>
+            <button id="p-shuf" title="Deal the steps out in a new order">Shuffle</button>
+            <button id="p-rnd" title="Make a new pattern">Random</button>
+            <button id="p-clr">Clear</button>
+            <button id="p-undo" disabled>Undo</button>
+          </div>
+          <span class="sq-msg" id="sq-msg" role="status">Tap a note to set or rest a step. Drag to paint. Tap a step number, then play keys to write.</span>
+        </div>
+        <div class="rollwrap"><div class="roll" id="roll" role="grid" aria-label="Pattern"></div></div>
       </div>
-      <div class="bend-vals" id="bendVals"></div>
-      <div class="sec-h"><h2>Bridges</h2><p>Rows are nodes you can tap; columns are where the wire lands. Your finger carries mains hum, like touching the board.</p></div>
-      <div class="scroll"><table class="mx" id="mx"></table></div>
     </section>
 
-    <section class="seq" aria-labelledby="seqh">
+    <section class="panel" id="pan-bend" role="tabpanel" aria-labelledby="tab-bend" hidden>
       <div class="sec-h">
-        <h2 id="seqh">Step sequencer</h2>
-        <p>Drag a note up or down to change pitch. Click a step number, then play a key to write it in. Ties hold the previous note; slides glide into the next step without retriggering.</p>
-        <div class="tools">
-          <button class="btn light" id="shL" aria-label="Shift pattern left">◀ Shift</button>
-          <button class="btn light" id="shR" aria-label="Shift pattern right">Shift ▶</button>
-          <button class="btn light" id="rndPat">Random</button>
-          <button class="btn light" id="clrPat">Clear</button>
-        </div>
+        <p>Swap component values on the live circuit. Double-click any control to put it back to stock.</p>
+        <div class="tools"><button class="btn light" id="bendStock">Stock values</button></div>
       </div>
-      <div class="scroll"><div class="steps" id="steps"></div></div>
+      <div class="bend-vals" id="bendVals"></div>
+    </section>
+
+    <section class="panel" id="pan-br" role="tabpanel" aria-labelledby="tab-br" hidden>
+      <div class="sec-h">
+        <p>Bridge any circuit node into another through a resistor; lower resistance is a stronger bridge. Rows are nodes you tap, columns are where the wire lands. Your finger carries mains hum.</p>
+        <div class="tools"><button class="btn light" id="mxClear">Remove bridges</button></div>
+      </div>
+      <div class="scroll"><table class="mx" id="mx"></table></div>
     </section>
 
     <section class="perf101" aria-label="Performance controls">
@@ -493,7 +588,7 @@ class KestrelProcessor extends AudioWorkletProcessor {
   }
 
   seqStep() {
-    const S = this.seq, len = Math.max(1, Math.min(16, S.length | 0));
+    const S = this.seq, len = Math.max(1, Math.min(64, S.length | 0, S.steps.length || 1));
     if (this.stepIdx >= len) this.stepIdx = 0;
     const i = this.stepIdx, st = S.steps[i] || { m: 'R' }, nx = S.steps[(i + 1) % len] || { m: 'R' };
     const base = this.fs * 60 / S.bpm / 4, sw = S.swing * 0.5;
@@ -830,9 +925,7 @@ const RACK = [
     { f: 'glide', label: 'Porta', def: .3, fmt: v => v < .01 ? 'off' : ms(0.003 * Math.pow(5 / 0.003, v)) },
     { s: 'glideMode', label: 'Porta', opts: ['Off', 'Auto', 'On'], def: 1 },
     { f: 'slide', label: 'Slide', def: .25, fmt: v => ((0.02 + v * 0.28) * 1000).toFixed(0) + 'ms' },
-    { f: 'accent', label: 'Accent', def: .6, fmt: pct },
-    { f: 'swing', label: 'Swing', def: 0, fmt: v => pct(v) + '%', seq: true },
-    { f: 'gateLen', label: 'Gate', def: .5, fmt: v => pct(0.1 + v * 0.85) + '%', seq: true } ] },
+    { f: 'accent', label: 'Accent', def: .6, fmt: pct } ] },
 ];
 const BENDER = [
   { f: 'bendVco', label: 'VCO', def: .3, fmt: v => '±' + (v * 12).toFixed(1) + 'st' },
@@ -865,16 +958,18 @@ const PRESETS = {
 // ---------- state ----------
 const defaults = {};
 for (const m of RACK) for (const it of m.items) defaults[it.f || it.s] = it.def;
-for (const b of BENDER) defaults[b.f] = b.def; defaults.transpose = 1;
+for (const b of BENDER) defaults[b.f] = b.def; defaults.transpose = 1; defaults.swing = 0; defaults.gateLen = .5;
 let state;
 function presetState(name) {
   const P = PRESETS[name];
   const bend = stockBend();
   for (const k in (P.bend || {})) { const b = BEND_ITEMS.find(x => x.id === k || x.sw === k); bend[k] = b.sw ? P.bend[k] : toNorm(b, P.bend[k]); }
-  return { params: { ...defaults, ...P.p }, bend, br: { ...(P.br || {}) }, steps: parsePat(P.pat), len: 16, bpm: P.bpm, preset: name };
+  return { params: { ...defaults, ...P.p }, bend, br: { ...(P.br || {}) }, steps: parsePat(P.pat), bpm: P.bpm, preset: name };
 }
 try { state = JSON.parse(localStorage.getItem('kestrel-ms1-v2')); } catch (e) { state = null; }
-if (!state || state.v !== 2 || !state.params || !state.steps || state.steps.length !== 16) state = presetState('Acid line');
+if (!state || state.v !== 2 || !state.params || !Array.isArray(state.steps) || !state.steps.length || state.steps.length > 64) state = presetState('Acid line');
+if (state.len) { state.steps = state.steps.slice(0, Math.max(1, state.len)); delete state.len; }
+for (const st of state.steps) { while (st.n >= 12) { st.n -= 12; st.o++; } st.o = Math.max(-2, Math.min(2, st.o | 0)); }
 state.v = 2; state.bend = { ...stockBend(), ...(state.bend || {}) }; state.br = state.br || {};
 state.params = { ...defaults, ...state.params };
 let saveT;
@@ -904,7 +999,7 @@ async function boot() {
 const post = (m) => { if (node) node.port.postMessage(m); };
 function seqMsg() {
   const p = state.params;
-  return { type: 'seq', seq: { steps: state.steps, length: state.len, bpm: state.bpm, swing: p.swing, gateLen: 0.1 + p.gateLen * 0.85 } };
+  return { type: 'seq', seq: { steps: state.steps, length: state.steps.length, bpm: state.bpm, swing: p.swing, gateLen: 0.1 + p.gateLen * 0.85 } };
 }
 function pushAll() { post({ type: 'seq101', steps: state.s101 || [] }); post({ type: 'params', p: state.params }); post({ type: 'bend', b: bendPhysical(state.bend) }); post({ type: 'bridges', br: state.br }); post(seqMsg()); }
 
@@ -1026,82 +1121,206 @@ function buildMatrix() {
 buildMatrix();
 document.getElementById('mxClear').onclick = () => { state.br = {}; Object.values(cells).forEach(r => r()); post({ type: 'bridges', br: state.br }); save(); };
 
-// ---------- UI: sequencer ----------
-const stepsEl = document.getElementById('steps');
-let selStep = -1, playStep = -1;
-const MODE_LAB = { N: 'Note', T: 'Tie', R: 'Rest' };
-function noteName(st) { return NOTE[st.n % 12] + (st.n === 12 ? '' : '') + (st.o + (st.n === 12 ? 4 : 3)); }
-function buildSteps() {
-  const rows = [['', 'head'], ['Note', 'note'], ['Oct', 'oct'], ['Gate', 'mode'], ['Accent', 'acc'], ['Slide', 'sld']];
-  let h = '';
-  for (const [lab, kind] of rows) {
-    h += `<div class="rl">${lab}</div>`;
-    for (let i = 0; i < 16; i++) {
-      if (kind === 'head') h += `<button class="stephead" id="sh-${i}" data-i="${i}" aria-label="Select step ${i + 1} for writing"><span class="led"></span>${i + 1}</button>`;
-      else if (kind === 'note') h += `<div class="st note" id="sn-${i}" data-i="${i}" role="slider" tabindex="0" aria-label="Step ${i + 1} pitch"></div>`;
-      else h += `<button class="st ${kind}" id="s${kind}-${i}" data-i="${i}"></button>`;
-    }
+// ---------- UI: sequencer (piano roll) ----------
+// A step is { n: key 0-11, o: octave -2..2, m: 'N' note | 'T' tie | 'R' rest, a: accent, s: slide }.
+// Rows: step numbers, octave lanes, keys B..C, then tie, slide and accent. At least 32 columns show;
+// columns past the pattern's end are dim, and pressing one grows the pattern to it (up to 64).
+const roll = document.getElementById('roll'), sqMsg = document.getElementById('sq-msg');
+const KEY_ROWS = [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], OCT_ROWS = [2, 1, -1, -2], BLACK = new Set([1, 3, 6, 8, 10]);
+const FLAG_ROWS = [['t', 'tie'], ['s', 'slide'], ['a', 'acc']];
+const SEQ_SHOW = 32, SEQ_MAX = 64;
+let selStep = -1, playStep = -1, seqCols = [], tail = [], undoBuf = null;
+const restStep = (st) => ({ n: st ? st.n : 0, o: st ? st.o : 0, m: 'R', a: false, s: false });
+const say = t => { sqMsg.textContent = t; };
+function renderSeq() {
+  const P = state.steps, n = P.length, cols = Math.max(SEQ_SHOW, n);
+  const focusId = document.activeElement && document.activeElement.closest && document.activeElement.closest('#roll') ? document.activeElement.id : '';
+  const ghost = Array.from({ length: cols - n }, (_, j) => n + j);
+  const bar = i => (i % 4 === 3 && i < cols - 1 ? ' bar' : '') + (i === n - 1 && n < cols ? ' end' : '');
+  const gcell = (cls, t, v, i, lab) => `<button class="cell ghost${cls}${bar(i)}" data-gcol="${i}" data-gt="${t}" data-v="${v}" tabindex="-1" aria-label="Extend to step ${i + 1}, ${lab}"></button>`;
+  let h = '<div class="rh">step</div>' + P.map((_, i) => `<button class="hd${bar(i)}${i === selStep ? ' sel' : ''}" data-col="${i}" data-h="${i}" id="sh-${i}" aria-label="Write step ${i + 1} from the keyboard" aria-pressed="${i === selStep}">${i % 4 === 0 ? i + 1 : ''}</button>`).join('')
+    + ghost.map(i => `<div class="hd ghost${bar(i)}">${i % 4 === 0 ? i + 1 : ''}</div>`).join('');
+  OCT_ROWS.forEach((o, r) => {
+    const last = r === OCT_ROWS.length - 1 ? ' gap' : '', lab = (o > 0 ? '+' : '−') + Math.abs(o), ol = 'octave ' + lab;
+    h += `<div class="rh${last}">${lab}</div>` + P.map((st, i) => {
+      const on = st.o === o, lit = on && st.m !== 'R';
+      return `<button class="cell${lit ? ' on' : on ? ' mem' : ''}${bar(i)}${last}" id="so${o}_${i}" data-col="${i}" data-t="o" data-v="${o}" aria-pressed="${on}" aria-label="Step ${i + 1} ${ol}"></button>`;
+    }).join('') + ghost.map(i => gcell(last, 'o', o, i, ol)).join('');
+  });
+  KEY_ROWS.forEach((k, r) => {
+    const cls = (BLACK.has(k) ? ' blk' : '') + (r === KEY_ROWS.length - 1 ? ' gap' : '');
+    h += `<div class="rh${cls}">${NOTE[k].toLowerCase()}</div>` + P.map((st, i) => {
+      const on = st.n === k, c = !on ? '' : st.m === 'N' ? ' on' : st.m === 'T' ? ' tie' : ' mem';
+      return `<button class="cell${cls}${c}${bar(i)}" id="sk${k}_${i}" data-col="${i}" data-t="k" data-v="${k}" aria-pressed="${on && st.m !== 'R'}" aria-label="Step ${i + 1} ${NOTE[k]}${on && st.m === 'R' ? ' (rest)' : on && st.m === 'T' ? ' (tied)' : ''}"></button>`;
+    }).join('') + ghost.map(i => gcell(cls, 'k', k, i, NOTE[k])).join('');
+  });
+  for (const [t, lab] of FLAG_ROWS) {
+    h += `<div class="rh">${lab}</div>` + P.map((st, i) => {
+      const on = t === 't' ? st.m === 'T' : st[t];
+      return `<button class="cell${on ? ' on' : ''}${bar(i)}" id="s${t}_${i}" data-col="${i}" data-t="${t}" aria-pressed="${on}" aria-label="Step ${i + 1} ${lab}"></button>`;
+    }).join('') + ghost.map(i => gcell('', t, 0, i, lab)).join('');
   }
-  stepsEl.innerHTML = h;
-  for (let i = 0; i < 16; i++) {
-    document.getElementById('sh-' + i).onclick = () => { selStep = selStep === i ? -1 : i; renderSteps(); };
-    document.getElementById('soct-' + i).onclick = () => { const s = state.steps[i]; s.o = s.o === 1 ? -1 : s.o + 1; stepChanged(); };
-    document.getElementById('smode-' + i).onclick = () => { const s = state.steps[i]; s.m = { N: 'T', T: 'R', R: 'N' }[s.m]; stepChanged(); };
-    document.getElementById('sacc-' + i).onclick = () => { state.steps[i].a = !state.steps[i].a; stepChanged(); };
-    document.getElementById('ssld-' + i).onclick = () => { state.steps[i].s = !state.steps[i].s; stepChanged(); };
-    const ne = document.getElementById('sn-' + i); let drag = null;
-    const bump = d => { const s = state.steps[i]; let v = s.n + s.o * 12 + d; v = Math.max(-12, Math.min(24, v)); s.o = v >= 12 && v !== 12 ? 1 : v < 0 ? -1 : 0; if (v === 24) s.o = 1; s.n = v - s.o * 12; if (s.m !== 'N') s.m = 'N'; stepChanged(); preview(i); };
-    ne.addEventListener('pointerdown', e => { ne.setPointerCapture(e.pointerId); drag = { y: e.clientY, acc: 0 }; });
-    ne.addEventListener('pointermove', e => { if (!drag) return; const d = Math.trunc((drag.y - e.clientY) / 8) - drag.acc; if (d) { drag.acc += d; bump(d); } });
-    ne.addEventListener('pointerup', () => drag = null); ne.addEventListener('pointercancel', () => drag = null);
-    ne.addEventListener('wheel', e => { e.preventDefault(); bump(-Math.sign(e.deltaY)); }, { passive: false });
-    ne.addEventListener('keydown', e => { if (e.key === 'ArrowUp') { bump(1); e.preventDefault(); } if (e.key === 'ArrowDown') { bump(-1); e.preventDefault(); } });
-  }
+  roll.innerHTML = h; roll.style.setProperty('--steps', cols);
+  seqCols = P.map(() => []);
+  for (const el of roll.querySelectorAll('[data-col]')) seqCols[+el.dataset.col].push(el);
+  if (running && seqCols[playStep]) for (const el of seqCols[playStep]) el.classList.add('cur');
+  if (focusId) { const f = document.getElementById(focusId); if (f) f.focus(); }
+  renderSide();
 }
-function renderSteps() {
-  for (let i = 0; i < 16; i++) {
-    const s = state.steps[i], off = i >= state.len;
-    const ne = document.getElementById('sn-' + i);
-    ne.textContent = s.m === 'R' ? '—' : s.m === 'T' ? '⌒' : noteName(s);
-    ne.className = 'st note' + (s.m === 'R' ? ' rest' : s.m === 'T' ? ' tie' : '');
-    ne.setAttribute('aria-valuetext', s.m === 'N' ? noteName(s) : MODE_LAB[s.m]);
-    const oc = document.getElementById('soct-' + i); oc.textContent = s.o === 1 ? 'Up' : s.o === -1 ? 'Dn' : '·'; oc.classList.toggle('on', s.o !== 0);
-    const mo = document.getElementById('smode-' + i); mo.textContent = MODE_LAB[s.m]; mo.className = 'st mode ' + s.m;
-    const ac = document.getElementById('sacc-' + i); ac.textContent = s.a ? 'Acc' : '·'; ac.classList.toggle('on', s.a); ac.setAttribute('aria-pressed', s.a);
-    const sl = document.getElementById('ssld-' + i); sl.textContent = s.s ? 'Sld' : '·'; sl.classList.toggle('on', s.s); sl.setAttribute('aria-pressed', s.s);
-    const hd = document.getElementById('sh-' + i); hd.classList.toggle('sel', i === selStep); hd.classList.toggle('play', i === playStep);
-    for (const k of ['sh', 'sn', 'soct', 'smode', 'sacc', 'ssld']) document.getElementById(k + '-' + i).classList.toggle('stepcol-off', off);
-  }
+function renderSide() {
+  const P = state.steps, p = state.params;
+  document.getElementById('o-len').textContent = P.length;
+  document.getElementById('o-gate').textContent = Math.round((0.1 + p.gateLen * 0.85) * 100) + '%';
+  document.getElementById('o-swing').textContent = Math.round(p.swing * 100) + '%';
+  const pit = P.map(st => st.n + 12 * st.o), lo = Math.min(...pit), hi = Math.max(...pit);
+  for (const b of document.querySelectorAll('.stp button[data-a="tr"]')) b.disabled = +b.dataset.d < 0 ? lo <= -24 : hi >= 35;
+  document.getElementById('p-undo').disabled = !undoBuf;
 }
-function stepChanged() { renderSteps(); post(seqMsg()); save(); }
+function stepChanged() { renderSeq(); post(seqMsg()); save(); }
+function setPitch(st, v) { st.o = Math.max(-2, Math.min(2, Math.floor(v / 12))); st.n = Math.max(0, Math.min(11, v - 12 * st.o)); }
+// one press: a key cell sets that note, or rests the step if it is already that note; octave lanes toggle;
+// tie holds the note before it (and takes its pitch); slide and accent toggle
+function applyCell(b) {
+  const i = +b.dataset.col, st = state.steps[i], t = b.dataset.t, v = +b.dataset.v;
+  if (t === 'k') { if (st.n === v && st.m !== 'R') st.m = 'R'; else { st.n = v; st.m = 'N'; preview(i); } }
+  else if (t === 'o') { st.o = st.o === v ? 0 : v; if (st.m === 'N') preview(i); }
+  else if (t === 't') { if (st.m === 'T') st.m = 'N'; else { const pv = state.steps[(i - 1 + state.steps.length) % state.steps.length]; st.n = pv.n; st.o = pv.o; st.m = 'T'; } }
+  else st[t] = !st[t];
+}
+// press and drag paints: the first cell's new state is laid on every step the stroke crosses; in the key rows
+// the stroke follows the pointer up and down, so a line can be drawn
+let paint = null, paintedClick = false;
+function paintCell(b) {
+  const i = +b.dataset.col, st = state.steps[i]; if (!st) return false;
+  const t = b.dataset.t, v = +b.dataset.v, before = JSON.stringify(st);
+  if (paint.t === 'k') { if (t !== 'k') return false; if (paint.on) { st.n = v; st.o = paint.oct; st.m = 'N'; } else st.m = 'R'; }
+  else if (paint.t === 'o') { if (t !== 'o') return false; st.o = paint.oct; }
+  else if (paint.t === 't') { if (t !== 't') return false; if (paint.on) { const pv = state.steps[(i - 1 + state.steps.length) % state.steps.length]; st.n = pv.n; st.o = pv.o; st.m = 'T'; } else if (st.m === 'T') st.m = 'N'; }
+  else { if (t !== paint.t) return false; st[t] = paint.on; }
+  return before !== JSON.stringify(st);
+}
+function extendTo(len) { const P = state.steps; while (P.length < Math.min(SEQ_MAX, len)) P.push(tail.shift() || restStep(P[P.length - 1])); }
+roll.addEventListener('pointerdown', e => {
+  boot();
+  const g = e.target.closest('button[data-gcol]');
+  if (g && e.button <= 0) {
+    e.preventDefault(); const i = +g.dataset.gcol, t = g.dataset.gt, v = g.dataset.v;
+    extendTo(i + 1); renderSeq();
+    const id = t === 'o' ? `so${v}_${i}` : t === 'k' ? `sk${v}_${i}` : `s${t}_${i}`, b = document.getElementById(id);
+    if (b) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerId: e.pointerId, button: 0, clientX: e.clientX, clientY: e.clientY }));
+    else stepChanged();
+    return;
+  }
+  const b = e.target.closest('button[data-t]'); if (!b || e.button > 0) return;
+  e.preventDefault(); applyCell(b); paintedClick = true;
+  const st = state.steps[+b.dataset.col], t = b.dataset.t;
+  paint = { t, id: e.pointerId, on: t === 'k' ? st.m !== 'R' : t === 'o' ? true : t === 't' ? st.m === 'T' : st[t], oct: st.o };
+  stepChanged();
+});
+addEventListener('pointermove', e => {
+  if (!paint || e.pointerId !== paint.id) return;
+  const t = document.elementFromPoint(e.clientX, e.clientY), b = t && t.closest && t.closest('#roll button[data-t]'); if (!b) return;
+  if (paintCell(b)) stepChanged();
+});
+const endPaint = e => { if (paint && e.pointerId === paint.id) paint = null; };
+addEventListener('pointerup', endPaint); addEventListener('pointercancel', endPaint);
+roll.addEventListener('click', e => {
+  const h = e.target.closest('button[data-h]');
+  if (h) { const i = +h.dataset.h; selStep = selStep === i ? -1 : i; renderSeq(); if (selStep >= 0) say(`Writing from step ${i + 1}: play keys to fill steps in turn. Tap the number again to stop.`); return; }
+  if (paintedClick) { paintedClick = false; if (e.detail !== 0) return; }
+  const b = e.target.closest('button[data-t]'); if (!b) return;
+  applyCell(b); stepChanged();
+});
+roll.addEventListener('keydown', e => {
+  const b = e.target.closest('button[data-t]'); if (!b) return;
+  const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key]; if (!d) return;
+  const cells = [...roll.querySelectorAll('button[data-t]')], n = state.steps.length, idx = cells.indexOf(b);
+  const r = Math.floor(idx / n), c = idx % n, rows = cells.length / n;
+  const t = cells[Math.min(rows - 1, Math.max(0, r + d[1])) * n + Math.min(n - 1, Math.max(0, c + d[0]))];
+  if (t) { e.preventDefault(); t.focus(); }
+});
 let prevT;
 function preview(i) {
-  if (running || !node) return; const s = state.steps[i]; const n = 60 + s.n + 12 * s.o;
+  if (running || !node) return; const st = state.steps[i]; const n = 60 + st.n + 12 * st.o;
   post({ type: 'noteOn', n }); clearTimeout(prevT); prevT = setTimeout(() => post({ type: 'noteOff', n }), 160);
 }
-buildSteps(); renderSteps();
-document.getElementById('rndPat').onclick = () => {
-  const scale = [0, 3, 5, 7, 10, 12]; state.steps = state.steps.map(() => {
-    const r = Math.random();
-    return { n: scale[Math.floor(Math.random() * scale.length)], o: Math.random() < .2 ? 1 : Math.random() < .15 ? -1 : 0, m: r < .12 ? 'R' : r < .2 ? 'T' : 'N', a: Math.random() < .25, s: Math.random() < .2 };
-  }); stepChanged();
+const keepUndo = () => { undoBuf = JSON.stringify({ steps: state.steps, tail }); };
+document.querySelector('.sq-side').addEventListener('click', e => {
+  const b = e.target.closest('button[data-a]'); if (!b) return;
+  const d = +b.dataset.d, P = state.steps, p = state.params;
+  switch (b.dataset.a) {
+    case 'len': if (d < 0 && P.length > 1) tail.unshift(P.pop()); else if (d > 0) extendTo(P.length + 1); break;
+    case 'gate': { const g = Math.min(0.95, Math.max(0.1, Math.round((0.1 + p.gateLen * 0.85 + d * 0.05) * 100) / 100)); p.gateLen = (g - 0.1) / 0.85; break; }
+    case 'swing': p.swing = Math.min(0.75, Math.max(0, Math.round((p.swing + d * 0.05) * 100) / 100)); break;
+    case 'shift': if (d > 0) P.unshift(P.pop()); else P.push(P.shift()); break;
+    case 'tr': if (P.every(st => { const v = st.n + 12 * st.o + d; return v >= -24 && v <= 35; })) for (const st of P) setPitch(st, st.n + 12 * st.o + d); break;
+  }
+  stepChanged();
+});
+document.getElementById('p-dup').onclick = () => {
+  const P = state.steps, n = P.length, to = [16, 32, 64].find(x => x > n);
+  if (!to) { say('Already at the 64-step maximum.'); return; }
+  keepUndo(); state.steps = Array.from({ length: to }, (_, i) => ({ ...P[i % n] })); tail = [];
+  stepChanged(); say(`Repeated ${n} step${n === 1 ? '' : 's'} out to ${to}.`);
 };
-document.getElementById('clrPat').onclick = () => { state.steps = state.steps.map(() => ({ n: 0, o: 0, m: 'N', a: false, s: false })); stepChanged(); };
-document.getElementById('shL').onclick = () => { state.steps.push(state.steps.shift()); stepChanged(); };
-document.getElementById('shR').onclick = () => { state.steps.unshift(state.steps.pop()); stepChanged(); };
+document.getElementById('p-shuf').onclick = () => {
+  const P = state.steps; if (P.length < 2) return; keepUndo();
+  for (let i = P.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [P[i], P[j]] = [P[j], P[i]]; }
+  for (let i = 0; i < P.length; i++) if (P[i].m === 'T' && i === 0) P[i].m = 'N';
+  tail = []; stepChanged(); say('Shuffled. Tap again for another order.');
+};
+// Random: a minor-pentatonic line around the root, mostly notes, some rests and ties, accents on strong beats
+document.getElementById('p-rnd').onclick = () => {
+  keepUndo(); const len = Math.max(16, Math.ceil(state.steps.length / 16) * 16), scale = [0, 3, 5, 7, 10];
+  const P = []; let prev = null;
+  for (let i = 0; i < len; i++) {
+    const r = Math.random(), m = i > 0 && r < 0.12 ? 'T' : r < 0.25 ? 'R' : 'N';
+    let v = scale[Math.floor(Math.random() * scale.length)] + (Math.random() < 0.2 ? 12 : Math.random() < 0.12 ? -12 : 0);
+    if (i % 4 === 0 && Math.random() < 0.5) v = 0;
+    const st = { n: 0, o: 0, m, a: (i % 4 === 0 ? 0.45 : 0.18) > Math.random(), s: Math.random() < 0.15 };
+    if (m === 'T' && prev) { st.n = prev.n; st.o = prev.o; } else setPitch(st, v);
+    P.push(st); if (m !== 'R') prev = st;
+  }
+  state.steps = P; tail = []; stepChanged(); say(`New ${len}-step line. Undo brings the last one back.`);
+};
+document.getElementById('p-clr').onclick = () => { keepUndo(); state.steps = state.steps.map(() => restStep()); tail = []; stepChanged(); say('Cleared. Undo brings it back.'); };
+document.getElementById('p-undo').onclick = () => {
+  if (!undoBuf) return; const u = JSON.parse(undoBuf); undoBuf = null; state.steps = u.steps; tail = u.tail; stepChanged(); say('Undone.');
+};
+renderSeq();
+
+// ---------- tabs ----------
+const TABS = [['tab-seq', 'pan-seq'], ['tab-bend', 'pan-bend'], ['tab-br', 'pan-br']];
+function showTab(id) {
+  for (const [t, p] of TABS) { const on = t === id; document.getElementById(t).setAttribute('aria-selected', on); document.getElementById(p).hidden = !on; }
+  try { localStorage.setItem('kestrel-ms1-tab', id); } catch (e) {}
+}
+TABS.forEach(([t], i) => {
+  const b = document.getElementById(t); b.onclick = () => showTab(t);
+  b.addEventListener('keydown', e => { const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!d) return; const n = TABS[(i + d + TABS.length) % TABS.length][0]; showTab(n); document.getElementById(n).focus(); });
+});
+try { const t = localStorage.getItem('kestrel-ms1-tab'); if (t && TABS.some(x => x[0] === t)) showTab(t); } catch (e) {}
+
+// ---------- phones: go full screen and hold landscape on the first touch ----------
+const coarse = matchMedia('(pointer: coarse)').matches;
+async function lockLandscape() {
+  if (!coarse) return;
+  try { if (!document.fullscreenElement && document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen({ navigationUI: 'hide' }); } catch (e) {}
+  try { if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape'); } catch (e) {}
+}
+addEventListener('pointerdown', lockLandscape, { once: true, capture: true });
 
 // ---------- transport ----------
 const playBtn = document.getElementById('play');
 async function setRun(on) {
   await boot(); running = on; post({ type: 'run', on });
   playBtn.classList.toggle('on', on); document.getElementById('playLab').textContent = on ? 'Stop' : 'Run';
-  if (!on) { playStep = -1; renderSteps(); }
+  if (!on) { for (const el of seqCols[playStep] || []) el.classList.remove('cur'); playStep = -1; }
 }
 playBtn.onclick = () => setRun(!running);
-const bpmEl = document.getElementById('bpm'), lenEl = document.getElementById('len');
-bpmEl.value = state.bpm; lenEl.value = state.len;
+const bpmEl = document.getElementById('bpm');
+bpmEl.value = state.bpm;
 bpmEl.onchange = () => { state.bpm = Math.max(40, Math.min(240, +bpmEl.value || 120)); bpmEl.value = state.bpm; post(seqMsg()); save(); };
-lenEl.onchange = () => { state.len = Math.max(1, Math.min(16, Math.round(+lenEl.value) || 16)); lenEl.value = state.len; stepChanged(); };
 const presetEl = document.getElementById('preset');
 presetEl.innerHTML = Object.keys(PRESETS).map(n => `<option>${n}</option>`).join('');
 presetEl.value = state.preset || 'Acid line';
@@ -1110,7 +1329,7 @@ presetEl.onchange = () => {
   for (const k in ui) ui[k](state.params[k]);
   for (const k in bui) bui[k](state.bend[k]);
   Object.values(cells).forEach(r => r());
-  bpmEl.value = state.bpm; lenEl.value = state.len; renderSteps(); pushAll(); save();
+  bpmEl.value = state.bpm; tail = []; undoBuf = null; renderSeq(); pushAll(); save();
 };
 
 // ---------- engine feedback ----------
@@ -1125,8 +1344,9 @@ function onEngineMsg(e) {
 }
 let lastLed = -1;
 function renderPlayLed() {
-  if (lastLed >= 0) document.getElementById('sh-' + lastLed).classList.remove('play');
-  if (playStep >= 0 && running) { document.getElementById('sh-' + playStep).classList.add('play'); lastLed = playStep; }
+  for (const el of seqCols[lastLed] || []) el.classList.remove('cur');
+  lastLed = -1;
+  if (playStep >= 0 && running && seqCols[playStep]) { for (const el of seqCols[playStep]) el.classList.add('cur'); lastLed = playStep; }
 }
 
 // ---------- scope ----------
@@ -1177,9 +1397,8 @@ async function noteOn(rel) {
   const legato = held.size > 0; held.add(n);
   keyEls[rel] && keyEls[rel].classList.add('down');
   if (selStep >= 0 && !running) {
-    const s = state.steps[selStep]; let v = n - 60; v = Math.max(-12, Math.min(24, v));
-    s.o = v < 0 ? -1 : v > 12 ? 1 : 0; s.n = v - s.o * 12; s.m = 'N';
-    selStep = (selStep + 1) % state.len; stepChanged();
+    const st = state.steps[selStep]; setPitch(st, Math.max(-24, Math.min(35, n - 60))); st.m = 'N';
+    selStep = (selStep + 1) % state.steps.length; stepChanged();
   }
   if (mode101.seq === 1 && state.s101.length < 100) { state.s101.push(legato ? { n: n + trOff(), l: true } : { n: n + trOff() }); pushS101(); }
   post({ type: 'noteOn', n });
