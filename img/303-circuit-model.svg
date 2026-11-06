@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1c1c20"/><stop offset="1" stop-color="#0d0d0f"/></linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9e6df"/><stop offset="1" stop-color="#cfcac0"/></linearGradient>
+    <radialGradient id="knob" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#3a3a40"/><stop offset="1" stop-color="#121214"/></radialGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <path d="M0 880 C 120 880 140 820 260 820 S 400 950 520 950 640 800 760 800 900 930 1020 930 1140 840 1260 840 1400 900 1600 900" fill="none" stroke="#ec8080" stroke-width="6" opacity=".55"/>
+  <rect x="200" y="210" width="1200" height="440" rx="28" fill="url(#panel)"/>
+  <rect x="200" y="210" width="1200" height="96" rx="28" fill="#111113"/>
+  <rect x="200" y="270" width="1200" height="36" fill="#111113"/>
+  <text x="250" y="275" font-family="Inter Tight, Helvetica, Arial, sans-serif" font-weight="800" font-size="56" letter-spacing="-2" fill="#f3f1ec">303 Circuit Model</text>
+  <circle cx="1340" cy="258" r="14" fill="#ec8080"/>
+  <g font-family="JetBrains Mono, Menlo, monospace" font-size="20" letter-spacing="2" fill="#6d6a64" text-anchor="middle">
+    <g transform="translate(320 440)"><circle r="62" fill="url(#knob)"/><line x1="0" y1="0" x2="-30" y2="-50" stroke="#f3f1ec" stroke-width="7" stroke-linecap="round"/><text y="112">TUNE</text></g>
+    <g transform="translate(500 440)"><circle r="62" fill="url(#knob)"/><line x1="0" y1="0" x2="40" y2="-44" stroke="#f3f1ec" stroke-width="7" stroke-linecap="round"/><text y="112">CUTOFF</text></g>
+    <g transform="translate(680 440)"><circle r="62" fill="url(#knob)"/><line x1="0" y1="0" x2="52" y2="-30" stroke="#f3f1ec" stroke-width="7" stroke-linecap="round"/><text y="112">RESO</text></g>
+    <g transform="translate(860 440)"><circle r="62" fill="url(#knob)"/><line x1="0" y1="0" x2="10" y2="-58" stroke="#f3f1ec" stroke-width="7" stroke-linecap="round"/><text y="112">ENV MOD</text></g>
+    <g transform="translate(1040 440)"><circle r="62" fill="url(#knob)"/><line x1="0" y1="0" x2="-50" y2="-34" stroke="#f3f1ec" stroke-width="7" stroke-linecap="round"/><text y="112">DECAY</text></g>
+    <g transform="translate(1220 440)"><circle r="62" fill="#ec8080"/><line x1="0" y1="0" x2="44" y2="-42" stroke="#111113" stroke-width="7" stroke-linecap="round"/><text y="112">ACCENT</text></g>
+  </g>
+  <text x="200" y="760" font-family="JetBrains Mono, Menlo, monospace" font-size="26" letter-spacing="4" fill="#8d8a93">VST3 · AU · MAC · WINDOWS · LINUX · FREE</text>
+</svg>
