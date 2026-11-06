@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Install 303 Circuit Model · Johnny Hawk</title>
+  <meta name="description" content="How to install 303 Circuit Model, a free acid bass synth plug-in, on Mac, Windows and Linux. Step by step, no experience needed.">
+  <meta property="og:title" content="Install 303 Circuit Model">
+  <meta property="og:description" content="A free acid bass synth plug-in for Mac, Windows and Linux. Step-by-step install, no experience needed.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23111'/><circle cx='16' cy='16' r='7' fill='%23ec8080'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../style.css">
+  <style>
+    /* Page-only styles. Colours, fonts, nav, buttons and footer come from the site's style.css. */
+    .install { max-width: 880px; margin: 0 auto; padding: 120px var(--pad) clamp(64px, 10vw, 120px); }
+    .install h1 {
+      font-size: clamp(48px, 9vw, 104px); font-weight: 800; line-height: .9; letter-spacing: -.05em;
+      margin: 18px 0 24px -.03em; text-wrap: balance;
+    }
+    .install h1 .dot { width: .14em; height: .14em; }
+    .lede { font-size: clamp(19px, 2vw, 24px); line-height: 1.35; letter-spacing: -.01em; max-width: 36ch; }
+    .install section { margin-top: clamp(56px, 8vw, 88px); }
+    .install h2 {
+      font-size: clamp(30px, 4.4vw, 48px); font-weight: 800; letter-spacing: -.04em; line-height: 1;
+      padding-bottom: 14px; border-bottom: 1px solid var(--line); margin-bottom: 22px;
+    }
+    .install h3 { font-size: 21px; font-weight: 600; letter-spacing: -.02em; margin: 28px 0 10px; }
+    .install p + p { margin-top: 12px; }
+    .install section > p, .install .panel > p { max-width: 62ch; }
+    .install a.u { border-bottom: 1px solid var(--accent); }
+    .install a.u:hover { color: #b54848; }
+    kbd {
+      font: 500 .82em/1 var(--mono); padding: 3px 7px 4px; border-radius: 6px;
+      background: #fff; border: 1px solid var(--line); box-shadow: 0 2px 0 var(--line); white-space: nowrap;
+    }
+    .install :not(pre) > code.path { font: 400 .86em/1.4 var(--mono); background: #e9e6df; padding: 2px 6px; border-radius: 5px; overflow-wrap: anywhere; }
+    .muted { color: var(--mute); }
+
+    /* try-it-first card */
+    .try {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px;
+      margin-top: 32px; padding: 20px 22px; border-radius: 14px; background: #fff; border: 1px solid var(--line);
+    }
+    .try p { max-width: 40ch; }
+    .try .button { padding: 15px 22px; }
+
+    /* computer picker */
+    .picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .picker button {
+      display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+      padding: 18px 18px 16px; border-radius: 14px; border: 1px solid var(--line); background: #fff; text-align: left;
+      transition: background .25s, color .25s, border-color .25s;
+    }
+    .picker button b { font-size: clamp(22px, 3vw, 30px); font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+    .picker button span { font: 500 11px/1.35 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--mute); }
+    .picker button:hover { border-color: var(--ink); }
+    .picker button[aria-selected="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+    .picker button[aria-selected="true"] span { color: var(--accent); }
+    .picker button:focus-visible, .copy:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    .picked { font: 400 13px/1.4 var(--mono); color: var(--mute); margin: 12px 0 0; min-height: 1.4em; }
+    .panel { margin-top: 28px; }
+    .panel[hidden] { display: none; }
+
+    /* command boxes */
+    .cmd-label { font: 500 12px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--mute); margin: 22px 0 8px; }
+    .cmd {
+      display: flex; align-items: flex-start; gap: 12px;
+      background: var(--dark); color: #eeeae4; border-radius: 12px; padding: 16px 12px 16px 18px;
+    }
+    .cmd code {
+      flex: 1; min-width: 0; font: 400 15px/1.55 var(--mono);
+      white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-all;
+    }
+    .cmd code::before { content: "$ "; color: var(--accent); user-select: none; -webkit-user-select: none; }
+    .cmd.ps code::before { content: "> "; }
+    .cmd.path code::before { content: none; }
+    .copy {
+      flex: none; min-width: 92px; padding: 10px 14px; border-radius: 999px;
+      background: #eeeae4; color: var(--dark);
+      font: 500 13px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase;
+      transition: background .2s, color .2s;
+    }
+    .copy:hover { background: var(--accent); color: var(--ink); }
+    .copy.done { background: var(--accent); color: var(--ink); }
+
+    /* numbered steps */
+    .steps { list-style: none; counter-reset: s; margin-top: 26px; }
+    .steps > li {
+      counter-increment: s; position: relative; padding: 0 0 22px 52px; margin-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .steps > li:last-child { border-bottom: 0; margin-bottom: 0; }
+    .steps > li::before {
+      content: counter(s); position: absolute; left: 0; top: -2px;
+      width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+      background: var(--ink); color: var(--bg); font: 500 15px/1 var(--mono);
+    }
+    .steps .aside { display: block; color: var(--mute); margin-top: 4px; }
+
+    /* drawn terminal windows: what you'll see */
+    .win {
+      margin-top: 14px; max-width: 520px; border-radius: 10px; overflow: hidden;
+      box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 12px 30px rgba(0,0,0,.12);
+      font: 400 13px/1.6 var(--mono);
+    }
+    .win .bar { display: flex; align-items: center; gap: 7px; padding: 9px 12px; font: 500 12px/1 var(--sans); }
+    .win .bar span { flex: 1; text-align: center; margin-right: 46px; }
+    .win pre { margin: 0; padding: 12px 14px 16px; white-space: pre-wrap; overflow-wrap: anywhere; min-height: 92px; font: inherit; }
+    .win.mac { background: #fff; color: #1d1d1f; border: 1px solid #d6d3cd; }
+    .win.mac .bar { background: #ecebe8; color: #555; border-bottom: 1px solid #d6d3cd; }
+    .win.mac .bar i { width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; }
+    .win.mac .bar i:nth-child(2) { background: #febc2e; }
+    .win.mac .bar i:nth-child(3) { background: #28c840; }
+    .win.ps { background: #012456; color: #eeedf0; }
+    .win.ps .bar { background: #f3f3f3; color: #333; justify-content: space-between; }
+    .win.ps .bar span { text-align: left; margin: 0; }
+    .win.ps .bar em { font-style: normal; letter-spacing: 14px; color: #555; }
+    .win.lx { background: #2b2b2e; color: #e8e6e3; }
+    .win.lx .bar { background: #1f1f22; color: #bbb; }
+    .win.lx .bar i { width: 12px; height: 12px; border-radius: 50%; background: #444448; }
+    .win .ok { color: #1a8f3c; font-weight: 500; }
+    .win.ps .ok, .win.lx .ok { color: #7ee29b; }
+    .caret { display: inline-block; width: .6em; height: 1.1em; vertical-align: -.2em; background: currentColor; animation: blink 1.1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .win-note { font: 400 12px/1.4 var(--mono); color: var(--mute); margin-top: 8px; }
+
+    /* reassurance box */
+    .note {
+      margin-top: 28px; padding: 18px 20px; border-radius: 12px;
+      background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--accent);
+    }
+    .note h3 { margin: 0 0 8px; font-size: 18px; }
+    .note ul { padding-left: 1.1em; }
+    .note li + li { margin-top: 6px; }
+    .note pre { margin: 8px 0 0; font: 400 13px/1.6 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; background: #f3f1ec; padding: 10px 12px; border-radius: 8px; }
+
+    /* DAW rows */
+    .daws { list-style: none; }
+    .daws li { display: grid; grid-template-columns: minmax(150px, 220px) 1fr; gap: 6px 24px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+    .daws li:first-child { padding-top: 0; }
+    .daws b { font-weight: 600; letter-spacing: -.01em; }
+    .daws code.path { justify-self: start; }
+
+    /* FAQ */
+    details { border-bottom: 1px solid var(--line); }
+    summary {
+      list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+      padding: 18px 0; font-weight: 600; font-size: 18px; letter-spacing: -.01em;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; font: 400 22px/1 var(--mono); color: var(--accent); transition: transform .3s var(--ease); }
+    details[open] summary::after { transform: rotate(45deg); }
+    details > div { padding: 0 0 20px; max-width: 62ch; }
+    details > div p + p, details > div p + .cmd, details > div .cmd + p { margin-top: 10px; }
+
+    .contact .small { max-width: 60ch; color: var(--dark-mute); font-size: 15px; margin-top: 18px; }
+    .contact .small + .small { margin-top: 10px; }
+    .contact .small a { color: #eeeae4; border-bottom: 1px solid var(--accent); }
+    .contact .big-link { font-size: clamp(44px, 9vw, 120px); margin-bottom: clamp(40px, 6vw, 72px); }
+
+    @media (max-width: 640px) {
+      .picker { grid-template-columns: 1fr; }
+      .picker button { flex-direction: row; align-items: baseline; justify-content: space-between; padding: 16px 18px; }
+      .cmd { flex-direction: column; align-items: stretch; padding: 14px; }
+      .cmd code { font-size: 14px; }
+      .copy { padding: 13px 14px; }
+      .steps > li { padding-left: 46px; }
+      .daws li { grid-template-columns: 1fr; }
+      .nav nav a.wide { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav scrolled">
+    <a href="../../">Johnny Hawk</a>
+    <nav>
+      <a class="wide" href="../../#work">Work</a>
+      <a class="wide" href="../../#music">Music</a>
+      <a href="#trouble">Help</a>
+    </nav>
+  </header>
+
+  <main class="install" id="top">
+    <p class="eyebrow">Free plug-in · Mac · Windows · Linux</p>
+    <h1>Install 303 Circuit Model<i class="dot"></i></h1>
+    <p class="lede">A free acid bass synth, modelled part by part from the original 1982 bass line circuit. This page walks you through installing it, even if you have never typed a command before.</p>
+    <p style="margin-top:16px">It works as a <b>plug-in</b>: an extra instrument that opens inside your music software. Music software like this is often called a <b>DAW</b> (digital audio workstation), for example Ableton Live, Logic Pro, FL Studio, Reaper, Bitwig, Cubase or GarageBand.</p>
+
+    <div class="try">
+      <p><b>Want to hear it first?</b> It also runs in your web browser. Nothing to install.</p>
+      <a class="button" href="https://tb303-circuit-model.pages.dev">Try it in your browser <span>→</span></a>
+    </div>
+
+    <section id="pick" aria-labelledby="pick-h">
+      <h2 id="pick-h">Pick your computer</h2>
+      <div class="picker" role="tablist" aria-label="Your computer">
+        <button role="tab" id="tab-mac" aria-controls="panel-mac" aria-selected="true" data-os="mac"><b>Mac</b><span>macOS 11 or later</span></button>
+        <button role="tab" id="tab-windows" aria-controls="panel-windows" aria-selected="false" tabindex="-1" data-os="windows"><b>Windows</b><span>10 or 11, 64-bit</span></button>
+        <button role="tab" id="tab-linux" aria-controls="panel-linux" aria-selected="false" tabindex="-1" data-os="linux"><b>Linux</b><span>x86_64</span></button>
+      </div>
+      <p class="picked" id="picked" aria-live="polite"></p>
+
+      <!-- ===================== MAC ===================== -->
+      <div class="panel" id="panel-mac" role="tabpanel" aria-labelledby="tab-mac">
+        <p>Works on Apple Silicon and Intel Macs running macOS 11 or later. You get two versions of the plug-in, VST3 and AU. They are just two plug-in formats; your music software picks the one it uses (Logic Pro and GarageBand use AU).</p>
+
+        <p class="cmd-label">The install command</p>
+        <div class="cmd"><code>curl -fsSL https://github.com/johnnyhawk02/tb303-circuit-model/releases/latest/download/install.sh | bash</code><button class="copy" type="button" aria-label="Copy the Mac install command">Copy</button></div>
+
+        <ol class="steps">
+          <li>
+            Open <b>Terminal</b>: press <kbd>Cmd</kbd> + <kbd>Space</kbd>, type <b>Terminal</b>, press <kbd>Return</kbd>.
+            <span class="aside">A window with a blinking cursor opens. That is all Terminal is: a place to type commands.</span>
+            <figure class="win mac" aria-label="Drawing of an empty Terminal window">
+              <div class="bar"><i></i><i></i><i></i><span>Terminal</span></div>
+              <pre>you@Mac ~ % <span class="caret"></span></pre>
+            </figure>
+          </li>
+          <li>Click <b>Copy</b> on the install command above.</li>
+          <li>Click in the Terminal window, then paste with <kbd>Cmd</kbd> + <kbd>V</kbd>.</li>
+          <li>
+            Press <kbd>Return</kbd>. You'll see "Downloading 303 Circuit Model..." and a progress bar.
+            <span class="aside">Nothing needs typing, and no password is asked for.</span>
+          </li>
+          <li>
+            When it says <b>Done.</b>, close Terminal.
+            <figure class="win mac" aria-label="Drawing of Terminal after a successful install">
+              <div class="bar"><i></i><i></i><i></i><span>Terminal</span></div>
+              <pre>Downloading 303 Circuit Model...
+<span class="muted">########################### 100%</span>
+<span class="ok">Done.</span>
+Rescan plug-ins in your DAW</pre>
+            </figure>
+            <p class="win-note">A drawing, so your window may look a little different.</p>
+          </li>
+          <li>Open your music software and rescan plug-ins (see <a class="u" href="#daw">Find it in your DAW</a> below).</li>
+        </ol>
+
+        <div class="note">
+          <h3>What the command does</h3>
+          <p>It downloads the plug-in from my GitHub releases and copies it into your own plug-in folders, in your user Library:</p>
+          <pre>~/Library/Audio/Plug-Ins/VST3/303 Circuit Model.vst3
+~/Library/Audio/Plug-Ins/Components/303 Circuit Model.component</pre>
+          <p style="margin-top:10px">No password is asked for, and nothing else on your Mac is changed. Running it again is safe: it just updates to the newest version.</p>
+        </div>
+      </div>
+
+      <!-- ===================== WINDOWS ===================== -->
+      <div class="panel" id="panel-windows" role="tabpanel" aria-labelledby="tab-windows" hidden>
+        <p>Works on Windows 10 or 11, 64-bit. You get the VST3 version, a plug-in format every Windows music app understands.</p>
+
+        <p class="cmd-label">The install command</p>
+        <div class="cmd ps"><code>irm https://github.com/johnnyhawk02/tb303-circuit-model/releases/latest/download/install.ps1 | iex</code><button class="copy" type="button" aria-label="Copy the Windows install command">Copy</button></div>
+
+        <ol class="steps">
+          <li>
+            Open <b>PowerShell</b>: click <b>Start</b>, type <b>PowerShell</b>, press <kbd>Enter</kbd>.
+            <span class="aside">A blue or black window opens. Don't pick "Run as administrator"; the installer asks for permission itself.</span>
+            <figure class="win ps" aria-label="Drawing of an empty PowerShell window">
+              <div class="bar"><span>Windows PowerShell</span><em>–▢✕</em></div>
+              <pre>PS C:\Users\you&gt; <span class="caret"></span></pre>
+            </figure>
+          </li>
+          <li>Click <b>Copy</b> on the Windows command above.</li>
+          <li>Right-click inside the PowerShell window to paste (or press <kbd>Ctrl</kbd> + <kbd>V</kbd>).</li>
+          <li>Press <kbd>Enter</kbd>.</li>
+          <li>When Windows asks "Do you want to allow this app to make changes to your device?", click <b>Yes</b>.</li>
+          <li>
+            When it says <b>Done.</b>, close PowerShell and rescan plug-ins in your DAW (see <a class="u" href="#daw">Find it in your DAW</a> below).
+            <figure class="win ps" aria-label="Drawing of PowerShell after a successful install">
+              <div class="bar"><span>Windows PowerShell</span><em>–▢✕</em></div>
+              <pre>Downloading 303 Circuit Model...
+<span class="ok">Done.</span>
+Rescan plug-ins in your DAW</pre>
+            </figure>
+            <p class="win-note">A drawing, so your window may look a little different.</p>
+          </li>
+        </ol>
+
+        <div class="note">
+          <h3>What the command does</h3>
+          <p>It downloads the plug-in from my GitHub releases and copies it into the folder every DAW looks in:</p>
+          <pre>C:\Program Files\Common Files\VST3\303 Circuit Model.vst3</pre>
+          <p style="margin-top:10px">That folder belongs to Windows, which is why it shows one "allow this app to make changes" box. Nothing else is changed. Running it again is safe: it just updates to the newest version.</p>
+          <p>The plug-in's screen needs the Microsoft Edge WebView2 Runtime. Windows 11 and up-to-date Windows 10 already have it. If yours doesn't, the installer tells you, and you can get it free from <a class="u" href="https://developer.microsoft.com/microsoft-edge/webview2/">Microsoft's WebView2 page</a> (choose the Evergreen Bootstrapper).</p>
+        </div>
+      </div>
+
+      <!-- ===================== LINUX ===================== -->
+      <div class="panel" id="panel-linux" role="tabpanel" aria-labelledby="tab-linux" hidden>
+        <p>Works on 64-bit Linux (x86_64). You get the VST3 version.</p>
+
+        <p class="cmd-label">The install command</p>
+        <div class="cmd"><code>curl -fsSL https://github.com/johnnyhawk02/tb303-circuit-model/releases/latest/download/install.sh | bash</code><button class="copy" type="button" aria-label="Copy the Linux install command">Copy</button></div>
+
+        <ol class="steps">
+          <li>
+            Open your terminal app. On many systems <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd> does it.
+            <figure class="win lx" aria-label="Drawing of an empty terminal window">
+              <div class="bar"><i></i><i></i><i></i><span>Terminal</span></div>
+              <pre>you@computer:~$ <span class="caret"></span></pre>
+            </figure>
+          </li>
+          <li>Click <b>Copy</b> on the install command above, then paste it into the terminal with <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd>.</li>
+          <li>Press <kbd>Enter</kbd>.</li>
+          <li>If it says WebKitGTK is missing, run the command it prints (see below), then you're set.</li>
+          <li>When it says <b>Done.</b>, close the terminal and rescan plug-ins in your DAW.</li>
+        </ol>
+
+        <div class="note">
+          <h3>What the command does</h3>
+          <p>It downloads the plug-in from my GitHub releases and copies it to <code class="path">~/.vst3/303 Circuit Model.vst3</code>. Nothing else is changed, and running it again just updates to the newest version.</p>
+          <p>The plug-in's screen needs WebKitGTK 4.1. If it's missing, the installer says so and prints the command for your system:</p>
+          <p class="cmd-label">Debian / Ubuntu</p>
+          <div class="cmd"><code>sudo apt install libwebkit2gtk-4.1-0</code><button class="copy" type="button" aria-label="Copy the Debian and Ubuntu WebKitGTK command">Copy</button></div>
+          <p class="cmd-label">Fedora</p>
+          <div class="cmd"><code>sudo dnf install webkit2gtk4.1</code><button class="copy" type="button" aria-label="Copy the Fedora WebKitGTK command">Copy</button></div>
+          <p class="cmd-label">Arch</p>
+          <div class="cmd"><code>sudo pacman -S webkit2gtk-4.1</code><button class="copy" type="button" aria-label="Copy the Arch WebKitGTK command">Copy</button></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="why" aria-labelledby="why-h">
+      <h2 id="why-h">Why a command, not a normal download?</h2>
+      <p>The plug-in is free, and I haven't paid Apple's yearly fee to have it notarised (checked and signed off by Apple). A Mac blocks un-notarised plug-ins downloaded in a web browser and calls them "damaged". Downloaded with the command, it isn't blocked.</p>
+      <p>The command only downloads the plug-in from my GitHub releases and copies it into the plug-in folder. If you'd like to read the scripts before you run them, here they are: <a class="u" href="https://github.com/johnnyhawk02/tb303-circuit-model/blob/main/install.sh">install.sh</a> (Mac and Linux) and <a class="u" href="https://github.com/johnnyhawk02/tb303-circuit-model/blob/main/install.ps1">install.ps1</a> (Windows).</p>
+      <p>There are no accounts and no tracking, and your presets stay on your computer.</p>
+    </section>
+
+    <section id="daw" aria-labelledby="daw-h">
+      <h2 id="daw-h">Find it in your DAW</h2>
+      <ul class="daws">
+        <li><b>Ableton Live</b><span>Settings &gt; Plug-ins, turn on "Use VST3 Plug-in System Folders", click Rescan. It's under Plug-ins &gt; 303 Circuit.</span></li>
+        <li><b>Logic Pro / GarageBand</b><span>It appears under Audio Units &gt; 303 Circuit &gt; 303 Circuit Model. If not, restart Logic.</span></li>
+        <li><b>FL Studio</b><span>Options &gt; Manage plugins &gt; Find plugins.</span></li>
+        <li><b>Reaper</b><span>Options &gt; Preferences &gt; Plug-ins &gt; VST &gt; Re-scan.</span></li>
+        <li><b>Bitwig, Cubase, Studio One and others</b><span>Rescan or restart; it's listed as "303 Circuit Model" by "303 Circuit".</span></li>
+      </ul>
+      <p style="margin-top:20px">Add it to an instrument track. Press play in the DAW: the plug-in follows the DAW's play, stop and tempo.</p>
+    </section>
+
+    <section id="update" aria-labelledby="update-h">
+      <h2 id="update-h">Updating</h2>
+      <p>Run the same install command again (<a class="u" href="#pick">pick your computer</a> above). It replaces the plug-in with the newest version. Your presets are kept.</p>
+    </section>
+
+    <section id="uninstall" aria-labelledby="uninstall-h">
+      <h2 id="uninstall-h">Uninstalling</h2>
+      <h3>Mac and Linux</h3>
+      <p>Paste this into Terminal and press <kbd>Return</kbd> (or <kbd>Enter</kbd>):</p>
+      <div class="cmd" style="margin-top:10px"><code>curl -fsSL https://github.com/johnnyhawk02/tb303-circuit-model/releases/latest/download/install.sh | bash -s -- --uninstall</code><button class="copy" type="button" aria-label="Copy the Mac and Linux uninstall command">Copy</button></div>
+      <h3>Windows</h3>
+      <p>In File Explorer, delete this folder. Windows asks for permission; click <b>Continue</b>.</p>
+      <div class="cmd path" style="margin-top:10px"><code>C:\Program Files\Common Files\VST3\303 Circuit Model.vst3</code><button class="copy" type="button" aria-label="Copy the Windows plug-in folder path">Copy</button></div>
+      <h3>Presets</h3>
+      <p>Uninstalling keeps your presets. To remove them too, delete this folder:</p>
+      <ul class="daws" style="margin-top:12px">
+        <li><b>Mac</b><code class="path">~/Library/Application Support/303 Circuit Model</code></li>
+        <li><b>Windows</b><code class="path">%APPDATA%\303 Circuit Model</code></li>
+        <li><b>Linux</b><code class="path">~/.config/303 Circuit Model</code></li>
+      </ul>
+    </section>
+
+    <section id="trouble" aria-labelledby="trouble-h">
+      <h2 id="trouble-h">Trouble?</h2>
+      <details>
+        <summary>Nothing shows up in my DAW</summary>
+        <div><p>Make sure your DAW is 64-bit and scans the standard VST3 folder, then rescan. If it's still missing, restart the DAW.</p></div>
+      </details>
+      <details>
+        <summary>The plug-in window is blank</summary>
+        <div>
+          <p><b>Windows:</b> install the <a class="u" href="https://developer.microsoft.com/microsoft-edge/webview2/">Microsoft Edge WebView2 Runtime</a> (the Evergreen Bootstrapper), then reopen the plug-in.</p>
+          <p><b>Linux:</b> install WebKitGTK 4.1 (the commands are in the <a class="u" href="#panel-linux" data-open="linux">Linux steps</a>).</p>
+        </div>
+      </details>
+      <details>
+        <summary>My Mac says it's "damaged"</summary>
+        <div><p>You downloaded the zip in a web browser. Use the <a class="u" href="#panel-mac" data-open="mac">Terminal command</a> instead; that copy isn't blocked. (<a class="u" href="#why">Why?</a>)</p></div>
+      </details>
+      <details>
+        <summary>"command not found: curl" (Linux, very rare)</summary>
+        <div><p>Install curl with your system's package manager, then run the install command again.</p></div>
+      </details>
+      <details>
+        <summary>Still stuck?</summary>
+        <div><p><a class="u" href="https://github.com/johnnyhawk02/tb303-circuit-model/issues">Open an issue on GitHub</a> and say which computer you have, which DAW you use and what happened. I'll take a look.</p></div>
+      </details>
+    </section>
+  </main>
+
+  <footer class="contact">
+    <p class="eyebrow">303 Circuit Model</p>
+    <a class="big-link" href="https://github.com/johnnyhawk02/tb303-circuit-model">Source on GitHub <span>→</span></a>
+    <p class="small">Free software under the GNU AGPL v3, with no warranty. Every version is on the <a href="https://github.com/johnnyhawk02/tb303-circuit-model/releases">releases page</a>; report bugs in <a href="https://github.com/johnnyhawk02/tb303-circuit-model/issues">issues</a>.</p>
+    <p class="small">Not affiliated with or endorsed by Roland, Behringer or the makers of any gear it is modelled on.</p>
+    <div class="foot-row" style="margin-top:40px">
+      <span>© <span id="year">2026</span> Johnny Hawk</span>
+      <a href="../../">Home</a>
+      <a href="../../#work">More work</a>
+      <a href="#top">Back to top ↑</a>
+    </div>
+  </footer>
+
+  <script>
+    // No tracking, no cookies. Just the computer tabs and the Copy buttons.
+    (function () {
+      var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+      var picked = document.getElementById("picked");
+      var names = { mac: "Mac", windows: "Windows", linux: "Linux" };
+
+      function show(os, focus) {
+        tabs.forEach(function (t) {
+          var on = t.dataset.os === os;
+          t.setAttribute("aria-selected", on);
+          t.tabIndex = on ? 0 : -1;
+          document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+          if (on && focus) t.focus();
+        });
+      }
+
+      // Guess the visitor's computer. Phones and tablets get Mac with a nudge to pick.
+      function detect() {
+        var p = ((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "").toLowerCase();
+        var ua = navigator.userAgent.toLowerCase();
+        var phone = /android|iphone|ipad|ipod/.test(ua) || (p === "macintel" && navigator.maxTouchPoints > 1);
+        if (phone) return { os: "mac", phone: true };
+        if (p.indexOf("win") === 0 || ua.indexOf("windows") > -1) return { os: "windows" };
+        if (p.indexOf("linux") > -1 || ua.indexOf("linux") > -1 || ua.indexOf("x11") > -1) return { os: "linux" };
+        if (p.indexOf("mac") === 0 || ua.indexOf("mac os") > -1) return { os: "mac" };
+        return { os: "mac", unknown: true };
+      }
+
+      var hash = location.hash.replace("#", "").replace("panel-", "");
+      var d = detect();
+      if (names[hash]) { show(hash); }
+      else {
+        show(d.os);
+        picked.textContent = d.phone ? "On your phone? Pick the computer you'll install on."
+          : d.unknown ? "Pick the computer you'll install on."
+          : "Looks like you're on " + (d.os === "mac" ? "a Mac" : names[d.os]) + ". Not right? Pick another.";
+      }
+
+      tabs.forEach(function (t, i) {
+        t.addEventListener("click", function () { show(t.dataset.os); picked.textContent = ""; });
+        t.addEventListener("keydown", function (e) {
+          var k = e.key, n = tabs.length, j = null;
+          if (k === "ArrowRight" || k === "ArrowDown") j = (i + 1) % n;
+          if (k === "ArrowLeft" || k === "ArrowUp") j = (i - 1 + n) % n;
+          if (k === "Home") j = 0;
+          if (k === "End") j = n - 1;
+          if (j !== null) { e.preventDefault(); show(tabs[j].dataset.os, true); picked.textContent = ""; }
+        });
+      });
+
+      // Links in the FAQ that point at one computer's steps open that tab.
+      document.querySelectorAll("[data-open]").forEach(function (a) {
+        a.addEventListener("click", function (e) {
+          e.preventDefault();
+          show(a.dataset.open); picked.textContent = "";
+          document.getElementById("pick").scrollIntoView({ behavior: "smooth" });
+        });
+      });
+
+      // Copy buttons: copy the exact single line, nothing more.
+      function fallbackCopy(text) {
+        var ta = document.createElement("textarea");
+        ta.value = text; ta.setAttribute("readonly", "");
+        ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select();
+        var ok = false; try { ok = document.execCommand("copy"); } catch (e) {}
+        document.body.removeChild(ta);
+        return ok ? Promise.resolve() : Promise.reject();
+      }
+      document.querySelectorAll(".copy").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var text = b.parentNode.querySelector("code").textContent.replace(/[\r\n]+/g, "").trim();
+          var p = navigator.clipboard && window.isSecureContext
+            ? navigator.clipboard.writeText(text).catch(function () { return fallbackCopy(text); })
+            : fallbackCopy(text);
+          p.then(function () {
+            b.textContent = "Copied!"; b.classList.add("done");
+          }, function () {
+            b.textContent = "Select it"; // copying blocked: let them select the text by hand
+            var r = document.createRange(); r.selectNodeContents(b.parentNode.querySelector("code"));
+            var s = getSelection(); s.removeAllRanges(); s.addRange(r);
+          });
+          clearTimeout(b._t);
+          b._t = setTimeout(function () { b.textContent = "Copy"; b.classList.remove("done"); }, 1800);
+        });
+      });
+
+      document.getElementById("year").textContent = new Date().getFullYear();
+    })();
+  </script>
+</body>
+</html>

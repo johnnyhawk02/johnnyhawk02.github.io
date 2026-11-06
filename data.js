@@ -57,6 +57,15 @@ export const work = [
     cta: "Play it on your phone",
   },
   {
+    kind: "Plugin",
+    title: "303 Circuit Model",
+    year: 2026,
+    blurb: "Free acid bass synth, modelled part by part from the original 1982 bass line circuit. VST3 and AU for Mac, VST3 for Windows and Linux, and it runs in your browser too.",
+    image: "img/303-circuit-model.svg",
+    link: "303-circuit-model/install/",
+    cta: "Install the plug-in",
+  },
+  {
     kind: "Website",
     title: "Active Sefton",
     year: 2026,
