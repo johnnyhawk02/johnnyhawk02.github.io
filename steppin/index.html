@@ -45,9 +45,9 @@ button, .filebtn { font: 600 13px var(--font-mono); padding: 8px 14px; border-ra
 button:hover, .filebtn:hover { border-color: var(--accent); }
 button:focus-visible, input:focus-visible, canvas:focus-visible, .filebtn:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 #start { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); min-width: 6.5em; }
-#sync.hit { animation: hit .25s ease-out; }
+#sync.hit, #rand.hit, #alter.hit { animation: hit .25s ease-out; }
 @keyframes hit { from { background: var(--accent); color: var(--accent-ink); } }
-@media (prefers-reduced-motion: reduce) { #sync.hit { animation: none; } }
+@media (prefers-reduced-motion: reduce) { #sync.hit, #rand.hit, #alter.hit { animation: none; } }
 .check { display: flex; gap: 8px; align-items: center; font-size: 13px; max-width: 34ch; }
 .check input { accent-color: var(--accent); width: 16px; height: 16px; }
 kbd { font: 600 11px var(--font-mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 3px; padding: 0 5px; background: var(--box); }
@@ -92,6 +92,8 @@ body.on h1 .tilde { animation: pulse 0.8s steps(2) infinite; }
     <div class="transport">
       <button id="start" type="button" aria-pressed="false">Start</button>
       <button id="sync" type="button" title="Resync every phasor, like the patch's spacebar">Sync <kbd>Space</kbd></button>
+      <button id="rand" type="button" title="New random values for steps, volumes, filter bank and tempo">Randomise <kbd>R</kbd></button>
+      <button id="alter" type="button" title="Nudge every value a little from where it is">Alter <kbd>A</kbd></button>
       <div class="field"><label for="msec">msec</label><input id="msec" type="number" min="50" max="5000" step="1" value="800"></div>
       <div class="field"><label for="ratio">ratio (Hz)</label><input id="ratio" type="number" min="0.05" max="20" step="0.01" value="1.25"></div>
       <div class="field"><label for="master">master volume</label><input id="master" type="range" min="0" max="1" step="0.01" value="0.6"></div>
@@ -111,21 +113,21 @@ body.on h1 .tilde { animation: pulse 0.8s steps(2) infinite; }
       <p class="src">→ peek~ newstep · read by [phasor~ 0.625] → gbStp rate, loop length</p>
       <canvas id="ms-gab" class="ms" tabindex="0" aria-label="Gabber steps, 16 values 0 to 500"></canvas>
       <div class="scale"><span>0</span><span>500</span></div>
-      <div class="tools"><button type="button" data-rand="gab">Randomise</button><button type="button" data-clear="gab">Clear</button></div>
+      <div class="tools"><button type="button" data-clear="gab">Clear</button></div>
     </section>
     <section class="obj" aria-labelledby="h-ann">
       <h2 id="h-ann">annoying steps</h2>
       <p class="src">→ peek~ steppin · read by [phasor~ 0.714286] → chops gbStp</p>
       <canvas id="ms-ann" class="ms" tabindex="0" aria-label="Annoying steps, 14 values 0 to 500"></canvas>
       <div class="scale"><span>0</span><span>500</span></div>
-      <div class="tools"><button type="button" data-rand="ann">Randomise</button><button type="button" data-clear="ann">Clear</button></div>
+      <div class="tools"><button type="button" data-clear="ann">Clear</button></div>
     </section>
     <section class="obj" aria-labelledby="h-bass">
       <h2 id="h-bass">bass steps</h2>
       <p class="src">→ peek~ thesteps · read by a log-warped phasor~ → bsStp pitch, untl rate</p>
       <canvas id="ms-bass" class="ms" tabindex="0" aria-label="Bass steps, 16 values 0 to 500"></canvas>
       <div class="scale"><span>0</span><span>500</span></div>
-      <div class="tools"><button type="button" data-rand="bass">Randomise</button><button type="button" data-clear="bass">Clear</button></div>
+      <div class="tools"><button type="button" data-clear="bass">Clear</button></div>
     </section>
   </div>
 
@@ -615,11 +617,51 @@ class PatchDSP {
   } catch (e) {}
   if (document.fonts) document.fonts.ready.then(redrawAll);
 
-  document.querySelectorAll('[data-rand]').forEach((b) => b.addEventListener('click', () => {
-    const k = b.dataset.rand, a = state[k];
-    for (let i = 0; i < a.length; i++) a[i] = Math.random() < 0.3 ? 0 : Math.round(Math.random() * (k === 'bass' ? 250 : 500));
-    sliders[k].draw(); send({ t: 'steps', w: k, v: a });
-  }));
+  // ---------- randomise everything / alter (nudge) ----------
+  const RANGES = {
+    gab: { min: 0, max: 500, int: true }, ann: { min: 0, max: 500, int: true }, bass: { min: 0, max: 250, int: true },
+    vols: { min: 0, max: 127, int: true }, freq: { min: 20, max: 5000 }, q: { min: 0, max: 100 }, gain: { min: 0, max: 1 }
+  };
+  const rr = (a, b) => a + Math.random() * (b - a);
+  const gauss = () => (Math.random() + Math.random() + Math.random() - 1.5) / 1.5; // roughly -1..1, centred
+  function pushAll() {
+    Object.keys(RANGES).forEach((k) => sliders[k].draw());
+    ['gab', 'ann', 'bass'].forEach((w) => send({ t: 'steps', w, v: state[w] }));
+    send({ t: 'vols', v: state.vols }); filt();
+  }
+  function randomiseAll() {
+    ['gab', 'ann', 'bass'].forEach((k) => {
+      const a = state[k], mx = RANGES[k].max;
+      for (let i = 0; i < a.length; i++) a[i] = Math.random() < 0.3 ? 0 : Math.round(rr(10, mx));
+    });
+    for (let i = 0; i < 14; i++) state.vols[i] = Math.random() < 0.12 ? 0 : Math.round(rr(78, 120));
+    for (let i = 0; i < 8; i++) {
+      state.freq[i] = Math.exp(rr(Math.log(60), Math.log(5000)));
+      state.q[i] = rr(2, 40); state.gain[i] = rr(0.3, 1);
+    }
+    setF(1000 / Math.round(rr(560, 1100)));
+    pushAll(); flashBtn('rand');
+  }
+  function alterAll() {
+    ['gab', 'ann', 'bass'].forEach((k) => {
+      const a = state[k], mx = RANGES[k].max;
+      for (let i = 0; i < a.length; i++) {
+        if (Math.random() < 0.08) a[i] = a[i] > 0 ? 0 : Math.round(rr(10, mx)); // occasionally flip a step on or off
+        else if (a[i] > 0) a[i] = Math.round(Math.max(1, Math.min(mx, a[i] + gauss() * mx * 0.08)));
+      }
+    });
+    for (let i = 0; i < 14; i++) if (state.vols[i] > 0) state.vols[i] = Math.round(Math.max(1, Math.min(127, state.vols[i] + gauss() * 6)));
+    for (let i = 0; i < 8; i++) {
+      state.freq[i] = Math.max(20, Math.min(5000, state.freq[i] * Math.pow(2, gauss() * 0.25)));
+      state.q[i] = Math.max(0.5, Math.min(100, state.q[i] * Math.pow(2, gauss() * 0.3)));
+      state.gain[i] = Math.max(0, Math.min(1, state.gain[i] + gauss() * 0.08));
+    }
+    setF(state.F * Math.pow(2, gauss() * 0.04));
+    pushAll(); flashBtn('alter');
+  }
+  function flashBtn(id) { const el = $(id); el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); }
+  $('rand').addEventListener('click', randomiseAll);
+  $('alter').addEventListener('click', alterAll);
   document.querySelectorAll('[data-clear]').forEach((b) => b.addEventListener('click', () => {
     const k = b.dataset.clear; state[k].fill(0); sliders[k].draw(); send({ t: 'steps', w: k, v: state[k] });
   }));
@@ -703,7 +745,7 @@ class PatchDSP {
     send({ t: 'reset' });
     flash();
   }
-  function flash() { const el = $('sync'); el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); }
+  function flash() { flashBtn('sync'); }
 
   async function start() {
     await ensureCtx();
@@ -720,9 +762,14 @@ class PatchDSP {
   $('start').addEventListener('click', () => (running ? stop() : start()));
   $('sync').addEventListener('click', async () => { if (!running) await start(); else sync(); });
   document.addEventListener('keydown', (e) => {
-    if (e.code !== 'Space' && e.key !== ' ') return;
     const tag = (e.target.tagName || '').toLowerCase();
-    if (tag === 'input' || tag === 'button' || tag === 'select' || tag === 'textarea') return;
+    const typing = tag === 'input' || tag === 'select' || tag === 'textarea';
+    if (!typing && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      if (e.key === 'r' || e.key === 'R') { randomiseAll(); return; }
+      if (e.key === 'a' || e.key === 'A') { alterAll(); return; }
+    }
+    if (e.code !== 'Space' && e.key !== ' ') return;
+    if (typing || tag === 'button') return;
     e.preventDefault();
     if (!running) start(); else sync();
   });

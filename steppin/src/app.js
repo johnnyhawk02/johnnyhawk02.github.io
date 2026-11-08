@@ -106,11 +106,51 @@
   } catch (e) {}
   if (document.fonts) document.fonts.ready.then(redrawAll);
 
-  document.querySelectorAll('[data-rand]').forEach((b) => b.addEventListener('click', () => {
-    const k = b.dataset.rand, a = state[k];
-    for (let i = 0; i < a.length; i++) a[i] = Math.random() < 0.3 ? 0 : Math.round(Math.random() * (k === 'bass' ? 250 : 500));
-    sliders[k].draw(); send({ t: 'steps', w: k, v: a });
-  }));
+  // ---------- randomise everything / alter (nudge) ----------
+  const RANGES = {
+    gab: { min: 0, max: 500, int: true }, ann: { min: 0, max: 500, int: true }, bass: { min: 0, max: 250, int: true },
+    vols: { min: 0, max: 127, int: true }, freq: { min: 20, max: 5000 }, q: { min: 0, max: 100 }, gain: { min: 0, max: 1 }
+  };
+  const rr = (a, b) => a + Math.random() * (b - a);
+  const gauss = () => (Math.random() + Math.random() + Math.random() - 1.5) / 1.5; // roughly -1..1, centred
+  function pushAll() {
+    Object.keys(RANGES).forEach((k) => sliders[k].draw());
+    ['gab', 'ann', 'bass'].forEach((w) => send({ t: 'steps', w, v: state[w] }));
+    send({ t: 'vols', v: state.vols }); filt();
+  }
+  function randomiseAll() {
+    ['gab', 'ann', 'bass'].forEach((k) => {
+      const a = state[k], mx = RANGES[k].max;
+      for (let i = 0; i < a.length; i++) a[i] = Math.random() < 0.3 ? 0 : Math.round(rr(10, mx));
+    });
+    for (let i = 0; i < 14; i++) state.vols[i] = Math.random() < 0.12 ? 0 : Math.round(rr(78, 120));
+    for (let i = 0; i < 8; i++) {
+      state.freq[i] = Math.exp(rr(Math.log(60), Math.log(5000)));
+      state.q[i] = rr(2, 40); state.gain[i] = rr(0.3, 1);
+    }
+    setF(1000 / Math.round(rr(560, 1100)));
+    pushAll(); flashBtn('rand');
+  }
+  function alterAll() {
+    ['gab', 'ann', 'bass'].forEach((k) => {
+      const a = state[k], mx = RANGES[k].max;
+      for (let i = 0; i < a.length; i++) {
+        if (Math.random() < 0.08) a[i] = a[i] > 0 ? 0 : Math.round(rr(10, mx)); // occasionally flip a step on or off
+        else if (a[i] > 0) a[i] = Math.round(Math.max(1, Math.min(mx, a[i] + gauss() * mx * 0.08)));
+      }
+    });
+    for (let i = 0; i < 14; i++) if (state.vols[i] > 0) state.vols[i] = Math.round(Math.max(1, Math.min(127, state.vols[i] + gauss() * 6)));
+    for (let i = 0; i < 8; i++) {
+      state.freq[i] = Math.max(20, Math.min(5000, state.freq[i] * Math.pow(2, gauss() * 0.25)));
+      state.q[i] = Math.max(0.5, Math.min(100, state.q[i] * Math.pow(2, gauss() * 0.3)));
+      state.gain[i] = Math.max(0, Math.min(1, state.gain[i] + gauss() * 0.08));
+    }
+    setF(state.F * Math.pow(2, gauss() * 0.04));
+    pushAll(); flashBtn('alter');
+  }
+  function flashBtn(id) { const el = $(id); el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); }
+  $('rand').addEventListener('click', randomiseAll);
+  $('alter').addEventListener('click', alterAll);
   document.querySelectorAll('[data-clear]').forEach((b) => b.addEventListener('click', () => {
     const k = b.dataset.clear; state[k].fill(0); sliders[k].draw(); send({ t: 'steps', w: k, v: state[k] });
   }));
@@ -194,7 +234,7 @@
     send({ t: 'reset' });
     flash();
   }
-  function flash() { const el = $('sync'); el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); }
+  function flash() { flashBtn('sync'); }
 
   async function start() {
     await ensureCtx();
@@ -211,9 +251,14 @@
   $('start').addEventListener('click', () => (running ? stop() : start()));
   $('sync').addEventListener('click', async () => { if (!running) await start(); else sync(); });
   document.addEventListener('keydown', (e) => {
-    if (e.code !== 'Space' && e.key !== ' ') return;
     const tag = (e.target.tagName || '').toLowerCase();
-    if (tag === 'input' || tag === 'button' || tag === 'select' || tag === 'textarea') return;
+    const typing = tag === 'input' || tag === 'select' || tag === 'textarea';
+    if (!typing && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      if (e.key === 'r' || e.key === 'R') { randomiseAll(); return; }
+      if (e.key === 'a' || e.key === 'A') { alterAll(); return; }
+    }
+    if (e.code !== 'Space' && e.key !== ' ') return;
+    if (typing || tag === 'button') return;
     e.preventDefault();
     if (!running) start(); else sync();
   });
