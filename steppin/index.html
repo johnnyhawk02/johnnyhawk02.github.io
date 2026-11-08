@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Steppin Patch</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Martian+Mono:wght@400;600;700&display=swap">
+<style>
+/* Layout: a Max patcher canvas. Panels are object boxes with inlet ticks; the accent is the yellow of a signal cord. */
+:root {
+  --bg: #cfd2d6; --panel: #e8e9eb; --box: #f6f6f7; --fg: #1c1e21; --muted: #5a6068;
+  --line: #2b2e33; --grid: #c4c8cd; --bar: #6b6b6b; --bar-ink: #f6f6f7; --accent: #b98a00; --accent-ink: #1c1e21;
+  --font-ui: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Martian Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #232528; --panel: #2c2f33; --box: #34373c; --fg: #e5e6e8; --muted: #9aa1a9;
+  --line: #5a5f66; --grid: #43474d; --bar: #8d939a; --bar-ink: #1c1e21; --accent: #f0c23b; --accent-ink: #1c1e21; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #232528; --panel: #2c2f33; --box: #34373c; --fg: #e5e6e8; --muted: #9aa1a9;
+  --line: #5a5f66; --grid: #43474d; --bar: #8d939a; --bar-ink: #1c1e21; --accent: #f0c23b; --accent-ink: #1c1e21; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 14px/1.5 var(--font-ui);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 16px; }
+header { display: grid; gap: 6px; }
+h1 { font: 700 clamp(22px, 4vw, 30px)/1.1 var(--font-mono); letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+h1 .tilde { color: var(--accent); }
+.lede { margin: 0; color: var(--muted); max-width: 68ch; }
+.obj { background: var(--panel); border: 1.5px solid var(--line); border-radius: 4px; position: relative; padding: 14px 14px 12px; min-width: 0; }
+.obj::before, .obj::after { content: ""; position: absolute; top: -1.5px; width: 9px; height: 3px; background: var(--line); }
+.obj::before { left: 10px; } .obj::after { right: 10px; }
+.obj h2 { margin: 0 0 2px; font: 600 12px/1.3 var(--font-mono); letter-spacing: 0.02em; }
+.obj .src { font: 400 11px/1.4 var(--font-mono); color: var(--muted); margin: 0 0 10px; overflow-wrap: anywhere; }
+.transport { display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: end; }
+.field { display: grid; gap: 4px; }
+.field label, .ro dt { font: 600 10px/1 var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+input[type=number] { width: 7.5em; font: 500 14px var(--font-mono); padding: 6px 8px; background: var(--box); color: var(--fg); border: 1.5px solid var(--line); border-radius: 3px; font-variant-numeric: tabular-nums; }
+input[type=range] { width: 140px; accent-color: var(--accent); }
+button, .filebtn { font: 600 13px var(--font-mono); padding: 8px 14px; border-radius: 3px; border: 1.5px solid var(--line); background: var(--box); color: var(--fg); cursor: pointer; }
+button:hover, .filebtn:hover { border-color: var(--accent); }
+button:focus-visible, input:focus-visible, canvas:focus-visible, .filebtn:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+#start { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); min-width: 6.5em; }
+#sync.hit { animation: hit .25s ease-out; }
+@keyframes hit { from { background: var(--accent); color: var(--accent-ink); } }
+@media (prefers-reduced-motion: reduce) { #sync.hit { animation: none; } }
+.check { display: flex; gap: 8px; align-items: center; font-size: 13px; max-width: 34ch; }
+.check input { accent-color: var(--accent); width: 16px; height: 16px; }
+kbd { font: 600 11px var(--font-mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 3px; padding: 0 5px; background: var(--box); }
+canvas.ms { display: block; width: 100%; background: var(--box); border: 1.5px solid var(--line); border-radius: 2px; touch-action: none; cursor: crosshair; }
+#ms-vols { height: 150px; }
+.steps canvas.ms { height: 110px; }
+.filters canvas.ms { height: 84px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.row2 { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 820px) { .grid3, .row2 { grid-template-columns: minmax(0, 1fr); } }
+.tools { display: flex; gap: 8px; margin-top: 8px; }
+.tools button { padding: 4px 10px; font-size: 11px; }
+.scale { display: flex; justify-content: space-between; font: 400 10px var(--font-mono); color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.ro { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 0; }
+.ro dd { margin: 4px 0 0; font: 600 18px var(--font-mono); font-variant-numeric: tabular-nums; }
+.ro dd small { font: 400 11px var(--font-ui); color: var(--muted); display: block; }
+.filebtn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.filebtn { position: relative; display: inline-block; }
+#sample-name { font: 400 12px var(--font-mono); color: var(--muted); margin-top: 8px; overflow-wrap: anywhere; }
+.map { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; margin: 0; font-size: 13px; }
+.map dt { font: 600 12px var(--font-mono); }
+.map dd { margin: 0; color: var(--muted); }
+.notes { margin: 0; padding-left: 1.1em; color: var(--muted); font-size: 13px; display: grid; gap: 4px; max-width: 72ch; }
+.notes code, .map code, .lede code { font: 400 12px var(--font-mono); color: var(--fg); }
+body.on h1 .tilde { animation: pulse 0.8s steps(2) infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { body.on h1 .tilde { animation: none; } }
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <h1>steppin<span class="tilde">~</span></h1>
+    <p class="lede">The decoded Max patch rebuilt in plain JavaScript and Web Audio. All 14 voices, three step buffers and the spool looper run sample by sample, the way MSP ran them. Press <b>Start</b>, then drag the bars.</p>
+  </header>
+
+  <section class="obj" aria-labelledby="h-transport">
+    <h2 id="h-transport">master tempo hack</h2>
+    <p class="src">[number] → [/ 1000.] → ratio → every phasor~ rate</p>
+    <div class="transport">
+      <button id="start" type="button" aria-pressed="false">Start</button>
+      <button id="sync" type="button" title="Resync every phasor, like the patch's spacebar">Sync <kbd>Space</kbd></button>
+      <div class="field"><label for="msec">msec</label><input id="msec" type="number" min="50" max="5000" step="1" value="800"></div>
+      <div class="field"><label for="ratio">ratio (Hz)</label><input id="ratio" type="number" min="0.05" max="20" step="0.01" value="1.25"></div>
+      <div class="field"><label for="master">master volume</label><input id="master" type="range" min="0" max="1" step="0.01" value="0.6"></div>
+      <label class="check" for="fix"><input id="fix" type="checkbox"> Fix the [/ 10.] bug (slow voices follow the tempo instead of sitting at 1 Hz)</label>
+    </div>
+  </section>
+
+  <section class="obj" aria-labelledby="h-vols">
+    <h2 id="h-vols">volumes</h2>
+    <p class="src">[multislider] 16 × 0–127 → [unpack] 14 → gain~ per voice · 127 = unity</p>
+    <canvas id="ms-vols" class="ms" tabindex="0" aria-label="Voice volumes, 16 sliders. Arrow keys select and adjust."></canvas>
+  </section>
+
+  <div class="grid3 steps">
+    <section class="obj" aria-labelledby="h-gab">
+      <h2 id="h-gab">gabber steps</h2>
+      <p class="src">→ peek~ newstep · read by [phasor~ 0.625] → gbStp rate, loop length</p>
+      <canvas id="ms-gab" class="ms" tabindex="0" aria-label="Gabber steps, 16 values 0 to 500"></canvas>
+      <div class="scale"><span>0</span><span>500</span></div>
+      <div class="tools"><button type="button" data-rand="gab">Randomise</button><button type="button" data-clear="gab">Clear</button></div>
+    </section>
+    <section class="obj" aria-labelledby="h-ann">
+      <h2 id="h-ann">annoying steps</h2>
+      <p class="src">→ peek~ steppin · read by [phasor~ 0.714286] → chops gbStp</p>
+      <canvas id="ms-ann" class="ms" tabindex="0" aria-label="Annoying steps, 14 values 0 to 500"></canvas>
+      <div class="scale"><span>0</span><span>500</span></div>
+      <div class="tools"><button type="button" data-rand="ann">Randomise</button><button type="button" data-clear="ann">Clear</button></div>
+    </section>
+    <section class="obj" aria-labelledby="h-bass">
+      <h2 id="h-bass">bass steps</h2>
+      <p class="src">→ peek~ thesteps · read by a log-warped phasor~ → bsStp pitch, untl rate</p>
+      <canvas id="ms-bass" class="ms" tabindex="0" aria-label="Bass steps, 16 values 0 to 500"></canvas>
+      <div class="scale"><span>0</span><span>500</span></div>
+      <div class="tools"><button type="button" data-rand="bass">Randomise</button><button type="button" data-clear="bass">Clear</button></div>
+    </section>
+  </div>
+
+  <div class="grid3 filters">
+    <section class="obj" aria-labelledby="h-freq">
+      <h2 id="h-freq">freq</h2>
+      <p class="src">[prepend freq 0] → s cmds → fffb~ 8 (snDrm)</p>
+      <canvas id="ms-freq" class="ms" tabindex="0" aria-label="Filter bank frequencies, 8 values 20 to 5000 Hz"></canvas>
+      <div class="scale"><span>20 Hz</span><span>5000 Hz</span></div>
+    </section>
+    <section class="obj" aria-labelledby="h-q">
+      <h2 id="h-q">q</h2>
+      <p class="src">[prepend Q 0] → s cmds</p>
+      <canvas id="ms-q" class="ms" tabindex="0" aria-label="Filter bank Q, 8 values 0 to 100"></canvas>
+      <div class="scale"><span>0</span><span>100</span></div>
+    </section>
+    <section class="obj" aria-labelledby="h-gain">
+      <h2 id="h-gain">gain</h2>
+      <p class="src">[prepend gain 0] → s cmds</p>
+      <canvas id="ms-gain" class="ms" tabindex="0" aria-label="Filter bank gains, 8 values 0 to 1"></canvas>
+      <div class="scale"><span>0</span><span>1</span></div>
+    </section>
+  </div>
+
+  <div class="row2">
+    <section class="obj" aria-labelledby="h-samp">
+      <h2 id="h-samp">spool</h2>
+      <p class="src">buffer~ spool → grooveduck · loop start = [counter 1 1 40] ms, length = 1000 / gabber step</p>
+      <div class="tools">
+        <label class="filebtn">Load a short sample<input id="file" type="file" accept="audio/*,.aif,.aiff,.wav"></label>
+        <button id="builtin" type="button">Use built-in hit</button>
+      </div>
+      <div id="sample-name">built-in hit · 500 ms</div>
+    </section>
+    <section class="obj" aria-labelledby="h-ro">
+      <h2 id="h-ro">readouts</h2>
+      <p class="src">[timer] and [counter] values from the running engine</p>
+      <dl class="ro">
+        <div><dt>real msec</dt><dd><span id="ro-beat">–</span><small>bsDrm hit to hit</small></dd></div>
+        <div><dt>sub msec</dt><dd><span id="ro-sub">–</span><small>5 Hz clock</small></dd></div>
+        <div><dt>loop ms</dt><dd><span id="ro-loop">–</span><small>start + length</small></dd></div>
+        <div><dt>counters</dt><dd><span id="ro-count">–</span><small>gabber × · log base · untl ÷</small></dd></div>
+      </dl>
+    </section>
+  </div>
+
+  <section class="obj" aria-labelledby="h-map">
+    <h2 id="h-map">what each slider plays</h2>
+    <p class="src">every drum is a phasor~ split two ways: log~ → cycle~ pitch sweep, and 1 − ramp for the decay</p>
+    <dl class="map">
+      <dt>samp</dt><dd>Spool loop of a few ms, ring-modulated by a 412 Hz sine with a 300 ms envelope</dd>
+      <dt>anny</dt><dd>Random-pitch sine blips: <code>sah~</code> grabs a 25 Hz ramp 15 times a second, stereo pair</dd>
+      <dt>untl</dt><dd>Log sweep clocked at audio rate by the bass steps, so it turns into FM grit</dd>
+      <dt>bsStp</dt><dd>Bass sine at step ÷ 4 Hz</dd>
+      <dt>tonMt</dt><dd>206 Hz ping on the 5 Hz clock, left channel only</dd>
+      <dt>lazr · gabbr</dt><dd>Fast 5 Hz log sweeps from 220 Hz; gabbr is pushed into the clipper by a +0.9 offset</dd>
+      <dt>bsClk ×3</dt><dd>Kick-like sweeps on the slow and beat clocks; the third is chopped by a −10 Hz saw</dd>
+      <dt>gbStp</dt><dd>Gabber voice whose rate comes from the gabber steps, chopped by the annoying steps</dd>
+      <dt>bsDrm</dt><dd>Beat kick with a 5 second <code>curve~</code> tail</dd>
+      <dt>snDrm</dt><dd>Noise through the 8-band filter bank, 80 ms gate, into a 10 ms <code>comb~</code></dd>
+      <dt>snClk</dt><dd>3000 → 200 Hz chirp in 50 ms, 20 ms gate</dd>
+    </dl>
+  </section>
+
+  <section class="obj" aria-labelledby="h-notes">
+    <h2 id="h-notes">where the port differs</h2>
+    <p class="src">engine: <span id="engine">starts on first click</span></p>
+    <ul class="notes">
+      <li>The paste held no saved preset or slider data, so the step, volume and filter values here are starting points I picked.</li>
+      <li><code>grooveduck</code> isn't a stock Max object. It's emulated as a looping player with a 1 ms fade at each loop point.</li>
+      <li>A DC blocker sits before the output. gabbr and snClk add a +0.9 offset in the patch that would otherwise push the speakers.</li>
+      <li>Sync matches the spacebar exactly, so it also resets the tempo to 800 ms.</li>
+    </ul>
+  </section>
+</div>
+
+<script type="text/plain" id="dsp-src">
+// Steppin DSP engine: a sample-by-sample port of the decoded Max/MSP patch.
+// Every phasor~/cycle~ in the patch is one state variable here, named after its Max object id.
+// Runs inside an AudioWorkletProcessor, or on the main thread as a ScriptProcessor fallback.
+
+const TWO_PI = 6.283185307179586;
+function wrap(x) { return x - Math.floor(x); }
+function clip(x, lo, hi) { return x < lo ? lo : x > hi ? hi : x; }
+// log~ with a base: 0 for non-positive input or a degenerate base (keeps the graph NaN-free)
+function lg(x, b) {
+  if (x <= 0 || b <= 0) return 0;
+  const lb = Math.log(b);
+  if (Math.abs(lb) < 1e-9) return 0;
+  return Math.log(x) / lb;
+}
+// index~ reading a 0..1 phasor scaled by N then offset by -0.5, truncated
+function stepIndex(p, n) { const i = (p * n - 0.5) | 0; return i < 0 ? 0 : i >= n ? n - 1 : i; }
+// gain~ slider law: 0 is off, 127 is unity, 0.6 dB per step
+function gainAmp(v) { return v <= 0 ? 0 : Math.pow(2, (v - 127) / 10); }
+
+class Curve { // curve~ / line~ segment generator
+  constructor(sr, c) { this.sr = sr; this.v = 0; this.from = 0; this.to = 0; this.n = 0; this.len = 1; this.setCurve(c); }
+  setCurve(c) { this.a = c * 8; this.den = Math.abs(this.a) < 1e-6 ? 0 : Math.exp(this.a) - 1; }
+  start(from, to, ms) { this.from = from; this.to = to; this.n = 0; this.len = Math.max(1, ms * this.sr / 1000); this.v = from; }
+  tick() {
+    if (this.n < this.len) {
+      const u = this.n / this.len;
+      const s = this.den === 0 ? u : (Math.exp(this.a * u) - 1) / this.den;
+      this.v = this.from + (this.to - this.from) * s;
+      this.n++;
+    } else this.v = this.to;
+    return this.v;
+  }
+}
+
+class PatchDSP {
+  constructor(sr) {
+    this.sr = sr; this.isr = 1 / sr; this.post = function () {};
+    this.F = 1.25; this.fix = false; this.master = 0.35;
+    const vars = ['p266','p329','p251','p460','p436','p62','p257','p259','p110','p112','p236','p56','p431','p398','p380','p319','p296','p281','p133','p101','p229','p214','p207','p174',
+      'c114','c254','c107','c444','c414','c364','c422','c121','c397','c303','c379','c318','c295','c123','c228','c83','c173','c334','c250'];
+    for (const k of vars) this[k] = 0;
+    // step buffers (buffer~ newstep / steppin / thesteps), stored 0..1 like peek~ value/500
+    this.gab = new Float32Array(16); this.ann = new Float32Array(14); this.bass = new Float32Array(16);
+    this.gt = new Float32Array(14); this.g = new Float32Array(14);
+    // counters
+    this.c322 = 41; this.uf = false; this.o136 = 0; this.c136 = 0; this.o433 = 1; this.c433 = 1; this.o63 = 1; this.c63 = 1;
+    // sah~
+    this.shR = 0; this.shL = 0; this.ctlR = 0; this.ctlL = 0;
+    // previous phasor outputs for delta~ <~ 0 edge~ trigger detection
+    this.pa = 0; this.pb = 0; this.pc = 0; this.pd = 0; this.pe = 0;
+    // envelopes
+    this.l300 = 0; this.l300d = 0; this.l100 = 0; this.l100d = 0;
+    this.cv75 = new Curve(sr, -0.9); this.cv143 = new Curve(sr, -0.9);
+    // gate~ objects and their delay closes
+    this.g158 = 0; this.g183 = 0; this.t158 = 0; this.t183 = 0;
+    // fffb~ 8
+    this.bands = [];
+    for (let i = 0; i < 8; i++) this.bands.push({ b0: 0, b2: 0, a1: 0, a2: 0, x1: 0, x2: 0, y1: 0, y2: 0, gain: 0.5 });
+    // comb~ (10 ms max delay; the patch's delay signal always exceeds it)
+    this.cD = Math.max(1, Math.round(0.010 * sr)); this.cx = new Float32Array(this.cD); this.cy = new Float32Array(this.cD); this.ci = 0;
+    this.ca = 1; this.cb = 0.8; this.cc = 0.7;
+    // spool / grooveduck sample looper
+    this.buf = null; this.pos = 0; this.lsMs = 0; this.llMs = 8; this.duckMs = 1;
+    // output DC blockers
+    this.dxL = 0; this.dyL = 0; this.dxR = 0; this.dyR = 0;
+    this.n = 0; this.pollN = 0; this.uiN = 0; this.lastD = 0; this.msD = 0; this.lastA = 0; this.msA = 0;
+    this.gabV = 0; this.gi = 0; this.ai = 0; this.bi = 0;
+    this.rates();
+  }
+
+  // the "master tempo hack": every clock rate derived from the ratio F (1.25 Hz = 800 ms)
+  rates() {
+    const F = this.F;
+    this.rF = F; this.r12 = F * 12; this.r20 = F / 20; this.r50 = F / 50;
+    this.r8 = F / 0.125; this.r4 = this.r8 / 2; this.rn8 = -this.r8;
+    // [/ 10.] receives F in both inlets; Max fires the right inlet first, so it outputs F/F = 1
+    this.R = this.fix ? F / 10 : 1; this.rnR = -this.R;
+  }
+
+  setFilters(f, q, g) {
+    for (let i = 0; i < 8; i++) {
+      const b = this.bands[i];
+      const fr = clip(f[i], 20, this.sr * 0.45), Q = Math.max(0.5, q[i]);
+      const w0 = TWO_PI * fr / this.sr, al = Math.sin(w0) / (2 * Q), a0 = 1 + al;
+      b.b0 = al / a0; b.b2 = -al / a0; b.a1 = -2 * Math.cos(w0) / a0; b.a2 = (1 - al) / a0; b.gain = g[i];
+    }
+  }
+
+  handle(m) {
+    switch (m.t) {
+      case 'F': this.F = m.v; this.rates(); break;
+      case 'fix': this.fix = !!m.v; this.rates(); break;
+      case 'vols': for (let i = 0; i < 14; i++) this.gt[i] = gainAmp(m.v[i]); break;
+      case 'steps': { const a = this[m.w]; for (let i = 0; i < a.length; i++) a[i] = (m.v[i] || 0) / 500; break; }
+      case 'filt': this.setFilters(m.f, m.q, m.g); break;
+      case 'sample': this.buf = m.v; this.pos = 0; break;
+      case 'master': this.master = m.v; break;
+      case 'reset': this.reset(); break;
+    }
+  }
+
+  // spacebar: [s o] → every [r o], plus the key's own messages
+  reset() {
+    this.p266 = 0; this.c322 = 0; this.uf = false; this.lsMs = 0;
+    this.p329 = 0.5; this.p207 = 0.5; this.p236 = 0; this.p251 = 0; this.p281 = 0; this.p296 = 0;
+    this.p319 = 0.75; this.p380 = 0; this.c83 = 0; this.p214 = 0; this.p229 = 0; this.p174 = 0.5; this.c173 = 0;
+    this.c318 = this.c379 = this.c397 = this.c422 = this.c414 = 0;
+    this.ca = 1; this.cb = 0.8; this.cc = 0.7;
+    this.c123 = 0.5; this.c303 = 0.5; this.p436 = 0; this.p56 = 0.8; this.p133 = 0; this.c121 = 0.2; this.p101 = 0;
+    this.c136 = 0; this.o136 = 0;
+    this.p398 = 0.5; this.p431 = 0; this.c364 = 0; this.c114 = 0; this.p460 = 0; this.p62 = 0; this.p259 = 0; this.p257 = 0;
+    this.c433 = 1; this.o433 = 1; this.c63 = 1; this.o63 = 1;
+    this.pos = 0;
+  }
+
+  // trigger handlers (button → ...)
+  trigA() { // phasor~ 5 wrap: loop-start counter, ring-mod and tonMt envelopes
+    let v = this.c322 - 1, uf = false;
+    if (v < 1) { v = 40; uf = true; }
+    if (!uf && this.uf) { this.p110 = 0.01; this.p112 = 0.01; this.p259 = 0; this.p257 = 0; } // [select 0] after underflow
+    this.uf = uf; this.c322 = v; this.lsMs = v;
+    this.l300 = 1; this.l300d = 1 / (0.3 * this.sr);
+    this.l100 = 1; this.l100d = 1 / (0.1 * this.sr);
+    this.msA = (this.n - this.lastA) * 1000 / this.sr; this.lastA = this.n;
+  }
+  trigBar() { // slow phasor~ wrap: gabber multiplier and bass-step log base
+    let v = this.c136 - 1; if (v < 1) v = 10; this.c136 = v; this.o136 = v;
+    let w = this.c433 + 1; if (w > 64) w = 1; this.c433 = w; this.o433 = w;
+  }
+  trigC() { let v = this.c63 + 1; if (v > 3) v = 1; this.c63 = v; this.o63 = v; }
+  trigD() { this.cv75.start(0.8, 0, 5000); this.msD = (this.n - this.lastD) * 1000 / this.sr; this.lastD = this.n; }
+  trigE() {
+    this.g158 = 1; this.t158 = Math.round(0.020 * this.sr);
+    this.g183 = 1; this.t183 = Math.round(0.080 * this.sr);
+    this.cv143.start(3000, 200, 50);
+  }
+
+  process(L, R, len) {
+    const isr = this.isr, sr = this.sr, g = this.g, gt = this.gt;
+    for (let i = 0; i < len; i++) {
+      for (let k = 0; k < 14; k++) g[k] += (gt[k] - g[k]) * 0.0015;
+
+      // ---- step readers (index~) ----
+      const p266 = this.p266; this.p266 = wrap(p266 + 0.625 * isr);
+      const gi = stepIndex(p266, 16), gabV = this.gab[gi] * 500;
+      const p101 = this.p101; this.p101 = wrap(p101 + 0.714286 * isr);
+      const ai = stepIndex(p101, 14), annS = this.ann[ai];
+      const p436 = this.p436; this.p436 = wrap(p436 + this.R * isr);
+      const p460 = this.p460; this.p460 = wrap(p460 + 32 * lg(p436, this.o433 / 16) * isr);
+      const bi = stepIndex(p460, 16), bassV = this.bass[bi] * 500;
+      this.gabV = gabV; this.gi = gi; this.ai = ai; this.bi = bi;
+
+      // ---- shared clocks ----
+      const p431 = this.p431; this.p431 = wrap(p431 + this.r4 * isr);
+      const p62 = this.p62; this.p62 = wrap(p62 + 0.5 * isr);
+      const p229 = this.p229; this.p229 = wrap(p229 + this.rF * isr);
+      const p207 = this.p207; this.p207 = wrap(p207 + this.rF * isr);
+
+      // ---- triggers ----
+      if (p431 < this.pa) this.trigA(); this.pa = p431;
+      if (p436 < this.pb) this.trigBar(); this.pb = p436;
+      if (p62 < this.pc) this.trigC(); this.pc = p62;
+      if (p229 < this.pd) this.trigD(); this.pd = p229;
+      if (p207 < this.pe) this.trigE(); this.pe = p207;
+      if (this.t158 > 0 && --this.t158 === 0) this.g158 = 0;
+      if (this.t183 > 0 && --this.t183 === 0) this.g183 = 0;
+
+      // number~ polled every 100 ms → [!/ 1000.] → loop length
+      if (++this.pollN >= sr * 0.1) { this.pollN = 0; this.llMs = gabV > 0 ? 1000 / gabV : 0; }
+
+      // ---- 0 samp: spool looper, ring-modulated ----
+      let gro = 0;
+      const buf = this.buf;
+      if (buf && buf.length > 2) {
+        const blen = buf.length - 1;
+        const s = Math.min(blen - 1, this.lsMs * sr / 1000);
+        const e = Math.min(blen, Math.max(s + 1, (this.lsMs + this.llMs) * sr / 1000));
+        if (this.pos >= e || this.pos < s) this.pos = s;
+        const ip = this.pos | 0, fr = this.pos - ip;
+        const v = buf[ip] * (1 - fr) + buf[ip + 1] * fr;
+        const d = this.duckMs * sr / 1000, dist = Math.min(this.pos - s, e - this.pos);
+        gro = v * (d > 0 ? Math.min(1, dist / d) : 1);
+        this.pos += 1;
+      }
+      const s334 = Math.cos(TWO_PI * this.c334); this.c334 = wrap(this.c334 + 412 * isr);
+      const p329 = this.p329; this.p329 = wrap(p329 + 0.03125 * isr);
+      this.l300 = Math.max(0, this.l300 - this.l300d);
+      const vSamp = gro * s334 * this.l300 * (p329 + 0.5);
+
+      // ---- 1 anny: sah~ random-pitch blips, L and R ----
+      const p257 = this.p257; this.p257 = wrap(p257 + 25 * isr);
+      const p259 = this.p259; this.p259 = wrap(p259 + this.r12 * isr);
+      if (this.ctlR <= 0.01 && p259 > 0.01) this.shR = p257; this.ctlR = p259;
+      const aR = Math.cos(TWO_PI * this.c254) * 0.2; this.c254 = wrap(this.c254 + this.shR * 1000 * isr);
+      const p110 = this.p110; this.p110 = wrap(p110 + 25 * isr);
+      const p112 = this.p112; this.p112 = wrap(p112 + this.r12 * isr);
+      if (this.ctlL <= 0.01 && p112 > 0.01) this.shL = p110; this.ctlL = p112;
+      const aL = Math.cos(TWO_PI * this.c107) * 0.2; this.c107 = wrap(this.c107 + this.shL * 1000 * isr);
+      const s114 = Math.cos(TWO_PI * this.c114); this.c114 = wrap(this.c114 + this.r20 * isr);
+
+      // ---- 2 untl: audio-rate log sweep clocked by the bass steps ----
+      const p251 = this.p251; this.p251 = wrap(p251 + (bassV / this.o63) * isr);
+      const f250 = clip(Math.abs(32 * lg(p251, 48)) * 32 - 1200, 0, 20000);
+      const s250 = Math.cos(TWO_PI * this.c250); this.c250 = wrap(this.c250 + f250 * isr);
+      const p236 = this.p236; this.p236 = wrap(p236 - 2.5 * isr);
+      const p56 = this.p56; this.p56 = wrap(p56 + this.r50 * isr);
+      const vUntl = s250 * clip(1 - p251, 0, 1) * clip(p236 + 0.3, -1, 1) * p56 * p436;
+
+      // ---- 3 bsStp: bass sine at step/4 Hz ----
+      const vBs = Math.cos(TWO_PI * this.c444); this.c444 = wrap(this.c444 + bassV / 4 * isr);
+
+      // ---- 4 tonMt: 206 Hz ping, left channel only ----
+      const s414 = Math.cos(TWO_PI * this.c414); this.c414 = wrap(this.c414 + 206 * isr);
+      const s364 = Math.cos(TWO_PI * this.c364); this.c364 = wrap(this.c364 + this.R * isr);
+      this.l100 = Math.max(0, this.l100 - this.l100d);
+      const vTon = s414 * this.l100 * s364;
+
+      // ---- 5 lazr ----
+      const f422 = clip(Math.abs(32 * lg(p431, 4)) * 32 - 1200, 0, 10000);
+      const s422 = Math.cos(TWO_PI * this.c422); this.c422 = wrap(this.c422 + f422 * isr);
+      const s121 = Math.cos(TWO_PI * this.c121); this.c121 = wrap(this.c121 + 0.015625 * isr);
+      const vLaz = s422 * clip(1 - p431, 0, 1) * s121;
+
+      // ---- 6 gabbr: same sweep, DC-pushed into the clipper ----
+      const p398 = this.p398; this.p398 = wrap(p398 + this.r4 * isr);
+      const f397 = clip(Math.abs(32 * lg(p398, 4)) * 32 - 1200, 0, 10000);
+      const s397 = Math.cos(TWO_PI * this.c397); this.c397 = wrap(this.c397 + f397 * isr);
+      const s303 = Math.cos(TWO_PI * this.c303); this.c303 = wrap(this.c303 + 0.03125 * isr);
+      const vGabbr = clip(s397 * clip(1 - p398, 0, 1) * s303 + 0.9, -1, 1);
+
+      // ---- 7, 8 bsClk ----
+      const p380 = this.p380; this.p380 = wrap(p380 + this.R * isr);
+      const f379 = clip(Math.abs(32 * lg(p380, 32)) * 32 - 1200, 0, 10000);
+      const s379 = Math.cos(TWO_PI * this.c379); this.c379 = wrap(this.c379 + f379 * isr);
+      const vClkA = s379 * clip(1 - p380, 0, 1);
+      const p319 = this.p319; this.p319 = wrap(p319 + this.R * isr);
+      const f318 = clip(Math.abs(32 * lg(p319, 48)) * 32 - 1200, 0, 10000);
+      const s318 = Math.cos(TWO_PI * this.c318); this.c318 = wrap(this.c318 + f318 * isr);
+      const vClkB = s318 * clip(1 - p319, 0, 1);
+
+      // ---- 9 gbStp: gabber, rate from gabber steps, chopped by annoying steps ----
+      const p296 = this.p296; this.p296 = wrap(p296 + gabV * 2 * this.o136 / 32 * isr);
+      const f295 = clip(Math.abs(96 * lg(p296, 48)) * 32 - 1200, 0, 10000);
+      const s295 = Math.cos(TWO_PI * this.c295); this.c295 = wrap(this.c295 + f295 * isr);
+      const p281 = this.p281; this.p281 = wrap(p281 + this.r8 * isr);
+      const p133 = this.p133; this.p133 = wrap(p133 + this.rnR * isr);
+      const s123 = Math.cos(TWO_PI * this.c123); this.c123 = wrap(this.c123 + 0.007812 * isr);
+      const vGbStp = s295 * clip(1 - p296, 0, 1) * clip(lg(p281, 2) + 0.1, -1, 1)
+        * clip(p133 + 0.8 + Math.cos(TWO_PI * s123), -1, 1) * annS;
+
+      // ---- 10 bsClk (gated by reverse saw) ----
+      const lg229 = Math.abs(70 * lg(p229, 2048)) * 32 - 1200;
+      const s228 = Math.cos(TWO_PI * this.c228); this.c228 = wrap(this.c228 + clip(lg229, 0, 10000) * isr);
+      const p214 = this.p214; this.p214 = wrap(p214 + this.rn8 * isr);
+      const vClkC = s228 * clip(1 - p229, 0, 1) * clip(p214 + 0.75, -1, 1);
+
+      // ---- 11 bsDrm: same sweep, 5 s curve~ tail ----
+      const s83 = Math.cos(TWO_PI * this.c83); this.c83 = wrap(this.c83 + clip(lg229, 50, 10000) * isr);
+      const vDrm = s83 * this.cv75.tick();
+
+      // ---- 12 snDrm: noise → fffb~ 8 → gate~ → comb~ ----
+      const nz = (Math.random() * 2 - 1) * 0.3;
+      let fb = 0;
+      for (let k = 0; k < 8; k++) {
+        const b = this.bands[k];
+        const y = b.b0 * nz + b.b2 * b.x2 - b.a1 * b.y1 - b.a2 * b.y2;
+        b.x2 = b.x1; b.x1 = nz; b.y2 = b.y1; b.y1 = y;
+        fb += y * b.gain;
+      }
+      const env183 = this.g183 ? -(lg(p207, 8192) + 0.1) : 0;
+      const sx = fb * env183;
+      const xd = this.cx[this.ci], yd = this.cy[this.ci];
+      const cy = this.ca * sx + this.cb * xd + this.cc * yd;
+      this.cx[this.ci] = sx; this.cy[this.ci] = cy; this.ci = (this.ci + 1) % this.cD;
+      const vSn = sx + cy;
+
+      // ---- 13 snClk: 3000→200 Hz chirp, 20 ms gate, +0.9 offset ----
+      const p174 = this.p174; this.p174 = wrap(p174 + 1.25 * isr);
+      const s173 = Math.cos(TWO_PI * this.c173); this.c173 = wrap(this.c173 + this.cv143.tick() * isr);
+      const vClk = (this.g158 ? s173 * clip(1 - p174, 0, 1) : 0) + 0.9;
+
+      // ---- mix (each dac~) ----
+      const both = vSamp * g[0] + vUntl * g[2] + vBs * g[3] + vLaz * g[5] + vGabbr * g[6] + vClkA * g[7]
+        + vClkB * g[8] + vGbStp * g[9] + vClkC * g[10] + vDrm * g[11] + vSn * g[12] + vClk * g[13];
+      let l = both + aL * g[1] * s114 + vTon * g[4];
+      let r = both + aR * g[1] * s114;
+      // DC blockers (not in the patch: gabbr and snClk add large DC offsets)
+      const yl = l - this.dxL + 0.9995 * this.dyL; this.dxL = l; this.dyL = yl;
+      const yr = r - this.dxR + 0.9995 * this.dyR; this.dxR = r; this.dyR = yr;
+      L[i] = clip(yl * this.master, -1, 1);
+      R[i] = clip(yr * this.master, -1, 1);
+      this.n++;
+    }
+    this.uiN += len;
+    if (this.uiN >= sr / 30) {
+      this.uiN = 0;
+      this.post({ t: 'ui', gi: this.gi, ai: this.ai, bi: this.bi, msD: this.msD, msA: this.msA,
+        ls: this.lsMs, ll: this.llMs, c136: this.o136, c433: this.o433, c63: this.o63 });
+    }
+  }
+}
+
+</script>
+<script>
+// Steppin UI: transport, multisliders, sample loading, and the audio engine bridge.
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const DSP_SRC = document.getElementById('dsp-src').textContent;
+
+  const VOICES = ['samp', 'anny', 'untl', 'bsStp', 'tonMt', 'lazr', 'gabbr', 'bsClk', 'bsClk', 'gbStp', 'bsClk', 'bsDrm', 'snDrm', 'snClk', '?', '?'];
+  const state = {
+    vols: [100, 85, 95, 92, 90, 95, 92, 100, 98, 105, 100, 108, 118, 96, 0, 0],
+    gab: [120, 0, 250, 60, 0, 180, 400, 0, 90, 300, 0, 140, 220, 0, 480, 40],
+    ann: [500, 0, 300, 0, 150, 500, 0, 400, 0, 0, 250, 500, 0, 100],
+    bass: [60, 60, 0, 90, 45, 0, 120, 60, 30, 0, 75, 150, 60, 0, 45, 240],
+    freq: [180, 320, 560, 900, 1500, 2400, 3600, 4800],
+    q: [8, 8, 10, 10, 12, 12, 14, 14],
+    gain: [1, 0.9, 0.8, 0.8, 0.7, 0.7, 0.6, 0.6],
+    F: 1.25, fix: false, master: 0.6
+  };
+
+  let ctx = null, send = () => {}, running = false, sampleData = null, sampleName = 'built-in hit';
+
+  // ---------- multislider ----------
+  function token(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  class MultiSlider {
+    constructor(canvas, opts) {
+      this.c = canvas; this.o = opts; this.values = opts.values; this.head = -1; this.down = false;
+      const ro = new ResizeObserver(() => this.resize()); ro.observe(canvas);
+      canvas.addEventListener('pointerdown', (e) => { this.down = true; canvas.setPointerCapture(e.pointerId); this.set(e); });
+      canvas.addEventListener('pointermove', (e) => { if (this.down) this.set(e); });
+      const up = () => { this.down = false; };
+      canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+      canvas.addEventListener('keydown', (e) => this.key(e));
+      this.focus = 0;
+      this.resize();
+    }
+    resize() {
+      const r = this.c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+      this.w = r.width; this.h = r.height;
+      this.c.width = Math.max(1, Math.round(r.width * dpr)); this.c.height = Math.max(1, Math.round(r.height * dpr));
+      this.ctx = this.c.getContext('2d'); this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      this.draw();
+    }
+    set(e) {
+      const r = this.c.getBoundingClientRect(), n = this.values.length;
+      const i = Math.max(0, Math.min(n - 1, Math.floor((e.clientX - r.left) / r.width * n)));
+      if (this.o.disabled && this.o.disabled(i)) return;
+      const u = 1 - Math.max(0, Math.min(1, (e.clientY - r.top) / r.height));
+      let v = this.o.min + u * (this.o.max - this.o.min);
+      if (this.o.int) v = Math.round(v);
+      this.values[i] = v; this.focus = i; this.draw(); this.o.onChange(this.values);
+    }
+    key(e) {
+      const n = this.values.length, step = (this.o.max - this.o.min) / 20;
+      if (e.key === 'ArrowRight') this.focus = Math.min(n - 1, this.focus + 1);
+      else if (e.key === 'ArrowLeft') this.focus = Math.max(0, this.focus - 1);
+      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        const d = e.key === 'ArrowUp' ? step : -step;
+        let v = Math.max(this.o.min, Math.min(this.o.max, this.values[this.focus] + d));
+        if (this.o.int) v = Math.round(v);
+        this.values[this.focus] = v; this.o.onChange(this.values);
+      } else return;
+      e.preventDefault(); this.draw();
+    }
+    setHead(i) { if (i !== this.head) { this.head = i; this.draw(); } }
+    draw() {
+      const x = this.ctx; if (!x) return;
+      const n = this.values.length, w = this.w, h = this.h, bw = w / n;
+      const fill = token('--bar'), head = token('--accent'), grid = token('--grid'), ink = token('--bar-ink'), dim = token('--muted');
+      x.clearRect(0, 0, w, h);
+      for (let i = 0; i < n; i++) {
+        const u = (this.values[i] - this.o.min) / (this.o.max - this.o.min);
+        const off = this.o.disabled && this.o.disabled(i);
+        x.fillStyle = i === this.head ? head : off ? grid : fill;
+        x.fillRect(i * bw + 1, h - u * h, bw - 2, u * h);
+        x.fillStyle = grid; x.fillRect(Math.round((i + 1) * bw) - 0.5, 0, 1, h);
+        if (this.o.labels) {
+          x.save(); x.translate(i * bw + bw / 2 + 4, h - 6); x.rotate(-Math.PI / 2);
+          x.font = '600 10px "Martian Mono", ui-monospace, monospace';
+          x.fillStyle = u * h > 50 && !off ? ink : dim; x.fillText(this.o.labels[i], 0, 0);
+          x.restore();
+        }
+      }
+      if (document.activeElement === this.c) {
+        x.strokeStyle = head; x.lineWidth = 2; x.strokeRect(this.focus * bw + 1, 1, bw - 2, h - 2);
+      }
+    }
+  }
+
+  const sliders = {};
+  function mk(id, key, opts) {
+    const c = $(id);
+    c.addEventListener('focus', () => sliders[key].draw()); c.addEventListener('blur', () => sliders[key].draw());
+    sliders[key] = new MultiSlider(c, Object.assign({ values: state[key] }, opts));
+  }
+  mk('ms-vols', 'vols', { min: 0, max: 127, int: true, labels: VOICES, disabled: (i) => i >= 14, onChange: (v) => send({ t: 'vols', v }) });
+  mk('ms-gab', 'gab', { min: 0, max: 500, int: true, onChange: (v) => send({ t: 'steps', w: 'gab', v }) });
+  mk('ms-ann', 'ann', { min: 0, max: 500, int: true, onChange: (v) => send({ t: 'steps', w: 'ann', v }) });
+  mk('ms-bass', 'bass', { min: 0, max: 500, int: true, onChange: (v) => send({ t: 'steps', w: 'bass', v }) });
+  const filt = () => send({ t: 'filt', f: state.freq, q: state.q, g: state.gain });
+  mk('ms-freq', 'freq', { min: 20, max: 5000, onChange: filt });
+  mk('ms-q', 'q', { min: 0, max: 100, onChange: filt });
+  mk('ms-gain', 'gain', { min: 0, max: 1, onChange: filt });
+
+  const redrawAll = () => Object.values(sliders).forEach((s) => s.draw());
+  try {
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redrawAll);
+    new MutationObserver(redrawAll).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  } catch (e) {}
+  if (document.fonts) document.fonts.ready.then(redrawAll);
+
+  document.querySelectorAll('[data-rand]').forEach((b) => b.addEventListener('click', () => {
+    const k = b.dataset.rand, a = state[k];
+    for (let i = 0; i < a.length; i++) a[i] = Math.random() < 0.3 ? 0 : Math.round(Math.random() * (k === 'bass' ? 250 : 500));
+    sliders[k].draw(); send({ t: 'steps', w: k, v: a });
+  }));
+  document.querySelectorAll('[data-clear]').forEach((b) => b.addEventListener('click', () => {
+    const k = b.dataset.clear; state[k].fill(0); sliders[k].draw(); send({ t: 'steps', w: k, v: state[k] });
+  }));
+
+  // ---------- tempo ----------
+  const msecIn = $('msec'), ratioIn = $('ratio');
+  function setF(F, from) {
+    if (!(F > 0) || !isFinite(F)) return;
+    state.F = F;
+    if (from !== 'ratio') ratioIn.value = F.toFixed(4).replace(/0+$/, '').replace(/\.$/, '');
+    if (from !== 'msec') msecIn.value = Math.round(1000 / F);
+    send({ t: 'F', v: F });
+  }
+  msecIn.addEventListener('input', () => { const ms = parseFloat(msecIn.value); if (ms > 0) setF(1000 / ms, 'msec'); });
+  ratioIn.addEventListener('input', () => setF(parseFloat(ratioIn.value), 'ratio'));
+  $('fix').addEventListener('change', (e) => { state.fix = e.target.checked; send({ t: 'fix', v: state.fix }); });
+  $('master').addEventListener('input', (e) => { state.master = parseFloat(e.target.value); send({ t: 'master', v: state.master }); });
+
+  // ---------- engine ----------
+  function sendAll() {
+    send({ t: 'F', v: state.F }); send({ t: 'fix', v: state.fix }); send({ t: 'master', v: state.master });
+    send({ t: 'vols', v: state.vols });
+    ['gab', 'ann', 'bass'].forEach((w) => send({ t: 'steps', w, v: state[w] }));
+    filt();
+    if (sampleData) send({ t: 'sample', v: sampleData });
+  }
+  function onMsg(m) {
+    if (m.t !== 'ui') return;
+    sliders.gab.setHead(m.gi); sliders.ann.setHead(m.ai); sliders.bass.setHead(m.bi);
+    $('ro-beat').textContent = m.msD ? Math.round(m.msD) : '–';
+    $('ro-sub').textContent = m.msA ? Math.round(m.msA) : '–';
+    $('ro-loop').textContent = m.ls + ' + ' + (m.ll ? m.ll.toFixed(1) : '0');
+    $('ro-count').textContent = m.c136 + ' · ' + m.c433 + ' · ' + m.c63;
+  }
+  async function ensureCtx() {
+    if (ctx) return;
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    let node = null;
+    try {
+      const proc = DSP_SRC + `
+        class SteppinProcessor extends AudioWorkletProcessor {
+          constructor() { super(); this.d = new PatchDSP(sampleRate); this.d.post = (m) => this.port.postMessage(m); this.port.onmessage = (e) => this.d.handle(e.data); }
+          process(i, o) { const out = o[0]; this.d.process(out[0], out[1] || out[0], out[0].length); return true; }
+        }
+        registerProcessor('steppin', SteppinProcessor);`;
+      const url = URL.createObjectURL(new Blob([proc], { type: 'application/javascript' }));
+      await ctx.audioWorklet.addModule(url);
+      node = new AudioWorkletNode(ctx, 'steppin', { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2] });
+      node.port.onmessage = (e) => onMsg(e.data);
+      send = (m) => node.port.postMessage(m);
+      $('engine').textContent = 'AudioWorklet';
+    } catch (err) {
+      const PatchDSP = new Function(DSP_SRC + '; return PatchDSP;')();
+      const d = new PatchDSP(ctx.sampleRate);
+      d.post = (m) => onMsg(m);
+      node = ctx.createScriptProcessor(1024, 1, 2);
+      node.onaudioprocess = (e) => { const b = e.outputBuffer; d.process(b.getChannelData(0), b.getChannelData(1), b.length); };
+      send = (m) => d.handle(m);
+      $('engine').textContent = 'ScriptProcessor (fallback)';
+    }
+    node.connect(ctx.destination);
+    if (!sampleData) sampleData = builtInHit(ctx.sampleRate);
+    sendAll();
+  }
+
+  function builtInHit(sr) {
+    const n = Math.round(sr * 0.5), a = new Float32Array(n);
+    let seed = 7;
+    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) * 2 - 1;
+    for (let i = 0; i < n; i++) {
+      const t = i / sr;
+      a[i] = (Math.sin(2 * Math.PI * 180 * t + 3 * Math.sin(2 * Math.PI * 523 * t)) * 0.6
+        + rnd() * Math.exp(-t * 40) * 0.5 + Math.sin(2 * Math.PI * 1210 * t) * Math.exp(-t * 20) * 0.25) * Math.exp(-t * 9);
+    }
+    return a;
+  }
+
+  // spacebar: [key] → [select 32] → 800 ms, ratio 1.25, [s o] phase resets
+  function sync() {
+    msecIn.value = 800; setF(1.25, 'msec');
+    send({ t: 'reset' });
+    flash();
+  }
+  function flash() { const el = $('sync'); el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); }
+
+  async function start() {
+    await ensureCtx();
+    await ctx.resume();
+    if (!running) { running = true; sync(); }
+    setRun(true);
+  }
+  async function stop() { if (ctx) await ctx.suspend(); running = false; setRun(false); }
+  function setRun(on) {
+    const b = $('start'); b.textContent = on ? 'Stop' : 'Start';
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    document.body.classList.toggle('on', on);
+  }
+  $('start').addEventListener('click', () => (running ? stop() : start()));
+  $('sync').addEventListener('click', async () => { if (!running) await start(); else sync(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.code !== 'Space' && e.key !== ' ') return;
+    const tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'button' || tag === 'select' || tag === 'textarea') return;
+    e.preventDefault();
+    if (!running) start(); else sync();
+  });
+
+  // ---------- sample ----------
+  $('file').addEventListener('change', async (e) => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    try {
+      await ensureCtx();
+      const ab = await f.arrayBuffer();
+      const audio = await ctx.decodeAudioData(ab);
+      const n = audio.length, mono = new Float32Array(n);
+      for (let c = 0; c < audio.numberOfChannels; c++) { const d = audio.getChannelData(c); for (let i = 0; i < n; i++) mono[i] += d[i] / audio.numberOfChannels; }
+      sampleData = mono; sampleName = f.name;
+      send({ t: 'sample', v: mono });
+      $('sample-name').textContent = f.name + ' · ' + Math.round(n / ctx.sampleRate * 1000) + ' ms';
+    } catch (err) {
+      $('sample-name').textContent = 'Could not decode that file. Try a WAV, AIFF or MP3.';
+    }
+  });
+  $('builtin').addEventListener('click', async () => {
+    await ensureCtx();
+    sampleData = builtInHit(ctx.sampleRate); sampleName = 'built-in hit';
+    send({ t: 'sample', v: sampleData });
+    $('sample-name').textContent = 'built-in hit · 500 ms';
+  });
+})();
+
+</script>
+
+</body>
+</html>

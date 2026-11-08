@@ -1,0 +1,202 @@
+<title>Steppin Patch</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Martian+Mono:wght@400;600;700&display=swap">
+<style>
+/* Layout: a Max patcher canvas. Panels are object boxes with inlet ticks; the accent is the yellow of a signal cord. */
+:root {
+  --bg: #cfd2d6; --panel: #e8e9eb; --box: #f6f6f7; --fg: #1c1e21; --muted: #5a6068;
+  --line: #2b2e33; --grid: #c4c8cd; --bar: #6b6b6b; --bar-ink: #f6f6f7; --accent: #b98a00; --accent-ink: #1c1e21;
+  --font-ui: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Martian Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #232528; --panel: #2c2f33; --box: #34373c; --fg: #e5e6e8; --muted: #9aa1a9;
+  --line: #5a5f66; --grid: #43474d; --bar: #8d939a; --bar-ink: #1c1e21; --accent: #f0c23b; --accent-ink: #1c1e21; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #232528; --panel: #2c2f33; --box: #34373c; --fg: #e5e6e8; --muted: #9aa1a9;
+  --line: #5a5f66; --grid: #43474d; --bar: #8d939a; --bar-ink: #1c1e21; --accent: #f0c23b; --accent-ink: #1c1e21; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 14px/1.5 var(--font-ui);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 16px; }
+header { display: grid; gap: 6px; }
+h1 { font: 700 clamp(22px, 4vw, 30px)/1.1 var(--font-mono); letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+h1 .tilde { color: var(--accent); }
+.lede { margin: 0; color: var(--muted); max-width: 68ch; }
+.obj { background: var(--panel); border: 1.5px solid var(--line); border-radius: 4px; position: relative; padding: 14px 14px 12px; min-width: 0; }
+.obj::before, .obj::after { content: ""; position: absolute; top: -1.5px; width: 9px; height: 3px; background: var(--line); }
+.obj::before { left: 10px; } .obj::after { right: 10px; }
+.obj h2 { margin: 0 0 2px; font: 600 12px/1.3 var(--font-mono); letter-spacing: 0.02em; }
+.obj .src { font: 400 11px/1.4 var(--font-mono); color: var(--muted); margin: 0 0 10px; overflow-wrap: anywhere; }
+.transport { display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: end; }
+.field { display: grid; gap: 4px; }
+.field label, .ro dt { font: 600 10px/1 var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+input[type=number] { width: 7.5em; font: 500 14px var(--font-mono); padding: 6px 8px; background: var(--box); color: var(--fg); border: 1.5px solid var(--line); border-radius: 3px; font-variant-numeric: tabular-nums; }
+input[type=range] { width: 140px; accent-color: var(--accent); }
+button, .filebtn { font: 600 13px var(--font-mono); padding: 8px 14px; border-radius: 3px; border: 1.5px solid var(--line); background: var(--box); color: var(--fg); cursor: pointer; }
+button:hover, .filebtn:hover { border-color: var(--accent); }
+button:focus-visible, input:focus-visible, canvas:focus-visible, .filebtn:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+#start { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); min-width: 6.5em; }
+#sync.hit { animation: hit .25s ease-out; }
+@keyframes hit { from { background: var(--accent); color: var(--accent-ink); } }
+@media (prefers-reduced-motion: reduce) { #sync.hit { animation: none; } }
+.check { display: flex; gap: 8px; align-items: center; font-size: 13px; max-width: 34ch; }
+.check input { accent-color: var(--accent); width: 16px; height: 16px; }
+kbd { font: 600 11px var(--font-mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 3px; padding: 0 5px; background: var(--box); }
+canvas.ms { display: block; width: 100%; background: var(--box); border: 1.5px solid var(--line); border-radius: 2px; touch-action: none; cursor: crosshair; }
+#ms-vols { height: 150px; }
+.steps canvas.ms { height: 110px; }
+.filters canvas.ms { height: 84px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.row2 { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 820px) { .grid3, .row2 { grid-template-columns: minmax(0, 1fr); } }
+.tools { display: flex; gap: 8px; margin-top: 8px; }
+.tools button { padding: 4px 10px; font-size: 11px; }
+.scale { display: flex; justify-content: space-between; font: 400 10px var(--font-mono); color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.ro { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 0; }
+.ro dd { margin: 4px 0 0; font: 600 18px var(--font-mono); font-variant-numeric: tabular-nums; }
+.ro dd small { font: 400 11px var(--font-ui); color: var(--muted); display: block; }
+.filebtn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.filebtn { position: relative; display: inline-block; }
+#sample-name { font: 400 12px var(--font-mono); color: var(--muted); margin-top: 8px; overflow-wrap: anywhere; }
+.map { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; margin: 0; font-size: 13px; }
+.map dt { font: 600 12px var(--font-mono); }
+.map dd { margin: 0; color: var(--muted); }
+.notes { margin: 0; padding-left: 1.1em; color: var(--muted); font-size: 13px; display: grid; gap: 4px; max-width: 72ch; }
+.notes code, .map code, .lede code { font: 400 12px var(--font-mono); color: var(--fg); }
+body.on h1 .tilde { animation: pulse 0.8s steps(2) infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { body.on h1 .tilde { animation: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>steppin<span class="tilde">~</span></h1>
+    <p class="lede">The decoded Max patch rebuilt in plain JavaScript and Web Audio. All 14 voices, three step buffers and the spool looper run sample by sample, the way MSP ran them. Press <b>Start</b>, then drag the bars.</p>
+  </header>
+
+  <section class="obj" aria-labelledby="h-transport">
+    <h2 id="h-transport">master tempo hack</h2>
+    <p class="src">[number] → [/ 1000.] → ratio → every phasor~ rate</p>
+    <div class="transport">
+      <button id="start" type="button" aria-pressed="false">Start</button>
+      <button id="sync" type="button" title="Resync every phasor, like the patch's spacebar">Sync <kbd>Space</kbd></button>
+      <div class="field"><label for="msec">msec</label><input id="msec" type="number" min="50" max="5000" step="1" value="800"></div>
+      <div class="field"><label for="ratio">ratio (Hz)</label><input id="ratio" type="number" min="0.05" max="20" step="0.01" value="1.25"></div>
+      <div class="field"><label for="master">master volume</label><input id="master" type="range" min="0" max="1" step="0.01" value="0.6"></div>
+      <label class="check" for="fix"><input id="fix" type="checkbox"> Fix the [/ 10.] bug (slow voices follow the tempo instead of sitting at 1 Hz)</label>
+    </div>
+  </section>
+
+  <section class="obj" aria-labelledby="h-vols">
+    <h2 id="h-vols">volumes</h2>
+    <p class="src">[multislider] 16 × 0–127 → [unpack] 14 → gain~ per voice · 127 = unity</p>
+    <canvas id="ms-vols" class="ms" tabindex="0" aria-label="Voice volumes, 16 sliders. Arrow keys select and adjust."></canvas>
+  </section>
+
+  <div class="grid3 steps">
+    <section class="obj" aria-labelledby="h-gab">
+      <h2 id="h-gab">gabber steps</h2>
+      <p class="src">→ peek~ newstep · read by [phasor~ 0.625] → gbStp rate, loop length</p>
+      <canvas id="ms-gab" class="ms" tabindex="0" aria-label="Gabber steps, 16 values 0 to 500"></canvas>
+      <div class="scale"><span>0</span><span>500</span></div>
+      <div class="tools"><button type="button" data-rand="gab">Randomise</button><button type="button" data-clear="gab">Clear</button></div>
+    </section>
+    <section class="obj" aria-labelledby="h-ann">
+      <h2 id="h-ann">annoying steps</h2>
+      <p class="src">→ peek~ steppin · read by [phasor~ 0.714286] → chops gbStp</p>
+      <canvas id="ms-ann" class="ms" tabindex="0" aria-label="Annoying steps, 14 values 0 to 500"></canvas>
+      <div class="scale"><span>0</span><span>500</span></div>
+      <div class="tools"><button type="button" data-rand="ann">Randomise</button><button type="button" data-clear="ann">Clear</button></div>
+    </section>
+    <section class="obj" aria-labelledby="h-bass">
+      <h2 id="h-bass">bass steps</h2>
+      <p class="src">→ peek~ thesteps · read by a log-warped phasor~ → bsStp pitch, untl rate</p>
+      <canvas id="ms-bass" class="ms" tabindex="0" aria-label="Bass steps, 16 values 0 to 500"></canvas>
+      <div class="scale"><span>0</span><span>500</span></div>
+      <div class="tools"><button type="button" data-rand="bass">Randomise</button><button type="button" data-clear="bass">Clear</button></div>
+    </section>
+  </div>
+
+  <div class="grid3 filters">
+    <section class="obj" aria-labelledby="h-freq">
+      <h2 id="h-freq">freq</h2>
+      <p class="src">[prepend freq 0] → s cmds → fffb~ 8 (snDrm)</p>
+      <canvas id="ms-freq" class="ms" tabindex="0" aria-label="Filter bank frequencies, 8 values 20 to 5000 Hz"></canvas>
+      <div class="scale"><span>20 Hz</span><span>5000 Hz</span></div>
+    </section>
+    <section class="obj" aria-labelledby="h-q">
+      <h2 id="h-q">q</h2>
+      <p class="src">[prepend Q 0] → s cmds</p>
+      <canvas id="ms-q" class="ms" tabindex="0" aria-label="Filter bank Q, 8 values 0 to 100"></canvas>
+      <div class="scale"><span>0</span><span>100</span></div>
+    </section>
+    <section class="obj" aria-labelledby="h-gain">
+      <h2 id="h-gain">gain</h2>
+      <p class="src">[prepend gain 0] → s cmds</p>
+      <canvas id="ms-gain" class="ms" tabindex="0" aria-label="Filter bank gains, 8 values 0 to 1"></canvas>
+      <div class="scale"><span>0</span><span>1</span></div>
+    </section>
+  </div>
+
+  <div class="row2">
+    <section class="obj" aria-labelledby="h-samp">
+      <h2 id="h-samp">spool</h2>
+      <p class="src">buffer~ spool → grooveduck · loop start = [counter 1 1 40] ms, length = 1000 / gabber step</p>
+      <div class="tools">
+        <label class="filebtn">Load a short sample<input id="file" type="file" accept="audio/*,.aif,.aiff,.wav"></label>
+        <button id="builtin" type="button">Use built-in hit</button>
+      </div>
+      <div id="sample-name">built-in hit · 500 ms</div>
+    </section>
+    <section class="obj" aria-labelledby="h-ro">
+      <h2 id="h-ro">readouts</h2>
+      <p class="src">[timer] and [counter] values from the running engine</p>
+      <dl class="ro">
+        <div><dt>real msec</dt><dd><span id="ro-beat">–</span><small>bsDrm hit to hit</small></dd></div>
+        <div><dt>sub msec</dt><dd><span id="ro-sub">–</span><small>5 Hz clock</small></dd></div>
+        <div><dt>loop ms</dt><dd><span id="ro-loop">–</span><small>start + length</small></dd></div>
+        <div><dt>counters</dt><dd><span id="ro-count">–</span><small>gabber × · log base · untl ÷</small></dd></div>
+      </dl>
+    </section>
+  </div>
+
+  <section class="obj" aria-labelledby="h-map">
+    <h2 id="h-map">what each slider plays</h2>
+    <p class="src">every drum is a phasor~ split two ways: log~ → cycle~ pitch sweep, and 1 − ramp for the decay</p>
+    <dl class="map">
+      <dt>samp</dt><dd>Spool loop of a few ms, ring-modulated by a 412 Hz sine with a 300 ms envelope</dd>
+      <dt>anny</dt><dd>Random-pitch sine blips: <code>sah~</code> grabs a 25 Hz ramp 15 times a second, stereo pair</dd>
+      <dt>untl</dt><dd>Log sweep clocked at audio rate by the bass steps, so it turns into FM grit</dd>
+      <dt>bsStp</dt><dd>Bass sine at step ÷ 4 Hz</dd>
+      <dt>tonMt</dt><dd>206 Hz ping on the 5 Hz clock, left channel only</dd>
+      <dt>lazr · gabbr</dt><dd>Fast 5 Hz log sweeps from 220 Hz; gabbr is pushed into the clipper by a +0.9 offset</dd>
+      <dt>bsClk ×3</dt><dd>Kick-like sweeps on the slow and beat clocks; the third is chopped by a −10 Hz saw</dd>
+      <dt>gbStp</dt><dd>Gabber voice whose rate comes from the gabber steps, chopped by the annoying steps</dd>
+      <dt>bsDrm</dt><dd>Beat kick with a 5 second <code>curve~</code> tail</dd>
+      <dt>snDrm</dt><dd>Noise through the 8-band filter bank, 80 ms gate, into a 10 ms <code>comb~</code></dd>
+      <dt>snClk</dt><dd>3000 → 200 Hz chirp in 50 ms, 20 ms gate</dd>
+    </dl>
+  </section>
+
+  <section class="obj" aria-labelledby="h-notes">
+    <h2 id="h-notes">where the port differs</h2>
+    <p class="src">engine: <span id="engine">starts on first click</span></p>
+    <ul class="notes">
+      <li>The paste held no saved preset or slider data, so the step, volume and filter values here are starting points I picked.</li>
+      <li><code>grooveduck</code> isn't a stock Max object. It's emulated as a looping player with a 1 ms fade at each loop point.</li>
+      <li>A DC blocker sits before the output. gabbr and snClk add a +0.9 offset in the patch that would otherwise push the speakers.</li>
+      <li>Sync matches the spacebar exactly, so it also resets the tempo to 800 ms.</li>
+    </ul>
+  </section>
+</div>
+
+<script type="text/plain" id="dsp-src">
+/*DSP*/
+</script>
+<script>
+/*APP*/
+</script>
