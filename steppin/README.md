@@ -14,6 +14,13 @@ A JavaScript / Web Audio port of a Max/MSP generative drum patch (462 objects). 
   `node src/test.js src/dsp.js`.
 - `patch/decoded_patch.maxpat` is the decoded original. It opens in Max.
 
+## Extras beyond the patch
+
+- **Randomise** (R) re-rolls everything. **Alter** (A) nudges every value from where it is.
+- **Presets**: 8 slots stored in the browser's localStorage. Click a slot (or press 1–8) to recall it. Shift-click a slot, press Shift+number, or press Save and then a slot to store the current sound.
+  Export downloads `steppin-presets.json`, and Import loads that file back.
+- **Reverb**: a stereo convolution reverb (generated noise impulse) on the master, with mix, size, tone and pre-delay. A limiter follows it.
+
 ## How the patch works
 
 Every drum is a `phasor~` used two ways. `log~ → *~ → abs~ → *~ 32 → -~ 1200 → clip~` gives the

@@ -55,6 +55,18 @@ canvas.ms { display: block; width: 100%; background: var(--box); border: 1.5px s
 @media (max-width: 820px) { .grid3, .row2 { grid-template-columns: minmax(0, 1fr); } }
 .tools { display: flex; gap: 8px; margin-top: 8px; }
 .tools button { padding: 4px 10px; font-size: 11px; }
+.slots { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; max-width: 360px; }
+.slot { aspect-ratio: 1; padding: 0; border-radius: 50%; font-size: 11px; color: var(--muted); background: var(--box); }
+.slot.full { background: var(--bar); color: var(--bar-ink); }
+.slot.cur { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+#presets.saving .slot { border-style: dashed; border-color: var(--accent); }
+#psave[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.tools .tool { padding: 4px 10px; font-size: 11px; }
+.hint { margin: 10px 0 0; font-size: 12px; color: var(--muted); min-height: 1.5em; }
+.knobs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; }
+.knobs input[type=range] { width: 100%; }
+.knobs output { color: var(--fg); text-transform: none; letter-spacing: 0; margin-left: 6px; font-variant-numeric: tabular-nums; }
+.tools { flex-wrap: wrap; }
 .scale { display: flex; justify-content: space-between; font: 400 10px var(--font-mono); color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
 .ro { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 0; }
 .ro dd { margin: 4px 0 0; font: 600 18px var(--font-mono); font-variant-numeric: tabular-nums; }
@@ -141,6 +153,34 @@ body.on h1 .tilde { animation: pulse 0.8s steps(2) infinite; }
       <p class="src">[prepend gain 0] → s cmds</p>
       <canvas id="ms-gain" class="ms" tabindex="0" aria-label="Filter bank gains, 8 values 0 to 1"></canvas>
       <div class="scale"><span>0</span><span>1</span></div>
+    </section>
+  </div>
+
+  <div class="row2">
+    <section class="obj" id="presets" aria-labelledby="h-pre">
+      <h2 id="h-pre">presets</h2>
+      <p class="src">[preset] · steps, volumes, filter bank, tempo and reverb · saved in this browser</p>
+      <div class="slots" role="group" aria-label="Preset slots">
+        <button type="button" class="slot">1</button><button type="button" class="slot">2</button><button type="button" class="slot">3</button><button type="button" class="slot">4</button>
+        <button type="button" class="slot">5</button><button type="button" class="slot">6</button><button type="button" class="slot">7</button><button type="button" class="slot">8</button>
+      </div>
+      <div class="tools">
+        <button id="psave" type="button" aria-pressed="false">Save</button>
+        <button id="pclear" type="button">Delete</button>
+        <button id="pexport" type="button">Export</button>
+        <label class="filebtn tool">Import<input id="pimport" type="file" accept="application/json,.json"></label>
+      </div>
+      <p id="pmsg" class="hint" aria-live="polite">Keys <kbd>1</kbd>–<kbd>8</kbd> recall. Shift-click or <kbd>Shift</kbd>+number saves.</p>
+    </section>
+    <section class="obj" aria-labelledby="h-verb">
+      <h2 id="h-verb">reverb</h2>
+      <p class="src">stereo convolution on the master · not in the original patch</p>
+      <div class="knobs">
+        <div class="field"><label for="verb-mix">mix <output id="verb-mix-v"></output></label><input id="verb-mix" type="range" min="0" max="1" step="0.01"></div>
+        <div class="field"><label for="verb-size">size <output id="verb-size-v"></output></label><input id="verb-size" type="range" min="0.2" max="8" step="0.1"></div>
+        <div class="field"><label for="verb-tone">tone <output id="verb-tone-v"></output></label><input id="verb-tone" type="range" min="5.99" max="9.80" step="0.01"></div>
+        <div class="field"><label for="verb-pre">pre-delay <output id="verb-pre-v"></output></label><input id="verb-pre" type="range" min="0" max="200" step="1"></div>
+      </div>
     </section>
   </div>
 

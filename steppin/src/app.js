@@ -12,7 +12,8 @@
     freq: [180, 320, 560, 900, 1500, 2400, 3600, 4800],
     q: [8, 8, 10, 10, 12, 12, 14, 14],
     gain: [1, 0.9, 0.8, 0.8, 0.7, 0.7, 0.6, 0.6],
-    F: 1.25, fix: false, master: 0.6
+    F: 1.25, fix: false, master: 0.6,
+    verb: { mix: 0.22, size: 2.4, tone: 6000, pre: 18 }
   };
 
   let ctx = null, send = () => {}, running = false, sampleData = null, sampleName = 'built-in hit';
@@ -155,6 +156,123 @@
     const k = b.dataset.clear; state[k].fill(0); sliders[k].draw(); send({ t: 'steps', w: k, v: state[k] });
   }));
 
+
+  // ---------- reverb: engine → dry ┐
+  //                     └ pre-delay → tone LPF → convolver → wet ┴→ limiter → out
+  let fx = null, irTimer = 0;
+  function makeIR(seconds) {
+    const sr = ctx.sampleRate, n = Math.max(1, Math.round(sr * seconds)), ir = ctx.createBuffer(2, n, sr);
+    for (let c = 0; c < 2; c++) {
+      const d = ir.getChannelData(c);
+      for (let i = 0; i < n; i++) {
+        const t = i / n;
+        // exponential decay to -60 dB over the length, sparse early part for a bit of grain
+        const early = i < sr * 0.03 ? (Math.random() < 0.02 ? 1 : 0.15) : 1;
+        d[i] = (Math.random() * 2 - 1) * Math.pow(0.001, t) * early;
+      }
+    }
+    return ir;
+  }
+  function buildFx(src) {
+    const dry = ctx.createGain(), wet = ctx.createGain(), pre = ctx.createDelay(0.5), tone = ctx.createBiquadFilter(), conv = ctx.createConvolver();
+    const lim = ctx.createDynamicsCompressor();
+    lim.threshold.value = -2; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.002; lim.release.value = 0.12;
+    tone.type = 'lowpass'; tone.Q.value = 0.5;
+    src.connect(dry); src.connect(pre); pre.connect(tone); tone.connect(conv); conv.connect(wet);
+    dry.connect(lim); wet.connect(lim); lim.connect(ctx.destination);
+    fx = { dry, wet, pre, tone, conv };
+    conv.buffer = makeIR(state.verb.size);
+    applyVerb(false);
+  }
+  function applyVerb(rebuildIR) {
+    if (!fx) return;
+    const v = state.verb, t = ctx.currentTime;
+    // equal-power crossfade so turning the mix up doesn't just get louder
+    fx.dry.gain.setTargetAtTime(Math.cos(v.mix * Math.PI / 2), t, 0.02);
+    fx.wet.gain.setTargetAtTime(Math.sin(v.mix * Math.PI / 2) * 0.8, t, 0.02);
+    fx.pre.delayTime.setTargetAtTime(v.pre / 1000, t, 0.02);
+    fx.tone.frequency.setTargetAtTime(v.tone, t, 0.02);
+    if (rebuildIR) { clearTimeout(irTimer); irTimer = setTimeout(() => { fx.conv.buffer = makeIR(state.verb.size); }, 120); }
+  }
+  const VERB_FIELDS = { 'verb-mix': ['mix', (x) => Math.round(x * 100) + '%'], 'verb-size': ['size', (x) => x.toFixed(1) + ' s'],
+    'verb-tone': ['tone', (x) => (x >= 1000 ? (x / 1000).toFixed(1) + ' kHz' : Math.round(x) + ' Hz')], 'verb-pre': ['pre', (x) => Math.round(x) + ' ms'] };
+  function syncVerbUI() {
+    for (const id in VERB_FIELDS) {
+      const [k, fmt] = VERB_FIELDS[id], el = $(id);
+      el.value = k === 'tone' ? Math.log(state.verb.tone) : state.verb[k];
+      $(id + '-v').textContent = fmt(state.verb[k]);
+    }
+  }
+  for (const id in VERB_FIELDS) {
+    $(id).addEventListener('input', (e) => {
+      const k = VERB_FIELDS[id][0], x = parseFloat(e.target.value);
+      state.verb[k] = k === 'tone' ? Math.exp(x) : x;
+      $(id + '-v').textContent = VERB_FIELDS[id][1](state.verb[k]);
+      applyVerb(k === 'size');
+    });
+  }
+  syncVerbUI();
+
+  // ---------- presets: 8 slots like the patch's [preset] bubbles, kept in this browser ----------
+  const PKEY = 'steppin.presets.v1', ARR = ['vols', 'gab', 'ann', 'bass', 'freq', 'q', 'gain'];
+  let presets = new Array(8).fill(null), saveMode = false, current = -1;
+  try { const s = JSON.parse(localStorage.getItem(PKEY) || 'null'); if (Array.isArray(s)) presets = s.slice(0, 8).concat(new Array(8).fill(null)).slice(0, 8); } catch (e) {}
+  function persist() { try { localStorage.setItem(PKEY, JSON.stringify(presets)); } catch (e) {} }
+  function snapshot() {
+    const o = { F: state.F, fix: state.fix, verb: Object.assign({}, state.verb) };
+    ARR.forEach((k) => { o[k] = Array.from(state[k]); });
+    return o;
+  }
+  function recall(p) {
+    ARR.forEach((k) => { if (Array.isArray(p[k])) for (let i = 0; i < state[k].length; i++) if (typeof p[k][i] === 'number') state[k][i] = p[k][i]; });
+    if (p.verb) Object.assign(state.verb, p.verb);
+    if (typeof p.fix === 'boolean') { state.fix = p.fix; $('fix').checked = p.fix; send({ t: 'fix', v: p.fix }); }
+    if (p.F > 0) setF(p.F);
+    pushAll(); syncVerbUI(); applyVerb(true);
+  }
+  function renderSlots() {
+    document.querySelectorAll('.slot').forEach((b, i) => {
+      b.classList.toggle('full', !!presets[i]); b.classList.toggle('cur', i === current);
+      b.setAttribute('aria-label', 'Preset ' + (i + 1) + (presets[i] ? '' : ', empty') + (saveMode ? ', click to save here' : ''));
+    });
+    $('psave').setAttribute('aria-pressed', saveMode ? 'true' : 'false');
+    $('psave').textContent = saveMode ? 'Pick a slot…' : 'Save';
+    $('presets').classList.toggle('saving', saveMode);
+  }
+  function slotClick(i, store) {
+    if (store) { presets[i] = snapshot(); persist(); current = i; $('pmsg').textContent = 'Saved to slot ' + (i + 1) + '.'; }
+    else if (presets[i]) { recall(presets[i]); current = i; $('pmsg').textContent = 'Recalled slot ' + (i + 1) + '.'; }
+    else { $('pmsg').textContent = 'Slot ' + (i + 1) + ' is empty. Press Save, then pick it, or shift-click it.'; }
+    saveMode = false; renderSlots();
+  }
+  document.querySelectorAll('.slot').forEach((b, i) => b.addEventListener('click', (e) => slotClick(i, saveMode || e.shiftKey)));
+  $('psave').addEventListener('click', () => { saveMode = !saveMode; $('pmsg').textContent = saveMode ? 'Click a slot to store the current sound.' : ''; renderSlots(); });
+  $('pclear').addEventListener('click', () => {
+    if (current < 0 || !presets[current]) { $('pmsg').textContent = 'Recall or save a slot first, then Delete removes it.'; return; }
+    presets[current] = null; persist(); $('pmsg').textContent = 'Deleted slot ' + (current + 1) + '.'; current = -1; renderSlots();
+  });
+  $('pexport').addEventListener('click', async () => {
+    const txt = JSON.stringify({ steppin: 1, presets }, null, 1);
+    try {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([txt], { type: 'application/json' })); a.download = 'steppin-presets.json';
+      document.body.appendChild(a); a.click(); a.remove();
+    } catch (e) {}
+    try { await navigator.clipboard.writeText(txt); $('pmsg').textContent = 'Presets downloaded and copied to the clipboard.'; }
+    catch (e) { $('pmsg').textContent = 'Presets downloaded as steppin-presets.json.'; }
+  });
+  $('pimport').addEventListener('change', async (e) => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    try {
+      const j = JSON.parse(await f.text()), list = Array.isArray(j) ? j : j.presets;
+      if (!Array.isArray(list)) throw new Error('no presets');
+      presets = list.slice(0, 8).concat(new Array(8).fill(null)).slice(0, 8); persist(); current = -1; renderSlots();
+      $('pmsg').textContent = 'Loaded ' + presets.filter(Boolean).length + ' presets from ' + f.name + '.';
+    } catch (err) { $('pmsg').textContent = 'That file isn\'t a steppin presets file.'; }
+    e.target.value = '';
+  });
+  renderSlots();
+
   // ---------- tempo ----------
   const msecIn = $('msec'), ratioIn = $('ratio');
   function setF(F, from) {
@@ -211,7 +329,7 @@
       send = (m) => d.handle(m);
       $('engine').textContent = 'ScriptProcessor (fallback)';
     }
-    node.connect(ctx.destination);
+    buildFx(node);
     if (!sampleData) sampleData = builtInHit(ctx.sampleRate);
     sendAll();
   }
@@ -256,6 +374,7 @@
     if (!typing && !e.metaKey && !e.ctrlKey && !e.altKey) {
       if (e.key === 'r' || e.key === 'R') { randomiseAll(); return; }
       if (e.key === 'a' || e.key === 'A') { alterAll(); return; }
+      if (/^Digit[1-8]$/.test(e.code)) { e.preventDefault(); slotClick(+e.code.slice(5) - 1, saveMode || e.shiftKey); return; }
     }
     if (e.code !== 'Space' && e.key !== ' ') return;
     if (typing || tag === 'button') return;
