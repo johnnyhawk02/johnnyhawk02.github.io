@@ -72,9 +72,9 @@
     P + ' .room thead th{font-size:.85em;color:#5a6570;font-weight:600;text-transform:uppercase;letter-spacing:.03em}' +
     P + ' .room td.time{font-variant-numeric:tabular-nums;color:#3a444e}' +
     P + ' .room td.num{font-variant-numeric:tabular-nums}' +
-    P + ' .cols.below .room{flex:0 0 calc((100% - 32px) / 3)}' +
+    P + ' .stack{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:16px}' + P + ' .stack .room{flex:none}' +
     P + ' .room tr.ppl-row td{overflow:visible}' +
-    '@media (max-width:760px){' + P + ' .cols{flex-direction:column}' + P + ' .room{width:100%;flex:none}}' +
+    '@media (max-width:760px){' + P + ' .cols{flex-direction:column}' + P + ' .room,' + P + ' .stack{width:100%;flex:none}}' +
     P + ' tr.roomhead td{background:#eaf1f9;font-weight:700;font-size:15px;padding-top:12px;border-bottom:2px solid #c9d8ea}' +
     P + ' tr.roomhead small{font-weight:400;color:#5a6570;margin-left:8px}' +
     '</style>' +
@@ -333,10 +333,10 @@
     var rooms = [];
     list.forEach(function (x) { if (rooms.indexOf(x.room) < 0) rooms.push(x.room); });
     var html = '<p class="sum">' + sum + '</p><div class="cols">';
-    var poolDone = false;
+    var stackOpen = false;
     rooms.forEach(function (room) {
-      if (room === 'Pool' && !poolDone && rooms.length > 1) { html += '</div><div class="cols below">'; }
-      if (room === 'Pool') poolDone = true;
+      // gym and pool share the last column, pool underneath
+      if (rank(room) >= 1 && !stackOpen) { html += '<div class="stack">'; stackOpen = true; }
       var inRoom = list.filter(function (y) { return y.room === room; });
       var rb = 0, rc = 0; inRoom.forEach(function (y) { rb += y.booked || 0; rc += y.capacity || 0; });
       var hasAlert = inRoom.some(function (y) { return y.alert; });
@@ -375,6 +375,7 @@
       });
       html += '</tbody></table></section>';
     });
+    if (stackOpen) html += '</div>';
     el('body').innerHTML = html + '</div>';
     $$('tr.tap', el('body')).forEach(function (tr) {
       tr.onclick = function () {
