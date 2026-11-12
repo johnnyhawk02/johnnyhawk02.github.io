@@ -193,12 +193,22 @@
       var names = await roomNames();
       if (!names.length) throw new Error('could not open the room list.');
       roomOrder = names.slice();
-      var wanted = names.map(function (n, i) { return { n: n, i: i }; }).filter(function (x) { return category(x.n) !== 'pool'; });
+      var wanted = names.map(function (n, i) { return { n: n, i: i }; });
       var fresh = [];
       for (var k = 0; k < wanted.length; k++) {
         setStatus('Reading ' + wanted[k].n + ' (' + (k + 1) + '/' + wanted.length + ')…');
         if (!(await chooseRoom(wanted[k].i))) continue;
-        fresh = fresh.concat(readCards(wanted[k].n));
+        var got = readCards(wanted[k].n);
+        if (category(wanted[k].n) === 'pool') {
+          // Pool: only Aqua classes, merged into one Pool section, lane duplicates removed.
+          got = got.filter(function (x) { return /aqua/i.test(x.name); }).map(function (x) { x.room = 'Pool'; return x; });
+          got = got.filter(function (x) {
+            return !fresh.some(function (y) { return y.room === 'Pool' && y.start === x.start && y.name === x.name && y.booked === x.booked && y.capacity === x.capacity; });
+          }).filter(function (x, i, arr) {
+            return arr.findIndex(function (y) { return y.start === x.start && y.name === x.name && y.booked === x.booked && y.capacity === x.capacity; }) === i;
+          });
+        }
+        fresh = fresh.concat(got);
         rows = fresh;
         render();
       }
@@ -217,7 +227,7 @@
 
   function render() {
     var ri = function (r) { var i = roomOrder.indexOf(r); return i < 0 ? 999 : i; };
-    var list = rows.filter(function (x) { return category(x.room) === view; });
+    var list = rows.filter(function (x) { return category(x.room) === view || (view === 'classes' && x.room === 'Pool'); });
     list.sort(function (a, b) { return (ri(a.room) - ri(b.room)) || (toMin(a.start) - toMin(b.start)); });
 
     var booked = 0, cap = 0, full = 0, waiting = 0;
@@ -227,13 +237,17 @@
       el('body').innerHTML = '<p class="sum">' + (busy ? 'Reading rooms…' : 'Nothing in ' + (view === 'gym' ? 'the gym' : 'the class rooms') + ' today.') + '</p>';
       return;
     }
-    var sum = list.length + ' sessions';
+    var sum = list.length + (list.length === 1 ? ' session' : ' sessions');
     if (cap) sum += ' · ' + booked + ' of ' + cap + ' places booked · ' + full + ' full';
     if (waiting) sum += ' · ' + waiting + ' on alert lists';
     var rooms = [];
     list.forEach(function (x) { if (rooms.indexOf(x.room) < 0) rooms.push(x.room); });
     var html = '<p class="sum">' + sum + '</p><div class="cols">';
+    var poolDone = false;
+    rooms.sort(function (a, b) { return (a === 'Pool') - (b === 'Pool'); });
     rooms.forEach(function (room) {
+      if (room === 'Pool' && !poolDone && rooms.length > 1) { html += '</div><div class="cols">'; }
+      if (room === 'Pool') poolDone = true;
       var inRoom = list.filter(function (y) { return y.room === room; });
       var rb = 0, rc = 0; inRoom.forEach(function (y) { rb += y.booked || 0; rc += y.capacity || 0; });
       var hasAlert = inRoom.some(function (y) { return y.alert; });
@@ -243,7 +257,7 @@
       if (hasBooked) cols.push('Booked');
       if (hasAlert) cols.push('Alert');
       if (hasNotes) cols.push('Notes');
-      html += '<section class="room"><h3>' + esc(room) + ' <small>' + inRoom.length + ' sessions' + (rc ? ' · ' + rb + '/' + rc + ' booked' : '') + '</small></h3>' +
+      html += '<section class="room"><h3>' + esc(room) + ' <small>' + inRoom.length + (inRoom.length === 1 ? ' session' : ' sessions') + (rc ? ' · ' + rb + '/' + rc + ' booked' : '') + '</small></h3>' +
         '<table><thead><tr>' + cols.map(function (c) { return '<th>' + c + '</th>'; }).join('') + '</tr></thead><tbody>';
       inRoom.forEach(function (x) {
         var pct = x.capacity ? Math.min(100, Math.round(100 * x.booked / x.capacity)) : 0;
