@@ -52,6 +52,12 @@
     P + ' .bar i{display:block;height:100%;background:#2f8f4e}' + P + ' tr.full .bar i{background:#c0392b}' +
     P + ' .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}' +
     P + ' .sum{margin-top:10px;color:#5a6570}' +
+    P + ' .cols{display:flex;gap:16px;align-items:flex-start;margin-top:10px}' +
+    P + ' .room{flex:1 1 0;min-width:0;border:1px solid #e3e6ea;border-radius:10px;overflow:hidden}' +
+    P + ' .room h3{margin:0;padding:10px 12px;background:#eaf1f9;font-size:16px;border-bottom:2px solid #c9d8ea}' +
+    P + ' .room h3 small{font-weight:400;color:#5a6570;margin-left:6px;font-size:13px}' +
+    P + ' .room table{margin-top:0}' + P + ' .room td.name{white-space:normal}' +
+    '@media (max-width:700px){' + P + ' .cols{flex-direction:column}' + P + ' .room{width:100%}}' +
     P + ' tr.roomhead td{background:#eaf1f9;font-weight:700;font-size:15px;padding-top:12px;border-bottom:2px solid #c9d8ea}' +
     P + ' tr.roomhead small{font-weight:400;color:#5a6570;margin-left:8px}' +
     '</style>' +
@@ -209,29 +215,37 @@
       el('body').innerHTML = '<p class="sum">' + (busy ? 'Reading rooms…' : 'Nothing in ' + (view === 'gym' ? 'the gym' : 'the class rooms') + ' today.') + '</p>';
       return;
     }
-    var cols = ['Start', view === 'gym' ? 'Booking' : 'Class', 'Length', 'Booked', 'Alert list', 'Notes'];
     var sum = list.length + ' sessions';
     if (cap) sum += ' · ' + booked + ' of ' + cap + ' places booked · ' + full + ' full';
     if (waiting) sum += ' · ' + waiting + ' on alert lists';
-    var html = '<p class="sum">' + sum + '</p><table><thead><tr>' +
-      cols.map(function (c) { return '<th>' + c + '</th>'; }).join('') + '</tr></thead><tbody>';
-    var curRoom = null;
-    list.forEach(function (x) {
-      if (x.room !== curRoom) {
-        curRoom = x.room;
-        var inRoom = list.filter(function (y) { return y.room === curRoom; });
-        var rb = 0, rc = 0; inRoom.forEach(function (y) { rb += y.booked || 0; rc += y.capacity || 0; });
-        html += '<tr class="roomhead"><td colspan="' + cols.length + '">' + esc(curRoom) + ' <small>' + inRoom.length + ' sessions' + (rc ? ' · ' + rb + '/' + rc + ' booked' : '') + '</small></td></tr>';
-      }
-      var pct = x.capacity ? Math.min(100, Math.round(100 * x.booked / x.capacity)) : 0;
-      var cls = x.capacity && x.booked >= x.capacity ? 'full' : (x.capacity && x.booked === 0) ? 'empty' : '';
-      html += '<tr class="' + cls + '"><td>' + esc(x.start) + '</td>' +
-        '<td><span class="dot" style="background:' + esc(x.colour) + '"></span>' + esc(x.name) + '</td>' +
-        '<td>' + esc(x.duration) + '</td>' +
-        '<td>' + (x.capacity != null ? '<span class="bar"><i style="width:' + pct + '%"></i></span>' + x.booked + '/' + x.capacity : '') + '</td>' +
-        '<td>' + (x.alert || '') + '</td><td>' + esc(x.extra) + '</td></tr>';
+    var rooms = [];
+    list.forEach(function (x) { if (rooms.indexOf(x.room) < 0) rooms.push(x.room); });
+    var html = '<p class="sum">' + sum + '</p><div class="cols">';
+    rooms.forEach(function (room) {
+      var inRoom = list.filter(function (y) { return y.room === room; });
+      var rb = 0, rc = 0; inRoom.forEach(function (y) { rb += y.booked || 0; rc += y.capacity || 0; });
+      var hasAlert = inRoom.some(function (y) { return y.alert; });
+      var hasNotes = inRoom.some(function (y) { return y.extra; });
+      var hasBooked = inRoom.some(function (y) { return y.capacity != null; });
+      var cols = ['Start', view === 'gym' ? 'Booking' : 'Class', 'Length'];
+      if (hasBooked) cols.push('Booked');
+      if (hasAlert) cols.push('Alert');
+      if (hasNotes) cols.push('Notes');
+      html += '<section class="room"><h3>' + esc(room) + ' <small>' + inRoom.length + ' sessions' + (rc ? ' · ' + rb + '/' + rc + ' booked' : '') + '</small></h3>' +
+        '<table><thead><tr>' + cols.map(function (c) { return '<th>' + c + '</th>'; }).join('') + '</tr></thead><tbody>';
+      inRoom.forEach(function (x) {
+        var pct = x.capacity ? Math.min(100, Math.round(100 * x.booked / x.capacity)) : 0;
+        var cls = x.capacity && x.booked >= x.capacity ? 'full' : (x.capacity && x.booked === 0) ? 'empty' : '';
+        html += '<tr class="' + cls + '"><td>' + esc(x.start) + '</td>' +
+          '<td class="name"><span class="dot" style="background:' + esc(x.colour) + '"></span>' + esc(x.name) + '</td>' +
+          '<td>' + esc(x.duration) + '</td>' +
+          (hasBooked ? '<td>' + (x.capacity != null ? '<span class="bar"><i style="width:' + pct + '%"></i></span>' + x.booked + '/' + x.capacity : '') + '</td>' : '') +
+          (hasAlert ? '<td>' + (x.alert || '') + '</td>' : '') +
+          (hasNotes ? '<td>' + esc(x.extra) + '</td>' : '') + '</tr>';
+      });
+      html += '</tbody></table></section>';
     });
-    el('body').innerHTML = html + '</tbody></table>';
+    el('body').innerHTML = html + '</div>';
   }
 
   function setView(v) {
