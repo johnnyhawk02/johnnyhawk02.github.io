@@ -78,8 +78,8 @@
     P + ' .room h3 small{font-weight:400;color:#5a6570;margin-left:6px;font-size:13px}' +
     P + ' .room table{margin-top:0;table-layout:fixed}' +
     P + ' .room td{overflow:hidden;text-overflow:ellipsis}' +
-    P + ' .room th,' + P + ' .room td{padding:7px 8px}' + P + ' .room th.c-start{width:4.7em}' + P + ' .room th.c-length{width:4.6em}' + P + ' .room th.c-booked{width:5.6em}' +
-    P + ' .room th.c-alert{width:4.4em}' + P + ' .room th.c-payment{width:5.4em}' + P + ' .room th.c-notes{width:7em}' +
+    P + ' .room th,' + P + ' .room td{padding:7px 5px}' + P + ' .room th:first-child,' + P + ' .room td:first-child{padding-left:10px}' + P + ' .room th:last-child,' + P + ' .room td:last-child{padding-right:10px}' + P + ' .room th.c-start{width:5em}' + P + ' .room th.c-length{width:3.9em}' + P + ' .room td.len{color:#5a6570;white-space:nowrap}' + P + ' .room th.c-booked{width:5.2em}' +
+    P + ' .room th.c-alert{width:3.9em}' + P + ' .room th.c-payment{width:5.4em}' + P + ' .room th.c-notes{width:7em}' +
     P + ' .room th.c-booked,' + P + ' .room th.c-alert,' + P + ' .room td.num{text-align:right}' +
     P + ' .room thead th{font-size:.85em;color:#5a6570;font-weight:600;text-transform:uppercase;letter-spacing:.03em}' +
     P + ' .room td.time{font-variant-numeric:tabular-nums;color:#3a444e}' +
@@ -322,7 +322,7 @@
     render();
   }
 
-  function shortLen(d) { return String(d || '').replace(/(\d+)\s*hrs?\s*(\d+)\s*m/, '$1h $2m').replace(/(\d+)\s*hrs?\b/, '$1h'); }
+  function shortLen(d) { return String(d || '').replace(/(\d+)\s*hrs?\s*(\d+)\s*m/, '$1h$2').replace(/(\d+)\s*hrs?\b/, '$1h'); }
 
   function toMin(t) { var m = /(\d+):(\d+)/.exec(t || ''); return m ? +m[1] * 60 + +m[2] : 9999; }
 
@@ -355,19 +355,20 @@
       var hasNotes = inRoom.some(function (y) { return y.extra; });
       var payOnly = hasNotes && inRoom.every(function (y) { return !y.extra || /^Payment: [^;]*$/.test(y.extra); });
       var hasBooked = inRoom.some(function (y) { return y.capacity != null; });
-      var cols = ['Start', category(room) === 'gym' ? 'Booking' : 'Class'];
+      var cols = ['Start', category(room) === 'gym' ? 'Booking' : 'Class', 'Length'];
       if (hasBooked) cols.push('Booked');
       if (hasAlert) cols.push('Alert');
       if (payOnly) hasNotes = false; // payment-only notes are not shown
       if (hasNotes) cols.push('Notes');
       html += '<section class="room"><h3>' + esc(room) + ' <small>' + inRoom.length + (inRoom.length === 1 ? ' session' : ' sessions') + (rc ? ' · ' + rb + '/' + rc + ' booked' : '') + '</small></h3>' +
-        '<table><thead><tr>' + cols.map(function (c, ci) { return '<th class="c-' + (ci === 1 ? 'name' : c.toLowerCase()) + '">' + c + '</th>'; }).join('') + '</tr></thead><tbody>';
+        '<table><thead><tr>' + cols.map(function (c, ci) { return '<th class="c-' + (ci === 1 ? 'name' : c.toLowerCase()) + '">' + (c === 'Length' ? 'Len' : c === 'Booked' ? 'Booked' : c) + '</th>'; }).join('') + '</tr></thead><tbody>';
       inRoom.forEach(function (x) {
         var pct = x.capacity ? Math.min(100, Math.round(100 * x.booked / x.capacity)) : 0;
         var cls = x.capacity && x.booked >= x.capacity ? 'full' : (x.capacity && x.booked === 0) ? 'empty' : '';
         html += '<tr class="' + cls + ' tap" data-uid="' + x.uid + '" title="Tap to see who is booked"><td class="time">' + esc(x.start) + '</td>' +
-          '<td class="name" title="' + esc(x.name + (x.duration ? ' (' + shortLen(x.duration) + ')' : '')) + '"><span class="dot" style="background:' + esc(x.colour) + '"></span>' + esc(x.name) + '</td>' +
+          '<td class="name" title="' + esc(x.name) + '"><span class="dot" style="background:' + esc(x.colour) + '"></span>' + esc(x.name) + '</td>' +
           
+          '<td class="len">' + esc(shortLen(x.duration)) + '</td>' +
           (hasBooked ? '<td class="num">' + (x.capacity != null ? x.booked + '/' + x.capacity : '') + '</td>' : '') +
           (hasAlert ? '<td class="num">' + (x.alert || '') + '</td>' : '') +
           (hasNotes ? '<td title="' + esc(x.extra) + '">' + esc(payOnly ? x.extra.replace(/^Payment:\s*/, '') : x.extra) + '</td>' : '') + '</tr>';
