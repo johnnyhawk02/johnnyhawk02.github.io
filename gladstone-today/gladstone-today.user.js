@@ -75,13 +75,16 @@
     P + ' .room{flex:1 1 0;min-width:0;border:1px solid #e3e6ea;border-radius:10px;overflow:hidden}' +
     P + ' .room h3{margin:0;padding:10px 12px;background:#eaf1f9;font-size:16px;border-bottom:2px solid #c9d8ea}' +
     P + ' .room h3 small{font-weight:400;color:#5a6570;margin-left:6px;font-size:13px}' +
-    P + ' .room table{margin-top:0}' + P + ' .room td.name{white-space:normal}' +
-    '@media (max-width:700px){' + P + ' .cols{flex-direction:column}' + P + ' .room{width:100%}}' +
+    P + ' .room table{margin-top:0;table-layout:fixed}' +
+    P + ' .room td{overflow:hidden;text-overflow:ellipsis}' +
+    P + ' .room th,' + P + ' .room td{padding:6px 7px}' + P + ' .room th.c-start{width:48px}' + P + ' .room th.c-length{width:66px}' + P + ' .room th.c-booked{width:58px}' +
+    P + ' .room th.c-alert{width:40px}' + P + ' .room th.c-notes{width:100px}' +
+    P + ' .room tr.ppl-row td{overflow:visible}' +
+    '@media (max-width:760px){' + P + ' .cols{flex-direction:column}' + P + ' .room{width:100%;flex:none}}' +
     P + ' tr.roomhead td{background:#eaf1f9;font-weight:700;font-size:15px;padding-top:12px;border-bottom:2px solid #c9d8ea}' +
     P + ' tr.roomhead small{font-weight:400;color:#5a6570;margin-left:8px}' +
     '</style>' +
     '<header><h2 data-k="title">Today</h2>' +
-    '<span class="switch"><button data-k="v-classes" class="on">Classes</button><button data-k="v-gym">Gym</button></span>' +
     '<button data-k="scan">Refresh</button>' +
     '<button data-k="close">Close</button>' +
     '<span class="status" data-k="status">Starting…</span></header>' +
@@ -317,14 +320,15 @@
 
   function render() {
     var ri = function (r) { var i = roomOrder.indexOf(r); return i < 0 ? 999 : i; };
-    var list = rows.filter(function (x) { return category(x.room) === view || (view === 'classes' && x.room === 'Pool'); });
-    list.sort(function (a, b) { return (ri(a.room) - ri(b.room)) || (toMin(a.start) - toMin(b.start)); });
+    var rank = function (r) { return r === 'Pool' ? 2 : category(r) === 'gym' ? 1 : 0; };
+    var list = rows.slice();
+    list.sort(function (a, b) { return (rank(a.room) - rank(b.room)) || (ri(a.room) - ri(b.room)) || (toMin(a.start) - toMin(b.start)); });
 
     var booked = 0, cap = 0, full = 0, waiting = 0;
     list.forEach(function (x) { booked += x.booked || 0; cap += x.capacity || 0; waiting += x.alert || 0; if (x.capacity && x.booked >= x.capacity) full++; });
 
     if (!list.length) {
-      el('body').innerHTML = '<p class="sum">' + (busy ? 'Reading rooms…' : 'Nothing in ' + (view === 'gym' ? 'the gym' : 'the class rooms') + ' today.') + '</p>';
+      el('body').innerHTML = '<p class="sum">' + (busy ? 'Reading rooms…' : 'Nothing booked today.') + '</p>';
       return;
     }
     var sum = list.length + (list.length === 1 ? ' session' : ' sessions');
@@ -334,7 +338,6 @@
     list.forEach(function (x) { if (rooms.indexOf(x.room) < 0) rooms.push(x.room); });
     var html = '<p class="sum">' + sum + '</p><div class="cols">';
     var poolDone = false;
-    rooms.sort(function (a, b) { return (a === 'Pool') - (b === 'Pool'); });
     rooms.forEach(function (room) {
       if (room === 'Pool' && !poolDone && rooms.length > 1) { html += '</div><div class="cols">'; }
       if (room === 'Pool') poolDone = true;
@@ -343,19 +346,19 @@
       var hasAlert = inRoom.some(function (y) { return y.alert; });
       var hasNotes = inRoom.some(function (y) { return y.extra; });
       var hasBooked = inRoom.some(function (y) { return y.capacity != null; });
-      var cols = ['Start', view === 'gym' ? 'Booking' : 'Class', 'Length'];
+      var cols = ['Start', category(room) === 'gym' ? 'Booking' : 'Class', 'Length'];
       if (hasBooked) cols.push('Booked');
       if (hasAlert) cols.push('Alert');
       if (hasNotes) cols.push('Notes');
       html += '<section class="room"><h3>' + esc(room) + ' <small>' + inRoom.length + (inRoom.length === 1 ? ' session' : ' sessions') + (rc ? ' · ' + rb + '/' + rc + ' booked' : '') + '</small></h3>' +
-        '<table><thead><tr>' + cols.map(function (c) { return '<th>' + c + '</th>'; }).join('') + '</tr></thead><tbody>';
+        '<table><thead><tr>' + cols.map(function (c, ci) { return '<th class="c-' + (ci === 1 ? 'name' : c.toLowerCase()) + '">' + c + '</th>'; }).join('') + '</tr></thead><tbody>';
       inRoom.forEach(function (x) {
         var pct = x.capacity ? Math.min(100, Math.round(100 * x.booked / x.capacity)) : 0;
         var cls = x.capacity && x.booked >= x.capacity ? 'full' : (x.capacity && x.booked === 0) ? 'empty' : '';
         html += '<tr class="' + cls + ' tap" data-uid="' + x.uid + '" title="Tap to see who is booked"><td>' + esc(x.start) + '</td>' +
-          '<td class="name"><span class="dot" style="background:' + esc(x.colour) + '"></span>' + esc(x.name) + '</td>' +
+          '<td class="name" title="' + esc(x.name) + '"><span class="dot" style="background:' + esc(x.colour) + '"></span>' + esc(x.name) + '</td>' +
           '<td>' + esc(x.duration) + '</td>' +
-          (hasBooked ? '<td>' + (x.capacity != null ? '<span class="bar"><i style="width:' + pct + '%"></i></span>' + x.booked + '/' + x.capacity : '') + '</td>' : '') +
+          (hasBooked ? '<td>' + (x.capacity != null ? x.booked + '/' + x.capacity : '') + '</td>' : '') +
           (hasAlert ? '<td>' + (x.alert || '') + '</td>' : '') +
           (hasNotes ? '<td>' + esc(x.extra) + '</td>' : '') + '</tr>';
         var pp = people[x.uid];
@@ -386,14 +389,6 @@
     });
   }
 
-  function setView(v) {
-    view = v;
-    el('v-classes').className = v === 'classes' ? 'on' : '';
-    el('v-gym').className = v === 'gym' ? 'on' : '';
-    render();
-  }
-  el('v-classes').onclick = function () { setView('classes'); };
-  el('v-gym').onclick = function () { setView('gym'); };
   el('scan').onclick = scan;
   el('stale').onclick = scan;
 
