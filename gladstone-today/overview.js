@@ -346,7 +346,8 @@
       var cols = ['Start', category(room) === 'gym' ? 'Booking' : 'Class'];
       if (hasBooked) cols.push('Booked');
       if (hasAlert) cols.push('Alert');
-      if (hasNotes) cols.push(payOnly ? 'Payment' : 'Notes');
+      if (payOnly) hasNotes = false; // payment-only notes are not shown
+      if (hasNotes) cols.push('Notes');
       html += '<section class="room"><h3>' + esc(room) + ' <small>' + inRoom.length + (inRoom.length === 1 ? ' session' : ' sessions') + (rc ? ' · ' + rb + '/' + rc + ' booked' : '') + '</small></h3>' +
         '<table><thead><tr>' + cols.map(function (c, ci) { return '<th class="c-' + (ci === 1 ? 'name' : c.toLowerCase()) + '">' + c + '</th>'; }).join('') + '</tr></thead><tbody>';
       inRoom.forEach(function (x) {
