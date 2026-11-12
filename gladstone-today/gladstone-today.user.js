@@ -46,8 +46,8 @@
   var P = '#' + ID;
   panel.innerHTML =
     '<style>' +
-    P + '{position:fixed;inset:24px;z-index:2147483000;background:#fff;color:#1d2329;border-radius:12px;' +
-    'box-shadow:0 10px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;font:14px/1.4 system-ui,Segoe UI,Arial,sans-serif}' +
+    P + '{position:fixed;inset:0;z-index:2147483000;background:#fff;color:#1d2329;border-radius:0;' +
+    'display:flex;flex-direction:column;font:14px/1.4 system-ui,Segoe UI,Arial,sans-serif}' +
     P + ' header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 18px;border-bottom:1px solid #e3e6ea}' +
     P + ' h2{margin:0 8px 0 0;font-size:18px}' +
     P + ' button{font:inherit;padding:6px 12px;border:1px solid #c4cad1;border-radius:6px;background:#fff;color:inherit;cursor:pointer}' +
@@ -64,6 +64,13 @@
     P + ' .bar i{display:block;height:100%;background:#2f8f4e}' + P + ' tr.full .bar i{background:#c0392b}' +
     P + ' .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}' +
     P + ' .sum{margin-top:10px;color:#5a6570}' +
+    P + ' .stale{background:#fff4ce;color:#5c4400;border-bottom:1px solid #f0d77a;padding:10px 18px;font-weight:600;cursor:pointer}' +
+    P + ' .stale[hidden]{display:none}' +
+    P + ' tr.tap{cursor:pointer}' + P + ' tr.tap:hover td{background:#f3f7fc}' +
+    P + ' tr.ppl-row td{background:#fafbfc;white-space:normal;padding:8px 14px}' +
+    P + ' ul.ppl{margin:0;padding:0;list-style:none}' + P + ' ul.ppl li{padding:3px 0}' +
+    P + ' ul.ppl span{color:#5a6570;margin-left:8px;font-size:13px}' +
+    P + ' ul.ppl span.yes{color:#2f8f4e}' + P + ' ul.ppl span.no{color:#c0392b}' +
     P + ' .cols{display:flex;gap:16px;align-items:flex-start;margin-top:10px}' +
     P + ' .room{flex:1 1 0;min-width:0;border:1px solid #e3e6ea;border-radius:10px;overflow:hidden}' +
     P + ' .room h3{margin:0;padding:10px 12px;background:#eaf1f9;font-size:16px;border-bottom:2px solid #c9d8ea}' +
@@ -78,6 +85,7 @@
     '<button data-k="scan">Refresh</button>' +
     '<button data-k="close">Close</button>' +
     '<span class="status" data-k="status">Starting…</span></header>' +
+    '<div class="stale" data-k="stale" hidden></div>' +
     '<div class="body" data-k="body"><p class="sum">Reading today\'s rooms. Leave this tab open for a few seconds.</p></div>';
   document.body.appendChild(panel);
   var el = function (k) { return panel.querySelector('[data-k="' + k + '"]'); };
@@ -85,9 +93,11 @@
   el('close').onclick = function () { panel.parentNode.removeChild(panel); };
   el('title').textContent = 'Today, ' + new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
+  var uidSeq = 0;
+
   /* ---------- reading the booking sheet ---------- */
   function readCards(room) {
-    return $$('.booking').filter(function (b) { return b.querySelector('.booking__inner'); }).map(function (b) {
+    return $$('.booking').filter(function (b) { return b.querySelector('.booking__inner'); }).map(function (b, idx) {
       var fields = {};
       $$('.booking__table p', b).forEach(function (p) {
         var strong = p.querySelector('strong');
@@ -101,6 +111,9 @@
       var colour = (b.getAttribute('style') || '').match(/--activity-backcolor-hex:\s*([^;]+)/);
       return {
         room: room,
+        srcRoom: room,
+        idx: idx,
+        uid: ++uidSeq,
         start: fields['Start Time'] || '',
         name: txt($('.row-wrapper--title', b)),
         duration: txt($('.row-wrapper--duration', b)),
@@ -182,6 +195,21 @@
   var roomOrder = [];
   var view = 'classes';
   var busy = false;
+  var lastUpdated = 0;
+  var STALE_MS = 15 * 60 * 1000;
+  function checkStale() {
+    if (!document.body.contains(panel)) { clearInterval(staleTimer); return; }
+    var box = el('stale');
+    var age = lastUpdated ? Date.now() - lastUpdated : 0;
+    if (lastUpdated && age > STALE_MS) {
+      box.textContent = '⚠ This information is ' + Math.floor(age / 60000) + ' minutes old and may be out of date. Tap here or Refresh to update.';
+      box.hidden = false;
+    } else {
+      box.hidden = true;
+    }
+  }
+  var staleTimer = setInterval(checkStale, 30000);
+  var people = {}; // uid -> {state, list, cap}
 
   async function scan() {
     if (busy) return;
@@ -195,6 +223,7 @@
       roomOrder = names.slice();
       var wanted = names.map(function (n, i) { return { n: n, i: i }; });
       var fresh = [];
+      people = {};
       for (var k = 0; k < wanted.length; k++) {
         setStatus('Reading ' + wanted[k].n + ' (' + (k + 1) + '/' + wanted.length + ')…');
         if (!(await chooseRoom(wanted[k].i))) continue;
@@ -214,12 +243,73 @@
       }
       var back = names.indexOf(originalRoom);
       if (back >= 0) await chooseRoom(back);
+      lastUpdated = Date.now();
+      checkStale();
       setStatus('Updated ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + '.');
     } catch (e) {
       setStatus('Stopped: ' + e.message);
     }
     busy = false;
     el('scan').disabled = false;
+    render();
+  }
+
+  function readDetails() {
+    var box = $('app-booking-details');
+    if (!box) return null;
+    var list = $$('tbody tr.mat-mdc-row, tbody tr[mat-row]', box).map(function (tr) {
+      var icon = function (col) { var i = tr.querySelector('.cdk-column-' + col + ' mat-icon'); return i ? txt(i) : ''; };
+      return {
+        name: txt(tr.querySelector('.cdk-column-name')),
+        id: txt(tr.querySelector('.cdk-column-memberId')),
+        attended: icon('attended') === 'check_circle',
+        paid: icon('paid') === 'check_circle'
+      };
+    }).filter(function (r) { return r.name; });
+    return { list: list, cap: txt($('.booking-detail__capacity', box)), title: txt($('.booking-detail__header', box)) };
+  }
+
+  function closeDetails() {
+    var c = $('.drawer-header .close') || $('.drawer-header gso-icon[icon="close"]');
+    if (c) c.click();
+    closeOverlay();
+  }
+
+  async function loadPeople(x) {
+    if (busy) return;
+    busy = true;
+    people[x.uid] = { state: 'loading' };
+    render();
+    try {
+      if (txt($('.locations__selected')) !== x.srcRoom) {
+        var ri = roomOrder.indexOf(x.srcRoom);
+        if (ri < 0 || !(await chooseRoom(ri))) throw new Error('room not found');
+      }
+      var cards = $$('.booking').filter(function (b) { return b.querySelector('.booking__inner'); });
+      var match = cards.filter(function (b) {
+        return txt($('.row-wrapper--title', b)) === x.name && txt(b).indexOf(x.start) >= 0;
+      });
+      var card = match.length === 1 ? match[0] : (cards[x.idx] || match[0]);
+      if (!card) throw new Error('booking not found');
+      card.click();
+      var got = null, last = '', stable = 0, t0 = Date.now();
+      while (Date.now() - t0 < 8000) {
+        await sleep(250);
+        var d = readDetails();
+        if (!d || d.title.indexOf(x.name) < 0) continue;
+        var sig = JSON.stringify(d);
+        if (sig === last) { stable += 250; } else { stable = 0; last = sig; }
+        got = d;
+        if (stable >= 500) break;
+      }
+      closeDetails();
+      if (!got) throw new Error('details did not open');
+      people[x.uid] = { state: 'done', list: got.list, cap: got.cap };
+    } catch (e) {
+      closeDetails();
+      people[x.uid] = { state: 'error', msg: e.message };
+    }
+    busy = false;
     render();
   }
 
@@ -262,16 +352,38 @@
       inRoom.forEach(function (x) {
         var pct = x.capacity ? Math.min(100, Math.round(100 * x.booked / x.capacity)) : 0;
         var cls = x.capacity && x.booked >= x.capacity ? 'full' : (x.capacity && x.booked === 0) ? 'empty' : '';
-        html += '<tr class="' + cls + '"><td>' + esc(x.start) + '</td>' +
+        html += '<tr class="' + cls + ' tap" data-uid="' + x.uid + '" title="Tap to see who is booked"><td>' + esc(x.start) + '</td>' +
           '<td class="name"><span class="dot" style="background:' + esc(x.colour) + '"></span>' + esc(x.name) + '</td>' +
           '<td>' + esc(x.duration) + '</td>' +
           (hasBooked ? '<td>' + (x.capacity != null ? '<span class="bar"><i style="width:' + pct + '%"></i></span>' + x.booked + '/' + x.capacity : '') + '</td>' : '') +
           (hasAlert ? '<td>' + (x.alert || '') + '</td>' : '') +
           (hasNotes ? '<td>' + esc(x.extra) + '</td>' : '') + '</tr>';
+        var pp = people[x.uid];
+        if (pp && pp.open !== false) {
+          var inner;
+          if (pp.state === 'loading') inner = 'Loading who\'s booked…';
+          else if (pp.state === 'error') inner = 'Couldn\'t load: ' + esc(pp.msg) + '. Tap the row to try again.';
+          else if (!pp.list.length) inner = 'Nobody booked.';
+          else inner = '<ul class="ppl">' + pp.list.map(function (r) {
+            return '<li><b>' + esc(r.name) + '</b>' + (r.id ? ' <span>#' + esc(r.id) + '</span>' : '') +
+              ' <span class="' + (r.attended ? 'yes' : 'no') + '">' + (r.attended ? 'Attended' : 'Not attended') + '</span>' +
+              ' <span class="' + (r.paid ? 'yes' : 'no') + '">' + (r.paid ? 'Paid' : 'Not paid') + '</span></li>';
+          }).join('') + '</ul>';
+          html += '<tr class="ppl-row"><td colspan="' + cols.length + '">' + inner + '</td></tr>';
+        }
       });
       html += '</tbody></table></section>';
     });
     el('body').innerHTML = html + '</div>';
+    $$('tr.tap', el('body')).forEach(function (tr) {
+      tr.onclick = function () {
+        var uid = +tr.getAttribute('data-uid');
+        var x = rows.filter(function (r) { return r.uid === uid; })[0];
+        var pp = people[uid];
+        if (pp && pp.state === 'done') { pp.open = pp.open === false; render(); return; }
+        if (x && !busy) loadPeople(x);
+      };
+    });
   }
 
   function setView(v) {
@@ -283,6 +395,7 @@
   el('v-classes').onclick = function () { setView('classes'); };
   el('v-gym').onclick = function () { setView('gym'); };
   el('scan').onclick = scan;
+  el('stale').onclick = scan;
 
   scan();
 })();
