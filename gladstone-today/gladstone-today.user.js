@@ -46,6 +46,7 @@
   var P = '#' + ID;
   panel.innerHTML =
     '<style>' +
+    P + ' *{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;box-sizing:border-box}' +
     P + '{position:fixed;inset:0;z-index:2147483000;background:#fff;color:#1d2329;border-radius:0;' +
     'display:flex;flex-direction:column;font:14px/1.4 system-ui,Segoe UI,Arial,sans-serif}' +
     P + ' header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 18px;border-bottom:1px solid #e3e6ea}' +
@@ -62,7 +63,7 @@
     P + ' tr.full td{background:#fdecec}' + P + ' tr.empty td{color:#8a949e}' +
     P + ' .bar{display:inline-block;width:60px;height:8px;border-radius:4px;background:#e3e6ea;vertical-align:middle;margin-right:6px;overflow:hidden}' +
     P + ' .bar i{display:block;height:100%;background:#2f8f4e}' + P + ' tr.full .bar i{background:#c0392b}' +
-    P + ' .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}' +
+    P + ' .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:middle;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}' +
     P + ' .sum{margin-top:10px;color:#5a6570}' +
     P + ' .stale{background:#fff4ce;color:#5c4400;border-bottom:1px solid #f0d77a;padding:10px 18px;font-weight:600;cursor:pointer}' +
     P + ' .stale[hidden]{display:none}' +
@@ -73,12 +74,17 @@
     P + ' ul.ppl span.yes{color:#2f8f4e}' + P + ' ul.ppl span.no{color:#c0392b}' +
     P + ' .cols{display:flex;gap:16px;align-items:flex-start;margin-top:10px}' +
     P + ' .room{flex:1 1 0;min-width:0;border:1px solid #e3e6ea;border-radius:10px;overflow:hidden}' +
-    P + ' .room h3{margin:0;padding:10px 12px;background:#eaf1f9;font-size:16px;border-bottom:2px solid #c9d8ea}' +
+    P + ' .room h3{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;padding:10px 12px;background:#eaf1f9;font-size:16px;border-bottom:2px solid #c9d8ea}' +
     P + ' .room h3 small{font-weight:400;color:#5a6570;margin-left:6px;font-size:13px}' +
     P + ' .room table{margin-top:0;table-layout:fixed}' +
     P + ' .room td{overflow:hidden;text-overflow:ellipsis}' +
-    P + ' .room th,' + P + ' .room td{padding:6px 7px}' + P + ' .room th.c-start{width:48px}' + P + ' .room th.c-length{width:66px}' + P + ' .room th.c-booked{width:58px}' +
-    P + ' .room th.c-alert{width:40px}' + P + ' .room th.c-notes{width:100px}' +
+    P + ' .room th,' + P + ' .room td{padding:7px 8px}' + P + ' .room th.c-start{width:4.7em}' + P + ' .room th.c-length{width:4.6em}' + P + ' .room th.c-booked{width:5.6em}' +
+    P + ' .room th.c-alert{width:4.4em}' + P + ' .room th.c-payment{width:5.4em}' + P + ' .room th.c-notes{width:7em}' +
+    P + ' .room th.c-booked,' + P + ' .room th.c-alert,' + P + ' .room td.num{text-align:right}' +
+    P + ' .room thead th{font-size:.85em;color:#5a6570;font-weight:600;text-transform:uppercase;letter-spacing:.03em}' +
+    P + ' .room td.time{font-variant-numeric:tabular-nums;color:#3a444e}' +
+    P + ' .room td.num{font-variant-numeric:tabular-nums}' +
+    P + ' .cols.below .room{flex:0 0 calc((100% - 32px) / 3)}' +
     P + ' .room tr.ppl-row td{overflow:visible}' +
     '@media (max-width:760px){' + P + ' .cols{flex-direction:column}' + P + ' .room{width:100%;flex:none}}' +
     P + ' tr.roomhead td{background:#eaf1f9;font-weight:700;font-size:15px;padding-top:12px;border-bottom:2px solid #c9d8ea}' +
@@ -316,6 +322,8 @@
     render();
   }
 
+  function shortLen(d) { return String(d || '').replace(/(\d+)\s*hrs?\s*(\d+)\s*m/, '$1h $2m').replace(/(\d+)\s*hrs?\b/, '$1h'); }
+
   function toMin(t) { var m = /(\d+):(\d+)/.exec(t || ''); return m ? +m[1] * 60 + +m[2] : 9999; }
 
   function render() {
@@ -339,28 +347,29 @@
     var html = '<p class="sum">' + sum + '</p><div class="cols">';
     var poolDone = false;
     rooms.forEach(function (room) {
-      if (room === 'Pool' && !poolDone && rooms.length > 1) { html += '</div><div class="cols">'; }
+      if (room === 'Pool' && !poolDone && rooms.length > 1) { html += '</div><div class="cols below">'; }
       if (room === 'Pool') poolDone = true;
       var inRoom = list.filter(function (y) { return y.room === room; });
       var rb = 0, rc = 0; inRoom.forEach(function (y) { rb += y.booked || 0; rc += y.capacity || 0; });
       var hasAlert = inRoom.some(function (y) { return y.alert; });
       var hasNotes = inRoom.some(function (y) { return y.extra; });
+      var payOnly = hasNotes && inRoom.every(function (y) { return !y.extra || /^Payment: [^;]*$/.test(y.extra); });
       var hasBooked = inRoom.some(function (y) { return y.capacity != null; });
-      var cols = ['Start', category(room) === 'gym' ? 'Booking' : 'Class', 'Length'];
+      var cols = ['Start', category(room) === 'gym' ? 'Booking' : 'Class'];
       if (hasBooked) cols.push('Booked');
       if (hasAlert) cols.push('Alert');
-      if (hasNotes) cols.push('Notes');
+      if (hasNotes) cols.push(payOnly ? 'Payment' : 'Notes');
       html += '<section class="room"><h3>' + esc(room) + ' <small>' + inRoom.length + (inRoom.length === 1 ? ' session' : ' sessions') + (rc ? ' · ' + rb + '/' + rc + ' booked' : '') + '</small></h3>' +
         '<table><thead><tr>' + cols.map(function (c, ci) { return '<th class="c-' + (ci === 1 ? 'name' : c.toLowerCase()) + '">' + c + '</th>'; }).join('') + '</tr></thead><tbody>';
       inRoom.forEach(function (x) {
         var pct = x.capacity ? Math.min(100, Math.round(100 * x.booked / x.capacity)) : 0;
         var cls = x.capacity && x.booked >= x.capacity ? 'full' : (x.capacity && x.booked === 0) ? 'empty' : '';
-        html += '<tr class="' + cls + ' tap" data-uid="' + x.uid + '" title="Tap to see who is booked"><td>' + esc(x.start) + '</td>' +
-          '<td class="name" title="' + esc(x.name) + '"><span class="dot" style="background:' + esc(x.colour) + '"></span>' + esc(x.name) + '</td>' +
-          '<td>' + esc(x.duration) + '</td>' +
-          (hasBooked ? '<td>' + (x.capacity != null ? x.booked + '/' + x.capacity : '') + '</td>' : '') +
-          (hasAlert ? '<td>' + (x.alert || '') + '</td>' : '') +
-          (hasNotes ? '<td>' + esc(x.extra) + '</td>' : '') + '</tr>';
+        html += '<tr class="' + cls + ' tap" data-uid="' + x.uid + '" title="Tap to see who is booked"><td class="time">' + esc(x.start) + '</td>' +
+          '<td class="name" title="' + esc(x.name + (x.duration ? ' (' + shortLen(x.duration) + ')' : '')) + '"><span class="dot" style="background:' + esc(x.colour) + '"></span>' + esc(x.name) + '</td>' +
+          
+          (hasBooked ? '<td class="num">' + (x.capacity != null ? x.booked + '/' + x.capacity : '') + '</td>' : '') +
+          (hasAlert ? '<td class="num">' + (x.alert || '') + '</td>' : '') +
+          (hasNotes ? '<td title="' + esc(x.extra) + '">' + esc(payOnly ? x.extra.replace(/^Payment:\s*/, '') : x.extra) + '</td>' : '') + '</tr>';
         var pp = people[x.uid];
         if (pp && pp.open !== false) {
           var inner;
