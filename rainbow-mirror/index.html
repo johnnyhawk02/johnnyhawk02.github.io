@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rainbow Mirror</title>
+<style>
+  :root {
+    --bg: #101018;
+    --ink: #ffffff;
+    --soft: rgba(255, 255, 255, 0.92);
+    --btn-dark: rgba(16, 16, 24, 0.72);
+    --save: #2f9e6b;
+    --fade: 450ms;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: var(--bg); color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    user-select: none; -webkit-user-select: none; touch-action: manipulation;
+  }
+
+  /* ---------- Mirror stage ---------- */
+  #stage { position: fixed; inset: 0; }
+  #video, #overlay {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    transform: scaleX(-1);              /* natural mirror */
+  }
+  #video { object-fit: cover; opacity: 0; transition: opacity 900ms ease; }
+  #video.live { opacity: 1; }
+  #overlay { pointer-events: none; transition: opacity var(--fade) ease; }
+  #overlay.hidden { opacity: 0; }
+
+  /* Soft white border pulse on photo */
+  #pulse {
+    position: fixed; inset: 0; pointer-events: none; opacity: 0;
+    box-shadow: inset 0 0 0 0 rgba(255,255,255,0);
+  }
+  #pulse.on { animation: pulse 900ms ease-in-out; }
+  @keyframes pulse {
+    0%   { opacity: 0; box-shadow: inset 0 0 0 0 rgba(255,255,255,0); }
+    40%  { opacity: 1; box-shadow: inset 0 0 0 18px rgba(255,255,255,0.85); }
+    100% { opacity: 0; box-shadow: inset 0 0 0 0 rgba(255,255,255,0); }
+  }
+
+  /* Gentle loading dot (no text) */
+  #loading {
+    position: fixed; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px;
+    border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff, #b9a7ff 60%, #8fd3ff);
+    animation: breathe 2.4s ease-in-out infinite; transition: opacity var(--fade) ease;
+  }
+  #loading.gone { opacity: 0; pointer-events: none; }
+  @keyframes breathe { 0%,100% { transform: scale(.8); opacity:.55 } 50% { transform: scale(1); opacity:.95 } }
+
+  #message {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    padding: 32px; text-align: center; font-size: 28px; line-height: 1.4;
+    opacity: 0; pointer-events: none; transition: opacity var(--fade) ease;
+  }
+  #message.show { opacity: 1; }
+
+  /* ---------- Controls ---------- */
+  .round {
+    position: fixed; bottom: calc(28px + env(safe-area-inset-bottom));
+    width: 90px; height: 90px; border-radius: 50%; padding: 0; cursor: pointer;
+    display: grid; place-items: center;
+    transition: transform 200ms ease, opacity var(--fade) ease, background 300ms ease;
+  }
+  .round:active { transform: scale(0.94); }
+  .round:focus-visible { outline: 4px solid #ffd84d; outline-offset: 4px; }
+  #filterBtn {
+    left: calc(28px + env(safe-area-inset-left));
+    background: var(--btn-dark); border: 4px solid var(--soft);
+  }
+  #filterBtn svg { width: 54px; height: 54px; transition: opacity 300ms ease; }
+  #shutterBtn {
+    left: 50%; margin-left: -45px;
+    background: #fff; border: 6px solid #111;
+    box-shadow: 0 0 0 5px #fff, 0 4px 18px rgba(0,0,0,.35);
+  }
+  #shutterBtn::after {
+    content: ""; width: 58px; height: 58px; border-radius: 50%;
+    border: 3px solid #111; background: #fff;
+  }
+
+  /* ---------- Photo preview ---------- */
+  #preview {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 24px; padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
+    opacity: 0; pointer-events: none; transition: opacity var(--fade) ease;
+  }
+  #preview.show { opacity: 1; pointer-events: auto; }
+  #previewImg {
+    max-width: 100%; max-height: calc(100% - 170px); object-fit: contain;
+    border-radius: 18px; border: 5px solid #fff;
+  }
+  .previewBtns { display: flex; gap: 28px; flex-wrap: wrap; justify-content: center; }
+  .big {
+    min-width: 170px; height: 110px; padding: 0 32px; border-radius: 28px; cursor: pointer;
+    font-size: 34px; font-weight: 800; letter-spacing: .5px;
+    display: inline-flex; align-items: center; gap: 14px; justify-content: center;
+    border: 5px solid #fff; transition: transform 200ms ease;
+  }
+  .big:active { transform: scale(0.96); }
+  .big:focus-visible { outline: 4px solid #ffd84d; outline-offset: 4px; }
+  .big svg { width: 42px; height: 42px; }
+  #saveBtn { background: var(--save); color: #fff; }
+  #backBtn { background: #fff; color: #111; border-color: #111; }
+
+  @media (prefers-reduced-motion: reduce) {
+    #loading { animation: none; }
+    #pulse.on { animation-duration: 1400ms; }
+  }
+</style>
+</head>
+<body>
+  <div id="stage">
+    <video id="video" playsinline muted autoplay></video>
+    <canvas id="overlay"></canvas>
+  </div>
+  <div id="pulse"></div>
+  <div id="loading" aria-label="Starting camera"></div>
+  <div id="message" role="status"></div>
+
+  <button id="filterBtn" class="round" aria-label="Change filter"></button>
+  <button id="shutterBtn" class="round" aria-label="Take photo"></button>
+
+  <div id="preview" aria-hidden="true">
+    <img id="previewImg" alt="Your photo">
+    <div class="previewBtns">
+      <button id="saveBtn" class="big" aria-label="Save photo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M6 10l6 6 6-6"/><path d="M4 20h16"/></svg>
+        Save
+      </button>
+      <button id="backBtn" class="big" aria-label="Back to mirror">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+        Back
+      </button>
+    </div>
+  </div>
+
+<script type="module">
+// MediaPipe is imported dynamically so the mirror still works if the CDN is slow or offline.
+const VISION_URL = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+const WASM_URL  = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm";
+const MODEL_URL = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
+
+const $ = (id) => document.getElementById(id);
+const video = $("video"), overlay = $("overlay"), ctx = overlay.getContext("2d");
+
+/* =====================================================================
+   FILTER REGISTRY
+   Each filter is a function: (ctx, landmarks, blendshapes, frame) => void
+     ctx         – 2D context in CSS pixels, un-mirrored (the canvas is
+                   mirrored by CSS, so draw in camera coordinates)
+     landmarks   – array of 478 {x,y,z} normalized points, or null if no face
+     blendshapes – { jawOpen: 0..1, ... } map, or {} if no face
+     frame       – helpers: { toPx(pt), width, height, dt, time, faceScale }
+   To add a filter: define filters.myFilter = (...) => {...}, give it an
+   icon in filterIcons, and add its key to filterOrder.
+   ===================================================================== */
+const filters = {};
+const filterIcons = {};
+
+/* ---- Clear Mirror ---- */
+filters.none = () => {};
+filterIcons.none = `<svg viewBox="0 0 54 54"><circle cx="27" cy="27" r="19" fill="none" stroke="#fff" stroke-width="4"/><path d="M19 22a10 10 0 0 1 8-6" stroke="#fff" stroke-width="3.5" stroke-linecap="round" fill="none" opacity=".8"/></svg>`;
+
+/* ---- Rainbow Bubbles ---- */
+filters.bubbles = (() => {
+  const PASTELS = ["#ffadad", "#ffd6a5", "#fdffb6", "#caffbf", "#9bf6ff", "#a0c4ff", "#cdb4ff"];
+  const BUBBLE_TINTS = [[255,173,173],[255,214,165],[253,255,182],[202,255,191],[155,246,255],[160,196,255],[205,180,255]];
+  const LEFT_CHEEK  = [50, 101, 118, 117, 123, 205, 187, 36];
+  const RIGHT_CHEEK = [280, 330, 347, 346, 352, 425, 411, 266];
+  const JAW_THRESHOLD = 0.45;
+  const MAX_BUBBLES = 36;
+
+  const bubbles = [];
+  let spawnTimer = 0;
+
+  const avg = (lm, ids, toPx) => {
+    let x = 0, y = 0;
+    for (const i of ids) { const p = toPx(lm[i]); x += p.x; y += p.y; }
+    return { x: x / ids.length, y: y / ids.length };
+  };
+
+  function drawCheekRainbow(ctx, c, size, roll, outward) {
+    ctx.save();
+    ctx.translate(c.x, c.y);
+    ctx.rotate(roll);
+    // a gentle tilt so each rainbow curves along the cheekbone
+    ctx.rotate(outward * 0.18);
+    ctx.globalAlpha = 0.62;
+    ctx.lineCap = "round";
+    const band = size * 0.075;
+    PASTELS.forEach((col, i) => {
+      ctx.beginPath();
+      ctx.strokeStyle = col;
+      ctx.lineWidth = band;
+      const r = size * 0.62 - i * band * 0.95;
+      ctx.arc(0, size * 0.18, r, Math.PI * 1.12, Math.PI * 1.88);
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  function spawn(at, scale) {
+    const tint = BUBBLE_TINTS[(Math.random() * BUBBLE_TINTS.length) | 0];
+    bubbles.push({
+      x: at.x + (Math.random() - 0.5) * scale * 0.25,
+      y: at.y,
+      r: scale * (0.05 + Math.random() * 0.07),
+      vy: -(28 + Math.random() * 32),        // px per second: slow float
+      drift: (Math.random() - 0.5) * 14,
+      phase: Math.random() * Math.PI * 2,
+      wobble: 6 + Math.random() * 10,
+      tint, age: 0, grow: 0, pop: -1,
+    });
+  }
+
+  function drawBubble(ctx, b) {
+    const grow = Math.min(1, b.grow);
+    let alpha = 0.75 * grow, r = b.r * (0.4 + 0.6 * grow);
+    if (b.pop >= 0) {                       // gentle pop: swell & fade
+      const t = Math.min(1, b.pop / 0.6);
+      r *= 1 + 0.35 * t;
+      alpha *= 1 - t;
+    }
+    if (alpha <= 0.01) return;
+    const [cr, cg, cb] = b.tint;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    const g = ctx.createRadialGradient(b.x - r * .3, b.y - r * .3, r * .1, b.x, b.y, r);
+    g.addColorStop(0, `rgba(255,255,255,0.10)`);
+    g.addColorStop(0.7, `rgba(${cr},${cg},${cb},0.22)`);
+    g.addColorStop(1, `rgba(${cr},${cg},${cb},0.55)`);
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = Math.max(1.5, r * 0.07);
+    ctx.strokeStyle = `rgba(255,255,255,0.7)`;
+    ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.beginPath(); ctx.ellipse(b.x - r * .38, b.y - r * .4, r * .2, r * .12, -0.7, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  const fn = (ctx, landmarks, blendshapes, frame) => {
+    const { toPx, dt, height } = frame;
+
+    if (landmarks) {
+      const scale = frame.faceScale;
+      const le = toPx(landmarks[33]), re = toPx(landmarks[263]);
+      const roll = Math.atan2(re.y - le.y, re.x - le.x);
+
+      drawCheekRainbow(ctx, avg(landmarks, LEFT_CHEEK, toPx),  scale * 0.3, roll, -1);
+      drawCheekRainbow(ctx, avg(landmarks, RIGHT_CHEEK, toPx), scale * 0.3, roll,  1);
+
+      if ((blendshapes.jawOpen || 0) > JAW_THRESHOLD) {
+        spawnTimer -= dt;
+        if (spawnTimer <= 0 && bubbles.length < MAX_BUBBLES) {
+          spawn(avg(landmarks, [13, 14, 78, 308], toPx), scale);
+          spawnTimer = 0.16 + Math.random() * 0.1;
+        }
+      } else {
+        spawnTimer = 0;
+      }
+    }
+
+    const popLine = height * 0.12;
+    for (let i = bubbles.length - 1; i >= 0; i--) {
+      const b = bubbles[i];
+      b.age += dt; b.grow += dt * 3;
+      b.y += b.vy * dt;
+      b.x += (b.drift + Math.sin(b.age * 1.6 + b.phase) * b.wobble) * dt;
+      if (b.pop < 0 && (b.y - b.r < popLine || b.age > 14)) b.pop = 0;
+      if (b.pop >= 0) b.pop += dt;
+      if (b.pop > 0.6) { bubbles.splice(i, 1); continue; }
+      drawBubble(ctx, b);
+    }
+  };
+  fn.reset = () => { bubbles.length = 0; spawnTimer = 0; };
+  return fn;
+})();
+filterIcons.bubbles = `<svg viewBox="0 0 54 54" fill="none" stroke-linecap="round" stroke-width="4">
+  <path d="M8 34a19 19 0 0 1 38 0" stroke="#ffadad"/>
+  <path d="M13 34a14 14 0 0 1 28 0" stroke="#fdffb6"/>
+  <path d="M18 34a9 9 0 0 1 18 0" stroke="#9bf6ff"/>
+  <circle cx="17" cy="44" r="5" stroke="#cdb4ff" stroke-width="2.5"/>
+  <circle cx="35" cy="45" r="3.5" stroke="#caffbf" stroke-width="2.5"/>
+</svg>`;
+
+const filterOrder = ["bubbles", "none"];   // add new filter keys here
+let filterIndex = 0;
+let activeFilter = filterOrder[filterIndex];
+
+/* =====================================================================
+   CAMERA + CANVAS SYNC
+   ===================================================================== */
+let dpr = 1, viewW = 0, viewH = 0;
+function resize() {
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  viewW = window.innerWidth; viewH = window.innerHeight;
+  overlay.width = Math.round(viewW * dpr);
+  overlay.height = Math.round(viewH * dpr);
+}
+window.addEventListener("resize", resize);
+resize();
+
+// Mapping from normalized video coords to on-screen px, matching object-fit: cover
+function coverMap() {
+  const vw = video.videoWidth || 1, vh = video.videoHeight || 1;
+  const s = Math.max(viewW / vw, viewH / vh);
+  return { s, ox: (viewW - vw * s) / 2, oy: (viewH - vh * s) / 2, vw, vh };
+}
+
+async function startCamera() {
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: false,
+    video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+  });
+  video.srcObject = stream;
+  await new Promise((res) => (video.readyState >= 2 ? res() : (video.onloadeddata = res)));
+  await video.play();
+  video.classList.add("live");
+}
+
+async function createLandmarker() {
+  const { FaceLandmarker, FilesetResolver } = await import(VISION_URL);
+  const fileset = await FilesetResolver.forVisionTasks(WASM_URL);
+  const opts = (delegate) => ({
+    baseOptions: { modelAssetPath: MODEL_URL, delegate },
+    runningMode: "VIDEO",
+    numFaces: 1,
+    outputFaceBlendshapes: true,
+  });
+  try { return await FaceLandmarker.createFromOptions(fileset, opts("GPU")); }
+  catch { return await FaceLandmarker.createFromOptions(fileset, opts("CPU")); }
+}
+
+/* =====================================================================
+   RENDER LOOP
+   ===================================================================== */
+let landmarker = null;
+let lastVideoTime = -1, lastFrame = performance.now();
+let smoothed = null;          // smoothed landmarks to remove jitter
+let blendshapes = {};
+let faceSeen = false;
+const SMOOTH = 0.55;          // 0 = frozen, 1 = raw
+
+function track(now) {
+  if (!landmarker || video.readyState < 2 || video.currentTime === lastVideoTime) return;
+  lastVideoTime = video.currentTime;
+  const r = landmarker.detectForVideo(video, now);
+  const lm = r.faceLandmarks && r.faceLandmarks[0];
+  if (!lm) { smoothed = null; blendshapes = {}; faceSeen = false; return; }
+  if (!smoothed || smoothed.length !== lm.length) {
+    smoothed = lm.map((p) => ({ x: p.x, y: p.y, z: p.z }));
+  } else {
+    for (let i = 0; i < lm.length; i++) {
+      const s = smoothed[i], p = lm[i];
+      s.x += (p.x - s.x) * SMOOTH; s.y += (p.y - s.y) * SMOOTH; s.z += (p.z - s.z) * SMOOTH;
+    }
+  }
+  blendshapes = {};
+  const cats = r.faceBlendshapes && r.faceBlendshapes[0] && r.faceBlendshapes[0].categories;
+  if (cats) for (const c of cats) blendshapes[c.categoryName] = c.score;
+  faceSeen = true;
+}
+
+function render(now) {
+  const dt = Math.min(0.05, (now - lastFrame) / 1000);
+  lastFrame = now;
+  track(now);
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, viewW, viewH);
+
+  const m = coverMap();
+  const toPx = (p) => ({ x: p.x * m.vw * m.s + m.ox, y: p.y * m.vh * m.s + m.oy });
+  let faceScale = 0;
+  if (smoothed) {
+    const a = toPx(smoothed[234]), b = toPx(smoothed[454]);
+    faceScale = Math.hypot(b.x - a.x, b.y - a.y);
+  }
+  const frame = { toPx, width: viewW, height: viewH, dt, time: now / 1000, faceScale };
+  filters[activeFilter](ctx, faceSeen ? smoothed : null, blendshapes, frame);
+
+  requestAnimationFrame(render);
+}
+
+/* =====================================================================
+   UI
+   ===================================================================== */
+const filterBtn = $("filterBtn");
+function paintFilterIcon() {
+  // show the icon of the filter that is ON now
+  filterBtn.innerHTML = filterIcons[activeFilter];
+  filterBtn.setAttribute("aria-label", activeFilter === "none" ? "Turn on Rainbow Bubbles" : "Clear mirror");
+}
+paintFilterIcon();
+
+let switching = false;
+filterBtn.addEventListener("click", () => {
+  if (switching) return;
+  switching = true;
+  overlay.classList.add("hidden");               // fade out
+  setTimeout(() => {
+    filters[activeFilter].reset?.();
+    filterIndex = (filterIndex + 1) % filterOrder.length;
+    activeFilter = filterOrder[filterIndex];
+    paintFilterIcon();
+    overlay.classList.remove("hidden");          // fade in
+    switching = false;
+  }, 450);
+});
+
+/* ---- Photo capture ---- */
+const pulse = $("pulse"), preview = $("preview"), previewImg = $("previewImg");
+let photoURL = null;
+
+$("shutterBtn").addEventListener("click", () => {
+  if (!video.videoWidth || preview.classList.contains("show")) return;
+  pulse.classList.remove("on"); void pulse.offsetWidth; pulse.classList.add("on");
+
+  const out = document.createElement("canvas");
+  out.width = overlay.width; out.height = overlay.height;
+  const o = out.getContext("2d");
+  const m = coverMap();
+  // mirror everything exactly as it appears on screen
+  o.translate(out.width, 0); o.scale(-1, 1);
+  o.drawImage(video, m.ox * dpr, m.oy * dpr, m.vw * m.s * dpr, m.vh * m.s * dpr);
+  o.drawImage(overlay, 0, 0);
+
+  out.toBlob((blob) => {
+    if (photoURL) URL.revokeObjectURL(photoURL);
+    photoURL = URL.createObjectURL(blob);
+    previewImg.src = photoURL;
+    setTimeout(() => { preview.classList.add("show"); preview.setAttribute("aria-hidden", "false"); }, 350);
+  }, "image/png");
+});
+
+$("saveBtn").addEventListener("click", () => {
+  if (!photoURL) return;
+  const a = document.createElement("a");
+  const t = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  a.download = `rainbow-mirror-${t.getFullYear()}${pad(t.getMonth()+1)}${pad(t.getDate())}-${pad(t.getHours())}${pad(t.getMinutes())}${pad(t.getSeconds())}.png`;
+  a.href = photoURL;
+  document.body.appendChild(a); a.click(); a.remove();
+});
+
+$("backBtn").addEventListener("click", () => {
+  preview.classList.remove("show");
+  preview.setAttribute("aria-hidden", "true");
+});
+
+/* =====================================================================
+   BOOT
+   ===================================================================== */
+function showMessage(text) {
+  $("loading").classList.add("gone");
+  const msg = $("message"); msg.textContent = text; msg.classList.add("show");
+}
+
+(async () => {
+  try {
+    if (!navigator.mediaDevices?.getUserMedia) throw new Error("nocam");
+    await startCamera();
+  } catch (e) {
+    console.error(e);
+    showMessage("The camera isn't on yet. Please allow the camera and reload the page.");
+    return;
+  }
+  requestAnimationFrame(render);   // mirror shows right away
+  try {
+    landmarker = await createLandmarker();
+  } catch (e) {
+    console.error("Face tracking failed to load", e);
+  }
+  $("loading").classList.add("gone");
+})();
+</script>
+</body>
+</html>
